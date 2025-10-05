@@ -103,7 +103,7 @@ type CreateUserClientPayload struct {
 	LastName         string `json:"last_name" binding:"required"`
 	Email            string `json:"email" binding:"required,email"`
 	Phone            string `json:"phone"`
-	IdentityDocument string `json:"identity_document"`
+	IdentityDocument string `json:"identity_document" binding:"required"`
 	Password         string `json:"password" binding:"required,min=8"`
 	BirthDate        string `json:"birth_date" binding:"required"`
 }
@@ -113,7 +113,7 @@ type CreateUserStaffPayload struct {
 	LastName         string `json:"last_name" binding:"required"`
 	Email            string `json:"email" binding:"required,email"`
 	Phone            string `json:"phone"`
-	IdentityDocument string `json:"identity_document"`
+	IdentityDocument string `json:"identity_document" binding:"required"`
 	Password         string `json:"password" binding:"required,min=8"`
 	RoleName         string `json:"role_name" binding:"omitempty"`
 	BirthDate        string `json:"birth_date" binding:"required"`

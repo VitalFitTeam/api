@@ -11,11 +11,13 @@ import (
 type Services struct {
 	AuthServices authdomain.AuthServicesInterface
 	logs.LogErrors
+	Logger *zap.SugaredLogger
 }
 
 func NewServices(store store.Storage, logger *zap.SugaredLogger) Services {
 	return Services{
 		AuthServices: authservices.NewAuthServices(store),
 		LogErrors:    logs.NewLogErrors(logger),
+		Logger:       logger,
 	}
 }

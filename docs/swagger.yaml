@@ -21,6 +21,7 @@ definitions:
     - birth_date
     - email
     - first_name
+    - identity_document
     - last_name
     - password
     type: object
@@ -47,6 +48,7 @@ definitions:
     - birth_date
     - email
     - first_name
+    - identity_document
     - last_name
     - password
     type: object

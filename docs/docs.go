@@ -154,6 +154,7 @@ const docTemplate = `{
                 "birth_date",
                 "email",
                 "first_name",
+                "identity_document",
                 "last_name",
                 "password"
             ],
@@ -188,6 +189,7 @@ const docTemplate = `{
                 "birth_date",
                 "email",
                 "first_name",
+                "identity_document",
                 "last_name",
                 "password"
             ],

@@ -12,6 +12,10 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+var (
+	QueryTimeoutDuration = time.Second * 5
+)
+
 func NewPGDB(addr string, maxOpenConnsm int, maxIdleConns int, maxIdleTime string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", addr)
 	if err != nil {

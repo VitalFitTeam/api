@@ -1,6 +1,7 @@
 package authhandlers
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
@@ -39,6 +40,7 @@ func NewAuthHandlers(services appservices.Services) *AuthHandlers {
 // @Router			/auth/register [post]
 func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 	var payload authdomain.CreateUserClientPayload
+	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -49,7 +51,7 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 		return
 	}
 
-	user := authdomain.Users{
+	user := &authdomain.Users{
 		FirstName:        payload.FirstName,
 		LastName:         payload.LastName,
 		Email:            payload.Email,
@@ -70,7 +72,7 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 	}
 	hash := sha256.Sum256([]byte(key))
 	hashedKey := hex.EncodeToString(hash[:])
-	if err := h.services.AuthServices.RegisterUserClient(c.Request.Context(), user, hashedKey); err != nil {
+	if err := h.services.AuthServices.RegisterUserClient(ctx, user, hashedKey); err != nil {
 		switch err {
 		case errors.ErrNotFound:
 			h.services.LogErrors.BadRequestResponse(c, err)
@@ -81,8 +83,14 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 		}
 		return
 	}
+
+	status, err := h.registerEmail(ctx, user, key, c)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+	}
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "user created",
+		"status":  status,
 		"code":    key,
 	})
 }
@@ -99,6 +107,7 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 // @Router			/auth/register-staff [post]
 func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	var payload authdomain.CreateUserStaffPayload
+	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -109,7 +118,7 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		return
 	}
 
-	user := authdomain.Users{
+	user := &authdomain.Users{
 		FirstName:        payload.FirstName,
 		LastName:         payload.LastName,
 		Email:            payload.Email,
@@ -130,7 +139,7 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	}
 	hash := sha256.Sum256([]byte(key))
 	hashedKey := hex.EncodeToString(hash[:])
-	if err := h.services.AuthServices.RegisterUserStaff(c.Request.Context(), user, hashedKey, payload.RoleName); err != nil {
+	if err := h.services.AuthServices.RegisterUserStaff(ctx, user, hashedKey, payload.RoleName); err != nil {
 		switch err {
 		case errors.ErrNotFound:
 			h.services.LogErrors.BadRequestResponse(c, err)
@@ -141,8 +150,32 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		}
 		return
 	}
+
+	//send main
+	status, err := h.registerEmail(ctx, user, key, c)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "user created",
+		"status":  status,
 		"code":    key,
 	})
+}
+
+func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string, c *gin.Context) (int, error) {
+	status, err := h.services.AuthServices.MailSender(ctx, user, key)
+	if err != nil {
+		h.services.Logger.Errorw("error sending welcome email", "error", err)
+
+		if err := h.services.AuthServices.Delete(ctx, user.UserID); err != nil {
+			h.services.Logger.Errorw("error deleting user", "error", err)
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return http.StatusInternalServerError, err
+	}
+
+	return status, err
+
 }
