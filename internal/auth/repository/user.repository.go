@@ -17,3 +17,7 @@ func NewUserRepositoryDAO(db *gorm.DB) *UserRepositoryDAO {
 func (s *UserRepositoryDAO) GetUser() error {
 	return nil
 }
+
+func (s *UserRepositoryDAO) Create() {
+
+}

@@ -3,7 +3,6 @@ package authservices
 import (
 	"context"
 
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/vitalfit/api/internal/store"
 )
@@ -14,7 +13,7 @@ type Authenticator interface {
 }
 
 type AuthServicesInterface interface {
-	RegisterUser(ctx context.Context) gin.H
+	RegisterUser(ctx context.Context)
 }
 
 type AuthService struct {
@@ -27,11 +26,6 @@ func NewAuthServices(store store.Storage) *AuthService {
 	}
 }
 
-func (s *AuthService) RegisterUser(ctx context.Context) gin.H {
-	data := gin.H{
-		"status":      "available",
-		"environment": s.store.Config.Env,
-		"version":     "0.0.1",
-	}
-	return data
+func (s *AuthService) RegisterUser(ctx context.Context) {
+
 }

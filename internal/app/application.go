@@ -13,6 +13,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	docs "github.com/vitalfit/api/docs"
+	"github.com/vitalfit/api/pkg/cors"
 
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
@@ -38,6 +39,7 @@ func (app *application) Mount() http.Handler {
 	r := gin.New()
 	docs.SwaggerInfo.BasePath = "/v1"
 	r.Use(gin.Logger(), gin.Recovery())
+	cors.SetupCORS(r)
 	{
 
 		v1 := r.Group("/v1")
