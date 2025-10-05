@@ -4,6 +4,7 @@ import (
 	"context"
 
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	"github.com/vitalfit/api/internal/shared/errors"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +22,9 @@ func (s *RoleStore) GetByName(ctx context.Context, name string) (*authdomain.Rol
 	if err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:
-			return nil, authdomain.ErrNotFound
+			return nil, errors.ErrNotFound
+		case gorm.ErrDuplicatedKey:
+			return nil, errors.ErrConflict
 		default:
 			return nil, err
 		}

@@ -1,10 +1,16 @@
 package errors
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+)
+
+var (
+	ErrNotFound = errors.New("resource not found")
+	ErrConflict = errors.New("resource already exists")
 )
 
 type LogErrors struct {

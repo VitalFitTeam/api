@@ -1,4 +1,29 @@
 basePath: /v1
+definitions:
+  authhandlers.createUserPayload:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      identity_document:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone:
+        type: string
+      role_name:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - role_name
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -11,6 +36,39 @@ info:
   termsOfService: http://swagger.io/terms/
   title: VitalFit API
 paths:
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user in the system with and specific role
+      parameters:
+      - description: Register user data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.createUserPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: user created'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad response
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register New User
+      tags:
+      - Auth
   /health:
     get:
       consumes:
