@@ -2,6 +2,7 @@ package authhandlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	appservices "github.com/vitalfit/api/internal/app/services"
@@ -17,6 +18,10 @@ type AuthHandlers struct {
 	services appservices.Services
 }
 
+func NewAuthHandlers(services appservices.Services) *AuthHandlers {
+	return &AuthHandlers{services: services}
+}
+
 type createUserPayload struct {
 	FirstName        string `json:"first_name" binding:"required"`
 	LastName         string `json:"last_name" binding:"required"`
@@ -25,10 +30,7 @@ type createUserPayload struct {
 	IdentityDocument string `json:"identity_document"`
 	Password         string `json:"password" binding:"required,min=8"`
 	RoleName         string `json:"role_name" binding:"required"`
-}
-
-func NewAuthHandlers(services appservices.Services) *AuthHandlers {
-	return &AuthHandlers{services: services}
+	BirthDate        string `json:"birth_date" binding:"required"`
 }
 
 // @Summary		Register New User
@@ -47,12 +49,19 @@ func (h *AuthHandlers) RegisterUserHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+	birthdate, err := time.Parse(time.RFC3339, payload.BirthDate)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
 	user := authdomain.Users{
 		FirstName:        payload.FirstName,
 		LastName:         payload.LastName,
 		Email:            payload.Email,
 		Phone:            payload.Phone,
 		IdentityDocument: payload.IdentityDocument,
+		BirthDate:        birthdate,
 	}
 
 	if err := user.PasswordHash.Set(payload.Password); err != nil {
@@ -62,7 +71,7 @@ func (h *AuthHandlers) RegisterUserHandler(c *gin.Context) {
 	if err := h.services.AuthServices.RegisterUser(c.Request.Context(), user, payload.RoleName); err != nil {
 		switch err {
 		case errors.ErrNotFound:
-			h.services.LogErrors.NotFoundResponse(c)
+			h.services.LogErrors.BadRequestResponse(c, err)
 		case errors.ErrConflict:
 			h.services.LogErrors.ConflictResponse(c, err)
 		default:

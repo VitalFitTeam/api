@@ -78,10 +78,10 @@ type Users struct {
 	Phone            string    `gorm:"type:varchar(50)" json:"phone"`
 	IdentityDocument string    `gorm:"type:varchar(50);unique" json:"identity_document"`
 
-	PasswordHash Password `gorm:"column:password_hash;type:bytea;not null" json:"-"`
-
-	ProfilePictureURL string `gorm:"type:varchar(255)" json:"profile_picture_url"`
-	IsValidated       bool   `gorm:"default:false" json:"is_validated"`
+	PasswordHash      Password  `gorm:"column:password_hash;type:bytea;not null" json:"-"`
+	BirthDate         time.Time `gorm:"type:date" json:"birth_date"`
+	ProfilePictureURL string    `gorm:"type:varchar(255)" json:"profile_picture_url"`
+	IsValidated       bool      `gorm:"default:false" json:"is_validated"`
 
 	RoleID uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
 	Role   Roles     `gorm:"foreignKey:RoleID" json:"role"`

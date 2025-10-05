@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS client_profiles (
     user_id UUID PRIMARY KEY REFERENCES users(user_id),
-    birth_date DATE,
     qr_code TEXT UNIQUE,
     scoring INT NOT NULL DEFAULT 0,
     status client_status NOT NULL DEFAULT 'Active',

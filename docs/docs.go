@@ -102,6 +102,7 @@ const docTemplate = `{
         "authhandlers.createUserPayload": {
             "type": "object",
             "required": [
+                "birth_date",
                 "email",
                 "first_name",
                 "last_name",
@@ -109,6 +110,9 @@ const docTemplate = `{
                 "role_name"
             ],
             "properties": {
+                "birth_date": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },

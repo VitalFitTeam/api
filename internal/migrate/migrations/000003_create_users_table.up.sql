@@ -6,6 +6,7 @@ CREATE TABLE users (
     phone VARCHAR(50),
     identity_document VARCHAR(50) UNIQUE,
     password_hash BYTEA NOT NULL,
+    birth_date DATE,
     profile_picture_url VARCHAR(255),
     
     -- Clave foránea a la tabla roles
