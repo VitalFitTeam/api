@@ -97,3 +97,24 @@ type UserInvitations struct {
 	Users  Users     `gorm:"foreignKey:UserID" json:"user"`
 	Expiry time.Time `gorm:"expiry"`
 }
+
+type CreateUserClientPayload struct {
+	FirstName        string `json:"first_name" binding:"required"`
+	LastName         string `json:"last_name" binding:"required"`
+	Email            string `json:"email" binding:"required,email"`
+	Phone            string `json:"phone"`
+	IdentityDocument string `json:"identity_document"`
+	Password         string `json:"password" binding:"required,min=8"`
+	BirthDate        string `json:"birth_date" binding:"required"`
+}
+
+type CreateUserStaffPayload struct {
+	FirstName        string `json:"first_name" binding:"required"`
+	LastName         string `json:"last_name" binding:"required"`
+	Email            string `json:"email" binding:"required,email"`
+	Phone            string `json:"phone"`
+	IdentityDocument string `json:"identity_document"`
+	Password         string `json:"password" binding:"required,min=8"`
+	RoleName         string `json:"role_name" binding:"omitempty"`
+	BirthDate        string `json:"birth_date" binding:"required"`
+}

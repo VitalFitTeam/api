@@ -26,7 +26,7 @@ const docTemplate = `{
     "paths": {
         "/auth/register": {
             "post": {
-                "description": "Register a new user in the system with and specific role",
+                "description": "Register a new user in the system with client role",
                 "consumes": [
                     "application/json"
                 ],
@@ -44,7 +44,56 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authhandlers.createUserPayload"
+                            "$ref": "#/definitions/authdomain.CreateUserClientPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "message: user created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "bad response",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register-staff": {
+            "post": {
+                "description": "Register a new user in the system with and specific role",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register New User Staff",
+                "parameters": [
+                    {
+                        "description": "Register user data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authdomain.CreateUserStaffPayload"
                         }
                     }
                 ],
@@ -99,15 +148,48 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "authhandlers.createUserPayload": {
+        "authdomain.CreateUserClientPayload": {
             "type": "object",
             "required": [
                 "birth_date",
                 "email",
                 "first_name",
                 "last_name",
-                "password",
-                "role_name"
+                "password"
+            ],
+            "properties": {
+                "birth_date": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "identity_document": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "authdomain.CreateUserStaffPayload": {
+            "type": "object",
+            "required": [
+                "birth_date",
+                "email",
+                "first_name",
+                "last_name",
+                "password"
             ],
             "properties": {
                 "birth_date": {

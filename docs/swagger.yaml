@@ -1,6 +1,30 @@
 basePath: /v1
 definitions:
-  authhandlers.createUserPayload:
+  authdomain.CreateUserClientPayload:
+    properties:
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      identity_document:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone:
+        type: string
+    required:
+    - birth_date
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  authdomain.CreateUserStaffPayload:
     properties:
       birth_date:
         type: string
@@ -25,7 +49,6 @@ definitions:
     - first_name
     - last_name
     - password
-    - role_name
     type: object
 info:
   contact:
@@ -43,14 +66,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: Register a new user in the system with and specific role
+      description: Register a new user in the system with client role
       parameters:
       - description: Register user data
         in: body
         name: user
         required: true
         schema:
-          $ref: '#/definitions/authhandlers.createUserPayload'
+          $ref: '#/definitions/authdomain.CreateUserClientPayload'
       produces:
       - application/json
       responses:
@@ -70,6 +93,39 @@ paths:
             additionalProperties: true
             type: object
       summary: Register New User
+      tags:
+      - Auth
+  /auth/register-staff:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user in the system with and specific role
+      parameters:
+      - description: Register user data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.CreateUserStaffPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: user created'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad response
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register New User Staff
       tags:
       - Auth
   /health:

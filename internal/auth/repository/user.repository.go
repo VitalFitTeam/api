@@ -2,10 +2,13 @@ package authrepository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
 )
@@ -25,7 +28,17 @@ func (s *UserRepositoryDAO) GetUser() error {
 }
 
 func (s *UserRepositoryDAO) Create(ctx context.Context, tx *gorm.DB, user authdomain.Users) error {
-	return tx.WithContext(ctx).Create(&user).Error
+	err := tx.WithContext(ctx).Create(&user).Error
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			if pgErr.ConstraintName == "users_email_key" {
+				return shared_errors.ErrConflict
+			}
+		}
+		return err
+	}
+	return nil
 }
 
 func (s *UserRepositoryDAO) createUserInvitation(ctx context.Context, tx *gorm.DB, code string, userID uuid.UUID, invitationExp time.Duration) error {
