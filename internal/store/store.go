@@ -12,12 +12,14 @@ import (
 
 type Storage struct {
 	Users authdomain.UserRepository
+	Roles authdomain.RolesRepository
 	config.Config
 }
 
 func NewStorage(db *gorm.DB, cfg config.Config) Storage {
 	return Storage{
 		Users:  authrepository.NewUserRepositoryDAO(db),
+		Roles:  authrepository.NewRoleStore(db),
 		Config: cfg,
 	}
 

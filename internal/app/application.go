@@ -45,6 +45,7 @@ func (app *application) Mount() http.Handler {
 		v1 := r.Group("/v1")
 
 		v1.GET("/health", app.HealthCheckHandler)
+		v1.GET("auth/register", app.handlers.AuthHandlers.RegisterUserHandler)
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}

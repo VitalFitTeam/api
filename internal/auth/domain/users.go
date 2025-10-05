@@ -61,37 +61,32 @@ func (p *Password) Scan(value interface{}) error {
 	return nil
 }
 
-type UUIDModel struct {
-	ID        uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+type Roles struct {
+	RoleID      uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"role_id"`
+	Name        string    `gorm:"type:varchar(50);unique;not null" json:"name"`
+	Level       int16     `gorm:"type:smallint;not null;default:0" json:"level"`
+	Description string    `gorm:"type:text" json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// Role corresponde a la tabla 'roles'
-type Role struct {
-	UUIDModel
-	Name        string `gorm:"type:varchar(50);unique;not null" json:"name"`
-	Level       int16  `gorm:"type:smallint;not null;default:0" json:"level"`
-	Description string `gorm:"type:text" json:"description"`
-}
-
-// User corresponde a la tabla 'users'
 type Users struct {
-	UUIDModel
-	FirstName        string `gorm:"type:varchar(100);not null" json:"first_name"`
-	LastName         string `gorm:"type:varchar(100);not null" json:"last_name"`
-	Email            string `gorm:"type:citext;unique;not null" json:"email"`
-	Phone            string `gorm:"type:varchar(50)" json:"phone"`
-	IdentityDocument string `gorm:"type:varchar(50);unique" json:"identity_document"`
+	UserID           uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"user_id"`
+	FirstName        string    `gorm:"type:varchar(100);not null" json:"first_name"`
+	LastName         string    `gorm:"type:varchar(100);not null" json:"last_name"`
+	Email            string    `gorm:"type:citext;unique;not null" json:"email"`
+	Phone            string    `gorm:"type:varchar(50)" json:"phone"`
+	IdentityDocument string    `gorm:"type:varchar(50);unique" json:"identity_document"`
 
-	// ⚡️ Usamos el struct Password personalizado aquí ⚡️
 	PasswordHash Password `gorm:"column:password_hash;type:bytea;not null" json:"-"`
 
 	ProfilePictureURL string `gorm:"type:varchar(255)" json:"profile_picture_url"`
 	IsValidated       bool   `gorm:"default:false" json:"is_validated"`
 
-	// Relación Belongs To: User pertenece a un Role
 	RoleID uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
-	Role   Role      `gorm:"foreignKey:RoleID" json:"role"`
+	Role   Roles     `gorm:"foreignKey:RoleID" json:"role"`
+
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }

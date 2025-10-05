@@ -18,6 +18,5 @@ func NewAuthHandlers(services appservices.Services) *AuthHandlers {
 }
 
 func (h *AuthHandlers) RegisterUserHandler(c *gin.Context) {
-	//register
 
 }
