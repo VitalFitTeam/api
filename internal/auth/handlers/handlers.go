@@ -8,6 +8,7 @@ import (
 	appservices "github.com/vitalfit/api/internal/app/services"
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	"github.com/vitalfit/api/internal/shared/errors"
+	otp "github.com/vitalfit/api/pkg/OTP"
 )
 
 type AuthHandlersInterface interface {
@@ -68,7 +69,13 @@ func (h *AuthHandlers) RegisterUserHandler(c *gin.Context) {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	if err := h.services.AuthServices.RegisterUser(c.Request.Context(), user, payload.RoleName); err != nil {
+
+	//store the user
+	key, err := otp.GenerateCode(5)
+	if err != nil {
+		h.services.InternalServerError(c, err)
+	}
+	if err := h.services.AuthServices.RegisterUserClient(c.Request.Context(), user, key); err != nil {
 		switch err {
 		case errors.ErrNotFound:
 			h.services.LogErrors.BadRequestResponse(c, err)

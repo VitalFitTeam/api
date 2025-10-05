@@ -12,5 +12,6 @@ type Authenticator interface {
 }
 
 type AuthServicesInterface interface {
-	RegisterUser(ctx context.Context, user Users, roleName string) error
+	RegisterUserClient(ctx context.Context, user Users, token string) error
+	RegisterUserStaff(ctx context.Context, user Users, token string, roleName string) error
 }

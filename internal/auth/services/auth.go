@@ -17,15 +17,26 @@ func NewAuthServices(store store.Storage) *AuthService {
 	}
 }
 
-func (s *AuthService) RegisterUser(ctx context.Context, user authdomain.Users, roleName string) error {
-	role, error := s.store.Roles.GetByName(ctx, roleName)
+func (s *AuthService) RegisterUserClient(ctx context.Context, user authdomain.Users, token string) error {
+	role, error := s.store.Roles.GetByName(ctx, "client")
 	if error != nil {
 		return error
 	}
 	user.RoleID = role.RoleID
-	if err := s.store.Users.Create(ctx, user); err != nil {
+	if err := s.store.Users.CreateAndInvitate(ctx, user, token, s.store.Config.Mail.Exp); err != nil {
 		return err
 	}
+	return nil
+}
 
+func (s *AuthService) RegisterUserStaff(ctx context.Context, user authdomain.Users, token string, roleName string) error {
+	role, error := s.store.Roles.GetByName(ctx, "client")
+	if error != nil {
+		return error
+	}
+	user.RoleID = role.RoleID
+	if err := s.store.Users.CreateAndInvitate(ctx, user, token, s.store.Config.Mail.Exp); err != nil {
+		return err
+	}
 	return nil
 }

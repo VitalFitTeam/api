@@ -1,12 +1,17 @@
 package config
 
-import env "github.com/vitalfit/api/pkg/Env"
+import (
+	"time"
+
+	env "github.com/vitalfit/api/pkg/Env"
+)
 
 type Config struct {
 	Addrs  string
 	ApiUrl string
 	Db     dbConfig
 	Env    string
+	Mail   MailConfig
 }
 
 type dbConfig struct {
@@ -14,6 +19,16 @@ type dbConfig struct {
 	MaxOpenConns int
 	MaxIdleConns int
 	MaxIdleTime  string
+}
+
+type MailConfig struct {
+	FromEmail string
+	Exp       time.Duration
+	Resend    ResendConfig
+}
+
+type ResendConfig struct {
+	ApiKey string
 }
 
 func LoadConfig() *Config {
@@ -27,5 +42,12 @@ func LoadConfig() *Config {
 		},
 		Env:    env.GetString("ENV", "dev"),
 		ApiUrl: env.GetString("API_URL", "localhost:8080"),
+		Mail: MailConfig{
+			Exp:       time.Hour * 24 * 3, //3 days
+			FromEmail: env.GetString("FROM_RESEND_EMAIL", ""),
+			Resend: ResendConfig{
+				ApiKey: env.GetString("RESEND_API_KEY", ""),
+			},
+		},
 	}
 }

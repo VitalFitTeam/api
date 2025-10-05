@@ -5,6 +5,10 @@ import (
 	"strconv"
 )
 
+var (
+	InvitationExp = GetString("INVITATION_EXP", "24h")
+)
+
 func GetString(key, fallback string) string {
 	val, ok := os.LookupEnv(key)
 	if !ok {

@@ -90,3 +90,10 @@ type Users struct {
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
+
+type UserInvitations struct {
+	Token  string `gorm:"type:varchar(255);unique;not null" json:"token"`
+	UserID uuid.UUID
+	Users  Users     `gorm:"foreignKey:UserID" json:"user"`
+	Expiry time.Time `gorm:"expiry"`
+}

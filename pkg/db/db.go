@@ -73,3 +73,7 @@ func New(addr string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*
 
 	return db, nil
 }
+
+func WithTX(db *gorm.DB, fn func(tx *gorm.DB) error) error {
+	return db.Transaction(fn)
+}

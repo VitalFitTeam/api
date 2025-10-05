@@ -1,9 +1,6 @@
 package store
 
 import (
-	"context"
-	"database/sql"
-
 	"github.com/vitalfit/api/config"
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	authrepository "github.com/vitalfit/api/internal/auth/repository"
@@ -23,18 +20,4 @@ func NewStorage(db *gorm.DB, cfg config.Config) Storage {
 		Config: cfg,
 	}
 
-}
-
-func withTX(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	if err := fn(tx); err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
 }
