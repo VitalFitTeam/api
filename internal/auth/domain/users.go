@@ -84,7 +84,7 @@ type Users struct {
 	IsValidated       bool      `gorm:"default:false" json:"is_validated"`
 
 	RoleID uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
-	Role   Roles     `gorm:"foreignKey:RoleID" json:"role"`
+	Role   Roles     `gorm:"foreignKey:RoleID;references:RoleID" json:"role"`
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`

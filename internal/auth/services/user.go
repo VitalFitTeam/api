@@ -49,3 +49,11 @@ func (h *UserService) GetUserFromContext(c *gin.Context) *authdomain.Users {
 	}
 	return user
 }
+
+func (h *UserService) GetRoleByName(ctx context.Context, name string) (*authdomain.Roles, error) {
+	role, err := h.store.Roles.GetByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	return role, nil
+}

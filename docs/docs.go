@@ -198,7 +198,31 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/register-staff": {
+        "/health": {
+            "get": {
+                "description": "return status, environment and version.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "verify service status",
+                "responses": {
+                    "200": {
+                        "description": "Ok status and system details",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/user/register-staff": {
             "post": {
                 "description": "Register a new user in the system with and specific role",
                 "consumes": [
@@ -239,30 +263,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/health": {
-            "get": {
-                "description": "return status, environment and version.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "System"
-                ],
-                "summary": "verify service status",
-                "responses": {
-                    "200": {
-                        "description": "Ok status and system details",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true

@@ -68,6 +68,7 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 	key, err := otp.GenerateCode(5)
 	if err != nil {
 		h.services.InternalServerError(c, err)
+		return
 	}
 	hash := sha256.Sum256([]byte(key))
 	hashedKey := hex.EncodeToString(hash[:])
@@ -86,6 +87,7 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 	status, err := h.registerEmail(ctx, user, key, c)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
+		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "user created",
@@ -103,7 +105,7 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 // @Success		201		{object}	map[string]interface{}				"message: user created"
 // @Failure		400		{object}	map[string]interface{}				"bad response"
 // @Failure		500		{object}	map[string]interface{}				"internal server error"
-// @Router			/auth/register-staff [post]
+// @Router			/user/register-staff [post]
 func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	var payload authdomain.CreateUserStaffPayload
 	ctx := c.Request.Context()
@@ -261,6 +263,7 @@ func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users
 
 		if err := h.services.AuthServices.Delete(ctx, user.UserID); err != nil {
 			h.services.Logger.Errorw("error deleting user", "error", err)
+			return http.StatusInternalServerError, err
 		}
 		h.services.LogErrors.InternalServerError(c, err)
 		return http.StatusInternalServerError, err

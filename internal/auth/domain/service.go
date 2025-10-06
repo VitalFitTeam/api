@@ -28,4 +28,5 @@ type UserServicesInterface interface {
 	Update(ctx context.Context, user *Users) error
 	GetByEmail(ctx context.Context, email string) (*Users, error)
 	GetUserFromContext(c *gin.Context) *Users
+	GetRoleByName(ctx context.Context, name string) (*Roles, error)
 }

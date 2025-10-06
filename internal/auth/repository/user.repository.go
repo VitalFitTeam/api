@@ -42,6 +42,26 @@ func (s *UserRepositoryDAO) Create(ctx context.Context, tx *gorm.DB, user *authd
 	return nil
 }
 
+func (s *UserRepositoryDAO) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.Users, error) {
+	var user authdomain.Users
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	result := s.db.WithContext(ctx).
+		Preload("Role").
+		Where("user_id = ?", userID).
+		First(&user)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
 func (s *UserRepositoryDAO) CreateAndInvitate(ctx context.Context, user *authdomain.Users, token string, invitationExp time.Duration) error {
 	//transacction
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
@@ -116,17 +136,17 @@ func (s *UserRepositoryDAO) delete(ctx context.Context, tx *gorm.DB, userID uuid
 	return nil
 }
 
-func (s *UserRepositoryDAO) softDelete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
-	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
-	defer cancel()
+// func (s *UserRepositoryDAO) softDelete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
+// 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+// 	defer cancel()
 
-	result := tx.WithContext(ctx).Delete(&authdomain.Users{}, userID)
+// 	result := tx.WithContext(ctx).Delete(&authdomain.Users{}, userID)
 
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
-}
+// 	if result.Error != nil {
+// 		return result.Error
+// 	}
+// 	return nil
+// }
 
 // Elimina las invitaciones asociadas a ese usuario.
 func (s *UserRepositoryDAO) deleteUserInvitations(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
@@ -172,20 +192,6 @@ func (s *UserRepositoryDAO) getUserFromInvitation(ctx context.Context, tx *gorm.
 	}
 
 	return &invitation.Users, nil
-}
-
-func (s *UserRepositoryDAO) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.Users, error) {
-	var user authdomain.Users
-	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
-	defer cancel()
-	err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&user).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, shared_errors.ErrNotFound
-		}
-		return nil, err
-	}
-	return &user, nil
 }
 
 func (s *UserRepositoryDAO) Update(ctx context.Context, user *authdomain.Users) error {

@@ -205,7 +205,23 @@ paths:
       summary: Register New User
       tags:
       - Auth
-  /auth/register-staff:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: return status, environment and version.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ok status and system details
+          schema:
+            additionalProperties: true
+            type: object
+      summary: verify service status
+      tags:
+      - System
+  /user/register-staff:
     post:
       consumes:
       - application/json
@@ -238,22 +254,6 @@ paths:
       summary: Register New User Staff
       tags:
       - Auth
-  /health:
-    get:
-      consumes:
-      - application/json
-      description: return status, environment and version.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Ok status and system details
-          schema:
-            additionalProperties: true
-            type: object
-      summary: verify service status
-      tags:
-      - System
   /user/whoami:
     get:
       description: Retrieves the profile of the user authenticated via the JWT token
