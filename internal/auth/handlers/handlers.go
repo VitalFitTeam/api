@@ -10,15 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
-	"github.com/vitalfit/api/internal/shared/errors"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
-	otp "github.com/vitalfit/api/pkg/OTP"
+	otp "github.com/vitalfit/api/pkg/otp"
 )
 
 type AuthHandlersInterface interface {
 	AuthRoutes(rg *gin.RouterGroup)
-	RegisterUserClientHandler(c *gin.Context)
-	RegisterUserStaffHandler(c *gin.Context)
+	UserRoutes(rg *gin.RouterGroup)
 }
 
 type AuthHandlers struct {
@@ -142,9 +140,9 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	hashedKey := hex.EncodeToString(hash[:])
 	if err := h.services.AuthServices.RegisterUserStaff(ctx, user, hashedKey, payload.RoleName); err != nil {
 		switch err {
-		case errors.ErrNotFound:
+		case shared_errors.ErrNotFound:
 			h.services.LogErrors.BadRequestResponse(c, err)
-		case errors.ErrConflict:
+		case shared_errors.ErrConflict:
 			h.services.LogErrors.ConflictResponse(c, err)
 		default:
 			h.services.LogErrors.InternalServerError(c, err)
@@ -212,7 +210,7 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := h.services.AuthServices.GetByEmail(ctx, payload.Email)
+	user, err := h.services.UserServices.GetByEmail(ctx, payload.Email)
 	if err != nil {
 		switch err {
 		case shared_errors.ErrNotFound:
@@ -239,6 +237,21 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 		"token": token,
 	})
 
+}
+
+// @Summary		Get current user profile
+// @Description	Retrieves the profile of the user authenticated via the JWT token in the request header.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	map[string]interface{}	"user"		"Current authenticated user profile"
+// @Failure		401	{object}	map[string]string		"error":	"Unauthorized"	"Missing or invalid JWT token"
+// @Router			/user/whoami [get]
+func (h *AuthHandlers) whoami(c *gin.Context) {
+	user := h.services.UserServices.GetUserFromContext(c)
+	c.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
 }
 
 func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string, c *gin.Context) (int, error) {

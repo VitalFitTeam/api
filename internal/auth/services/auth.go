@@ -67,6 +67,7 @@ func (h *AuthService) MailSender(ctx context.Context, user *authdomain.Users, ke
 	return status, err
 }
 
+// rollbacks user creations if transaction fails
 func (h *AuthService) Delete(ctx context.Context, userID uuid.UUID) error {
 	if err := h.store.Users.Delete(ctx, userID); err != nil {
 		return err
@@ -106,5 +107,8 @@ func (h *AuthService) GenerateToken(user *authdomain.Users) (string, error) {
 	}
 
 	return token, nil
+}
 
+func (h *AuthService) ValidateToken(token string) (*jwt.Token, error) {
+	return h.store.Auth.ValidateToken(token)
 }

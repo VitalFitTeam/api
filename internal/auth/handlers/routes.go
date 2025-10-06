@@ -1,17 +1,26 @@
 package authhandlers
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	shared_jwt "github.com/vitalfit/api/internal/shared/middleware"
+)
 
 func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup) {
 
 	authGroup := rg.Group("/auth")
-	{
-		// 2. Asocia los métodos del Handler a las rutas
+	{ //public routes
 		authGroup.POST("/register", r.RegisterUserClientHandler)
 		authGroup.POST("/register-staff", r.RegisterUserStaffHandler)
 		authGroup.PUT("/activate", r.ActivateUserHandler)
 		authGroup.POST("/login", r.LoginHandler)
-		//authGroup.POST("/logout", r.Handler.LogoutHandler)
-		// ...
+
+	}
+}
+
+func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup) {
+	m := shared_jwt.NewJWTAuthMiddleware(r.services)
+	userGroup := rg.Group("/user").Use(m.AuthJwtTokenMiddleware())
+	{
+		userGroup.GET("/whoami", r.whoami)
 	}
 }

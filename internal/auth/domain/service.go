@@ -3,6 +3,7 @@ package authdomain
 import (
 	"context"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -18,6 +19,13 @@ type AuthServicesInterface interface {
 	Delete(context.Context, uuid.UUID) error
 	MailSender(ctx context.Context, user *Users, key string) (int, error)
 	Activate(ctx context.Context, code string) error
-	GetByEmail(ctx context.Context, email string) (*Users, error)
 	GenerateToken(user *Users) (string, error)
+	ValidateToken(token string) (*jwt.Token, error)
+}
+
+type UserServicesInterface interface {
+	GetByID(ctx context.Context, userID uuid.UUID) (*Users, error)
+	Update(ctx context.Context, user *Users) error
+	GetByEmail(ctx context.Context, email string) (*Users, error)
+	GetUserFromContext(c *gin.Context) *Users
 }

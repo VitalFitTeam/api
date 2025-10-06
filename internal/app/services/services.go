@@ -10,6 +10,7 @@ import (
 
 type Services struct {
 	AuthServices authdomain.AuthServicesInterface
+	UserServices authdomain.UserServicesInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
@@ -17,6 +18,7 @@ type Services struct {
 func NewServices(store store.Storage, logger *zap.SugaredLogger) Services {
 	return Services{
 		AuthServices: authservices.NewAuthServices(store),
+		UserServices: authservices.NewUserService(store),
 		LogErrors:    logs.NewLogErrors(logger),
 		Logger:       logger,
 	}

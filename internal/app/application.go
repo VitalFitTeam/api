@@ -29,9 +29,9 @@ var (
 type application struct {
 	Config   *config.Config
 	Logger   *zap.SugaredLogger
-	store    store.Storage
-	services appservices.Services
-	handlers apphandlers.Handlers
+	Store    store.Storage
+	Services appservices.Services
+	Handlers apphandlers.Handlers
 }
 
 // Mount config and return router
@@ -46,7 +46,8 @@ func (app *application) Mount() http.Handler {
 
 		v1.GET("/health", app.HealthCheckHandler)
 
-		app.handlers.AuthHandlers.AuthRoutes(v1)
+		app.Handlers.AuthHandlers.AuthRoutes(v1)
+		app.Handlers.AuthHandlers.UserRoutes(v1)
 
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

@@ -254,6 +254,29 @@ paths:
       summary: verify service status
       tags:
       - System
+  /user/whoami:
+    get:
+      description: Retrieves the profile of the user authenticated via the JWT token
+        in the request header.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: "user\"\t\t\"Current authenticated user profile"
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: "error\":\t\"Unauthorized\"\t\"Missing or invalid JWT token"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get current user profile
+      tags:
+      - User
 securityDefinitions:
   ApiKeyAuth:
     in: header

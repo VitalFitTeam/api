@@ -28,8 +28,8 @@ func BuildApplication(cfg *config.Config, db *gorm.DB) *application {
 	return &application{
 		Config:   cfg,
 		Logger:   logger,
-		store:    store,
-		services: services,
-		handlers: handlers,
+		Store:    store,
+		Services: services,
+		Handlers: handlers,
 	}
 }

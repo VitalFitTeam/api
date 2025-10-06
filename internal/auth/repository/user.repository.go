@@ -77,7 +77,7 @@ func (s *UserRepositoryDAO) Activate(ctx context.Context, code string) error {
 			return err
 		}
 		user.IsValidated = true
-		if err := s.UpdateUser(ctx, user); err != nil {
+		if err := s.Update(ctx, user); err != nil {
 			return err
 		}
 
@@ -174,11 +174,21 @@ func (s *UserRepositoryDAO) getUserFromInvitation(ctx context.Context, tx *gorm.
 	return &invitation.Users, nil
 }
 
-func (s *UserRepositoryDAO) GetUser(ctx context.Context, userID uuid.UUID) (*authdomain.Users, error) {
-	return nil, nil //TODO
+func (s *UserRepositoryDAO) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.Users, error) {
+	var user authdomain.Users
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+	err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+	return &user, nil
 }
 
-func (s *UserRepositoryDAO) UpdateUser(ctx context.Context, user *authdomain.Users) error {
+func (s *UserRepositoryDAO) Update(ctx context.Context, user *authdomain.Users) error {
 	err := s.db.WithContext(ctx).Save(user).Error
 	if err != nil {
 		return err
