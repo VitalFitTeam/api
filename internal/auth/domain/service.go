@@ -18,4 +18,6 @@ type AuthServicesInterface interface {
 	Delete(context.Context, uuid.UUID) error
 	MailSender(ctx context.Context, user *Users, key string) (int, error)
 	Activate(ctx context.Context, code string) error
+	GetByEmail(ctx context.Context, email string) (*Users, error)
+	GenerateToken(user *Users) (string, error)
 }

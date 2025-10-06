@@ -10,7 +10,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup) {
 		authGroup.POST("/register", r.RegisterUserClientHandler)
 		authGroup.POST("/register-staff", r.RegisterUserStaffHandler)
 		authGroup.PUT("/activate", r.ActivateUserHandler)
-		//authGroup.POST("/login", r.Handler.LoginHandler)
+		authGroup.POST("/login", r.LoginHandler)
 		//authGroup.POST("/logout", r.Handler.LogoutHandler)
 		// ...
 	}

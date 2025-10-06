@@ -90,6 +90,20 @@ func (s *UserRepositoryDAO) Activate(ctx context.Context, code string) error {
 
 }
 
+func (s *UserRepositoryDAO) GetByEmail(ctx context.Context, email string) (*authdomain.Users, error) {
+	var user authdomain.Users
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+	err := s.db.WithContext(ctx).Where("email = ?", email).Where("is_validated = ?", true).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (s *UserRepositoryDAO) delete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()

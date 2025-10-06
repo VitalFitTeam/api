@@ -14,6 +14,7 @@ type UserRepository interface {
 	CreateAndInvitate(ctx context.Context, user *Users, token string, invitationExp time.Duration) error
 	Delete(ctx context.Context, userID uuid.UUID) error
 	Activate(ctx context.Context, code string) error
+	GetByEmail(ctx context.Context, email string) (*Users, error)
 }
 
 type RolesRepository interface {

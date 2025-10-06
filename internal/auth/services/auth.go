@@ -2,7 +2,9 @@ package authservices
 
 import (
 	"context"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	"github.com/vitalfit/api/internal/store"
@@ -77,5 +79,32 @@ func (h *AuthService) Activate(ctx context.Context, code string) error {
 		return err
 	}
 	return nil
+
+}
+
+func (h *AuthService) GetByEmail(ctx context.Context, email string) (*authdomain.Users, error) {
+	users, err := h.store.Users.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (h *AuthService) GenerateToken(user *authdomain.Users) (string, error) {
+	// generate the token -> add claims
+	claims := jwt.MapClaims{
+		"sub": user.UserID,
+		"exp": time.Now().Add(h.store.Config.Auth.Token.Exp).Unix(),
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
+		"iss": h.store.Config.Auth.Token.Iss,
+		"aud": h.store.Config.Auth.Token.Iss,
+	}
+	token, err := h.store.Auth.GenerateToken(claims)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 
 }

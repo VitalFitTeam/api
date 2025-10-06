@@ -122,3 +122,8 @@ type CreateUserStaffPayload struct {
 type CodePayload struct {
 	Code string `json:"code" binding:"required"`
 }
+
+type CreateUserTokenPayload struct {
+	Email    string `json:"email" binding:"required,email,max=255"`
+	Password string `json:"password" binding:"required,min=3,max=72"`
+}

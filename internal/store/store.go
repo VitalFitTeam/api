@@ -13,14 +13,15 @@ type Storage struct {
 	Roles authdomain.RolesRepository
 	config.Config
 	Mailer mailer.Client
+	Auth   authdomain.Authenticator
 }
 
-func NewStorage(db *gorm.DB, cfg config.Config, mailer mailer.Client) Storage {
+func NewStorage(db *gorm.DB, cfg config.Config, mailer mailer.Client, Auth authdomain.Authenticator) Storage {
 	return Storage{
 		Users:  authrepository.NewUserRepositoryDAO(db),
 		Roles:  authrepository.NewRoleStore(db),
 		Config: cfg,
 		Mailer: mailer,
+		Auth:   Auth,
 	}
-
 }

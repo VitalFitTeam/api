@@ -4,6 +4,7 @@ import (
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
+	authservices "github.com/vitalfit/api/internal/auth/services"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
 	"go.uber.org/zap"
@@ -19,7 +20,8 @@ func BuildApplication(cfg *config.Config, db *gorm.DB) *application {
 	if err != nil {
 		logger.Errorw("error creating mailer", "error", err.Error())
 	}
-	store := store.NewStorage(db, *cfg, mailer)
+	auth := authservices.NewJWTAuthenticator(cfg.Auth.Token.Secret, cfg.Auth.Token.Iss, cfg.Auth.Token.Iss)
+	store := store.NewStorage(db, *cfg, mailer, auth)
 	services := appservices.NewServices(store, logger)
 	handlers := apphandlers.NewAppHandlers(services)
 	defer logger.Sync()

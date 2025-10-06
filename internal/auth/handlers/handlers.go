@@ -11,6 +11,7 @@ import (
 	appservices "github.com/vitalfit/api/internal/app/services"
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	"github.com/vitalfit/api/internal/shared/errors"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	otp "github.com/vitalfit/api/pkg/OTP"
 )
 
@@ -74,9 +75,9 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 	hashedKey := hex.EncodeToString(hash[:])
 	if err := h.services.AuthServices.RegisterUserClient(ctx, user, hashedKey); err != nil {
 		switch err {
-		case errors.ErrNotFound:
+		case shared_errors.ErrNotFound:
 			h.services.LogErrors.BadRequestResponse(c, err)
-		case errors.ErrConflict:
+		case shared_errors.ErrConflict:
 			h.services.LogErrors.ConflictResponse(c, err)
 		default:
 			h.services.LogErrors.InternalServerError(c, err)
@@ -191,6 +192,55 @@ func (h *AuthHandlers) ActivateUserHandler(c *gin.Context) {
 
 }
 
+// @Summary		Logs in a user and issues a JWT token
+// @Description	Authenticates the user with email and password, returning an access token upon success.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			credentials	body		authdomain.CreateUserTokenPayload	true		"User login credentials (email and password)"
+// @Success		200			{object}	map[string]string					"token"		"Successfully generated JWT access token"
+// @Failure		400			{object}	map[string]string					"error":	"Invalid request body"
+// @Failure		401			{object}	map[string]string					"error":	"Unauthorized"						"Invalid credentials (password mismatch)"
+// @Failure		404			{object}	map[string]string					"error":	"not found"							"User with the given email not found"
+// @Failure		500			{object}	map[string]string					"error":	"the server encountered a problem"	"Internal server error during token generation or hashing"
+// @Router			/auth/login [post]
+func (h *AuthHandlers) LoginHandler(c *gin.Context) {
+	var payload authdomain.CreateUserTokenPayload
+	ctx := c.Request.Context()
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	user, err := h.services.AuthServices.GetByEmail(ctx, payload.Email)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	match, err := user.PasswordHash.Matches(payload.Password)
+	if err != nil || !match {
+		h.services.LogErrors.UnauthorizedErrorResponse(c, err)
+		return
+	}
+
+	token, err := h.services.AuthServices.GenerateToken(user)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+	})
+
+}
+
 func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string, c *gin.Context) (int, error) {
 	status, err := h.services.AuthServices.MailSender(ctx, user, key)
 	if err != nil {
@@ -204,5 +254,4 @@ func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users
 	}
 
 	return status, err
-
 }

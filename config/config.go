@@ -12,6 +12,7 @@ type Config struct {
 	Db     dbConfig
 	Env    string
 	Mail   MailConfig
+	Auth   AuthConfig
 }
 
 type dbConfig struct {
@@ -31,6 +32,15 @@ type ResendConfig struct {
 	ApiKey string
 }
 
+type AuthConfig struct {
+	Token TokenConfig
+}
+type TokenConfig struct {
+	Secret string
+	Exp    time.Duration
+	Iss    string
+}
+
 func LoadConfig() *Config {
 	return &Config{
 		Addrs: env.GetString("ADDRS", ":8080"),
@@ -47,6 +57,13 @@ func LoadConfig() *Config {
 			FromEmail: env.GetString("FROM_RESEND_EMAIL", ""),
 			Resend: ResendConfig{
 				ApiKey: env.GetString("RESEND_API_KEY", ""),
+			},
+		},
+		Auth: AuthConfig{
+			Token: TokenConfig{
+				Secret: env.GetString("JWT_SECRET", ""),
+				Exp:    time.Hour * 24 * 3, //3 days
+				Iss:    env.GetString("JWT_ISS", ""),
 			},
 		},
 	}

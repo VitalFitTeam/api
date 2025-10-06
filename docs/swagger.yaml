@@ -59,6 +59,19 @@ definitions:
     - last_name
     - password
     type: object
+  authdomain.CreateUserTokenPayload:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      password:
+        maxLength: 72
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -107,6 +120,58 @@ paths:
       summary: Activate user account
       tags:
       - User
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates the user with email and password, returning an access
+        token upon success.
+      parameters:
+      - description: User login credentials (email and password)
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.CreateUserTokenPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: "token\"\t\t\"Successfully generated JWT access token"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: "error\":\t\"Invalid request body"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: "error\":\t\"Unauthorized\"\t\t\t\t\t\t\"Invalid credentials
+            (password mismatch)"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: "error\":\t\"not found\"\t\t\t\t\t\t\t\"User with the given
+            email not found"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: "error\":\t\"the server encountered a problem\"\t\"Internal
+            server error during token generation or hashing"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logs in a user and issues a JWT token
+      tags:
+      - Auth
   /auth/register:
     post:
       consumes:
