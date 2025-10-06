@@ -1,5 +1,12 @@
 basePath: /v1
 definitions:
+  authdomain.CodePayload:
+    properties:
+      code:
+        type: string
+    required:
+    - code
+    type: object
   authdomain.CreateUserClientPayload:
     properties:
       birth_date:
@@ -64,6 +71,42 @@ info:
   termsOfService: http://swagger.io/terms/
   title: VitalFit API
 paths:
+  /auth/activate:
+    put:
+      consumes:
+      - application/json
+      description: Activates a user's account using the invitation code/token.
+      parameters:
+      - description: Activation Code
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.CodePayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User successfully activated. No content returned.
+        "400":
+          description: Bad request (e.g., invalid JSON payload)
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Code is invalid or expired (handled by the service layer returning
+            ErrNotFound)
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error (e.g., database connection issue)
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Activate user account
+      tags:
+      - User
   /auth/register:
     post:
       consumes:

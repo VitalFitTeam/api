@@ -2,6 +2,8 @@ package authrepository
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -23,10 +25,6 @@ func NewUserRepositoryDAO(db *gorm.DB) *UserRepositoryDAO {
 	}
 }
 
-func (s *UserRepositoryDAO) GetUser() error {
-	return nil
-}
-
 func (s *UserRepositoryDAO) Create(ctx context.Context, tx *gorm.DB, user *authdomain.Users) error {
 	err := tx.WithContext(ctx).Create(&user).Error
 	if err != nil {
@@ -35,20 +33,13 @@ func (s *UserRepositoryDAO) Create(ctx context.Context, tx *gorm.DB, user *authd
 			if pgErr.ConstraintName == "users_email_key" {
 				return shared_errors.ErrConflict
 			}
+			if pgErr.ConstraintName == "users_identity_document_key" {
+				return shared_errors.ErrConflict
+			}
 		}
 		return err
 	}
 	return nil
-}
-
-func (s *UserRepositoryDAO) createUserInvitation(ctx context.Context, tx *gorm.DB, code string, userID uuid.UUID, invitationExp time.Duration) error {
-	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
-	defer cancel()
-	return tx.WithContext(ctx).Create(&authdomain.UserInvitations{
-		Token:  code,
-		UserID: userID,
-		Expiry: time.Now().Add(invitationExp),
-	}).Error
 }
 
 func (s *UserRepositoryDAO) CreateAndInvitate(ctx context.Context, user *authdomain.Users, token string, invitationExp time.Duration) error {
@@ -65,6 +56,38 @@ func (s *UserRepositoryDAO) CreateAndInvitate(ctx context.Context, user *authdom
 
 		return nil //commit
 	})
+}
+
+func (s *UserRepositoryDAO) Delete(ctx context.Context, userID uuid.UUID) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := s.delete(ctx, tx, userID); err != nil {
+			return err //rollback
+		}
+		if err := s.deleteUserInvitations(ctx, tx, userID); err != nil {
+			return err //rollback
+		}
+		return nil //commit
+	})
+}
+
+func (s *UserRepositoryDAO) Activate(ctx context.Context, code string) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		user, err := s.getUserFromInvitation(ctx, tx, code)
+		if err != nil {
+			return err
+		}
+		user.IsValidated = true
+		if err := s.UpdateUser(ctx, user); err != nil {
+			return err
+		}
+
+		if err := s.deleteUserInvitations(ctx, tx, user.UserID); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 }
 
 func (s *UserRepositoryDAO) delete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
@@ -102,14 +125,49 @@ func (s *UserRepositoryDAO) deleteUserInvitations(ctx context.Context, tx *gorm.
 	return nil
 }
 
-func (s *UserRepositoryDAO) Delete(ctx context.Context, userID uuid.UUID) error {
-	return db.WithTX(s.db, func(tx *gorm.DB) error {
-		if err := s.delete(ctx, tx, userID); err != nil {
-			return err //rollback
+func (s *UserRepositoryDAO) createUserInvitation(ctx context.Context, tx *gorm.DB, code string, userID uuid.UUID, invitationExp time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+	return tx.WithContext(ctx).Create(&authdomain.UserInvitations{
+		Token:  code,
+		UserID: userID,
+		Expiry: time.Now().Add(invitationExp),
+	}).Error
+}
+
+func (s *UserRepositoryDAO) getUserFromInvitation(ctx context.Context, tx *gorm.DB, code string) (*authdomain.Users, error) {
+
+	var invitation authdomain.UserInvitations
+
+	hash := sha256.Sum256([]byte(code))
+	hashCode := hex.EncodeToString(hash[:])
+
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
+	result := tx.WithContext(ctx).
+		Preload("Users").
+		Where("token = ? AND expiry > ?", hashCode, time.Now()).
+		First(&invitation)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
 		}
-		if err := s.deleteUserInvitations(ctx, tx, userID); err != nil {
-			return err //rollback
-		}
-		return nil //commit
-	})
+		return nil, result.Error
+	}
+
+	return &invitation.Users, nil
+}
+
+func (s *UserRepositoryDAO) GetUser(ctx context.Context, userID uuid.UUID) (*authdomain.Users, error) {
+	return nil, nil //TODO
+}
+
+func (s *UserRepositoryDAO) UpdateUser(ctx context.Context, user *authdomain.Users) error {
+	err := s.db.WithContext(ctx).Save(user).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

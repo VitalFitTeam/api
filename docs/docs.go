@@ -24,6 +24,58 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/activate": {
+            "put": {
+                "description": "Activates a user's account using the invitation code/token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Activate user account",
+                "parameters": [
+                    {
+                        "description": "Activation Code",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authdomain.CodePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User successfully activated. No content returned."
+                    },
+                    "400": {
+                        "description": "Bad request (e.g., invalid JSON payload)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Code is invalid or expired (handled by the service layer returning ErrNotFound)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error (e.g., database connection issue)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "Register a new user in the system with client role",
@@ -148,6 +200,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "authdomain.CodePayload": {
+            "type": "object",
+            "required": [
+                "code"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                }
+            }
+        },
         "authdomain.CreateUserClientPayload": {
             "type": "object",
             "required": [

@@ -71,3 +71,11 @@ func (h *AuthService) Delete(ctx context.Context, userID uuid.UUID) error {
 	}
 	return nil
 }
+
+func (h *AuthService) Activate(ctx context.Context, code string) error {
+	if err := h.store.Users.Activate(ctx, code); err != nil {
+		return err
+	}
+	return nil
+
+}

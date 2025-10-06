@@ -2,6 +2,7 @@ package authrepository
 
 import (
 	"context"
+	"errors"
 
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
@@ -18,17 +19,16 @@ func NewRoleStore(db *gorm.DB) *RoleStore {
 
 func (s *RoleStore) GetByName(ctx context.Context, name string) (*authdomain.Roles, error) {
 	var role authdomain.Roles
+
 	err := s.db.WithContext(ctx).Where("name = ?", name).First(&role).Error
+
 	if err != nil {
-		switch err {
-		case gorm.ErrRecordNotFound:
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, shared_errors.ErrNotFound
-		case gorm.ErrDuplicatedKey:
-			return nil, shared_errors.ErrConflict
-		default:
-			return nil, err
 		}
 
+		return nil, err
 	}
+
 	return &role, nil
 }

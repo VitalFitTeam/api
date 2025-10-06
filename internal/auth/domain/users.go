@@ -118,3 +118,7 @@ type CreateUserStaffPayload struct {
 	RoleName         string `json:"role_name" binding:"omitempty"`
 	BirthDate        string `json:"birth_date" binding:"required"`
 }
+
+type CodePayload struct {
+	Code string `json:"code" binding:"required"`
+}

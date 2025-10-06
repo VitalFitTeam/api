@@ -17,4 +17,5 @@ type AuthServicesInterface interface {
 	RegisterUserStaff(ctx context.Context, user *Users, token string, roleName string) error
 	Delete(context.Context, uuid.UUID) error
 	MailSender(ctx context.Context, user *Users, key string) (int, error)
+	Activate(ctx context.Context, code string) error
 }

@@ -164,6 +164,33 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	})
 }
 
+// @Summary		Activate user account
+// @Description	Activates a user's account using the invitation code/token.
+// @Tags			User
+// @Accept			json
+// @Produce		json
+// @Param			payload	body	authdomain.CodePayload	true	"Activation Code"
+// @Success		204		"User successfully activated. No content returned."
+// @Failure		400		{object}	map[string]interface{}	"Bad request (e.g., invalid JSON payload)"
+// @Failure		404		{object}	map[string]interface{}	"Code is invalid or expired (handled by the service layer returning ErrNotFound)"
+// @Failure		500		{object}	map[string]interface{}	"Internal server error (e.g., database connection issue)"
+// @Router			/auth/activate [put]
+func (h *AuthHandlers) ActivateUserHandler(c *gin.Context) {
+	var payload authdomain.CodePayload
+	ctx := c.Request.Context()
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	if err := h.services.AuthServices.Activate(ctx, payload.Code); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+
+}
+
 func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string, c *gin.Context) (int, error) {
 	status, err := h.services.AuthServices.MailSender(ctx, user, key)
 	if err != nil {
