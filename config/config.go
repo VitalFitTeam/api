@@ -4,15 +4,17 @@ import (
 	"time"
 
 	env "github.com/vitalfit/api/pkg/Env"
+	"github.com/vitalfit/api/pkg/ratelimiter"
 )
 
 type Config struct {
-	Addrs  string
-	ApiUrl string
-	Db     dbConfig
-	Env    string
-	Mail   MailConfig
-	Auth   AuthConfig
+	Addrs       string
+	ApiUrl      string
+	Db          dbConfig
+	Env         string
+	Mail        MailConfig
+	Auth        AuthConfig
+	RateLimiter ratelimiter.Config
 }
 
 type dbConfig struct {
@@ -65,6 +67,11 @@ func LoadConfig() *Config {
 				Exp:    time.Hour * 24 * 3, //3 days
 				Iss:    env.GetString("JWT_ISS", ""),
 			},
+		},
+		RateLimiter: ratelimiter.Config{
+			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_PER_TIME_FRAME", 150),
+			TimeFrame:            time.Minute * 1,
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
 	}
 }

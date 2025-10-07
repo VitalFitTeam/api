@@ -14,11 +14,13 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	docs "github.com/vitalfit/api/docs"
 	"github.com/vitalfit/api/pkg/cors"
+	"github.com/vitalfit/api/pkg/ratelimiter"
 
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
+	ratelimiterm "github.com/vitalfit/api/internal/shared/middleware/ratelimiter"
 	"github.com/vitalfit/api/internal/store"
 	"go.uber.org/zap"
 )
@@ -28,11 +30,12 @@ var (
 )
 
 type application struct {
-	Config   *config.Config
-	Logger   *zap.SugaredLogger
-	Store    store.Storage
-	Services appservices.Services
-	Handlers apphandlers.Handlers
+	Config      *config.Config
+	Logger      *zap.SugaredLogger
+	Store       store.Storage
+	Services    appservices.Services
+	Handlers    apphandlers.Handlers
+	ratelimiter ratelimiter.Limiter
 }
 
 // Mount config and return router
@@ -42,7 +45,8 @@ func (app *application) Mount() http.Handler {
 	r.Use(gin.Logger(), gin.Recovery())
 	cors.SetupCORS(r)
 	m := auth.NewAuthMiddleware(app.Services)
-
+	rate := ratelimiterm.NewRateLimiterMiddleware(app.ratelimiter, app.Config.RateLimiter, app.Logger)
+	r.Use(rate.RateLimiterMiddleware())
 	{
 
 		v1 := r.Group("/v1")

@@ -24,6 +24,7 @@ func NewAuthMiddleware(services appservices.Services) *AuthMiddleware {
 
 func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			j.services.LogErrors.UnauthorizedErrorResponse(c, fmt.Errorf("missing authorization header"))
