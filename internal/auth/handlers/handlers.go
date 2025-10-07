@@ -46,7 +46,7 @@ func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
-	birthdate, err := time.Parse(time.RFC3339, payload.BirthDate)
+	birthdate, err := time.Parse("2006-01-02", payload.BirthDate)
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -118,7 +118,7 @@ func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
-	birthdate, err := time.Parse(time.RFC3339, payload.BirthDate)
+	birthdate, err := time.Parse("2006-01-02", payload.BirthDate)
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
