@@ -332,6 +332,16 @@ func (h *AuthHandlers) forgotPasswordHandler(c *gin.Context) {
 
 }
 
+// @Summary		Execute Password Reset
+// @Description	Finalizes the password reset process by validating the token and updating the user's password hash.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			body	body		authdomain.ResetPasswordPayload	true	"Reset token and new password data (must include password confirmation)."
+// @Success		200		{object}	map[string]interface{}			"Password updated successfully."
+// @Failure		400		{object}	map[string]interface{}			"Bad Request - Invalid data (expired token, token not found, or passwords do not match)."
+// @Failure		500		{object}	map[string]interface{}			"Internal Server Error - Error while hashing the password or executing the DB transaction."
+// @Router			/auth/password/reset [post]
 func (h *AuthHandlers) resetPasswordHandler(c *gin.Context) {
 	var payload authdomain.ResetPasswordPayload
 	var user authdomain.Users
@@ -359,16 +369,6 @@ func (h *AuthHandlers) resetPasswordHandler(c *gin.Context) {
 
 }
 
-// @Summary		Execute Password Reset
-// @Description	Finalizes the password reset process by validating the token and updating the user's password hash.
-// @Tags			Auth
-// @Accept			json
-// @Produce		json
-// @Param			body	body		authdomain.ResetPasswordPayload	true	"Reset token and new password data (must include password confirmation)."
-// @Success		200		{object}	map[string]interface{}			"Password updated successfully."
-// @Failure		400		{object}	map[string]interface{}			"Bad Request - Invalid data (expired token, token not found, or passwords do not match)."
-// @Failure		500		{object}	map[string]interface{}			"Internal Server Error - Error while hashing the password or executing the DB transaction."
-// @Router			/auth/password/reset [post]
 func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string) (int, error) {
 	status, err := h.services.AuthServices.MailSender(ctx, user, key, mailer.UserWelcomeTemplate)
 	if err != nil {
