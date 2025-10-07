@@ -22,10 +22,15 @@ func NewAuthServices(store store.Storage) *AuthService {
 
 func (s *AuthService) RegisterUserClient(ctx context.Context, user *authdomain.Users, token string) error {
 	role, error := s.store.Roles.GetByName(ctx, "client")
+	client_profile := &authdomain.ClientProfiles{
+		UserID:   user.UserID,
+		Category: authdomain.ClientCategoryNew,
+	}
 	if error != nil {
 		return error
 	}
 	user.RoleID = role.RoleID
+	user.ClientProfile = *client_profile
 	if err := s.store.Users.CreateAndInvitate(ctx, user, token, s.store.Config.Mail.Exp); err != nil {
 		return err
 	}
