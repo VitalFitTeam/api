@@ -19,7 +19,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 			// passwordGroup.POST("/reset", r.resetPasswordHandler)
 		}
 
-		protectedGroup := authGroup.Group("/").Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("super_admin"))
+		protectedGroup := authGroup.Group("/").Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("branch_admin"))
 		{
 			protectedGroup.POST("/register-staff", r.registerUserStaffHandler)
 		}
@@ -29,7 +29,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 }
 
 func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
-	userGroup := rg.Group("/user").Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("super_admin"))
+	userGroup := rg.Group("/user").Use(m.AuthJwtTokenMiddleware())
 	{ //private routes
 		userGroup.GET("/whoami", r.whoami)
 	}

@@ -239,7 +239,7 @@ func (s *UserRepositoryDAO) userResetToken(ctx context.Context, tx *gorm.DB, use
 func (s *UserRepositoryDAO) deleteUserReset(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
-	err := s.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&authdomain.PasswordResetToken{}).Error
+	err := tx.WithContext(ctx).Where("user_id = ?", userID).Delete(&authdomain.PasswordResetToken{}).Error
 	if err != nil {
 		return err
 	}

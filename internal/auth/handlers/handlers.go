@@ -58,6 +58,7 @@ func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
 		Phone:            payload.Phone,
 		IdentityDocument: payload.IdentityDocument,
 		BirthDate:        birthdate,
+		Gender:           authdomain.GenderEnum(payload.Gender),
 	}
 
 	if err := user.PasswordHash.Set(payload.Password); err != nil {
@@ -85,7 +86,7 @@ func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
 		return
 	}
 
-	status, err := h.registerEmail(ctx, user, key, c)
+	status, err := h.registerEmail(ctx, user, key)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -100,6 +101,7 @@ func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
 // @Summary		Register New User Staff
 // @Description	Register a new user in the system with and specific role
 // @Tags			Auth
+// @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
 // @Param			user	body		authdomain.CreateUserStaffPayload	true	"Register user data"
@@ -127,6 +129,7 @@ func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
 		Phone:            payload.Phone,
 		IdentityDocument: payload.IdentityDocument,
 		BirthDate:        birthdate,
+		Gender:           authdomain.GenderEnum(payload.Gender),
 	}
 
 	if err := user.PasswordHash.Set(payload.Password); err != nil {
@@ -138,6 +141,7 @@ func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
 	key, err := otp.GenerateCode(6)
 	if err != nil {
 		h.services.InternalServerError(c, err)
+		return
 	}
 	hash := sha256.Sum256([]byte(key))
 	hashedKey := hex.EncodeToString(hash[:])
@@ -154,7 +158,7 @@ func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
 	}
 
 	//send main
-	status, err := h.registerEmail(ctx, user, key, c)
+	status, err := h.registerEmail(ctx, user, key)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -319,24 +323,23 @@ func (h *AuthHandlers) forgotPasswordHandler(c *gin.Context) {
 	}
 
 	c.JSON(status, gin.H{
-		"message": "resey key created",
+		"message": "reset key created",
 		"code":    key,
 	})
 
 }
 
-func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string, c *gin.Context) (int, error) {
+func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string) (int, error) {
 	status, err := h.services.AuthServices.MailSender(ctx, user, key)
 	if err != nil {
 		h.services.Logger.Errorw("error sending welcome email", "error", err)
 
-		if err := h.services.AuthServices.Delete(ctx, user.UserID); err != nil {
-			h.services.Logger.Errorw("error deleting user", "error", err)
-			return http.StatusInternalServerError, err
+		// Attempt to rollback user creation
+		if rollbackErr := h.services.AuthServices.Delete(ctx, user.UserID); rollbackErr != nil {
+			h.services.Logger.Errorw("critical: failed to rollback user creation after email failure", "original_error", err, "rollback_error", rollbackErr, "user_id", user.UserID)
 		}
-		h.services.LogErrors.InternalServerError(c, err)
-		return http.StatusInternalServerError, err
+		return http.StatusInternalServerError, err // Return original error
 	}
 
-	return status, err
+	return status, nil
 }

@@ -7,6 +7,7 @@ CREATE TABLE users (
     identity_document VARCHAR(50) UNIQUE,
     password_hash BYTEA NOT NULL,
     birth_date DATE,
+    gender gender_enum,
     profile_picture_url VARCHAR(255),
     
     role_id UUID NOT NULL REFERENCES roles(role_id),

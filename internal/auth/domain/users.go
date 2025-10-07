@@ -10,6 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// Definición del tipo GenderEnum
+type GenderEnum string
+
+const (
+	GenderMale           GenderEnum = "male"
+	GenderFemale         GenderEnum = "female"
+	GenderPreferNotToSay GenderEnum = "prefer-not-to-say"
+)
+
 type Password struct {
 	text *string
 	hash []byte
@@ -78,10 +87,11 @@ type Users struct {
 	Phone            string    `gorm:"type:varchar(50)" json:"phone"`
 	IdentityDocument string    `gorm:"type:varchar(50);unique" json:"identity_document"`
 
-	PasswordHash      Password  `gorm:"column:password_hash;type:bytea;not null" json:"-"`
-	BirthDate         time.Time `gorm:"type:date" json:"birth_date"`
-	ProfilePictureURL string    `gorm:"type:varchar(255)" json:"profile_picture_url"`
-	IsValidated       bool      `gorm:"default:false" json:"is_validated"`
+	PasswordHash      Password   `gorm:"column:password_hash;type:bytea;not null" json:"-"`
+	BirthDate         time.Time  `gorm:"type:date" json:"birth_date"`
+	Gender            GenderEnum `gorm:"type:gender_enum" json:"gender"`
+	ProfilePictureURL string     `gorm:"type:varchar(255)" json:"profile_picture_url"`
+	IsValidated       bool       `gorm:"default:false" json:"is_validated"`
 
 	RoleID uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
 	Role   Roles     `gorm:"foreignKey:RoleID;references:RoleID" json:"role"`
@@ -102,21 +112,23 @@ type CreateUserClientPayload struct {
 	FirstName        string `json:"first_name" binding:"required"`
 	LastName         string `json:"last_name" binding:"required"`
 	Email            string `json:"email" binding:"required,email"`
-	Phone            string `json:"phone"`
+	Phone            string `json:"phone" binding:"required"`
 	IdentityDocument string `json:"identity_document" binding:"required"`
 	Password         string `json:"password" binding:"required,min=8"`
 	BirthDate        string `json:"birth_date" binding:"required"`
+	Gender           string `json:"gender" binding:"required"`
 }
 
 type CreateUserStaffPayload struct {
 	FirstName        string `json:"first_name" binding:"required"`
 	LastName         string `json:"last_name" binding:"required"`
 	Email            string `json:"email" binding:"required,email"`
-	Phone            string `json:"phone"`
+	Phone            string `json:"phone" binding:"required"`
 	IdentityDocument string `json:"identity_document" binding:"required"`
 	Password         string `json:"password" binding:"required,min=8"`
 	RoleName         string `json:"role_name" binding:"omitempty"`
 	BirthDate        string `json:"birth_date" binding:"required"`
+	Gender           string `json:"gender" binding:"required"`
 }
 
 type CodePayload struct {

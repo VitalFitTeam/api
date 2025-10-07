@@ -249,6 +249,11 @@ const docTemplate = `{
         },
         "/auth/register-staff": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Register a new user in the system with and specific role",
                 "consumes": [
                     "application/json"
@@ -374,9 +379,11 @@ const docTemplate = `{
                 "birth_date",
                 "email",
                 "first_name",
+                "gender",
                 "identity_document",
                 "last_name",
-                "password"
+                "password",
+                "phone"
             ],
             "properties": {
                 "birth_date": {
@@ -386,6 +393,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "identity_document": {
@@ -409,9 +419,11 @@ const docTemplate = `{
                 "birth_date",
                 "email",
                 "first_name",
+                "gender",
                 "identity_document",
                 "last_name",
-                "password"
+                "password",
+                "phone"
             ],
             "properties": {
                 "birth_date": {
@@ -421,6 +433,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "identity_document": {

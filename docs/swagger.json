@@ -241,6 +241,11 @@
         },
         "/auth/register-staff": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Register a new user in the system with and specific role",
                 "consumes": [
                     "application/json"
@@ -366,9 +371,11 @@
                 "birth_date",
                 "email",
                 "first_name",
+                "gender",
                 "identity_document",
                 "last_name",
-                "password"
+                "password",
+                "phone"
             ],
             "properties": {
                 "birth_date": {
@@ -378,6 +385,9 @@
                     "type": "string"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "identity_document": {
@@ -401,9 +411,11 @@
                 "birth_date",
                 "email",
                 "first_name",
+                "gender",
                 "identity_document",
                 "last_name",
-                "password"
+                "password",
+                "phone"
             ],
             "properties": {
                 "birth_date": {
@@ -413,6 +425,9 @@
                     "type": "string"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "identity_document": {

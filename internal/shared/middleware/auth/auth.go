@@ -27,11 +27,13 @@ func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			j.services.LogErrors.UnauthorizedErrorResponse(c, fmt.Errorf("missing authorization header"))
+			c.Abort()
 			return
 		}
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			j.services.LogErrors.UnauthorizedErrorResponse(c, fmt.Errorf("authorization header is malformed"))
+			c.Abort()
 			return
 		}
 
@@ -39,6 +41,7 @@ func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 		jwtToken, err := j.services.AuthServices.ValidateToken(token)
 		if err != nil {
 			j.services.LogErrors.UnauthorizedErrorResponse(c, err)
+			c.Abort()
 			return
 		}
 
@@ -47,6 +50,7 @@ func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 		userID, err := uuid.Parse(claims["sub"].(string))
 		if err != nil {
 			j.services.LogErrors.UnauthorizedErrorResponse(c, err)
+			c.Abort()
 			return
 		}
 
@@ -55,6 +59,7 @@ func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 		user, err := j.services.UserServices.GetByID(ctx, userID)
 		if err != nil {
 			j.services.LogErrors.UnauthorizedErrorResponse(c, err)
+			c.Abort()
 			return
 		}
 		c.Set("user", user)

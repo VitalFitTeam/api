@@ -15,6 +15,8 @@ definitions:
         type: string
       first_name:
         type: string
+      gender:
+        type: string
       identity_document:
         type: string
       last_name:
@@ -28,9 +30,11 @@ definitions:
     - birth_date
     - email
     - first_name
+    - gender
     - identity_document
     - last_name
     - password
+    - phone
     type: object
   authdomain.CreateUserStaffPayload:
     properties:
@@ -39,6 +43,8 @@ definitions:
       email:
         type: string
       first_name:
+        type: string
+      gender:
         type: string
       identity_document:
         type: string
@@ -55,9 +61,11 @@ definitions:
     - birth_date
     - email
     - first_name
+    - gender
     - identity_document
     - last_name
     - password
+    - phone
     type: object
   authdomain.CreateUserTokenPayload:
     properties:
@@ -280,6 +288,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - ApiKeyAuth: []
       summary: Register New User Staff
       tags:
       - Auth
