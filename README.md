@@ -76,6 +76,12 @@ docker-compose up --build
 
 This will start all services defined in [`docker-compose.yml`](docker-compose.yml).
 
+### Migrations
+This will start the migrations
+```sh
+  make migrate-up
+```
+
 ### 4. Install Dependencies
 
 Make sure Go modules are downloaded:

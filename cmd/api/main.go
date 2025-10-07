@@ -5,7 +5,6 @@ import (
 
 	"github.com/vitalfit/api/config"
 	"github.com/vitalfit/api/internal/app"
-	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/db"
 
 	_ "github.com/lib/pq" // Importa el driver de PostgreSQL
@@ -38,11 +37,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//initialize store
-	store := store.NewStorage(db, *config)
 	//initialize application
 
-	app := app.BuildApplication(config, store)
+	app := app.BuildApplication(config, db)
 	mux := app.Mount()
 	if err := app.Run(mux); err != nil {
 		log.Fatal(err)

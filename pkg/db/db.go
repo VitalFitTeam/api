@@ -12,6 +12,10 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+var (
+	QueryTimeoutDuration = time.Second * 5
+)
+
 func NewPGDB(addr string, maxOpenConnsm int, maxIdleConns int, maxIdleTime string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", addr)
 	if err != nil {
@@ -46,14 +50,12 @@ func New(addr string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*
 	})
 	if err != nil {
 
-		return nil, fmt.Errorf("falló la conexión a la base de datos con GORM: %w", err)
+		return nil, fmt.Errorf("connection failed with the GORM data base: %w", err)
 	}
 
-	// 2. Obtener el *sql.DB Subyacente para la Configuración del Pool
-	// GORM usa internamente database/sql. Necesitas acceder a él para configurar el pool.
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, fmt.Errorf("no se pudo obtener la conexión SQL subyacente de GORM: %w", err)
+		return nil, fmt.Errorf("couln't get the generic database object: %w", err)
 	}
 
 	sqlDB.SetMaxOpenConns(maxOpenConns)
@@ -61,15 +63,19 @@ func New(addr string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*
 
 	duration, err := time.ParseDuration(maxIdleTime)
 	if err != nil {
-		return nil, fmt.Errorf("error al parsear MaxIdleTime '%s': %w", maxIdleTime, err)
+		return nil, fmt.Errorf("error parsing MaxIdleTime '%s': %w", maxIdleTime, err)
 	}
 	sqlDB.SetConnMaxIdleTime(duration)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	if err = sqlDB.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("falló el ping a la base de datos: %w", err)
+		return nil, fmt.Errorf("ping to the database failed: %w", err)
 	}
 
 	return db, nil
+}
+
+func WithTX(db *gorm.DB, fn func(tx *gorm.DB) error) error {
+	return db.Transaction(fn)
 }

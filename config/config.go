@@ -1,12 +1,20 @@
 package config
 
-import env "github.com/vitalfit/api/pkg/Env"
+import (
+	"time"
+
+	env "github.com/vitalfit/api/pkg/Env"
+	"github.com/vitalfit/api/pkg/ratelimiter"
+)
 
 type Config struct {
-	Addrs  string
-	ApiUrl string
-	Db     dbConfig
-	Env    string
+	Addrs       string
+	ApiUrl      string
+	Db          dbConfig
+	Env         string
+	Mail        MailConfig
+	Auth        AuthConfig
+	RateLimiter ratelimiter.Config
 }
 
 type dbConfig struct {
@@ -14,6 +22,25 @@ type dbConfig struct {
 	MaxOpenConns int
 	MaxIdleConns int
 	MaxIdleTime  string
+}
+
+type MailConfig struct {
+	FromEmail string
+	Exp       time.Duration
+	Resend    ResendConfig
+}
+
+type ResendConfig struct {
+	ApiKey string
+}
+
+type AuthConfig struct {
+	Token TokenConfig
+}
+type TokenConfig struct {
+	Secret string
+	Exp    time.Duration
+	Iss    string
 }
 
 func LoadConfig() *Config {
@@ -27,5 +54,24 @@ func LoadConfig() *Config {
 		},
 		Env:    env.GetString("ENV", "dev"),
 		ApiUrl: env.GetString("API_URL", "localhost:8080"),
+		Mail: MailConfig{
+			Exp:       time.Hour * 24 * 3, //3 days
+			FromEmail: env.GetString("FROM_RESEND_EMAIL", ""),
+			Resend: ResendConfig{
+				ApiKey: env.GetString("RESEND_API_KEY", ""),
+			},
+		},
+		Auth: AuthConfig{
+			Token: TokenConfig{
+				Secret: env.GetString("JWT_SECRET", ""),
+				Exp:    time.Hour * 24 * 3, //3 days
+				Iss:    env.GetString("JWT_ISS", ""),
+			},
+		},
+		RateLimiter: ratelimiter.Config{
+			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_PER_TIME_FRAME", 150),
+			TimeFrame:            time.Minute * 1,
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
+		},
 	}
 }

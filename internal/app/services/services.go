@@ -1,6 +1,7 @@
 package appservices
 
 import (
+	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	authservices "github.com/vitalfit/api/internal/auth/services"
 	logs "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
@@ -8,13 +9,17 @@ import (
 )
 
 type Services struct {
-	AuthServices authservices.AuthServicesInterface
+	AuthServices authdomain.AuthServicesInterface
+	UserServices authdomain.UserServicesInterface
 	logs.LogErrors
+	Logger *zap.SugaredLogger
 }
 
 func NewServices(store store.Storage, logger *zap.SugaredLogger) Services {
 	return Services{
 		AuthServices: authservices.NewAuthServices(store),
+		UserServices: authservices.NewUserService(store),
 		LogErrors:    logs.NewLogErrors(logger),
+		Logger:       logger,
 	}
 }

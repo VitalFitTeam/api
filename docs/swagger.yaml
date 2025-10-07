@@ -1,4 +1,112 @@
 basePath: /v1
+definitions:
+  authdomain.CodePayload:
+    properties:
+      code:
+        type: string
+    required:
+    - code
+    type: object
+  authdomain.CreateUserClientPayload:
+    properties:
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity_document:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
+        type: string
+    required:
+    - birth_date
+    - email
+    - first_name
+    - gender
+    - identity_document
+    - last_name
+    - password
+    - phone
+    type: object
+  authdomain.CreateUserStaffPayload:
+    properties:
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity_document:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
+        type: string
+      role_name:
+        type: string
+    required:
+    - birth_date
+    - email
+    - first_name
+    - gender
+    - identity_document
+    - last_name
+    - password
+    - phone
+    type: object
+  authdomain.CreateUserTokenPayload:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      password:
+        maxLength: 72
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  authdomain.ForgotPasswordPayload:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+    required:
+    - email
+    type: object
+  authdomain.ResetPasswordPayload:
+    properties:
+      confirm_password:
+        description: Valida en el backend
+        type: string
+      password:
+        minLength: 8
+        type: string
+      token:
+        type: string
+    required:
+    - confirm_password
+    - password
+    - token
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -11,6 +119,235 @@ info:
   termsOfService: http://swagger.io/terms/
   title: VitalFit API
 paths:
+  /auth/activate:
+    put:
+      consumes:
+      - application/json
+      description: Activates a user's account using the invitation code/token.
+      parameters:
+      - description: Activation Code
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.CodePayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User successfully activated. No content returned.
+        "400":
+          description: Bad request (e.g., invalid JSON payload)
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Code is invalid or expired (handled by the service layer returning
+            ErrNotFound)
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error (e.g., database connection issue)
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Activate user account
+      tags:
+      - User
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates the user with email and password, returning an access
+        token upon success.
+      parameters:
+      - description: User login credentials (email and password)
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.CreateUserTokenPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: "token\"\t\t\"Successfully generated JWT access token"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: "error\":\t\"Invalid request body"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: "error\":\t\"Unauthorized\"\t\t\t\t\t\t\"Invalid credentials
+            (password mismatch)"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: "error\":\t\"not found\"\t\t\t\t\t\t\t\"User with the given
+            email not found"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: "error\":\t\"the server encountered a problem\"\t\"Internal
+            server error during token generation or hashing"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logs in a user and issues a JWT token
+      tags:
+      - Auth
+  /auth/password/forgot:
+    post:
+      consumes:
+      - application/json
+      description: Envía un código OTP al correo electrónico proporcionado para iniciar
+        el proceso de reseteo de contraseña.
+      parameters:
+      - description: Estructura que contiene el correo del usuario
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.ForgotPasswordPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Si el correo existe, el proceso de token ha sido exitoso (por
+            seguridad, el mensaje no confirma la existencia del correo).
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request - Datos de entrada inválidos (ej. formato de email
+            incorrecto)
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error - Error al generar el token, al acceder
+            a la DB, o al enviar el correo.
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Solicitar token de reseteo de contraseña
+      tags:
+      - Auth
+  /auth/password/reset:
+    post:
+      consumes:
+      - application/json
+      description: Finalizes the password reset process by validating the token and
+        updating the user's password hash.
+      parameters:
+      - description: Reset token and new password data (must include password confirmation).
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.ResetPasswordPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password updated successfully.
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request - Invalid data (expired token, token not found,
+            or passwords do not match).
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error - Error while hashing the password or
+            executing the DB transaction.
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Execute Password Reset
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user in the system with client role
+      parameters:
+      - description: Register user data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.CreateUserClientPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: user created'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad response
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register New User
+      tags:
+      - Auth
+  /auth/register-staff:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user in the system with and specific role
+      parameters:
+      - description: Register user data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.CreateUserStaffPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: user created'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: bad response
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Register New User Staff
+      tags:
+      - Auth
   /health:
     get:
       consumes:
@@ -27,6 +364,29 @@ paths:
       summary: verify service status
       tags:
       - System
+  /user/whoami:
+    get:
+      description: Retrieves the profile of the user authenticated via the JWT token
+        in the request header.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: "user\"\t\t\"Current authenticated user profile"
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: "error\":\t\"Unauthorized\"\t\"Missing or invalid JWT token"
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get current user profile
+      tags:
+      - User
 securityDefinitions:
   ApiKeyAuth:
     in: header

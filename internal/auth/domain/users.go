@@ -1,1 +1,182 @@
 package authdomain
+
+import (
+	"database/sql/driver"
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+)
+
+// ENUMS
+type GenderEnum string
+type ClientCategoryEnum string
+type ClientStatusEnum string
+
+const (
+	GenderMale            GenderEnum         = "male"
+	GenderFemale          GenderEnum         = "female"
+	GenderPreferNotToSay  GenderEnum         = "prefer-not-to-say"
+	ClientStatusActive    ClientStatusEnum   = "Active"
+	ClientStatusBlocked   ClientStatusEnum   = "Blocked"
+	ClientCategoryVIP     ClientCategoryEnum = "VIP"
+	ClientCategoryRegular ClientCategoryEnum = "Regular"
+	ClientCategoryNew     ClientCategoryEnum = "New"
+	ClientCategoryAtRisk  ClientCategoryEnum = "AtRisk"
+)
+
+type Password struct {
+	text *string
+	hash []byte
+}
+
+// Set hashs the given text and sets it to the Password struct
+func (p *Password) Set(text string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(text), 12)
+	if err != nil {
+		return err
+	}
+	p.text = &text
+	p.hash = hash
+	return nil
+}
+
+// compares users password with the given text
+func (p *Password) Matches(text string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword(p.hash, []byte(text))
+	if err == nil {
+		return true, nil
+	}
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return false, nil
+	}
+	return false, err
+}
+
+// Value implements driver.Valuer: indicates to GORM how to save the field in the DB.
+func (p Password) Value() (driver.Value, error) {
+	if len(p.hash) == 0 {
+		return nil, nil
+	}
+	// GORM saves only basic types, so we return the hash as a byte slice
+	return p.hash, nil
+}
+
+// Scan implements sql.Scanner: indicates to GORM how to read the field from the DB.
+func (p *Password) Scan(value interface{}) error {
+	if value == nil {
+		p.hash = nil
+		return nil
+	}
+	v, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("unexpected scan type password: %T", value)
+	}
+	p.hash = v
+	return nil
+}
+
+type Roles struct {
+	RoleID      uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"role_id"`
+	Name        string    `gorm:"type:varchar(50);unique;not null" json:"name"`
+	Level       int16     `gorm:"type:smallint;not null;default:0" json:"level"`
+	Description string    `gorm:"type:text" json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type Users struct {
+	UserID           uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"user_id"`
+	FirstName        string    `gorm:"type:varchar(100);not null" json:"first_name"`
+	LastName         string    `gorm:"type:varchar(100);not null" json:"last_name"`
+	Email            string    `gorm:"type:citext;unique;not null" json:"email"`
+	Phone            string    `gorm:"type:varchar(50)" json:"phone"`
+	IdentityDocument string    `gorm:"type:varchar(50);unique" json:"identity_document"`
+
+	PasswordHash      Password       `gorm:"column:password_hash;type:bytea;not null" json:"-"`
+	BirthDate         time.Time      `gorm:"type:date" json:"birth_date"`
+	Gender            GenderEnum     `gorm:"type:gender_enum" json:"gender"`
+	ProfilePictureURL string         `gorm:"type:varchar(255)" json:"profile_picture_url"`
+	IsValidated       bool           `gorm:"default:false" json:"is_validated"`
+	ClientProfile     ClientProfiles `gorm:"foreignKey:UserID;references:UserID"`
+
+	RoleID uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
+	Role   Roles     `gorm:"foreignKey:RoleID;references:RoleID" json:"role"`
+
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+}
+
+type ClientProfiles struct {
+	// Primary Key and Foreign Key to Users
+	UserID             uuid.UUID          `gorm:"type:uuid;primaryKey" json:"user_id"`
+	QRCode             string             `gorm:"type:text;unique;not null" json:"qr_code"`
+	Scoring            int                `gorm:"type:integer;default:0" json:"scoring"`
+	Status             ClientStatusEnum   `gorm:"type:client_status;not null;default:'Active'" json:"status"`
+	BlockJustification string             `gorm:"type:text" json:"block_justification"`
+	Category           ClientCategoryEnum `gorm:"type:client_category;not null;default:'New'" json:"category"`
+	CreatedAt          time.Time          `json:"created_at"`
+	UpdatedAt          time.Time          `json:"updated_at"`
+	DeletedAt          gorm.DeletedAt     `gorm:"index" json:"deleted_at,omitempty"`
+}
+
+type UserInvitations struct {
+	Token  string `gorm:"type:varchar(255);unique;not null" json:"token"`
+	UserID uuid.UUID
+	Users  Users     `gorm:"foreignKey:UserID" json:"user"`
+	Expiry time.Time `gorm:"expiry"`
+}
+
+type CreateUserClientPayload struct {
+	FirstName         string `json:"first_name" binding:"required"`
+	LastName          string `json:"last_name" binding:"required"`
+	Email             string `json:"email" binding:"required,email"`
+	Phone             string `json:"phone" binding:"required"`
+	IdentityDocument  string `json:"identity_document" binding:"required"`
+	Password          string `json:"password" binding:"required,min=8"`
+	BirthDate         string `json:"birth_date" binding:"required"`
+	Gender            string `json:"gender" binding:"required"`
+	ProfilePictureURL string `json:"profile_picture_url"`
+}
+
+type CreateUserStaffPayload struct {
+	FirstName         string `json:"first_name" binding:"required"`
+	LastName          string `json:"last_name" binding:"required"`
+	Email             string `json:"email" binding:"required,email"`
+	Phone             string `json:"phone" binding:"required"`
+	IdentityDocument  string `json:"identity_document" binding:"required"`
+	Password          string `json:"password" binding:"required,min=8"`
+	RoleName          string `json:"role_name" binding:"omitempty"`
+	BirthDate         string `json:"birth_date" binding:"required"`
+	Gender            string `json:"gender" binding:"required"`
+	ProfilePictureURL string `json:"profile_picture_url"`
+}
+
+type CodePayload struct {
+	Code string `json:"code" binding:"required"`
+}
+
+type CreateUserTokenPayload struct {
+	Email    string `json:"email" binding:"required,email,max=255"`
+	Password string `json:"password" binding:"required,min=3,max=72"`
+}
+
+type PasswordResetToken struct {
+	Token  string `gorm:"type:varchar(255);unique;not null" json:"token"`
+	UserID uuid.UUID
+	Users  Users     `gorm:"foreignKey:UserID" json:"user"`
+	Expiry time.Time `gorm:"expiry"`
+}
+
+type ForgotPasswordPayload struct {
+	Email string `json:"email" binding:"required,email,max=255"`
+}
+
+type ResetPasswordPayload struct {
+	Password        string `json:"password" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"` // Valida en el backend
+	Token           string `json:"token" binding:"required"`
+}
