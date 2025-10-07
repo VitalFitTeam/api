@@ -198,6 +198,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/password/reset": {
+            "post": {
+                "description": "Finalizes the password reset process by validating the token and updating the user's password hash.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Execute Password Reset",
+                "parameters": [
+                    {
+                        "description": "Reset token and new password data (must include password confirmation).",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authdomain.ResetPasswordPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password updated successfully.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Invalid data (expired token, token not found, or passwords do not match).",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - Error while hashing the password or executing the DB transaction.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "Register a new user in the system with client role",
@@ -410,6 +459,9 @@ const docTemplate = `{
                 },
                 "phone": {
                     "type": "string"
+                },
+                "profile_picture_url": {
+                    "type": "string"
                 }
             }
         },
@@ -451,6 +503,9 @@ const docTemplate = `{
                 "phone": {
                     "type": "string"
                 },
+                "profile_picture_url": {
+                    "type": "string"
+                },
                 "role_name": {
                     "type": "string"
                 }
@@ -483,6 +538,27 @@ const docTemplate = `{
                 "email": {
                     "type": "string",
                     "maxLength": 255
+                }
+            }
+        },
+        "authdomain.ResetPasswordPayload": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "password",
+                "token"
+            ],
+            "properties": {
+                "confirm_password": {
+                    "description": "Valida en el backend",
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         }

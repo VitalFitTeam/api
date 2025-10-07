@@ -18,6 +18,7 @@ type UserRepository interface {
 	Update(ctx context.Context, user *Users) error
 	CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, key string, tokenExp time.Duration) error
 	DeleteResetToken(ctx context.Context, userID uuid.UUID) error
+	ResetUserPassword(ctx context.Context, key string, user *Users) error
 }
 
 type RolesRepository interface {

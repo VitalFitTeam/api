@@ -12,6 +12,7 @@ import (
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
+	"github.com/vitalfit/api/pkg/mailer"
 	otp "github.com/vitalfit/api/pkg/otp"
 )
 
@@ -52,13 +53,14 @@ func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
 	}
 
 	user := &authdomain.Users{
-		FirstName:        payload.FirstName,
-		LastName:         payload.LastName,
-		Email:            payload.Email,
-		Phone:            payload.Phone,
-		IdentityDocument: payload.IdentityDocument,
-		BirthDate:        birthdate,
-		Gender:           authdomain.GenderEnum(payload.Gender),
+		FirstName:         payload.FirstName,
+		LastName:          payload.LastName,
+		Email:             payload.Email,
+		Phone:             payload.Phone,
+		IdentityDocument:  payload.IdentityDocument,
+		BirthDate:         birthdate,
+		Gender:            authdomain.GenderEnum(payload.Gender),
+		ProfilePictureURL: payload.ProfilePictureURL,
 	}
 
 	if err := user.PasswordHash.Set(payload.Password); err != nil {
@@ -123,13 +125,14 @@ func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
 	}
 
 	user := &authdomain.Users{
-		FirstName:        payload.FirstName,
-		LastName:         payload.LastName,
-		Email:            payload.Email,
-		Phone:            payload.Phone,
-		IdentityDocument: payload.IdentityDocument,
-		BirthDate:        birthdate,
-		Gender:           authdomain.GenderEnum(payload.Gender),
+		FirstName:         payload.FirstName,
+		LastName:          payload.LastName,
+		Email:             payload.Email,
+		Phone:             payload.Phone,
+		IdentityDocument:  payload.IdentityDocument,
+		BirthDate:         birthdate,
+		Gender:            authdomain.GenderEnum(payload.Gender),
+		ProfilePictureURL: payload.ProfilePictureURL,
 	}
 
 	if err := user.PasswordHash.Set(payload.Password); err != nil {
@@ -311,7 +314,7 @@ func (h *AuthHandlers) forgotPasswordHandler(c *gin.Context) {
 		return
 	}
 	//send email -> error -> rollback
-	status, err := h.services.AuthServices.MailSender(ctx, user, key)
+	status, err := h.services.AuthServices.MailSender(ctx, user, key, mailer.UserResetPwsTemplate)
 	if err != nil {
 		h.services.Logger.Errorw("error sending reset token password to email", "error", err)
 		if err := h.services.AuthServices.DeleteResetToken(ctx, user.UserID); err != nil {
@@ -329,8 +332,45 @@ func (h *AuthHandlers) forgotPasswordHandler(c *gin.Context) {
 
 }
 
+func (h *AuthHandlers) resetPasswordHandler(c *gin.Context) {
+	var payload authdomain.ResetPasswordPayload
+	var user authdomain.Users
+	ctx := c.Request.Context()
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	if err := user.PasswordHash.Set(payload.Password); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	err := h.services.AuthServices.ResetPassword(ctx, payload.Token, &user)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.BadRequestResponse(c, err)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+}
+
+// @Summary		Execute Password Reset
+// @Description	Finalizes the password reset process by validating the token and updating the user's password hash.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			body	body		authdomain.ResetPasswordPayload	true	"Reset token and new password data (must include password confirmation)."
+// @Success		200		{object}	map[string]interface{}			"Password updated successfully."
+// @Failure		400		{object}	map[string]interface{}			"Bad Request - Invalid data (expired token, token not found, or passwords do not match)."
+// @Failure		500		{object}	map[string]interface{}			"Internal Server Error - Error while hashing the password or executing the DB transaction."
+// @Router			/auth/password/reset [post]
 func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string) (int, error) {
-	status, err := h.services.AuthServices.MailSender(ctx, user, key)
+	status, err := h.services.AuthServices.MailSender(ctx, user, key, mailer.UserWelcomeTemplate)
 	if err != nil {
 		h.services.Logger.Errorw("error sending welcome email", "error", err)
 

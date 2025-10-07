@@ -217,7 +217,25 @@ func (s *UserRepositoryDAO) DeleteResetToken(ctx context.Context, userID uuid.UU
 		if err := s.deleteUserReset(ctx, tx, userID); err != nil {
 			return err //rollback
 		}
+
 		return nil //commit
+	})
+}
+
+func (s *UserRepositoryDAO) ResetUserPassword(ctx context.Context, key string, user *authdomain.Users) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		userReset, err := s.getUserResetToken(ctx, tx, key)
+		if err != nil {
+			return err
+		}
+		user.UserID = userReset.UserID
+		if err := tx.WithContext(ctx).Model(user).Select("password_hash").Updates(user).Error; err != nil {
+			return err
+		}
+		if err := s.deleteUserReset(ctx, tx, user.UserID); err != nil {
+			return err
+		}
+		return nil
 	})
 }
 
@@ -244,4 +262,27 @@ func (s *UserRepositoryDAO) deleteUserReset(ctx context.Context, tx *gorm.DB, us
 		return err
 	}
 	return nil
+}
+
+func (s *UserRepositoryDAO) getUserResetToken(ctx context.Context, tx *gorm.DB, key string) (*authdomain.Users, error) {
+	var resetToken authdomain.PasswordResetToken
+	hash := sha256.Sum256([]byte(key))
+	hashCode := hex.EncodeToString(hash[:])
+
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
+	result := tx.WithContext(ctx).
+		Preload("Users").
+		Where("token = ? AND expiry > ?", hashCode, time.Now()).
+		First(&resetToken)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, result.Error
+	}
+
+	return &resetToken.Users, nil
 }

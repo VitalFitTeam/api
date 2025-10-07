@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	"github.com/vitalfit/api/internal/store"
-	"github.com/vitalfit/api/pkg/mailer"
 )
 
 type AuthService struct {
@@ -45,21 +44,21 @@ func (s *AuthService) RegisterUserStaff(ctx context.Context, user *authdomain.Us
 	return nil
 }
 
-func (h *AuthService) MailSender(ctx context.Context, user *authdomain.Users, key string) (int, error) {
+func (h *AuthService) MailSender(ctx context.Context, user *authdomain.Users, key string, template string) (int, error) {
 
 	//mail -> fail -> roll back -> create invite
 
 	isProdEnv := h.store.Env == "production"
 	vars := struct {
-		Username       string
-		ActivationCODE string
+		Username string
+		CODE     string
 	}{
-		Username:       user.FirstName,
-		ActivationCODE: key,
+		Username: user.FirstName,
+		CODE:     key,
 	}
 
 	// send mail
-	status, err := h.store.Mailer.Send(mailer.UserWelcomeTemplate, user.FirstName, user.Email, vars, !isProdEnv)
+	status, err := h.store.Mailer.Send(template, user.FirstName, user.Email, vars, !isProdEnv)
 	if err != nil {
 		return status, err
 	}
@@ -131,4 +130,11 @@ func (h *AuthService) GenerateToken(user *authdomain.Users) (string, error) {
 
 func (h *AuthService) ValidateToken(token string) (*jwt.Token, error) {
 	return h.store.Auth.ValidateToken(token)
+}
+
+func (h *AuthService) ResetPassword(ctx context.Context, key string, user *authdomain.Users) error {
+	if err := h.store.Users.ResetUserPassword(ctx, key, user); err != nil {
+		return err
+	}
+	return nil
 }

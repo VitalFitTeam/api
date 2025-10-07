@@ -1,4 +1,4 @@
-{{define "subject"}} ¡Activa tu cuenta VITAL FIT! {{end}}
+{{define "subject"}} Código de Restablecimiento de Contraseña VITAL FIT {{end}}
 
 {{define "body"}}
 <!doctype html>
@@ -6,7 +6,7 @@
   <head>
     <meta name="viewport" content="width=device-width" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Activación de Cuenta Vital Fit</title>
+    <title>Restablecimiento de Contraseña Vital Fit</title>
     <style>
       /* Estilos en línea básicos para compatibilidad */
       body {
@@ -39,22 +39,20 @@
         max-width: 150px;
         height: auto;
       }
-      /* Estilo del botón (color naranja del logo: #F58A24) */
-      .btn {
+      /* Estilo del código OTP */
+      .code-box {
         text-align: center;
         width: 100%;
-        margin-top: 20px;
-        margin-bottom: 20px;
-      }
-      .btn a {
-        display: inline-block;
-        padding: 10px 25px;
+        margin: 20px 0;
+        padding: 15px 0;
+        background-color: #f58a24; /* Color de fondo */
         border-radius: 5px;
-        background-color: #f58a24;
+      }
+      .code-box h1 {
         color: #ffffff;
-        text-decoration: none;
-        font-weight: bold;
-        border: 1px solid #f58a24;
+        font-size: 32px;
+        margin: 0;
+        letter-spacing: 5px; /* Para que el código destaque */
       }
       .footer {
         color: #999999;
@@ -68,27 +66,31 @@
     <div class="container">
       <div class="logo">
         <h1 style="color: #f58a24; font-size: 30px; margin: 0;">VITALFIT</h1>
-        <p style="color: #666666; font-size: 14px; margin: 5px 0 0;">Activa tu vida, supera tus límites</p>
+        <p style="color: #666666; font-size: 14px; margin: 5px 0 0;">Tu seguridad es nuestra prioridad</p>
       </div>
 
       <div class="content">
         <p>Hola **{{.Username}}**, </p>
 
-        <p>¡Gracias por unirte a la familia **VITAL FIT**! Estamos emocionados de ayudarte a activar tu vida y superar tus límites.</p>
+        <p>Hemos recibido una solicitud para **restablecer la contraseña** de tu cuenta **VITAL FIT**.</p>
 
-        <p>Para comenzar tu viaje fitness, solo falta un paso: **confirmar tu dirección de correo electrónico**.</p>
+        <p>Para confirmar esta acción y crear una nueva contraseña, por favor ingresa el siguiente **código temporal de seguridad** en la aplicación:</p>
         
-        <div class="btn">
+        <div class="code-box">
           <h1>{{.CODE}}</h1>
         </div>
 
+        <p style="font-size: 14px; color: #cc0000; font-weight: bold;">
+          Si no solicitaste este cambio, ignora este correo. Tu contraseña actual permanecerá sin cambios.
+        </p>
+        
 
-        <p>¡Te esperamos!</p>
+        <p>Gracias por mantener tu cuenta segura,</p>
         <p>El equipo VITAL FIT</p>
       </div>
       
       <div class="footer">
-        Este correo fue enviado automáticamente. Por favor, no lo respondas.
+        Este correo fue enviado automáticamente por un proceso de seguridad. Por favor, no lo respondas.
       </div>
     </div>
   </body>
