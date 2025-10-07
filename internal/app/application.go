@@ -18,6 +18,7 @@ import (
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
+	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	"github.com/vitalfit/api/internal/store"
 	"go.uber.org/zap"
 )
@@ -40,14 +41,16 @@ func (app *application) Mount() http.Handler {
 	docs.SwaggerInfo.BasePath = "/v1"
 	r.Use(gin.Logger(), gin.Recovery())
 	cors.SetupCORS(r)
+	m := auth.NewAuthMiddleware(app.Services)
+
 	{
 
 		v1 := r.Group("/v1")
 
 		v1.GET("/health", app.HealthCheckHandler)
 
-		app.Handlers.AuthHandlers.AuthRoutes(v1)
-		app.Handlers.AuthHandlers.UserRoutes(v1)
+		app.Handlers.AuthHandlers.AuthRoutes(v1, m)
+		app.Handlers.AuthHandlers.UserRoutes(v1, m)
 
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

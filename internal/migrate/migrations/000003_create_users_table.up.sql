@@ -9,7 +9,6 @@ CREATE TABLE users (
     birth_date DATE,
     profile_picture_url VARCHAR(255),
     
-    -- Clave foránea a la tabla roles
     role_id UUID NOT NULL REFERENCES roles(role_id),
     
     is_validated BOOLEAN NOT NULL DEFAULT FALSE,

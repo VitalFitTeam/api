@@ -91,6 +91,26 @@ func (h *AuthService) GetByEmail(ctx context.Context, email string) (*authdomain
 	return users, nil
 }
 
+func (h *AuthService) CreatePasswordResetToken(ctx context.Context, email string, key string) error {
+	user, err := h.store.Users.GetByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+	if err := h.store.Users.CreatePasswordResetToken(ctx, user.UserID, key, h.store.Config.Mail.Exp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *AuthService) DeleteResetToken(ctx context.Context, userID uuid.UUID) error {
+	err := h.store.Users.Delete(ctx, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
 func (h *AuthService) GenerateToken(user *authdomain.Users) (string, error) {
 	// generate the token -> add claims
 	claims := jwt.MapClaims{

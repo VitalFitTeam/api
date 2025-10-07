@@ -72,6 +72,14 @@ definitions:
     - email
     - password
     type: object
+  authdomain.ForgotPasswordPayload:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+    required:
+    - email
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -172,6 +180,43 @@ paths:
       summary: Logs in a user and issues a JWT token
       tags:
       - Auth
+  /auth/password/forgot:
+    post:
+      consumes:
+      - application/json
+      description: Envía un código OTP al correo electrónico proporcionado para iniciar
+        el proceso de reseteo de contraseña.
+      parameters:
+      - description: Estructura que contiene el correo del usuario
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/authdomain.ForgotPasswordPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Si el correo existe, el proceso de token ha sido exitoso (por
+            seguridad, el mensaje no confirma la existencia del correo).
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request - Datos de entrada inválidos (ej. formato de email
+            incorrecto)
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error - Error al generar el token, al acceder
+            a la DB, o al enviar el correo.
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Solicitar token de reseteo de contraseña
+      tags:
+      - Auth
   /auth/register:
     post:
       consumes:
@@ -205,23 +250,7 @@ paths:
       summary: Register New User
       tags:
       - Auth
-  /health:
-    get:
-      consumes:
-      - application/json
-      description: return status, environment and version.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Ok status and system details
-          schema:
-            additionalProperties: true
-            type: object
-      summary: verify service status
-      tags:
-      - System
-  /user/register-staff:
+  /auth/register-staff:
     post:
       consumes:
       - application/json
@@ -254,6 +283,22 @@ paths:
       summary: Register New User Staff
       tags:
       - Auth
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: return status, environment and version.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ok status and system details
+          schema:
+            additionalProperties: true
+            type: object
+      summary: verify service status
+      tags:
+      - System
   /user/whoami:
     get:
       description: Retrieves the profile of the user authenticated via the JWT token

@@ -24,5 +24,4 @@ func (app *application) HealthCheckHandler(c *gin.Context) {
 		"version":     version,
 	}
 	c.JSON(http.StatusOK, data)
-
 }

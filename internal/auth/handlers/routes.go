@@ -2,24 +2,35 @@ package authhandlers
 
 import (
 	"github.com/gin-gonic/gin"
-	shared_jwt "github.com/vitalfit/api/internal/shared/middleware/auth"
+	"github.com/vitalfit/api/internal/shared/middleware/auth"
 )
 
-func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup) {
+func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
 	authGroup := rg.Group("/auth")
 	{ //public routes
-		authGroup.POST("/register", r.RegisterUserClientHandler)
-		authGroup.PUT("/activate", r.ActivateUserHandler)
-		authGroup.POST("/login", r.LoginHandler)
+		authGroup.POST("/register", r.registerUserClientHandler)
+		authGroup.PUT("/activate", r.activateUserHandler)
+		authGroup.POST("/login", r.loginHandler)
+
+		passwordGroup := authGroup.Group("/password")
+		{
+			passwordGroup.POST("/forgot", r.forgotPasswordHandler)
+			// passwordGroup.POST("/reset", r.resetPasswordHandler)
+		}
+
+		protectedGroup := authGroup.Group("/").Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("super_admin"))
+		{
+			protectedGroup.POST("/register-staff", r.registerUserStaffHandler)
+		}
+
 	}
+
 }
 
-func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup) {
-	m := shared_jwt.NewAuthMiddleware(r.services)
+func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	userGroup := rg.Group("/user").Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("super_admin"))
 	{ //private routes
 		userGroup.GET("/whoami", r.whoami)
-		userGroup.POST("/register-staff", r.RegisterUserStaffHandler)
 	}
 }

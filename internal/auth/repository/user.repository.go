@@ -124,6 +124,14 @@ func (s *UserRepositoryDAO) GetByEmail(ctx context.Context, email string) (*auth
 	return &user, nil
 }
 
+func (s *UserRepositoryDAO) Update(ctx context.Context, user *authdomain.Users) error {
+	err := s.db.WithContext(ctx).Save(user).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *UserRepositoryDAO) delete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
@@ -194,8 +202,44 @@ func (s *UserRepositoryDAO) getUserFromInvitation(ctx context.Context, tx *gorm.
 	return &invitation.Users, nil
 }
 
-func (s *UserRepositoryDAO) Update(ctx context.Context, user *authdomain.Users) error {
-	err := s.db.WithContext(ctx).Save(user).Error
+func (s *UserRepositoryDAO) CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, key string, tokenExp time.Duration) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := s.userResetToken(ctx, tx, userID, key, tokenExp); err != nil {
+			return err //rollback
+		}
+		return nil //commit
+
+	})
+}
+
+func (s *UserRepositoryDAO) DeleteResetToken(ctx context.Context, userID uuid.UUID) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := s.deleteUserReset(ctx, tx, userID); err != nil {
+			return err //rollback
+		}
+		return nil //commit
+	})
+}
+
+func (s *UserRepositoryDAO) userResetToken(ctx context.Context, tx *gorm.DB, userID uuid.UUID, key string, tokenExp time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
+	err := tx.WithContext(ctx).Create(&authdomain.PasswordResetToken{
+		Token:  key,
+		UserID: userID,
+		Expiry: time.Now().Add(tokenExp),
+	}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *UserRepositoryDAO) deleteUserReset(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+	err := s.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&authdomain.PasswordResetToken{}).Error
 	if err != nil {
 		return err
 	}

@@ -127,3 +127,14 @@ type CreateUserTokenPayload struct {
 	Email    string `json:"email" binding:"required,email,max=255"`
 	Password string `json:"password" binding:"required,min=3,max=72"`
 }
+
+type PasswordResetToken struct {
+	Token  string `gorm:"type:varchar(255);unique;not null" json:"token"`
+	UserID uuid.UUID
+	Users  Users     `gorm:"foreignKey:UserID" json:"user"`
+	Expiry time.Time `gorm:"expiry"`
+}
+
+type ForgotPasswordPayload struct {
+	Email string `json:"email" binding:"required,email,max=255"`
+}

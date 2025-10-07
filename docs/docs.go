@@ -149,6 +149,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/password/forgot": {
+            "post": {
+                "description": "Envía un código OTP al correo electrónico proporcionado para iniciar el proceso de reseteo de contraseña.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Solicitar token de reseteo de contraseña",
+                "parameters": [
+                    {
+                        "description": "Estructura que contiene el correo del usuario",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authdomain.ForgotPasswordPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Si el correo existe, el proceso de token ha sido exitoso (por seguridad, el mensaje no confirma la existencia del correo).",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - Datos de entrada inválidos (ej. formato de email incorrecto)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - Error al generar el token, al acceder a la DB, o al enviar el correo.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "Register a new user in the system with client role",
@@ -198,31 +247,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/health": {
-            "get": {
-                "description": "return status, environment and version.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "System"
-                ],
-                "summary": "verify service status",
-                "responses": {
-                    "200": {
-                        "description": "Ok status and system details",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/user/register-staff": {
+        "/auth/register-staff": {
             "post": {
                 "description": "Register a new user in the system with and specific role",
                 "consumes": [
@@ -263,6 +288,30 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "return status, environment and version.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "verify service status",
+                "responses": {
+                    "200": {
+                        "description": "Ok status and system details",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -407,6 +456,18 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 72,
                     "minLength": 3
+                }
+            }
+        },
+        "authdomain.ForgotPasswordPayload": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         }

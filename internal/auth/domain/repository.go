@@ -16,6 +16,8 @@ type UserRepository interface {
 	Activate(ctx context.Context, code string) error
 	GetByEmail(ctx context.Context, email string) (*Users, error)
 	Update(ctx context.Context, user *Users) error
+	CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, key string, tokenExp time.Duration) error
+	DeleteResetToken(ctx context.Context, userID uuid.UUID) error
 }
 
 type RolesRepository interface {

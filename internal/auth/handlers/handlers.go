@@ -11,12 +11,13 @@ import (
 	appservices "github.com/vitalfit/api/internal/app/services"
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	otp "github.com/vitalfit/api/pkg/otp"
 )
 
 type AuthHandlersInterface interface {
-	AuthRoutes(rg *gin.RouterGroup)
-	UserRoutes(rg *gin.RouterGroup)
+	AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 }
 
 type AuthHandlers struct {
@@ -37,7 +38,7 @@ func NewAuthHandlers(services appservices.Services) *AuthHandlers {
 // @Failure		400		{object}	map[string]interface{}				"bad response"
 // @Failure		500		{object}	map[string]interface{}				"internal server error"
 // @Router			/auth/register [post]
-func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
+func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
 	var payload authdomain.CreateUserClientPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -65,7 +66,7 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 	}
 
 	//store the user
-	key, err := otp.GenerateCode(5)
+	key, err := otp.GenerateCode(6)
 	if err != nil {
 		h.services.InternalServerError(c, err)
 		return
@@ -105,8 +106,8 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 // @Success		201		{object}	map[string]interface{}				"message: user created"
 // @Failure		400		{object}	map[string]interface{}				"bad response"
 // @Failure		500		{object}	map[string]interface{}				"internal server error"
-// @Router			/user/register-staff [post]
-func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
+// @Router			/auth/register-staff [post]
+func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
 	var payload authdomain.CreateUserStaffPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -134,7 +135,7 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	}
 
 	//store the user
-	key, err := otp.GenerateCode(5)
+	key, err := otp.GenerateCode(6)
 	if err != nil {
 		h.services.InternalServerError(c, err)
 	}
@@ -156,6 +157,7 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	status, err := h.registerEmail(ctx, user, key, c)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
+		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -176,7 +178,7 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 // @Failure		404		{object}	map[string]interface{}	"Code is invalid or expired (handled by the service layer returning ErrNotFound)"
 // @Failure		500		{object}	map[string]interface{}	"Internal server error (e.g., database connection issue)"
 // @Router			/auth/activate [put]
-func (h *AuthHandlers) ActivateUserHandler(c *gin.Context) {
+func (h *AuthHandlers) activateUserHandler(c *gin.Context) {
 	var payload authdomain.CodePayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -204,7 +206,7 @@ func (h *AuthHandlers) ActivateUserHandler(c *gin.Context) {
 // @Failure		404			{object}	map[string]string					"error":	"not found"							"User with the given email not found"
 // @Failure		500			{object}	map[string]string					"error":	"the server encountered a problem"	"Internal server error during token generation or hashing"
 // @Router			/auth/login [post]
-func (h *AuthHandlers) LoginHandler(c *gin.Context) {
+func (h *AuthHandlers) loginHandler(c *gin.Context) {
 	var payload authdomain.CreateUserTokenPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -254,6 +256,73 @@ func (h *AuthHandlers) whoami(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"user": user,
 	})
+}
+
+// @Summary		Solicitar token de reseteo de contraseña
+// @Description	Envía un código OTP al correo electrónico proporcionado para iniciar el proceso de reseteo de contraseña.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			email	body		authdomain.ForgotPasswordPayload	true	"Estructura que contiene el correo del usuario"
+// @Success		200		{object}	map[string]interface{}				"Si el correo existe, el proceso de token ha sido exitoso (por seguridad, el mensaje no confirma la existencia del correo)."
+// @Failure		400		{object}	map[string]interface{}				"Bad Request - Datos de entrada inválidos (ej. formato de email incorrecto)"
+// @Failure		500		{object}	map[string]interface{}				"Internal Server Error - Error al generar el token, al acceder a la DB, o al enviar el correo."
+// @Router			/auth/password/forgot [post]
+func (h *AuthHandlers) forgotPasswordHandler(c *gin.Context) {
+	var payload authdomain.ForgotPasswordPayload
+	ctx := c.Request.Context()
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	//creates otp
+	key, err := otp.GenerateCode(6)
+	if err != nil {
+		h.services.InternalServerError(c, err)
+		return
+	}
+	hash := sha256.Sum256([]byte(key))
+	hashedKey := hex.EncodeToString(hash[:])
+
+	user, err := h.services.UserServices.GetByEmail(ctx, payload.Email)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	//Sends otp key to user if exists
+	err = h.services.AuthServices.CreatePasswordResetToken(ctx, user.Email, hashedKey)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	//send email -> error -> rollback
+	status, err := h.services.AuthServices.MailSender(ctx, user, key)
+	if err != nil {
+		h.services.Logger.Errorw("error sending reset token password to email", "error", err)
+		if err := h.services.AuthServices.DeleteResetToken(ctx, user.UserID); err != nil {
+			h.services.Logger.Errorw("error deleting user reset token password ", "error", err)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(status, gin.H{
+		"message": "resey key created",
+		"code":    key,
+	})
+
 }
 
 func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string, c *gin.Context) (int, error) {

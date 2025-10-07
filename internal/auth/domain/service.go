@@ -21,6 +21,8 @@ type AuthServicesInterface interface {
 	Activate(ctx context.Context, code string) error
 	GenerateToken(user *Users) (string, error)
 	ValidateToken(token string) (*jwt.Token, error)
+	CreatePasswordResetToken(ctx context.Context, email string, key string) error
+	DeleteResetToken(context.Context, uuid.UUID) error
 }
 
 type UserServicesInterface interface {
