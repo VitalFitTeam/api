@@ -21,6 +21,10 @@ migrate-force:
 gen-docs:
 	@swag init -g ./api/main.go -d cmd,internal && swag fmt
 
+.PHONY: seed
+seed: 
+	@go run internal/migrate/seed/main.go
+
 .PHONY: run
 run:
 	@go run ./cmd/api/*.go

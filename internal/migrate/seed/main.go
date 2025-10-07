@@ -63,12 +63,6 @@ func main() {
 	}
 	cfg := config.LoadConfig()
 
-	sqlDB, err := dbg.NewPGDB(addr, 3, 3, "15m")
-	if err != nil {
-		log.Fatalf("Failed to get generic database object: %v", err)
-	}
-	defer sqlDB.Close()
-
 	mailer, err := mailer.NewResendClient(cfg.Mail.Resend.ApiKey, cfg.Mail.FromEmail)
 	if err != nil {
 		log.Fatal(err)
