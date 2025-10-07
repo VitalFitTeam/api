@@ -19,10 +19,12 @@ import (
 
 func Seed(store store.Storage, db *gorm.DB) {
 	ctx := context.Background()
+	email := env.GetString("ADMIN_EMAIL", "")
+	password := env.GetString("ADMIN_PASSWORD", "")
 	user := &authdomain.Users{
 		FirstName:        "Super",
 		LastName:         "Admin",
-		Email:            env.GetString("ADMIN_EMAIL", ""),
+		Email:            email,
 		Phone:            "+581235467890",
 		IdentityDocument: "V-1234567891",
 		Gender:           "male",
@@ -40,7 +42,7 @@ func Seed(store store.Storage, db *gorm.DB) {
 		return
 	}
 	user.RoleID = role.RoleID
-	user.PasswordHash.Set(env.GetString("ADMIN_PASSWORD", ""))
+	user.PasswordHash.Set(password)
 	err = dbg.WithTX(db, func(tx *gorm.DB) error {
 		if err := store.Users.Create(ctx, tx, user); err != nil {
 			return err
@@ -56,7 +58,7 @@ func Seed(store store.Storage, db *gorm.DB) {
 }
 
 func main() {
-	addr := env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/vitalfit?sslmode=disable")
+	addr := env.GetString("DB_ADDR", "")
 	conn, err := dbg.New(addr, 3, 3, "15m")
 	if err != nil {
 		log.Fatal(err)

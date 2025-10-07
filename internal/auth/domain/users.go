@@ -113,7 +113,7 @@ type Users struct {
 type ClientProfiles struct {
 	// Primary Key and Foreign Key to Users
 	UserID             uuid.UUID          `gorm:"type:uuid;primaryKey" json:"user_id"`
-	QRCode             string             `gorm:"type:text;unique;not null" json:"qr_code"`
+	QRCode             string             `gorm:"type:text" json:"qr_code"`
 	Scoring            int                `gorm:"type:integer;default:0" json:"scoring"`
 	Status             ClientStatusEnum   `gorm:"type:client_status;not null;default:'Active'" json:"status"`
 	BlockJustification string             `gorm:"type:text" json:"block_justification"`
