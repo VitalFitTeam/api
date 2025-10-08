@@ -18,7 +18,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 			passwordGroup.POST("/forgot", r.forgotPasswordHandler)
 			passwordGroup.POST("/reset", r.resetPasswordHandler)
 		}
-
+		//protected routes
 		protectedGroup := authGroup.Group("/").Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("branch_admin"))
 		{
 			protectedGroup.POST("/register-staff", r.registerUserStaffHandler)
