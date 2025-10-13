@@ -1,21 +1,30 @@
-include .envrc
-MIGRATIONS_PATH = ./internal/migrate/migrations
+MIGRATIONS_PATH=./internal/migrate/migrations
+APP_SERVICE=app 
+include .env
+
+.PHONY: docker-up
+docker-up:
+	@docker compose up --build
+
+.PHONY: docker-down
+docker-down:
+	@docker compose down
 
 .PHONY: migrate-create
 migration:
-	@migrate create -seq -ext sql -dir $(MIGRATIONS_PATH) $(filter-out $@,$(MAKECMDGOALS))
+	@docker compose run --rm $(APP_SERVICE) migrate create -seq -ext sql -dir $(MIGRATIONS_PATH) $(filter-out $@,$(MAKECMDGOALS))
 
 .PHONY: migrate-up
 migrate-up:
-	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) up
+	@docker compose run --rm $(APP_SERVICE) migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) up
 
 .PHONY: migrate-down
 migrate-down:
-	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) down $(filter-out $@,$(MAKECMDGOALS))
+	@docker compose run --rm $(APP_SERVICE) migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) down $(filter-out $@,$(MAKECMDGOALS))
 
 .PHONY: migrate-force 
 migrate-force:
-	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) force $(NAME)
+	@docker compose run --rm $(APP_SERVICE) migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) force $(NAME)
 
 .PHONY: gen-docs
 gen-docs:
@@ -23,8 +32,8 @@ gen-docs:
 
 .PHONY: seed
 seed: 
-	@go run internal/migrate/seed/main.go
+	@docker compose run --rm $(APP_SERVICE) go run internal/migrate/seed/main.go
 
 .PHONY: run
 run:
-	@go run ./cmd/api/*.go
+	@echo "Usa 'make docker-up' para correr la app con Air y Docker."

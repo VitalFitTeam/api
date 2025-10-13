@@ -1,153 +1,159 @@
 # VitalFit API
 
-Backend API for VitalFit, a gym management system, built with **Go**.
-
----
+Quick start guide to set up and run the VitalFit backend using Docker and Make.
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-  - [1. Clone the Repository](#1-clone-the-repository)
-  - [2. Configure Environment Variables](#2-configure-environment-variables)
-  - [3. Start the Database](#3-start-the-database)
-  - [4. Install Dependencies](#4-install-dependencies)
-  - [5. Run the Application](#5-run-the-application)
-- [Live Reloading with Air](#live-reloading-with-air)
-- [API Documentation](#api-documentation)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [License](#license)
-
----
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Go**: 1.25.1 or higher
-- **Docker & Docker Compose**: For running the database
-- **Git**: For cloning the repository
-- **[Air](https://github.com/cosmtrek/air)**: For live reloading during development
-- **direnv**: For loading environment variables from `.envrc`
-
----
+  - [Prerequisites](#prerequisites)
+  - [Configuration](#configuration)
+- [Running the Project](#running-the-project)
+- [Makefile Commands](#makefile-commands)
 
 ## Getting Started
 
-### 1. Clone the Repository
+Follow these instructions to get the project up and running on your local machine.
 
-```sh
-git clone https://github.com/yourusername/vitalfit-api.git
-cd vitalfit-api
+### Prerequisites
+
+- **Docker and Docker Compose**: To run the application in containers.
+- **Make**: To use the simplified commands from the `Makefile`.
+- **Git**: To clone the repository.
+
+### Configuration
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/vitalfit/api.git
+    cd vitalfit-api
+    ```
+
+2.  **Create and configure your `.env` file:**
+
+    Copy the example file `.env.example` to a new file named `.env`.
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Open the `.env` file and fill in the variables with your local credentials and settings (database, API keys, etc.).
+
+## Running the Project
+
+1.  **Start the services with Docker Compose:**
+
+    This command will build and start the application containers along with the database, and you will be able to see the live-reloading logs.
+
+    ```bash
+    make docker-up
+    ```
+
+    If you want to run it in the background:
+
+    ```bash
+    docker compose up -d
+    ```
+
+    The API will be available at the address specified in your `.env` file (default is `localhost:8080`). The service uses `Air` for hot-reloading when it detects changes in the code.
+
+2.  **Stop the services:**
+
+    To stop and remove the containers, run:
+
+    ```bash
+    make docker-down
+    ```
+
+## Makefile Commands
+
+The `makefile` provides several commands to facilitate common development tasks.
+
+### Database Migrations
+
+*   **Create a new migration:**
+
+    ```bash
+    make migration migration_name
+    ```
+
+*   **Apply all pending migrations:**
+
+    ```bash
+    make migrate-up
+    ```
+
+*   **Revert the last migration:**
+
+    ```bash
+    make migrate-down
+    ```
+
+### Database Seeding
+
+*   **Seed the database with initial data (e.g., an admin user):**
+
+    ```bash
+    make seed
+    ```
+
+### API Documentation
+
+*   **Generate or update Swagger documentation:**
+
+    This command parses the code comments and updates the files in the `/docs` directory.
+
+```bash
+make gen-docs
 ```
 
-### 2. Configure Environment Variables
+El servidor se iniciará y estará escuchando en el puerto especificado en tu archivo `.env` (por defecto, `http://localhost:8080`).
 
-This project uses `.envrc` for environment variable management. **godotenv is not used**, so you must export variables manually or use [direnv](https://direnv.net/).
+## Testing
 
-- Copy the example environment file:
+El proyecto está configurado con un flujo de trabajo de CI que ejecuta varias comprobaciones de calidad. Para ejecutar estas comprobaciones localmente:
 
-  ```sh
-  cp env.example .envrc
-  ```
+```bash
+# Ejecutar pruebas unitarias y de integración
+go test ./...
 
-- Edit `.envrc` and set your environment variables as needed. Example on .env.example
+# Verificar que no haya código "sospechoso"
+go vet ./...
 
-
-- Allow direnv to load the variables:
-
-  ```sh
-  direnv allow .
-  ```
-
-### 3. Start the Database
-
-Use Docker Compose to start the database service:
-
-```sh
-docker-compose up -d
-```
-or 
-
-```sh
-docker-compose up --build
+# Ejecutar análisis estático (requiere instalación previa)
+# go install honnef.co/go/tools/cmd/staticcheck@latest
+staticcheck ./...
 ```
 
-This will start all services defined in [`docker-compose.yml`](docker-compose.yml).
+## Documentación de la API
 
-### Migrations
-This will start the migrations
-```sh
-  make migrate-up
-```
+Este proyecto utiliza `swaggo/swag` para generar documentación de la API en formato Swagger/OpenAPI.
 
-### 4. Install Dependencies
+*   **Acceder a la documentación**: Una vez que el servidor esté en ejecución, puedes ver la documentación interactiva de la API en tu navegador visitando:
+    `http://localhost:8080/swagger/index.html`
 
-Make sure Go modules are downloaded:
+*   **Actualizar la documentación**: Si realizas cambios en los comentarios de la API (las anotaciones `// @...`), debes regenerar los archivos de documentación. Ejecuta el siguiente comando desde la raíz del proyecto:
 
-```sh
-go mod tidy
-```
+    ```bash
+    swag init -g cmd/api/main.go
+    ```
 
-### 5. Run the Application
+## Variables de Entorno
 
-You can run the application directly:
+A continuación se detallan las variables de entorno utilizadas por la aplicación:
 
-```sh
-go run cmd/api/main.go
-```
-
-Or use Air for live reloading (recommended for development):
-
-```sh
-air
-```
-
----
-
-## Live Reloading with Air
-
-Air watches for file changes and automatically restarts your Go application. To use Air:
-
-1. Install Air:
-
-   ```sh
-   go install github.com/cosmtrek/air@latest
-   ```
-
-2. Run Air in the project root:
-
-   ```sh
-   air
-   ```
-
-Configuration is handled via `.air.toml` (already present in the project).
-
----
-
-## API Documentation
-
-API documentation is available in [docs/swagger.yaml](docs/swagger.yaml) and [docs/swagger.json](docs/swagger.json).
-
-You can view the documentation using [Swagger UI](https://swagger.io/tools/swagger-ui/) or import the files into your preferred API client.
-
----
-
-## Tech Stack
-
-- **Go**: Backend language
-- **PostgreSQL**: Database (via Docker Compose)
-- **Air**: Live reloading for development
-- **direnv**: Environment variable management
-- **Docker Compose**: Service orchestration
-
----
-
-## Project Structure
+| Variable            | Descripción                                                              | Ejemplo                                                        |
+| ------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| `API_PORT`          | Puerto en el que se ejecutará el servidor.                               | `8080`                                                         |
+| `API_ENV`           | Entorno de la aplicación (`development`, `staging`, `production`).       | `development`                                                  |
+| `DB_DSN`            | Data Source Name para la conexión a PostgreSQL.                          | `"host=localhost user=postgres ..."`                           |
+| `JWT_SECRET`        | Clave secreta para firmar los tokens JWT.                                | `"un-secreto-muy-largo-y-dificil-de-adivinar"`                 |
+| `JWT_EXPIRATION`    | Duración de validez de los tokens JWT.                                   | `"72h"`                                                        |
+| `RESEND_API_KEY`    | Clave API para el servicio de correo Resend.                             | `"re_xxxxxxxxxxxx"`                                            |
+| `RESEND_FROM_EMAIL` | Dirección de correo electrónico remitente para Resend.                   | `"noreply@tudominio.com"`                                      |
+                                     
 
 
+## Licencia
 
-## License
-
-This project is licensed under the Apache 2.0 License.
+Este proyecto está bajo la Licencia Apache 2.0. Consulta el archivo `LICENSE` para más detalles.
