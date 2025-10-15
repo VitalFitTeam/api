@@ -15,17 +15,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepositoryDAO struct {
+type UserStore struct {
 	db *gorm.DB
 }
 
-func NewUserRepositoryDAO(db *gorm.DB) *UserRepositoryDAO {
-	return &UserRepositoryDAO{
+func NewUserStore(db *gorm.DB) *UserStore {
+	return &UserStore{
 		db: db,
 	}
 }
 
-func (s *UserRepositoryDAO) Create(ctx context.Context, tx *gorm.DB, user *authdomain.Users) error {
+func (s *UserStore) Create(ctx context.Context, tx *gorm.DB, user *authdomain.Users) error {
 	err := tx.WithContext(ctx).Create(&user).Error
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -42,7 +42,7 @@ func (s *UserRepositoryDAO) Create(ctx context.Context, tx *gorm.DB, user *authd
 	return nil
 }
 
-func (s *UserRepositoryDAO) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.Users, error) {
+func (s *UserStore) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.Users, error) {
 	var user authdomain.Users
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -62,7 +62,7 @@ func (s *UserRepositoryDAO) GetByID(ctx context.Context, userID uuid.UUID) (*aut
 	return &user, nil
 }
 
-func (s *UserRepositoryDAO) CreateAndInvitate(ctx context.Context, user *authdomain.Users, token string, invitationExp time.Duration) error {
+func (s *UserStore) CreateAndInvitate(ctx context.Context, user *authdomain.Users, token string, invitationExp time.Duration) error {
 	//transacction
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 
@@ -78,7 +78,7 @@ func (s *UserRepositoryDAO) CreateAndInvitate(ctx context.Context, user *authdom
 	})
 }
 
-func (s *UserRepositoryDAO) Delete(ctx context.Context, userID uuid.UUID) error {
+func (s *UserStore) Delete(ctx context.Context, userID uuid.UUID) error {
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 		if err := s.delete(ctx, tx, userID); err != nil {
 			return err //rollback
@@ -90,7 +90,7 @@ func (s *UserRepositoryDAO) Delete(ctx context.Context, userID uuid.UUID) error 
 	})
 }
 
-func (s *UserRepositoryDAO) Activate(ctx context.Context, code string) error {
+func (s *UserStore) Activate(ctx context.Context, code string) error {
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 		user, err := s.getUserFromInvitation(ctx, tx, code)
 		if err != nil {
@@ -110,7 +110,7 @@ func (s *UserRepositoryDAO) Activate(ctx context.Context, code string) error {
 
 }
 
-func (s *UserRepositoryDAO) GetByEmail(ctx context.Context, email string) (*authdomain.Users, error) {
+func (s *UserStore) GetByEmail(ctx context.Context, email string) (*authdomain.Users, error) {
 	var user authdomain.Users
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
@@ -124,7 +124,7 @@ func (s *UserRepositoryDAO) GetByEmail(ctx context.Context, email string) (*auth
 	return &user, nil
 }
 
-func (s *UserRepositoryDAO) Update(ctx context.Context, user *authdomain.Users) error {
+func (s *UserStore) Update(ctx context.Context, user *authdomain.Users) error {
 	err := s.db.WithContext(ctx).Save(user).Error
 	if err != nil {
 		return err
@@ -132,7 +132,7 @@ func (s *UserRepositoryDAO) Update(ctx context.Context, user *authdomain.Users) 
 	return nil
 }
 
-func (s *UserRepositoryDAO) delete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
+func (s *UserStore) delete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 
@@ -144,7 +144,7 @@ func (s *UserRepositoryDAO) delete(ctx context.Context, tx *gorm.DB, userID uuid
 	return nil
 }
 
-// func (s *UserRepositoryDAO) softDelete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
+// func (s *UserStore) softDelete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
 // 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 // 	defer cancel()
 
@@ -157,7 +157,7 @@ func (s *UserRepositoryDAO) delete(ctx context.Context, tx *gorm.DB, userID uuid
 // }
 
 // Elimina las invitaciones asociadas a ese usuario.
-func (s *UserRepositoryDAO) deleteUserInvitations(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
+func (s *UserStore) deleteUserInvitations(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
 	// Elimina todos los registros de invitaciones que tienen este UserID
 	result := tx.WithContext(ctx).Where("user_id = ?", userID).Delete(&authdomain.UserInvitations{})
 
@@ -167,7 +167,7 @@ func (s *UserRepositoryDAO) deleteUserInvitations(ctx context.Context, tx *gorm.
 	return nil
 }
 
-func (s *UserRepositoryDAO) createUserInvitation(ctx context.Context, tx *gorm.DB, code string, userID uuid.UUID, invitationExp time.Duration) error {
+func (s *UserStore) createUserInvitation(ctx context.Context, tx *gorm.DB, code string, userID uuid.UUID, invitationExp time.Duration) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 	return tx.WithContext(ctx).Create(&authdomain.UserInvitations{
@@ -177,7 +177,7 @@ func (s *UserRepositoryDAO) createUserInvitation(ctx context.Context, tx *gorm.D
 	}).Error
 }
 
-func (s *UserRepositoryDAO) getUserFromInvitation(ctx context.Context, tx *gorm.DB, code string) (*authdomain.Users, error) {
+func (s *UserStore) getUserFromInvitation(ctx context.Context, tx *gorm.DB, code string) (*authdomain.Users, error) {
 
 	var invitation authdomain.UserInvitations
 
@@ -202,7 +202,7 @@ func (s *UserRepositoryDAO) getUserFromInvitation(ctx context.Context, tx *gorm.
 	return &invitation.Users, nil
 }
 
-func (s *UserRepositoryDAO) CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, key string, tokenExp time.Duration) error {
+func (s *UserStore) CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, key string, tokenExp time.Duration) error {
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 		if err := s.userResetToken(ctx, tx, userID, key, tokenExp); err != nil {
 			return err //rollback
@@ -212,7 +212,7 @@ func (s *UserRepositoryDAO) CreatePasswordResetToken(ctx context.Context, userID
 	})
 }
 
-func (s *UserRepositoryDAO) DeleteResetToken(ctx context.Context, userID uuid.UUID) error {
+func (s *UserStore) DeleteResetToken(ctx context.Context, userID uuid.UUID) error {
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 		if err := s.deleteUserReset(ctx, tx, userID); err != nil {
 			return err //rollback
@@ -222,7 +222,7 @@ func (s *UserRepositoryDAO) DeleteResetToken(ctx context.Context, userID uuid.UU
 	})
 }
 
-func (s *UserRepositoryDAO) ResetUserPassword(ctx context.Context, key string, user *authdomain.Users) error {
+func (s *UserStore) ResetUserPassword(ctx context.Context, key string, user *authdomain.Users) error {
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 		userReset, err := s.getUserResetToken(ctx, tx, key)
 		if err != nil {
@@ -239,7 +239,7 @@ func (s *UserRepositoryDAO) ResetUserPassword(ctx context.Context, key string, u
 	})
 }
 
-func (s *UserRepositoryDAO) userResetToken(ctx context.Context, tx *gorm.DB, userID uuid.UUID, key string, tokenExp time.Duration) error {
+func (s *UserStore) userResetToken(ctx context.Context, tx *gorm.DB, userID uuid.UUID, key string, tokenExp time.Duration) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 
@@ -254,7 +254,7 @@ func (s *UserRepositoryDAO) userResetToken(ctx context.Context, tx *gorm.DB, use
 	return nil
 }
 
-func (s *UserRepositoryDAO) deleteUserReset(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
+func (s *UserStore) deleteUserReset(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 	err := tx.WithContext(ctx).Where("user_id = ?", userID).Delete(&authdomain.PasswordResetToken{}).Error
@@ -264,7 +264,7 @@ func (s *UserRepositoryDAO) deleteUserReset(ctx context.Context, tx *gorm.DB, us
 	return nil
 }
 
-func (s *UserRepositoryDAO) getUserResetToken(ctx context.Context, tx *gorm.DB, key string) (*authdomain.Users, error) {
+func (s *UserStore) getUserResetToken(ctx context.Context, tx *gorm.DB, key string) (*authdomain.Users, error) {
 	var resetToken authdomain.PasswordResetToken
 	hash := sha256.Sum256([]byte(key))
 	hashCode := hex.EncodeToString(hash[:])

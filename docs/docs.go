@@ -44,7 +44,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.CodePayload"
+                            "$ref": "#/definitions/authhandlers.CodePayload"
                         }
                     }
                 ],
@@ -96,7 +96,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.CreateUserTokenPayload"
+                            "$ref": "#/definitions/authhandlers.CreateUserTokenPayload"
                         }
                     }
                 ],
@@ -169,7 +169,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.ForgotPasswordPayload"
+                            "$ref": "#/definitions/authhandlers.ForgotPasswordPayload"
                         }
                     }
                 ],
@@ -218,7 +218,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.ResetPasswordPayload"
+                            "$ref": "#/definitions/authhandlers.ResetPasswordPayload"
                         }
                     }
                 ],
@@ -267,7 +267,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.CreateUserClientPayload"
+                            "$ref": "#/definitions/authhandlers.CreateUserClientPayload"
                         }
                     }
                 ],
@@ -321,7 +321,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.CreateUserStaffPayload"
+                            "$ref": "#/definitions/authhandlers.CreateUserStaffPayload"
                         }
                     }
                 ],
@@ -411,7 +411,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "authdomain.CodePayload": {
+        "authhandlers.CodePayload": {
             "type": "object",
             "required": [
                 "code"
@@ -422,7 +422,7 @@ const docTemplate = `{
                 }
             }
         },
-        "authdomain.CreateUserClientPayload": {
+        "authhandlers.CreateUserClientPayload": {
             "type": "object",
             "required": [
                 "birth_date",
@@ -465,7 +465,7 @@ const docTemplate = `{
                 }
             }
         },
-        "authdomain.CreateUserStaffPayload": {
+        "authhandlers.CreateUserStaffPayload": {
             "type": "object",
             "required": [
                 "birth_date",
@@ -511,7 +511,7 @@ const docTemplate = `{
                 }
             }
         },
-        "authdomain.CreateUserTokenPayload": {
+        "authhandlers.CreateUserTokenPayload": {
             "type": "object",
             "required": [
                 "email",
@@ -529,7 +529,7 @@ const docTemplate = `{
                 }
             }
         },
-        "authdomain.ForgotPasswordPayload": {
+        "authhandlers.ForgotPasswordPayload": {
             "type": "object",
             "required": [
                 "email"
@@ -541,7 +541,7 @@ const docTemplate = `{
                 }
             }
         },
-        "authdomain.ResetPasswordPayload": {
+        "authhandlers.ResetPasswordPayload": {
             "type": "object",
             "required": [
                 "confirm_password",

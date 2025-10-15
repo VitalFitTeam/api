@@ -36,7 +36,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.CodePayload"
+                            "$ref": "#/definitions/authhandlers.CodePayload"
                         }
                     }
                 ],
@@ -88,7 +88,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.CreateUserTokenPayload"
+                            "$ref": "#/definitions/authhandlers.CreateUserTokenPayload"
                         }
                     }
                 ],
@@ -161,7 +161,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.ForgotPasswordPayload"
+                            "$ref": "#/definitions/authhandlers.ForgotPasswordPayload"
                         }
                     }
                 ],
@@ -210,7 +210,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.ResetPasswordPayload"
+                            "$ref": "#/definitions/authhandlers.ResetPasswordPayload"
                         }
                     }
                 ],
@@ -259,7 +259,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.CreateUserClientPayload"
+                            "$ref": "#/definitions/authhandlers.CreateUserClientPayload"
                         }
                     }
                 ],
@@ -313,7 +313,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/authdomain.CreateUserStaffPayload"
+                            "$ref": "#/definitions/authhandlers.CreateUserStaffPayload"
                         }
                     }
                 ],
@@ -403,7 +403,7 @@
         }
     },
     "definitions": {
-        "authdomain.CodePayload": {
+        "authhandlers.CodePayload": {
             "type": "object",
             "required": [
                 "code"
@@ -414,7 +414,7 @@
                 }
             }
         },
-        "authdomain.CreateUserClientPayload": {
+        "authhandlers.CreateUserClientPayload": {
             "type": "object",
             "required": [
                 "birth_date",
@@ -457,7 +457,7 @@
                 }
             }
         },
-        "authdomain.CreateUserStaffPayload": {
+        "authhandlers.CreateUserStaffPayload": {
             "type": "object",
             "required": [
                 "birth_date",
@@ -503,7 +503,7 @@
                 }
             }
         },
-        "authdomain.CreateUserTokenPayload": {
+        "authhandlers.CreateUserTokenPayload": {
             "type": "object",
             "required": [
                 "email",
@@ -521,7 +521,7 @@
                 }
             }
         },
-        "authdomain.ForgotPasswordPayload": {
+        "authhandlers.ForgotPasswordPayload": {
             "type": "object",
             "required": [
                 "email"
@@ -533,7 +533,7 @@
                 }
             }
         },
-        "authdomain.ResetPasswordPayload": {
+        "authhandlers.ResetPasswordPayload": {
             "type": "object",
             "required": [
                 "confirm_password",

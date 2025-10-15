@@ -130,53 +130,9 @@ type UserInvitations struct {
 	Expiry time.Time `gorm:"expiry"`
 }
 
-type CreateUserClientPayload struct {
-	FirstName         string `json:"first_name" binding:"required"`
-	LastName          string `json:"last_name" binding:"required"`
-	Email             string `json:"email" binding:"required,email"`
-	Phone             string `json:"phone" binding:"required"`
-	IdentityDocument  string `json:"identity_document" binding:"required"`
-	Password          string `json:"password" binding:"required,min=8"`
-	BirthDate         string `json:"birth_date" binding:"required"`
-	Gender            string `json:"gender" binding:"required"`
-	ProfilePictureURL string `json:"profile_picture_url"`
-}
-
-type CreateUserStaffPayload struct {
-	FirstName         string `json:"first_name" binding:"required"`
-	LastName          string `json:"last_name" binding:"required"`
-	Email             string `json:"email" binding:"required,email"`
-	Phone             string `json:"phone" binding:"required"`
-	IdentityDocument  string `json:"identity_document" binding:"required"`
-	Password          string `json:"password" binding:"required,min=8"`
-	RoleName          string `json:"role_name" binding:"omitempty"`
-	BirthDate         string `json:"birth_date" binding:"required"`
-	Gender            string `json:"gender" binding:"required"`
-	ProfilePictureURL string `json:"profile_picture_url"`
-}
-
-type CodePayload struct {
-	Code string `json:"code" binding:"required"`
-}
-
-type CreateUserTokenPayload struct {
-	Email    string `json:"email" binding:"required,email,max=255"`
-	Password string `json:"password" binding:"required,min=3,max=72"`
-}
-
 type PasswordResetToken struct {
 	Token  string `gorm:"type:varchar(255);unique;not null" json:"token"`
 	UserID uuid.UUID
 	Users  Users     `gorm:"foreignKey:UserID" json:"user"`
 	Expiry time.Time `gorm:"expiry"`
-}
-
-type ForgotPasswordPayload struct {
-	Email string `json:"email" binding:"required,email,max=255"`
-}
-
-type ResetPasswordPayload struct {
-	Password        string `json:"password" binding:"required,min=8"`
-	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"` // Valida en el backend
-	Token           string `json:"token" binding:"required"`
 }

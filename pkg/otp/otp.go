@@ -17,11 +17,10 @@ func GenerateCode(length int) (string, error) {
 	alphabetSize := len(alphabetRunes)
 
 	if alphabetSize == 0 {
-		return "", fmt.Errorf("el alfabeto no puede estar vacío")
+		return "", fmt.Errorf("alphabet cannot be empty")
 	}
 
 	for i := 0; i < length; i++ {
-		// Selecciona un carácter aleatorio del alfabeto
 		randomIndex := rand.Intn(alphabetSize)
 		code[i] = alphabetRunes[randomIndex]
 	}

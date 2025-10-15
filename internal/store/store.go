@@ -18,7 +18,7 @@ type Storage struct {
 
 func NewStorage(db *gorm.DB, cfg config.Config, mailer mailer.Client, Auth authdomain.Authenticator) Storage {
 	return Storage{
-		Users:  authrepository.NewUserRepositoryDAO(db),
+		Users:  authrepository.NewUserStore(db),
 		Roles:  authrepository.NewRoleStore(db),
 		Config: cfg,
 		Mailer: mailer,

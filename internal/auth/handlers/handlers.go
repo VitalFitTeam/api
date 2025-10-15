@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	appservices "github.com/vitalfit/api/internal/app/services"
@@ -34,36 +33,23 @@ func NewAuthHandlers(services appservices.Services) *AuthHandlers {
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			user	body		authdomain.CreateUserClientPayload	true	"Register user data"
-// @Success		201		{object}	map[string]interface{}				"message: user created"
-// @Failure		400		{object}	map[string]interface{}				"bad response"
-// @Failure		500		{object}	map[string]interface{}				"internal server error"
+// @Param			user	body		CreateUserClientPayload	true	"Register user data"
+// @Success		201		{object}	map[string]interface{}	"message: user created"
+// @Failure		400		{object}	map[string]interface{}	"bad response"
+// @Failure		500		{object}	map[string]interface{}	"internal server error"
 // @Router			/auth/register [post]
 func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
-	var payload authdomain.CreateUserClientPayload
+	var payload CreateUserClientPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
-	birthdate, err := time.Parse("2006-01-02", payload.BirthDate)
-	if err != nil {
-		birthdate, err = time.Parse(time.RFC3339, payload.BirthDate)
-		if err != nil {
-			h.services.LogErrors.BadRequestResponse(c, err)
-			return
-		}
-	}
 
-	user := &authdomain.Users{
-		FirstName:         payload.FirstName,
-		LastName:          payload.LastName,
-		Email:             payload.Email,
-		Phone:             payload.Phone,
-		IdentityDocument:  payload.IdentityDocument,
-		BirthDate:         birthdate,
-		Gender:            authdomain.GenderEnum(payload.Gender),
-		ProfilePictureURL: payload.ProfilePictureURL,
+	user, err := payload.createUser()
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
 	}
 
 	if err := user.PasswordHash.Set(payload.Password); err != nil {
@@ -109,36 +95,23 @@ func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
-// @Param			user	body		authdomain.CreateUserStaffPayload	true	"Register user data"
-// @Success		201		{object}	map[string]interface{}				"message: user created"
-// @Failure		400		{object}	map[string]interface{}				"bad response"
-// @Failure		500		{object}	map[string]interface{}				"internal server error"
+// @Param			user	body		CreateUserStaffPayload	true	"Register user data"
+// @Success		201		{object}	map[string]interface{}	"message: user created"
+// @Failure		400		{object}	map[string]interface{}	"bad response"
+// @Failure		500		{object}	map[string]interface{}	"internal server error"
 // @Router			/auth/register-staff [post]
 func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
-	var payload authdomain.CreateUserStaffPayload
+	var payload CreateUserStaffPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
-	birthdate, err := time.Parse("2006-01-02", payload.BirthDate)
-	if err != nil {
-		birthdate, err = time.Parse(time.RFC3339, payload.BirthDate)
-		if err != nil {
-			h.services.LogErrors.BadRequestResponse(c, err)
-			return
-		}
-	}
 
-	user := &authdomain.Users{
-		FirstName:         payload.FirstName,
-		LastName:          payload.LastName,
-		Email:             payload.Email,
-		Phone:             payload.Phone,
-		IdentityDocument:  payload.IdentityDocument,
-		BirthDate:         birthdate,
-		Gender:            authdomain.GenderEnum(payload.Gender),
-		ProfilePictureURL: payload.ProfilePictureURL,
+	user, err := payload.CreateUserClientPayload.createUser()
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
 	}
 
 	if err := user.PasswordHash.Set(payload.Password); err != nil {
@@ -185,14 +158,14 @@ func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
 // @Tags			User
 // @Accept			json
 // @Produce		json
-// @Param			payload	body	authdomain.CodePayload	true	"Activation Code"
+// @Param			payload	body	CodePayload	true	"Activation Code"
 // @Success		204		"User successfully activated. No content returned."
 // @Failure		400		{object}	map[string]interface{}	"Bad request (e.g., invalid JSON payload)"
 // @Failure		404		{object}	map[string]interface{}	"Code is invalid or expired (handled by the service layer returning ErrNotFound)"
 // @Failure		500		{object}	map[string]interface{}	"Internal server error (e.g., database connection issue)"
 // @Router			/auth/activate [put]
 func (h *AuthHandlers) activateUserHandler(c *gin.Context) {
-	var payload authdomain.CodePayload
+	var payload CodePayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
@@ -212,15 +185,15 @@ func (h *AuthHandlers) activateUserHandler(c *gin.Context) {
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			credentials	body		authdomain.CreateUserTokenPayload	true		"User login credentials (email and password)"
-// @Success		200			{object}	map[string]string					"token"		"Successfully generated JWT access token"
-// @Failure		400			{object}	map[string]string					"error":	"Invalid request body"
-// @Failure		401			{object}	map[string]string					"error":	"Unauthorized"						"Invalid credentials (password mismatch)"
-// @Failure		404			{object}	map[string]string					"error":	"not found"							"User with the given email not found"
-// @Failure		500			{object}	map[string]string					"error":	"the server encountered a problem"	"Internal server error during token generation or hashing"
+// @Param			credentials	body		CreateUserTokenPayload	true		"User login credentials (email and password)"
+// @Success		200			{object}	map[string]string		"token"		"Successfully generated JWT access token"
+// @Failure		400			{object}	map[string]string		"error":	"Invalid request body"
+// @Failure		401			{object}	map[string]string		"error":	"Unauthorized"						"Invalid credentials (password mismatch)"
+// @Failure		404			{object}	map[string]string		"error":	"not found"							"User with the given email not found"
+// @Failure		500			{object}	map[string]string		"error":	"the server encountered a problem"	"Internal server error during token generation or hashing"
 // @Router			/auth/login [post]
 func (h *AuthHandlers) loginHandler(c *gin.Context) {
-	var payload authdomain.CreateUserTokenPayload
+	var payload CreateUserTokenPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
@@ -276,13 +249,13 @@ func (h *AuthHandlers) whoami(c *gin.Context) {
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			email	body		authdomain.ForgotPasswordPayload	true	"Estructura que contiene el correo del usuario"
-// @Success		200		{object}	map[string]interface{}				"Si el correo existe, el proceso de token ha sido exitoso (por seguridad, el mensaje no confirma la existencia del correo)."
-// @Failure		400		{object}	map[string]interface{}				"Bad Request - Datos de entrada inválidos (ej. formato de email incorrecto)"
-// @Failure		500		{object}	map[string]interface{}				"Internal Server Error - Error al generar el token, al acceder a la DB, o al enviar el correo."
+// @Param			email	body		ForgotPasswordPayload	true	"Estructura que contiene el correo del usuario"
+// @Success		200		{object}	map[string]interface{}	"Si el correo existe, el proceso de token ha sido exitoso (por seguridad, el mensaje no confirma la existencia del correo)."
+// @Failure		400		{object}	map[string]interface{}	"Bad Request - Datos de entrada inválidos (ej. formato de email incorrecto)"
+// @Failure		500		{object}	map[string]interface{}	"Internal Server Error - Error al generar el token, al acceder a la DB, o al enviar el correo."
 // @Router			/auth/password/forgot [post]
 func (h *AuthHandlers) forgotPasswordHandler(c *gin.Context) {
-	var payload authdomain.ForgotPasswordPayload
+	var payload ForgotPasswordPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
@@ -343,13 +316,13 @@ func (h *AuthHandlers) forgotPasswordHandler(c *gin.Context) {
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			body	body		authdomain.ResetPasswordPayload	true	"Reset token and new password data (must include password confirmation)."
-// @Success		200		{object}	map[string]interface{}			"Password updated successfully."
-// @Failure		400		{object}	map[string]interface{}			"Bad Request - Invalid data (expired token, token not found, or passwords do not match)."
-// @Failure		500		{object}	map[string]interface{}			"Internal Server Error - Error while hashing the password or executing the DB transaction."
+// @Param			body	body		ResetPasswordPayload	true	"Reset token and new password data (must include password confirmation)."
+// @Success		200		{object}	map[string]interface{}	"Password updated successfully."
+// @Failure		400		{object}	map[string]interface{}	"Bad Request - Invalid data (expired token, token not found, or passwords do not match)."
+// @Failure		500		{object}	map[string]interface{}	"Internal Server Error - Error while hashing the password or executing the DB transaction."
 // @Router			/auth/password/reset [post]
 func (h *AuthHandlers) resetPasswordHandler(c *gin.Context) {
-	var payload authdomain.ResetPasswordPayload
+	var payload ResetPasswordPayload
 	var user authdomain.Users
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -375,6 +348,7 @@ func (h *AuthHandlers) resetPasswordHandler(c *gin.Context) {
 
 }
 
+// function to send emails on register
 func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users, key string) (int, error) {
 	status, err := h.services.AuthServices.MailSender(ctx, user, key, mailer.UserWelcomeTemplate)
 	if err != nil {

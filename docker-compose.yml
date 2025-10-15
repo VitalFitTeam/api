@@ -1,23 +1,16 @@
 version: '3.8'
 
 services:
-  # ------------------------------------------------
-  # Servicio de la Aplicación Go (Development)
-  # ------------------------------------------------
   app:
     build:
       context: .
       dockerfile: Dockerfile
-      # Asegúrate de usar la imagen actualizada con 'make'
       target: development 
     container_name: vitalfit-app-dev
     ports:
       - "8080:8080"
-    # Carga todas las variables de .envrc
     env_file:
       - .env
-    # SOBRESCRIBE DB_HOST a 'db'
-    # NOTA: Asegúrate que tu código Go LEA y USE DB_HOST para conectar a la DB.
     environment:
       - DB_HOST=db
     volumes:
@@ -27,9 +20,6 @@ services:
         condition: service_healthy
     command: ["air"] 
 
-  # ------------------------------------------------
-  # Servicio de la Base de Datos PostgreSQL
-  # ------------------------------------------------
   db:
     image: postgres:16.3
     container_name: postgres-db-vitalfit

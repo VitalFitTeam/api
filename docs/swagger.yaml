@@ -1,13 +1,13 @@
 basePath: /v1
 definitions:
-  authdomain.CodePayload:
+  authhandlers.CodePayload:
     properties:
       code:
         type: string
     required:
     - code
     type: object
-  authdomain.CreateUserClientPayload:
+  authhandlers.CreateUserClientPayload:
     properties:
       birth_date:
         type: string
@@ -38,7 +38,7 @@ definitions:
     - password
     - phone
     type: object
-  authdomain.CreateUserStaffPayload:
+  authhandlers.CreateUserStaffPayload:
     properties:
       birth_date:
         type: string
@@ -71,7 +71,7 @@ definitions:
     - password
     - phone
     type: object
-  authdomain.CreateUserTokenPayload:
+  authhandlers.CreateUserTokenPayload:
     properties:
       email:
         maxLength: 255
@@ -84,7 +84,7 @@ definitions:
     - email
     - password
     type: object
-  authdomain.ForgotPasswordPayload:
+  authhandlers.ForgotPasswordPayload:
     properties:
       email:
         maxLength: 255
@@ -92,7 +92,7 @@ definitions:
     required:
     - email
     type: object
-  authdomain.ResetPasswordPayload:
+  authhandlers.ResetPasswordPayload:
     properties:
       confirm_password:
         description: Valida en el backend
@@ -130,7 +130,7 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/authdomain.CodePayload'
+          $ref: '#/definitions/authhandlers.CodePayload'
       produces:
       - application/json
       responses:
@@ -167,7 +167,7 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/authdomain.CreateUserTokenPayload'
+          $ref: '#/definitions/authhandlers.CreateUserTokenPayload'
       produces:
       - application/json
       responses:
@@ -219,7 +219,7 @@ paths:
         name: email
         required: true
         schema:
-          $ref: '#/definitions/authdomain.ForgotPasswordPayload'
+          $ref: '#/definitions/authhandlers.ForgotPasswordPayload'
       produces:
       - application/json
       responses:
@@ -256,7 +256,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/authdomain.ResetPasswordPayload'
+          $ref: '#/definitions/authhandlers.ResetPasswordPayload'
       produces:
       - application/json
       responses:
@@ -291,7 +291,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/authdomain.CreateUserClientPayload'
+          $ref: '#/definitions/authhandlers.CreateUserClientPayload'
       produces:
       - application/json
       responses:
@@ -324,7 +324,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/authdomain.CreateUserStaffPayload'
+          $ref: '#/definitions/authhandlers.CreateUserStaffPayload'
       produces:
       - application/json
       responses:
