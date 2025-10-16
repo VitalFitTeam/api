@@ -3,7 +3,7 @@ package authhandlers
 import (
 	"time"
 
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 )
 
 type CreateUserClientPayload struct {

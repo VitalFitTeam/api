@@ -2,7 +2,7 @@ package apphandlers
 
 import (
 	appservices "github.com/vitalfit/api/internal/app/services"
-	authhandlers "github.com/vitalfit/api/internal/auth/handlers"
+	authhandlers "github.com/vitalfit/api/internal/modules/auth/handlers"
 )
 
 type Handlers struct {

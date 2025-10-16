@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"gorm.io/gorm"
 )
 

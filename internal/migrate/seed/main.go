@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"github.com/vitalfit/api/internal/store"
 	env "github.com/vitalfit/api/pkg/Env"
 	dbg "github.com/vitalfit/api/pkg/db"

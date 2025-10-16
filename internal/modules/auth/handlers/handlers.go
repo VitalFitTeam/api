@@ -8,11 +8,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	appservices "github.com/vitalfit/api/internal/app/services"
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	"github.com/vitalfit/api/pkg/mailer"
-	otp "github.com/vitalfit/api/pkg/otp"
+	"github.com/vitalfit/api/pkg/otp"
 )
 
 type AuthHandlersInterface interface {

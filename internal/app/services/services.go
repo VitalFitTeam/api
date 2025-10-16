@@ -2,8 +2,8 @@ package appservices
 
 import (
 	"github.com/vitalfit/api/config"
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
-	authservices "github.com/vitalfit/api/internal/auth/services"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	authservices "github.com/vitalfit/api/internal/modules/auth/services"
 	logs "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"

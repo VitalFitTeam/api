@@ -4,7 +4,8 @@ import (
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
-	authservices "github.com/vitalfit/api/internal/auth/services"
+	authservices "github.com/vitalfit/api/internal/modules/auth/services"
+
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
 	rate_mw "github.com/vitalfit/api/pkg/ratelimiter"

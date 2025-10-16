@@ -1,8 +1,8 @@
 package store
 
 import (
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
-	authrepository "github.com/vitalfit/api/internal/auth/repository"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	authrepository "github.com/vitalfit/api/internal/modules/auth/repository"
 	"gorm.io/gorm"
 )
 
