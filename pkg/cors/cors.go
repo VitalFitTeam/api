@@ -2,16 +2,16 @@ package cors
 
 import (
 	"log"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	env "github.com/vitalfit/api/pkg/Env"
 )
 
 func SetupCORS(router *gin.Engine) {
-	originsStr := os.Getenv("WHITE_LIST")
+	originsStr := env.GetString("WHITE_LIST", "http://localhost:3000")
 	if originsStr == "" {
 		log.Fatal("Error: WHITE_LIST not set in environment variables")
 	}

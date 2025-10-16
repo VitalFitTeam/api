@@ -518,6 +518,9 @@ const docTemplate = `{
                 "password"
             ],
             "properties": {
+                "context": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string",
                     "maxLength": 255

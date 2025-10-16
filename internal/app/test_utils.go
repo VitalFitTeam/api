@@ -1,6 +1,8 @@
 package app
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/vitalfit/api/config"
@@ -13,12 +15,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func newTestApplication(t *testing.T, cfg *config.Config) *application {
+func NewTestApplication(t *testing.T, cfg *config.Config) *application {
 	t.Helper()
 
 	logger := zap.NewNop().Sugar()
 	// Uncomment to enable logs
-	// logger := zap.Must(zap.NewProduction()).Sugar()
+	//logger := zap.Must(zap.NewProduction()).Sugar()
 	testAuth := &authmocks.TestAuthenticator{}
 	mailer := &mailermocks.MockMailer{}
 	mockStore := store.NewMockStore()
@@ -38,5 +40,18 @@ func newTestApplication(t *testing.T, cfg *config.Config) *application {
 		Services:    mockServices,
 		Handlers:    mockHandlers,
 		Config:      cfg,
+	}
+}
+
+func ExecuteRequest(req *http.Request, mux http.Handler) *httptest.ResponseRecorder {
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	return rr
+}
+
+func CheckResponseCode(t *testing.T, expected, actual int) {
+	if expected != actual {
+		t.Errorf("Expected response code %d. Got %d", expected, actual)
 	}
 }

@@ -1,8 +1,6 @@
 package store
 
-import (
-	authmocks "github.com/vitalfit/api/internal/auth/mocks"
-)
+import authmocks "github.com/vitalfit/api/internal/auth/mocks"
 
 func NewMockStore() Storage {
 	return Storage{

@@ -18,13 +18,13 @@ import (
 type AuthHandlersInterface interface {
 	AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
-	registerUserStaffHandler(c *gin.Context)
-	registerUserClientHandler(c *gin.Context)
-	activateUserHandler(c *gin.Context)
-	loginHandler(c *gin.Context)
-	whoami(c *gin.Context)
-	forgotPasswordHandler(c *gin.Context)
-	resetPasswordHandler(c *gin.Context)
+	RegisterUserStaffHandler(c *gin.Context)
+	RegisterUserClientHandler(c *gin.Context)
+	ActivateUserHandler(c *gin.Context)
+	LoginHandler(c *gin.Context)
+	WhoAmI(c *gin.Context)
+	ForgotPasswordHandler(c *gin.Context)
+	ResetPasswordHandler(c *gin.Context)
 }
 
 type AuthHandlers struct {
@@ -45,7 +45,7 @@ func NewAuthHandlers(services appservices.Services) *AuthHandlers {
 // @Failure		400		{object}	map[string]interface{}	"bad response"
 // @Failure		500		{object}	map[string]interface{}	"internal server error"
 // @Router			/auth/register [post]
-func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
+func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 	var payload CreateUserClientPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -107,11 +107,16 @@ func (h *AuthHandlers) registerUserClientHandler(c *gin.Context) {
 // @Failure		400		{object}	map[string]interface{}	"bad response"
 // @Failure		500		{object}	map[string]interface{}	"internal server error"
 // @Router			/auth/register-staff [post]
-func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
+func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	var payload CreateUserStaffPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	if payload.RoleName == "client" {
+		h.services.LogErrors.BadRequestResponse(c, shared_errors.ErrBadRequest)
 		return
 	}
 
@@ -171,7 +176,7 @@ func (h *AuthHandlers) registerUserStaffHandler(c *gin.Context) {
 // @Failure		404		{object}	map[string]interface{}	"Code is invalid or expired (handled by the service layer returning ErrNotFound)"
 // @Failure		500		{object}	map[string]interface{}	"Internal server error (e.g., database connection issue)"
 // @Router			/auth/activate [put]
-func (h *AuthHandlers) activateUserHandler(c *gin.Context) {
+func (h *AuthHandlers) ActivateUserHandler(c *gin.Context) {
 	var payload CodePayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -199,7 +204,7 @@ func (h *AuthHandlers) activateUserHandler(c *gin.Context) {
 // @Failure		404			{object}	map[string]string		"error":	"not found"							"User with the given email not found"
 // @Failure		500			{object}	map[string]string		"error":	"the server encountered a problem"	"Internal server error during token generation or hashing"
 // @Router			/auth/login [post]
-func (h *AuthHandlers) loginHandler(c *gin.Context) {
+func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 	var payload CreateUserTokenPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -215,6 +220,12 @@ func (h *AuthHandlers) loginHandler(c *gin.Context) {
 		default:
 			h.services.LogErrors.InternalServerError(c, err)
 		}
+		return
+	}
+
+	// Si el contexto es 'dashboard', no permitir login de 'client'
+	if payload.Context == "dashboard" && user.Role.Name == "client" {
+		h.services.LogErrors.ForbiddenResponse(c)
 		return
 	}
 
@@ -244,7 +255,7 @@ func (h *AuthHandlers) loginHandler(c *gin.Context) {
 // @Success		200	{object}	map[string]interface{}	"user"		"Current authenticated user profile"
 // @Failure		401	{object}	map[string]string		"error":	"Unauthorized"	"Missing or invalid JWT token"
 // @Router			/user/whoami [get]
-func (h *AuthHandlers) whoami(c *gin.Context) {
+func (h *AuthHandlers) WhoAmI(c *gin.Context) {
 	user := h.services.UserServices.GetUserFromContext(c)
 	c.JSON(http.StatusOK, gin.H{
 		"user": user,
@@ -261,7 +272,7 @@ func (h *AuthHandlers) whoami(c *gin.Context) {
 // @Failure		400		{object}	map[string]interface{}	"Bad Request - Datos de entrada inválidos (ej. formato de email incorrecto)"
 // @Failure		500		{object}	map[string]interface{}	"Internal Server Error - Error al generar el token, al acceder a la DB, o al enviar el correo."
 // @Router			/auth/password/forgot [post]
-func (h *AuthHandlers) forgotPasswordHandler(c *gin.Context) {
+func (h *AuthHandlers) ForgotPasswordHandler(c *gin.Context) {
 	var payload ForgotPasswordPayload
 	ctx := c.Request.Context()
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -328,7 +339,7 @@ func (h *AuthHandlers) forgotPasswordHandler(c *gin.Context) {
 // @Failure		400		{object}	map[string]interface{}	"Bad Request - Invalid data (expired token, token not found, or passwords do not match)."
 // @Failure		500		{object}	map[string]interface{}	"Internal Server Error - Error while hashing the password or executing the DB transaction."
 // @Router			/auth/password/reset [post]
-func (h *AuthHandlers) resetPasswordHandler(c *gin.Context) {
+func (h *AuthHandlers) ResetPasswordHandler(c *gin.Context) {
 	var payload ResetPasswordPayload
 	var user authdomain.Users
 	ctx := c.Request.Context()

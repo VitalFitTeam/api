@@ -16,7 +16,7 @@ type AuthService struct {
 	store  store.Storage
 	config config.Config
 	auth   authdomain.Authenticator
-	mailer mailer.Client
+	Mailer mailer.Client
 }
 
 func NewAuthServices(store store.Storage, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client) *AuthService {
@@ -24,7 +24,7 @@ func NewAuthServices(store store.Storage, cfg config.Config, auth authdomain.Aut
 		store:  store,
 		config: cfg,
 		auth:   auth,
-		mailer: mailer,
+		Mailer: mailer,
 	}
 }
 
@@ -71,7 +71,7 @@ func (h *AuthService) MailSender(ctx context.Context, user *authdomain.Users, ke
 	}
 
 	// send mail
-	status, err := h.mailer.Send(template, user.FirstName, user.Email, vars, !isProdEnv)
+	status, err := h.Mailer.Send(template, user.FirstName, user.Email, vars, !isProdEnv)
 	if err != nil {
 		return status, err
 	}
