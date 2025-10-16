@@ -2,6 +2,10 @@ MIGRATIONS_PATH=./internal/migrate/migrations
 APP_SERVICE=app 
 include .env
 
+.PHONY: test
+test:
+	@go test -v ./...
+
 .PHONY: docker-up
 docker-up:
 	@docker compose up --build
