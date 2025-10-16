@@ -19,7 +19,6 @@ import (
 	mailermocks "github.com/vitalfit/api/pkg/mailer/mocks"
 )
 
-// setup es una función de ayuda que inicializa los mocks y los servicios para las pruebas.
 func setup(t *testing.T) (*authservices.AuthService, *authservices.UserService, *authmocks.UserStoreMock, *authmocks.RoleStoreMock, *mailermocks.MockMailer) {
 	t.Helper()
 
@@ -153,7 +152,6 @@ func TestAuthService(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, token)
 
-		// Validar el token para asegurar que se generó correctamente
 		parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 			return []byte("test"), nil
 		})
@@ -164,15 +162,12 @@ func TestAuthService(t *testing.T) {
 	})
 
 	t.Run("ValidateToken", func(t *testing.T) {
-		// Generar un token válido primero
 		validToken, _ := authService.GenerateToken(mockUser)
 
-		// Probar validación exitosa
 		parsedToken, err := authService.ValidateToken(validToken)
 		assert.NoError(t, err)
 		assert.True(t, parsedToken.Valid)
 
-		// Probar token inválido
 		_, err = authService.ValidateToken("invalid.token.string")
 		assert.Error(t, err)
 	})

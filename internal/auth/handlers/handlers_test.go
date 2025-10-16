@@ -152,7 +152,7 @@ func TestLoginHandler(t *testing.T) {
 		clientUser := newTestUser("client-login@example.com", testPassword)
 		clientUser.Role = authdomain.Roles{Name: "client"}
 
-		// Mock para GetByEmail, que ahora debe devolver el usuario con su rol
+		// Mock for GetByEmail, it should return a user with his role
 		userStoreMock.On("GetByEmail", mock.Anything, clientUser.Email).Return(clientUser, nil).Once()
 
 		body := newLoginPayload(clientUser.Email, testPassword, "dashboard")
@@ -161,7 +161,7 @@ func TestLoginHandler(t *testing.T) {
 
 		rr := app.ExecuteRequest(req, mux)
 
-		// Esperamos un 403 Forbidden
+		// We wait for a 403 forbidden
 		app.CheckResponseCode(t, http.StatusForbidden, rr.Code)
 		userStoreMock.AssertExpectations(t)
 
@@ -269,7 +269,7 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 	// Admin user who will perform the action
 	adminUser := &authdomain.Users{
 		UserID: uuid.New(),
-		Email:  "admin@example.com",                              // The level for branch_admin is 50 according to the migration
+		Email:  "admin@example.com",
 		Role:   authdomain.Roles{Name: "super_admin", Level: 99}, // Sufficient level
 	}
 	adminToken, _ := testApp.Services.AuthServices.GenerateToken(adminUser)
@@ -318,7 +318,7 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 			"first_name": "Client", "last_name": "User", "email": "shouldfail@example.com",
 			"phone": "111", "identity_document": "111", "password": "password",
 			"birth_date": "2000-01-01", "gender": "male",
-			"role_name": "client", // <-- Trying to register a client
+			"role_name": "client", // Trying to register a client
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, "/v1/auth/register-staff", bytes.NewBuffer(body))
@@ -332,16 +332,13 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 		roleStoreMock.AssertExpectations(t)
 	})
 
-	// Table-driven test for success cases
 	staffRoles := []string{"instructor", "accountant", "recepcionist", "branch_admin", "super_admin"}
 
 	for _, role := range staffRoles {
 		t.Run("should succeed registering a "+role, func(t *testing.T) {
-			// Mocks for authentication and role middleware
 			userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
 			roleStoreMock.On("GetByName", mock.Anything, "branch_admin").Return(&authdomain.Roles{Level: 50}, nil).Once()
 
-			// Mocks for the handler logic
 			mockRole := &authdomain.Roles{RoleID: uuid.New(), Name: role}
 			roleStoreMock.On("GetByName", mock.Anything, role).Return(mockRole, nil).Once()
 			userStoreMock.On("CreateAndInvitate", mock.Anything, mock.AnythingOfType("*authdomain.Users"), mock.AnythingOfType("string"), mock.AnythingOfType("time.Duration")).Return(nil).Once()
