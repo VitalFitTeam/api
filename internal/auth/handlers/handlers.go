@@ -18,6 +18,13 @@ import (
 type AuthHandlersInterface interface {
 	AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	registerUserStaffHandler(c *gin.Context)
+	registerUserClientHandler(c *gin.Context)
+	activateUserHandler(c *gin.Context)
+	loginHandler(c *gin.Context)
+	whoami(c *gin.Context)
+	forgotPasswordHandler(c *gin.Context)
+	resetPasswordHandler(c *gin.Context)
 }
 
 type AuthHandlers struct {

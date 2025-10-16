@@ -6,15 +6,12 @@ import (
 	"time"
 
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
-	authservices "github.com/vitalfit/api/internal/auth/services"
 	"github.com/vitalfit/api/internal/store"
 	env "github.com/vitalfit/api/pkg/Env"
 	dbg "github.com/vitalfit/api/pkg/db"
-	"github.com/vitalfit/api/pkg/mailer"
 	"gorm.io/gorm"
 
 	_ "github.com/lib/pq"
-	"github.com/vitalfit/api/config"
 )
 
 func Seed(store store.Storage, db *gorm.DB) {
@@ -63,16 +60,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cfg := config.LoadConfig()
-
-	mailer, err := mailer.NewResendClient(cfg.Mail.Resend.ApiKey, cfg.Mail.FromEmail)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	auth := authservices.NewJWTAuthenticator(cfg.Auth.Token.Secret, cfg.Auth.Token.Iss, cfg.Auth.Token.Iss)
-
-	store := store.NewStorage(conn, *cfg, mailer, auth)
+	store := store.NewStorage(conn)
 
 	Seed(store, conn)
 }

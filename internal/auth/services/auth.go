@@ -6,17 +6,25 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/config"
 	authdomain "github.com/vitalfit/api/internal/auth/domain"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/mailer"
 )
 
 type AuthService struct {
-	store store.Storage
+	store  store.Storage
+	config config.Config
+	auth   authdomain.Authenticator
+	mailer mailer.Client
 }
 
-func NewAuthServices(store store.Storage) *AuthService {
+func NewAuthServices(store store.Storage, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client) *AuthService {
 	return &AuthService{
-		store: store,
+		store:  store,
+		config: cfg,
+		auth:   auth,
+		mailer: mailer,
 	}
 }
 
@@ -31,7 +39,7 @@ func (s *AuthService) RegisterUserClient(ctx context.Context, user *authdomain.U
 	}
 	user.RoleID = role.RoleID
 	user.ClientProfile = *client_profile
-	if err := s.store.Users.CreateAndInvitate(ctx, user, token, s.store.Config.Mail.Exp); err != nil {
+	if err := s.store.Users.CreateAndInvitate(ctx, user, token, s.config.Mail.Exp); err != nil {
 		return err
 	}
 	return nil
@@ -43,7 +51,7 @@ func (s *AuthService) RegisterUserStaff(ctx context.Context, user *authdomain.Us
 		return error
 	}
 	user.RoleID = role.RoleID
-	if err := s.store.Users.CreateAndInvitate(ctx, user, token, s.store.Config.Mail.Exp); err != nil {
+	if err := s.store.Users.CreateAndInvitate(ctx, user, token, s.config.Mail.Exp); err != nil {
 		return err
 	}
 	return nil
@@ -53,7 +61,7 @@ func (h *AuthService) MailSender(ctx context.Context, user *authdomain.Users, ke
 
 	//mail -> fail -> roll back -> create invite
 
-	isProdEnv := h.store.Env == "production"
+	isProdEnv := h.config.Env == "production"
 	vars := struct {
 		Username string
 		CODE     string
@@ -63,7 +71,7 @@ func (h *AuthService) MailSender(ctx context.Context, user *authdomain.Users, ke
 	}
 
 	// send mail
-	status, err := h.store.Mailer.Send(template, user.FirstName, user.Email, vars, !isProdEnv)
+	status, err := h.mailer.Send(template, user.FirstName, user.Email, vars, !isProdEnv)
 	if err != nil {
 		return status, err
 	}
@@ -100,7 +108,7 @@ func (h *AuthService) CreatePasswordResetToken(ctx context.Context, email string
 	if err != nil {
 		return err
 	}
-	if err := h.store.Users.CreatePasswordResetToken(ctx, user.UserID, key, h.store.Config.Mail.Exp); err != nil {
+	if err := h.store.Users.CreatePasswordResetToken(ctx, user.UserID, key, h.config.Mail.Exp); err != nil {
 		return err
 	}
 	return nil
@@ -119,13 +127,13 @@ func (h *AuthService) GenerateToken(user *authdomain.Users) (string, error) {
 	// generate the token -> add claims
 	claims := jwt.MapClaims{
 		"sub": user.UserID,
-		"exp": time.Now().Add(h.store.Config.Auth.Token.Exp).Unix(),
+		"exp": time.Now().Add(h.config.Auth.Token.Exp).Unix(),
 		"iat": time.Now().Unix(),
 		"nbf": time.Now().Unix(),
-		"iss": h.store.Config.Auth.Token.Iss,
-		"aud": h.store.Config.Auth.Token.Iss,
+		"iss": h.config.Auth.Token.Iss,
+		"aud": h.config.Auth.Token.Iss,
 	}
-	token, err := h.store.Auth.GenerateToken(claims)
+	token, err := h.auth.GenerateToken(claims)
 	if err != nil {
 		return "", err
 	}
@@ -134,7 +142,7 @@ func (h *AuthService) GenerateToken(user *authdomain.Users) (string, error) {
 }
 
 func (h *AuthService) ValidateToken(token string) (*jwt.Token, error) {
-	return h.store.Auth.ValidateToken(token)
+	return h.auth.ValidateToken(token)
 }
 
 func (h *AuthService) ResetPassword(ctx context.Context, key string, user *authdomain.Users) error {

@@ -23,8 +23,8 @@ func BuildApplication(cfg *config.Config, db *gorm.DB) *application {
 	}
 	auth := authservices.NewJWTAuthenticator(cfg.Auth.Token.Secret, cfg.Auth.Token.Iss, cfg.Auth.Token.Iss)
 	rateLimiter := rate_mw.NewFixedWindowLimiter(cfg.RateLimiter.RequestsPerTimeFrame, cfg.RateLimiter.TimeFrame)
-	store := store.NewStorage(db, *cfg, mailer, auth)
-	services := appservices.NewServices(store, logger)
+	store := store.NewStorage(db)
+	services := appservices.NewServices(store, logger, *cfg, auth, mailer)
 	handlers := apphandlers.NewAppHandlers(services)
 	defer logger.Sync()
 	return &application{
