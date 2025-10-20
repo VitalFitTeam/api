@@ -408,6 +408,50 @@
                 }
             }
         },
+        "/branches/payment-methods": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all available payment methods in the system.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Get all payment methods",
+                "responses": {
+                    "200": {
+                        "description": "A list of payment methods",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/branchdomain.PaymentMethods"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "return status, environment and version.",
@@ -619,6 +663,47 @@
                     "minLength": 8
                 },
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "branchdomain.PaymentMethodTypeEnum": {
+            "type": "string",
+            "enum": [
+                "Cash",
+                "Card",
+                "Transfer",
+                "Other"
+            ],
+            "x-enum-varnames": [
+                "PaymentMethodCash",
+                "PaymentMethodCard",
+                "PaymentMethodTransfer",
+                "PaymentMethodOther"
+            ]
+        },
+        "branchdomain.PaymentMethods": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "global_status": {
+                    "type": "boolean"
+                },
+                "method_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/branchdomain.PaymentMethodTypeEnum"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }

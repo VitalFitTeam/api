@@ -43,16 +43,16 @@ type Branch struct {
 	Status      BranchStatusEnum `gorm:"type:branch_status_enum;not null;default:'Active'" json:"status"`
 	CreatedAt   time.Time        `json:"created_at"`
 	UpdatedAt   time.Time        `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt   `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt   gorm.DeletedAt   `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
 
 	//relations
 	StateID uuid.UUID `gorm:"type:uuid;not null" json:"state_id"`
 	State   States    `gorm:"foreignKey:StateID" json:"state"`
 
-	ManagerID          uuid.UUID             `gorm:"column:user_id;type:uuid;not null" json:"manager_id"`
-	Manager            authdomain.Users      `gorm:"foreignKey:ManagerID" json:"manager"`
-	OperatingHours     []OperatingHours      `gorm:"foreignKey:BranchID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"operating_hours,omitempty"`
-	PaymentMethodLinks []PaymentMethodBranch `gorm:"foreignKey:BranchID" json:"payment_method_links,omitempty"`
+	ManagerID           uuid.UUID              `gorm:"column:user_id;type:uuid;not null" json:"manager_id"`
+	Manager             authdomain.Users       `gorm:"foreignKey:ManagerID" json:"manager"`
+	OperatingHours      []OperatingHours       `gorm:"foreignKey:BranchID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"operating_hours,omitempty"`
+	PaymentMethodsLinks []PaymentMethodsBranch `gorm:"foreignKey:BranchID" json:"payment_method_links,omitempty"`
 }
 
 type OperatingHours struct {
@@ -62,27 +62,4 @@ type OperatingHours struct {
 	OpenTime  *string       `gorm:"type:time" json:"open_time"`
 	CloseTime *string       `gorm:"type:time" json:"close_time"`
 	IsClosed  bool          `gorm:"type:bool;default:false" json:"is_closed"`
-}
-
-type PaymentMethod struct {
-	MethodID     uuid.UUID             `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"method_id"`
-	Name         string                `gorm:"type:varchar(255);not null;unique" json:"name"`
-	Type         PaymentMethodTypeEnum `gorm:"type:payment_method_type_enum;not null" json:"type"`
-	Description  string                `gorm:"type:text" json:"description,omitempty"`
-	GlobalStatus bool                  `gorm:"type:bool;default:true" json:"global_status"`
-	CreatedAt    time.Time             `json:"created_at"`
-	UpdatedAt    time.Time             `json:"updated_at"`
-
-	BranchLinks []PaymentMethodBranch `gorm:"foreignKey:MethodID" json:"branch_links,omitempty"`
-}
-
-type PaymentMethodBranch struct {
-	BranchID  uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_branch_method" json:"branch_id"`
-	MethodID  uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_branch_method" json:"method_id"`
-	IsActive  bool      `gorm:"type:bool;not null;default:true" json:"is_active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-
-	Branch *Branch        `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
-	Method *PaymentMethod `gorm:"foreignKey:MethodID" json:"method,omitempty"`
 }

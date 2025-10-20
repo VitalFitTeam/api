@@ -27,3 +27,19 @@ func (s *BranchServices) CreateBranch(ctx context.Context, branch *branchdomain.
 	}
 	return nil
 }
+
+func (s *BranchServices) GetPaymentMethodByName(ctx context.Context, name string) (*branchdomain.PaymentMethods, error) {
+	paymentMethod, err := s.store.PaymentMethods.GetPaymentMethodByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	return paymentMethod, nil
+}
+
+func (s *BranchServices) GetPaymentMethods(ctx context.Context) ([]*branchdomain.PaymentMethods, error) {
+	paymentMethods, err := s.store.PaymentMethods.GetPaymentMethods(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return paymentMethods, nil
+}

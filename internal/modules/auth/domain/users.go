@@ -107,7 +107,7 @@ type Users struct {
 
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
 }
 
 type ClientProfiles struct {
@@ -120,7 +120,7 @@ type ClientProfiles struct {
 	Category           ClientCategoryEnum `gorm:"type:client_category;not null;default:'New'" json:"category"`
 	CreatedAt          time.Time          `json:"created_at"`
 	UpdatedAt          time.Time          `json:"updated_at"`
-	DeletedAt          gorm.DeletedAt     `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt          gorm.DeletedAt     `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
 }
 
 type UserInvitations struct {

@@ -9,7 +9,8 @@ import (
 
 type BranchHandlersInterface interface {
 	BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
-	CreateBranch(c *gin.Context)
+	CreateBranchHandler(c *gin.Context)
+	GetPaymentMethodsHandler(c *gin.Context)
 }
 
 type BranchHandlers struct {
@@ -31,7 +32,7 @@ func NewBranchHandlers(services appservices.Services) *BranchHandlers {
 // @Failure		400		{object}	object{error=string}	"Error: bad request"
 // @Failure		500		{object}	object{error=string}	"Error: internal server error"
 // @Router			/branches [post]
-func (h *BranchHandlers) CreateBranch(c *gin.Context) {
+func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 	var payload CreateBranchPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
@@ -65,6 +66,26 @@ func (h *BranchHandlers) CreateBranch(c *gin.Context) {
 	}
 	c.JSON(201, gin.H{
 		"message": "branch created",
+	})
+
+}
+
+// @Summary		Get all payment methods
+// @Description	Retrieves a list of all available payment methods in the system.
+// @Tags			Branches
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=[]branchdomain.PaymentMethods}	"A list of payment methods"
+// @Failure		500	{object}	object{error=string}						"Error: internal server error"
+// @Router			/branches/payment-methods [get]
+func (h *BranchHandlers) GetPaymentMethodsHandler(c *gin.Context) {
+	paymentMethods, err := h.services.BranchesServices.GetPaymentMethods(c)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(200, gin.H{
+		"data": paymentMethods,
 	})
 
 }

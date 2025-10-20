@@ -34,20 +34,6 @@ func (s *BranchesStore) create(ctx context.Context, tx *gorm.DB, branch *branchd
 
 }
 
-func (s *BranchesStore) addOperatingHour(ctx context.Context, tx *gorm.DB, operatingHour *branchdomain.OperatingHours) error {
-	err := tx.WithContext(ctx).Create(&operatingHour).Error
-	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			if pgErr.ConstraintName == "operating_hours_branch_id_day_of_week_key" {
-				return shared_errors.ErrConflict
-			}
-		}
-		return err
-	}
-	return nil
-}
-
 func (s *BranchesStore) CreateBranch(ctx context.Context, branch *branchdomain.Branch) error {
 	//transaction
 	return db.WithTX(s.db, func(tx *gorm.DB) error {

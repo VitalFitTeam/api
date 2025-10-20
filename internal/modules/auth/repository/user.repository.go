@@ -45,7 +45,7 @@ func (s *UserStore) Create(ctx context.Context, tx *gorm.DB, user *authdomain.Us
 func (s *UserStore) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.Users, error) {
 	var user authdomain.Users
 
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 
 	result := s.db.WithContext(ctx).

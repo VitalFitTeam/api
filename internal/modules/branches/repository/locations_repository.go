@@ -3,7 +3,6 @@ package branchrepository
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -68,7 +67,7 @@ func (s *LocationsStore) FindOrCreateStateByCountry(ctx context.Context, stateNa
 	var country *branchdomain.Countries
 	var state *branchdomain.States
 
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 	//transaction
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {

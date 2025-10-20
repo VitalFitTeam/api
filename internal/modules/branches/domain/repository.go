@@ -13,3 +13,8 @@ type BranchesRepository interface {
 type LocationRepository interface {
 	FindOrCreateStateByCountry(ctx context.Context, stateName string, countryName string) (*States, error)
 }
+
+type PaymentMethodsRepository interface {
+	GetPaymentMethods(ctx context.Context) ([]*PaymentMethods, error)
+	GetPaymentMethodByName(ctx context.Context, name string) (*PaymentMethods, error)
+}
