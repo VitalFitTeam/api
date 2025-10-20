@@ -1,7 +1,10 @@
 package branchservices
 
 import (
+	"context"
+
 	"github.com/vitalfit/api/config"
+	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	"github.com/vitalfit/api/internal/store"
 )
 
@@ -16,4 +19,11 @@ func NewBranchServices(store store.Storage, cfg config.Config) *BranchServices {
 		config: cfg,
 	}
 
+}
+
+func (s *BranchServices) CreateBranch(ctx context.Context, branch *branchdomain.Branch) error {
+	if err := s.store.Branches.CreateBranch(ctx, branch); err != nil {
+		return err
+	}
+	return nil
 }

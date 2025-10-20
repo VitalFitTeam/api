@@ -9,15 +9,17 @@ import (
 )
 
 type Storage struct {
-	Users    authdomain.UserRepository
-	Roles    authdomain.RolesRepository
-	Branches branchdomain.BranchesRepository
+	Users     authdomain.UserRepository
+	Roles     authdomain.RolesRepository
+	Branches  branchdomain.BranchesRepository
+	Locations branchdomain.LocationRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
 	return Storage{
-		Users:    authrepository.NewUserStore(db),
-		Roles:    authrepository.NewRoleStore(db),
-		Branches: branchrepository.NewBranchesStore(db),
+		Users:     authrepository.NewUserStore(db),
+		Roles:     authrepository.NewRoleStore(db),
+		Branches:  branchrepository.NewBranchesStore(db),
+		Locations: branchrepository.NewLocationsStore(db),
 	}
 }

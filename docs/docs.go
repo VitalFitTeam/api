@@ -350,6 +350,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/branches": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "adds a new branc to the system with his ubication and configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "create a new branch",
+                "parameters": [
+                    {
+                        "description": "Payload needed for the branch creation",
+                        "name": "branch",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/branchhandlers.CreateBranchPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "suceed message",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "return status, environment and version.",
@@ -561,6 +627,95 @@ const docTemplate = `{
                     "minLength": 8
                 },
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "branchhandlers.CreateBranchPayload": {
+            "type": "object",
+            "required": [
+                "country",
+                "manager_id",
+                "name",
+                "state",
+                "tax_id"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "manager_id": {
+                    "type": "string"
+                },
+                "max_capacity": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "operating_hours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/branchhandlers.OperatingHourPayload"
+                    }
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Active",
+                        "Inactive",
+                        "Maintenance"
+                    ]
+                },
+                "tax_id": {
+                    "type": "string",
+                    "minLength": 5
+                }
+            }
+        },
+        "branchhandlers.OperatingHourPayload": {
+            "type": "object",
+            "required": [
+                "day_of_week"
+            ],
+            "properties": {
+                "close_time": {
+                    "type": "string"
+                },
+                "day_of_week": {
+                    "type": "string",
+                    "enum": [
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                        "Sunday"
+                    ]
+                },
+                "is_closed": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "open_time": {
                     "type": "string"
                 }
             }

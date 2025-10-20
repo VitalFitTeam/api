@@ -109,6 +109,70 @@ definitions:
     - password
     - token
     type: object
+  branchhandlers.CreateBranchPayload:
+    properties:
+      address:
+        type: string
+      country:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      manager_id:
+        type: string
+      max_capacity:
+        minimum: 1
+        type: integer
+      name:
+        minLength: 3
+        type: string
+      operating_hours:
+        items:
+          $ref: '#/definitions/branchhandlers.OperatingHourPayload'
+        type: array
+      phone:
+        type: string
+      state:
+        type: string
+      status:
+        enum:
+        - Active
+        - Inactive
+        - Maintenance
+        type: string
+      tax_id:
+        minLength: 5
+        type: string
+    required:
+    - country
+    - manager_id
+    - name
+    - state
+    - tax_id
+    type: object
+  branchhandlers.OperatingHourPayload:
+    properties:
+      close_time:
+        type: string
+      day_of_week:
+        enum:
+        - Monday
+        - Tuesday
+        - Wednesday
+        - Thursday
+        - Friday
+        - Saturday
+        - Sunday
+        type: string
+      is_closed:
+        default: false
+        type: boolean
+      open_time:
+        type: string
+    required:
+    - day_of_week
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -350,6 +414,47 @@ paths:
       summary: Register New User Staff
       tags:
       - Auth
+  /branches:
+    post:
+      consumes:
+      - application/json
+      description: adds a new branc to the system with his ubication and configuration
+      parameters:
+      - description: Payload needed for the branch creation
+        in: body
+        name: branch
+        required: true
+        schema:
+          $ref: '#/definitions/branchhandlers.CreateBranchPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: suceed message
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: 'Error: bad request'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: create a new branch
+      tags:
+      - Branches
   /health:
     get:
       consumes:

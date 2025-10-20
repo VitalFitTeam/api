@@ -56,6 +56,9 @@ func (app *application) Mount() http.Handler {
 		app.Handlers.AuthHandlers.AuthRoutes(v1, m)
 		app.Handlers.AuthHandlers.UserRoutes(v1, m)
 
+		//branch routes
+		app.Handlers.BranchHandlers.BranchRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}

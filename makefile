@@ -40,4 +40,4 @@ seed:
 
 .PHONY: run
 run:
-	@echo "Usa 'make docker-up' para correr la app con Air y Docker."
+	@echo "Use 'make docker-up' to run the app with Air and Docker."

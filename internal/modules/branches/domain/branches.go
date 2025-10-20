@@ -1,1 +1,88 @@
 package branchdomain
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	"gorm.io/gorm"
+)
+
+type BranchStatusEnum string
+type DayOfWeekEnum string
+type PaymentMethodTypeEnum string
+
+const (
+	BranchStatusActive      BranchStatusEnum = "Active"
+	BranchStatusInactive    BranchStatusEnum = "Inactive"
+	BranchStatusMaintenance BranchStatusEnum = "Maintenance"
+
+	DayMonday    DayOfWeekEnum = "Monday"
+	DayTuesday   DayOfWeekEnum = "Tuesday"
+	DayWednesday DayOfWeekEnum = "Wednesday"
+	DayThursday  DayOfWeekEnum = "Thursday"
+	DayFriday    DayOfWeekEnum = "Friday"
+	DaySaturday  DayOfWeekEnum = "Saturday"
+	DaySunday    DayOfWeekEnum = "Sunday"
+
+	PaymentMethodCash     PaymentMethodTypeEnum = "Cash"
+	PaymentMethodCard     PaymentMethodTypeEnum = "Card"
+	PaymentMethodTransfer PaymentMethodTypeEnum = "Transfer"
+	PaymentMethodOther    PaymentMethodTypeEnum = "Other"
+)
+
+type Branch struct {
+	BranchID    uuid.UUID        `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"branch_id"`
+	Name        string           `gorm:"type:varchar(255);not null" json:"name"`
+	TaxID       string           `gorm:"type:varchar(20);unique;not null" json:"tax_id"`
+	Address     string           `gorm:"type:text" json:"address"`
+	Latitude    float64          `gorm:"type:float" json:"latitude"`
+	Longitude   float64          `gorm:"type:float" json:"longitude"`
+	MaxCapacity int              `gorm:"type:int" json:"max_capacity"`
+	Phone       string           `gorm:"type:varchar(30)" json:"phone"`
+	Status      BranchStatusEnum `gorm:"type:branch_status_enum;not null;default:'Active'" json:"status"`
+	CreatedAt   time.Time        `json:"created_at"`
+	UpdatedAt   time.Time        `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt   `gorm:"index" json:"deleted_at,omitempty"`
+
+	//relations
+	StateID uuid.UUID `gorm:"type:uuid;not null" json:"state_id"`
+	State   States    `gorm:"foreignKey:StateID" json:"state"`
+
+	ManagerID          uuid.UUID             `gorm:"column:user_id;type:uuid;not null" json:"manager_id"`
+	Manager            authdomain.Users      `gorm:"foreignKey:ManagerID" json:"manager"`
+	OperatingHours     []OperatingHours      `gorm:"foreignKey:BranchID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"operating_hours,omitempty"`
+	PaymentMethodLinks []PaymentMethodBranch `gorm:"foreignKey:BranchID" json:"payment_method_links,omitempty"`
+}
+
+type OperatingHours struct {
+	HourID    uuid.UUID     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"hour_id"`
+	DayOfWeek DayOfWeekEnum `gorm:"type:day_of_week_enum;not null;uniqueIndex:idx_branch_day" json:"day_of_week"`
+	BranchID  uuid.UUID     `gorm:"type:uuid;not null;uniqueIndex:idx_branch_day" json:"branch_id"`
+	OpenTime  *string       `gorm:"type:time" json:"open_time"`
+	CloseTime *string       `gorm:"type:time" json:"close_time"`
+	IsClosed  bool          `gorm:"type:bool;default:false" json:"is_closed"`
+}
+
+type PaymentMethod struct {
+	MethodID     uuid.UUID             `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"method_id"`
+	Name         string                `gorm:"type:varchar(255);not null;unique" json:"name"`
+	Type         PaymentMethodTypeEnum `gorm:"type:payment_method_type_enum;not null" json:"type"`
+	Description  string                `gorm:"type:text" json:"description,omitempty"`
+	GlobalStatus bool                  `gorm:"type:bool;default:true" json:"global_status"`
+	CreatedAt    time.Time             `json:"created_at"`
+	UpdatedAt    time.Time             `json:"updated_at"`
+
+	BranchLinks []PaymentMethodBranch `gorm:"foreignKey:MethodID" json:"branch_links,omitempty"`
+}
+
+type PaymentMethodBranch struct {
+	BranchID  uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_branch_method" json:"branch_id"`
+	MethodID  uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_branch_method" json:"method_id"`
+	IsActive  bool      `gorm:"type:bool;not null;default:true" json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+
+	Branch *Branch        `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
+	Method *PaymentMethod `gorm:"foreignKey:MethodID" json:"method,omitempty"`
+}
