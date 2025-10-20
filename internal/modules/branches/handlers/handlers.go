@@ -41,6 +41,16 @@ func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
+	user, err := h.services.UserServices.GetByID(ctx, payload.ManagerID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	if user.Role.Name != "branch_admin" {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
 	branch, err := payload.toBranch()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
