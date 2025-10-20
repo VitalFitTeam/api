@@ -138,6 +138,25 @@ definitions:
       updated_at:
         type: string
     type: object
+  branchhandlers.BranchListResponse:
+    properties:
+      branch_id:
+        type: string
+      country_name:
+        type: string
+      manager_last_name:
+        type: string
+      manager_name:
+        type: string
+      name:
+        type: string
+      state_name:
+        type: string
+      status:
+        type: string
+      tax_id:
+        type: string
+    type: object
   branchhandlers.CreateBranchPayload:
     properties:
       address:
@@ -448,6 +467,71 @@ paths:
       tags:
       - Auth
   /branches:
+    get:
+      consumes:
+      - application/json
+      description: Get a branch list paginated with optional filters
+      parameters:
+      - default: 10
+        description: limit results per page
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - default: 0
+        description: number of results to skip (paginación)
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      - default: desc
+        description: clasification order (asc or desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: search terms (filter by name)
+        in: query
+        name: search
+        type: string
+      - description: filter by status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: succed response
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/branchhandlers.BranchListResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Error: invalid params'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a branch list
+      tags:
+      - Branches
     post:
       consumes:
       - application/json

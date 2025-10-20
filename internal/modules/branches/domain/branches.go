@@ -45,12 +45,14 @@ type Branch struct {
 	UpdatedAt   time.Time        `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt   `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
 
-	//relations
 	StateID uuid.UUID `gorm:"type:uuid;not null" json:"state_id"`
-	State   States    `gorm:"foreignKey:StateID" json:"state"`
+	State   States    `json:"state"`
 
-	ManagerID           uuid.UUID              `gorm:"column:user_id;type:uuid;not null" json:"manager_id"`
-	Manager             authdomain.Users       `gorm:"foreignKey:ManagerID" json:"manager"`
+	ManagerID uuid.UUID `gorm:"column:user_id;type:uuid;not null" json:"manager_id"`
+
+	Manager authdomain.Users `gorm:"foreignKey:ManagerID" json:"manager"`
+
+	// --- Otras Relaciones (sin cambios) ---
 	OperatingHours      []OperatingHours       `gorm:"foreignKey:BranchID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"operating_hours,omitempty"`
 	PaymentMethodsLinks []PaymentMethodsBranch `gorm:"foreignKey:BranchID" json:"payment_method_links,omitempty"`
 }

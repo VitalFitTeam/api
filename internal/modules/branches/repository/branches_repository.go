@@ -9,6 +9,7 @@ import (
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -50,6 +51,24 @@ func (s *BranchesStore) CreateBranch(ctx context.Context, branch *branchdomain.B
 	}
 
 	return branch, nil
+}
+
+func (s *BranchesStore) GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*branchdomain.Branch, error) {
+	var branches []*branchdomain.Branch
+
+	result := s.db.
+		Preload("State.Country").
+		Preload("Manager").
+		Limit(fq.Limit).
+		Offset(fq.Offset).Where("name ILIKE ? AND status = ?", "%"+fq.Search+"%", fq.Status).
+		Find(&branches)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return branches, nil
+
 }
 
 func (s *BranchesStore) AddPaymentMethodsToBranch(ctx context.Context, branchID uuid.UUID, paymentLinks []branchdomain.PaymentMethodsBranch) error {

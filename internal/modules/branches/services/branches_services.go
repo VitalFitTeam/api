@@ -7,6 +7,7 @@ import (
 	"github.com/vitalfit/api/config"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type BranchServices struct {
@@ -31,6 +32,14 @@ func (s *BranchServices) CreateBranch(ctx context.Context, branch *branchdomain.
 		return err
 	}
 	return nil
+}
+
+func (s *BranchServices) GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*branchdomain.Branch, error) {
+	branches, err := s.store.Branches.GetBranches(ctx, fq)
+	if err != nil {
+		return nil, err
+	}
+	return branches, nil
 }
 
 func (s *BranchServices) GetPaymentMethodByID(ctx context.Context, methodID uuid.UUID) (*branchdomain.PaymentMethods, error) {

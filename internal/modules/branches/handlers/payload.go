@@ -54,3 +54,15 @@ func (s *OperatingHourPayload) toOperatingHour() (*branchdomain.OperatingHours, 
 
 	return operatingHour, nil
 }
+
+// response
+type BranchListResponse struct {
+	BranchID        uuid.UUID `json:"branch_id"`
+	Name            string    `json:"name"`
+	TaxID           string    `json:"tax_id"`
+	StateName       string    `json:"state_name"`
+	CountryName     string    `json:"country_name"`
+	ManagerName     string    `json:"manager_name"`
+	ManagerLastName string    `json:"manager_last_name"`
+	Status          string    `json:"status"`
+}
