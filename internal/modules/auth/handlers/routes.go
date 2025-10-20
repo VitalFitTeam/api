@@ -32,5 +32,6 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	userGroup := rg.Group("/user").Use(m.AuthJwtTokenMiddleware())
 	{ //private routes
 		userGroup.GET("/whoami", r.WhoAmI)
+		userGroup.GET("/branch-admins", r.GetBranchAdmins).Use(m.CheckRoleAccess("super_admin"))
 	}
 }

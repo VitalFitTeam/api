@@ -1,5 +1,18 @@
 basePath: /v1
 definitions:
+  authhandlers.BranchAdminResponse:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      role_id:
+        type: string
+      role_name:
+        type: string
+      user_id:
+        type: string
+    type: object
   authhandlers.CodePayload:
     properties:
       code:
@@ -615,6 +628,68 @@ paths:
       summary: verify service status
       tags:
       - System
+  /user/branch-admins:
+    get:
+      consumes:
+      - application/json
+      description: Get a user list with the branch admin role
+      parameters:
+      - default: 10
+        description: limit results per page
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - default: 0
+        description: number of results to skip (paginación)
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      - default: desc
+        description: clasification order (asc or desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: search terms (filter by name)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: succed response
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/authhandlers.BranchAdminResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Error: invalid params'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a user list that are branch admins
+      tags:
+      - User
   /user/whoami:
     get:
       description: Retrieves the profile of the user authenticated via the JWT token
