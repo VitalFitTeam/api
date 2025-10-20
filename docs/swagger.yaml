@@ -160,6 +160,10 @@ definitions:
         items:
           $ref: '#/definitions/branchhandlers.OperatingHourPayload'
         type: array
+      payment_methods:
+        items:
+          type: string
+        type: array
       phone:
         type: string
       state:

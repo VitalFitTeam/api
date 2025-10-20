@@ -18,6 +18,7 @@ type CreateBranchPayload struct {
 	Country        string                 `json:"country" binding:"required"`
 	ManagerID      uuid.UUID              `json:"manager_id" binding:"required"`
 	OperatingHours []OperatingHourPayload `json:"operating_hours" binding:"omitempty,dive"`
+	PaymentMethods []uuid.UUID            `json:"payment_methods" binding:"omitempty,dive"`
 }
 
 type OperatingHourPayload struct {

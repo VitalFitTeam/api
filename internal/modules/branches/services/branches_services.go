@@ -3,6 +3,7 @@ package branchservices
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/vitalfit/api/config"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	"github.com/vitalfit/api/internal/store"
@@ -22,14 +23,18 @@ func NewBranchServices(store store.Storage, cfg config.Config) *BranchServices {
 }
 
 func (s *BranchServices) CreateBranch(ctx context.Context, branch *branchdomain.Branch) error {
-	if err := s.store.Branches.CreateBranch(ctx, branch); err != nil {
+	branch, err := s.store.Branches.CreateBranch(ctx, branch)
+	if err != nil {
+		return err
+	}
+	if err := s.store.Branches.AddPaymentMethodsToBranch(ctx, branch.BranchID, branch.PaymentMethodsLinks); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *BranchServices) GetPaymentMethodByName(ctx context.Context, name string) (*branchdomain.PaymentMethods, error) {
-	paymentMethod, err := s.store.PaymentMethods.GetPaymentMethodByName(ctx, name)
+func (s *BranchServices) GetPaymentMethodByID(ctx context.Context, methodID uuid.UUID) (*branchdomain.PaymentMethods, error) {
+	paymentMethod, err := s.store.PaymentMethods.GetPaymentMethodByID(ctx, methodID)
 	if err != nil {
 		return nil, err
 	}

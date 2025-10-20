@@ -2,12 +2,15 @@ package branchdomain
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type BranchesRepository interface {
 	//GetByID(ctx context.Context, branchID uuid.UUID) (*Branch, error)
 	//Update(ctx context.Context, branch *Branch) error
-	CreateBranch(ctx context.Context, branch *Branch) error
+	CreateBranch(ctx context.Context, branch *Branch) (*Branch, error)
+	AddPaymentMethodsToBranch(ctx context.Context, branchID uuid.UUID, paymentLinks []PaymentMethodsBranch) error
 }
 
 type LocationRepository interface {
@@ -16,5 +19,5 @@ type LocationRepository interface {
 
 type PaymentMethodsRepository interface {
 	GetPaymentMethods(ctx context.Context) ([]*PaymentMethods, error)
-	GetPaymentMethodByName(ctx context.Context, name string) (*PaymentMethods, error)
+	GetPaymentMethodByID(ctx context.Context, methodID uuid.UUID) (*PaymentMethods, error)
 }

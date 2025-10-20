@@ -755,6 +755,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/branchhandlers.OperatingHourPayload"
                     }
                 },
+                "payment_methods": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "phone": {
                     "type": "string"
                 },

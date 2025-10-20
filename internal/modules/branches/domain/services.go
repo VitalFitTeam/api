@@ -2,11 +2,13 @@ package branchdomain
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type BranchesServicesInterface interface {
 	CreateBranch(ctx context.Context, branch *Branch) error
-	GetPaymentMethodByName(ctx context.Context, name string) (*PaymentMethods, error)
+	GetPaymentMethodByID(ctx context.Context, methodID uuid.UUID) (*PaymentMethods, error)
 	GetPaymentMethods(ctx context.Context) ([]*PaymentMethods, error)
 }
 

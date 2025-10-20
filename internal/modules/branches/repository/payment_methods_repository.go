@@ -3,6 +3,7 @@ package branchrepository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
@@ -26,11 +27,11 @@ func (s *PaymentMethodsStore) GetPaymentMethods(ctx context.Context) ([]*branchd
 	return paymentMethods, nil
 }
 
-func (s *PaymentMethodsStore) GetPaymentMethodByName(ctx context.Context, name string) (*branchdomain.PaymentMethods, error) {
+func (s *PaymentMethodsStore) GetPaymentMethodByID(ctx context.Context, methodID uuid.UUID) (*branchdomain.PaymentMethods, error) {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 	var paymentMethod branchdomain.PaymentMethods
-	err := s.db.WithContext(ctx).Where("name = ?", name).First(&paymentMethod).Error
+	err := s.db.WithContext(ctx).Where("method_id = ?", methodID).First(&paymentMethod).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, shared_errors.ErrNotFound

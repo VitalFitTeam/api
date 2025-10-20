@@ -43,6 +43,7 @@ func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+	//operating hours
 	var branchOperatingHours []branchdomain.OperatingHours
 	for _, operatingHour := range payload.OperatingHours {
 		operatingHour, err := operatingHour.toOperatingHour()
@@ -53,13 +54,23 @@ func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 		branchOperatingHours = append(branchOperatingHours, *operatingHour)
 	}
 	branch.OperatingHours = branchOperatingHours
+	//payment methods
+	var branchPaymentMethods []branchdomain.PaymentMethodsBranch
+	for _, paymentMethod := range payload.PaymentMethods {
+		branchPaymentMethod := branchdomain.PaymentMethodsBranch{
+			MethodID: paymentMethod,
+		}
+		branchPaymentMethods = append(branchPaymentMethods, branchPaymentMethod)
+	}
+	branch.PaymentMethodsLinks = branchPaymentMethods
+	//state
 	state, err := h.services.LocationsServices.FindOrCreateStateByCountry(c, payload.State, payload.Country)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 	branch.StateID = state.StateID
-
+	//create branch
 	if err := h.services.BranchesServices.CreateBranch(c, branch); err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
