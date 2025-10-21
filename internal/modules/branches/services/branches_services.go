@@ -34,7 +34,7 @@ func (s *BranchServices) CreateBranch(ctx context.Context, branch *branchdomain.
 	return nil
 }
 
-func (s *BranchServices) GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*branchdomain.Branch, error) {
+func (s *BranchServices) GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) (*branchdomain.BranchQueryResults, error) {
 	branches, err := s.store.Branches.GetBranches(ctx, fq)
 	if err != nil {
 		return nil, err

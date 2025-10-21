@@ -65,3 +65,15 @@ type OperatingHours struct {
 	CloseTime *string       `gorm:"type:time" json:"close_time"`
 	IsClosed  bool          `gorm:"type:bool;default:false" json:"is_closed"`
 }
+
+type BranchQueryResults struct {
+	Branches         []*Branch
+	ActiveCount      int64
+	InactiveCount    int64
+	ManteinanceCount int64
+}
+
+type StatusCount struct {
+	Status string
+	Count  int64
+}

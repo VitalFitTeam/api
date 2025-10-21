@@ -53,21 +53,59 @@ func (s *BranchesStore) CreateBranch(ctx context.Context, branch *branchdomain.B
 	return branch, nil
 }
 
-func (s *BranchesStore) GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*branchdomain.Branch, error) {
+func (s *BranchesStore) GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) (*branchdomain.BranchQueryResults, error) {
+	searchPattern := "%" + fq.Search + "%"
+
+	baseQuery := s.db.WithContext(ctx).
+		Model(&branchdomain.Branch{}).
+		Where("name ILIKE ?", searchPattern)
+
+	var counts []branchdomain.StatusCount
+	if err := baseQuery.Session(&gorm.Session{NewDB: true}).
+		Model(&branchdomain.Branch{}).
+		Select("status, COUNT(*) as count").
+		Group("status").
+		Find(&counts).Error; err != nil {
+		return nil, err
+	}
+
+	var activeCount, inactiveCount, manteinanceCount int64
+	for _, c := range counts {
+		switch c.Status {
+		case "Active":
+			activeCount = c.Count
+		case "Inactive":
+			inactiveCount = c.Count
+		case "Manteinance":
+			manteinanceCount = c.Count
+		}
+	}
+
 	var branches []*branchdomain.Branch
 
-	result := s.db.
+	query := baseQuery.
 		Preload("State.Country").
 		Preload("Manager").
 		Limit(fq.Limit).
-		Offset(fq.Offset).Where("name ILIKE ? AND status = ?", "%"+fq.Search+"%", fq.Status).
-		Find(&branches)
+		Offset(fq.Offset).
+		Order("created_at " + fq.Sort)
 
-	if result.Error != nil {
-		return nil, result.Error
+	if fq.Status != "" {
+		query = query.Where("status = ?", fq.Status)
 	}
 
-	return branches, nil
+	if err := query.Find(&branches).Error; err != nil {
+		return nil, err
+	}
+
+	response := &branchdomain.BranchQueryResults{
+		Branches:         branches,
+		ActiveCount:      activeCount,
+		InactiveCount:    inactiveCount,
+		ManteinanceCount: manteinanceCount,
+	}
+
+	return response, nil
 
 }
 
