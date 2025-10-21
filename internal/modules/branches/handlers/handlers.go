@@ -1,9 +1,13 @@
 package branchhandlers
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	"github.com/vitalfit/api/pkg/pagination"
 )
@@ -88,7 +92,7 @@ func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	c.JSON(201, gin.H{
+	c.JSON(http.StatusCreated, gin.H{
 		"message": "branch created",
 	})
 
@@ -98,14 +102,16 @@ func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 // @Description	Get a branch list paginated with optional filters
 // @Tags			Branches
 // @Security		ApiKeyAuth
-// @Param			limit	query	int		false	"limit results per page"					default(10)			minimum(1)	maximum(100)
-// @Param			offset	query	int		false	"number of results to skip (paginación)"	default(0)			minimum(0)
-// @Param			sort	query	string	false	"clasification order (asc or desc)"			enums(asc, desc)	default(desc)
-// @Param			search	query	string	false	"search terms (filter by name)"
-// @Param			status	query	string	false	"filter by status"	enums(Active, Inactiv
+// @Param			limit		query	int		false	"limit results per page"					default(10)			minimum(1)	maximum(100)
+// @Param			offset		query	int		false	"number of results to skip (paginación)"	default(0)			minimum(0)
+// @Param			sort		query	string	false	"clasification order (asc or desc)"			enums(asc, desc)	default(desc)
+// @Param			status		query	string	false	"filter by status"							enums(Active, Inactive, Maintenance)
+// @Param			search		query	string	false	"global search across branch, state and country names"
+// @Param			location	query	string	false	"filter by location (state or country)"
+// @Param			tax_id		query	string	false	"filter by exact tax id"
 // @Accept			json
 // @Produce		json
-// @Success		200	{object}	object{data=[]BranchListResponse, count=object{active=integer, inactive=integer, maintenance=integer}, pagination=pagination.PaginatedFeedQuery}	"succed response"
+// @Success		200	{object}	object{data=[]BranchListResponse}	"succed response"
 // @Failure		400	{object}	object{error=string}				"Error: invalid params"
 // @Failure		500	{object}	object{error=string}				"Error: internal server error"
 // @Router			/branches [get]
@@ -149,7 +155,7 @@ func (h *BranchHandlers) GetBranchesHandler(c *gin.Context) {
 		responseList = append(responseList, resp)
 	}
 
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"data": responseList,
 		"count": gin.H{
 			"active":      branches.ActiveCount,
@@ -159,6 +165,43 @@ func (h *BranchHandlers) GetBranchesHandler(c *gin.Context) {
 		},
 		"pagination": fq,
 	})
+}
+
+// @Summary		Delete a branch
+// @Description	Deletes a specific branch by its UUID. Requires "super_admin" role.
+// @Tags			Branches
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id	path		string					true	"Branch UUID"
+// @Success		204	{object}	nil						"No Content"
+// @Failure		400	{object}	object{error=string}	"Error: Bad Request - Malformed ID"
+// @Failure		401	{object}	object{error=string}	"Error: Unauthorized - Token required"
+// @Failure		403	{object}	object{error=string}	"Error: Forbidden - Not super_admin"
+// @Failure		404	{object}	object{error=string}	"Error: Not Found - Branch not found"
+// @Failure		500	{object}	object{error=string}	"Error: Internal Server Error"
+// @Router			/branches/{id} [delete]
+func (h *BranchHandlers) DeleteBranchHandler(c *gin.Context) {
+	idStr := c.Param("id")
+
+	branchID, err := uuid.Parse(idStr)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	ctx := c.Request.Context()
+	if err := h.services.BranchesServices.DeleteBranch(ctx, branchID); err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }
 
 // @Summary		Get all payment methods

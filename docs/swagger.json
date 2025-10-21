@@ -390,15 +390,32 @@
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            "Active",
+                            "Inactive",
+                            "Maintenance"
+                        ],
                         "type": "string",
-                        "description": "search terms (filter by name)",
+                        "description": "filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "global search across branch, state and country names",
                         "name": "search",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "filter by status",
-                        "name": "status",
+                        "description": "filter by location (state or country)",
+                        "name": "location",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "filter by exact tax id",
+                        "name": "tax_id",
                         "in": "query"
                     }
                 ],
@@ -538,6 +555,95 @@
                     },
                     "500": {
                         "description": "Error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/branches/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deletes a specific branch by its UUID. Requires \"super_admin\" role.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Delete a branch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Error: Bad Request - Malformed ID",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Error: Unauthorized - Token required",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Error: Forbidden - Not super_admin",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Error: Not Found - Branch not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Internal Server Error",
                         "schema": {
                             "type": "object",
                             "properties": {

@@ -12,6 +12,7 @@ type BranchesServicesInterface interface {
 	GetPaymentMethodByID(ctx context.Context, methodID uuid.UUID) (*PaymentMethods, error)
 	GetPaymentMethods(ctx context.Context) ([]*PaymentMethods, error)
 	GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) (*BranchQueryResults, error)
+	DeleteBranch(ctx context.Context, branchID uuid.UUID) error
 }
 
 type LocationsServicesInterface interface {
