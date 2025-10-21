@@ -38,7 +38,7 @@ func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	var payload CreateBranchPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
+		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
 	user, err := h.services.UserServices.GetByID(ctx, payload.ManagerID)
@@ -47,7 +47,7 @@ func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 		return
 	}
 	if user.Role.Name != "branch_admin" {
-		h.services.LogErrors.BadRequestResponse(c, err)
+		h.services.LogErrors.ForbiddenResponse(c)
 		return
 	}
 
