@@ -105,7 +105,7 @@ func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 // @Param			status	query	string	false	"filter by status"	enums(Active, Inactiv
 // @Accept			json
 // @Produce		json
-// @Success		200	{object}	object{data=[]BranchListResponse}	"succed response"
+// @Success		200	{object}	object{data=[]BranchListResponse, count=object{active=integer, inactive=integer, maintenance=integer}, pagination=pagination.PaginatedFeedQuery}	"succed response"
 // @Failure		400	{object}	object{error=string}				"Error: invalid params"
 // @Failure		500	{object}	object{error=string}				"Error: internal server error"
 // @Router			/branches [get]
@@ -114,8 +114,9 @@ func (h *BranchHandlers) GetBranchesHandler(c *gin.Context) {
 	fq := pagination.PaginatedFeedQuery{
 		Limit:  10,
 		Offset: 0,
-		Sort:   "asc",
+		Sort:   "desc",
 		Search: "",
+		Status: "Active",
 	}
 
 	fq, err := fq.Parse(c.Request)
@@ -130,9 +131,9 @@ func (h *BranchHandlers) GetBranchesHandler(c *gin.Context) {
 		return
 	}
 
-	responseList := make([]BranchListResponse, 0, len(branches))
+	responseList := make([]BranchListResponse, 0, len(branches.Branches))
 
-	for _, branch := range branches {
+	for _, branch := range branches.Branches {
 
 		resp := BranchListResponse{
 			BranchID:        branch.BranchID,
@@ -149,7 +150,13 @@ func (h *BranchHandlers) GetBranchesHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"data":       responseList,
+		"data": responseList,
+		"count": gin.H{
+			"active":      branches.ActiveCount,
+			"inactive":    branches.InactiveCount,
+			"maintenance": branches.ManteinanceCount,
+			"total":       branches.ActiveCount + branches.InactiveCount + branches.ManteinanceCount,
+		},
 		"pagination": fq,
 	})
 }
