@@ -17,7 +17,6 @@ import (
 func Seed(store store.Storage, db *gorm.DB) {
 	ctx := context.Background()
 	CreateSuperAdmin(store, db, ctx)
-	CreateBranchAdmin(store, db, ctx)
 }
 
 func CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -39,45 +38,6 @@ func CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
 	}
 	user.BirthDate = date
 	role, err := store.Roles.GetByName(ctx, "super_admin")
-	if err != nil {
-		log.Println("Error getting the role", err)
-		return
-	}
-	user.RoleID = role.RoleID
-	user.PasswordHash.Set(password)
-	err = dbg.WithTX(db, func(tx *gorm.DB) error {
-		if err := store.Users.Create(ctx, tx, user); err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		log.Println("Error creating the user", err)
-		return
-	}
-
-	log.Println("User created successfully")
-}
-
-func CreateBranchAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
-	email := "branch_admin@example.com"
-	password := "branchadmin123"
-	user := &authdomain.Users{
-		FirstName:        "David",
-		LastName:         "Gomez",
-		Email:            email,
-		Phone:            "+581235467890",
-		IdentityDocument: "V-1234567892",
-		Gender:           "male",
-		IsValidated:      true,
-	}
-	date, err := time.Parse(time.RFC3339, "2001-01-12T00:00:00Z")
-	if err != nil {
-		log.Println("Error parsing date", err)
-		return
-	}
-	user.BirthDate = date
-	role, err := store.Roles.GetByName(ctx, "branch_admin")
 	if err != nil {
 		log.Println("Error getting the role", err)
 		return
