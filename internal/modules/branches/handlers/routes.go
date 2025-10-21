@@ -6,10 +6,11 @@ import (
 )
 
 func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
-	branchGroup := rg.Group("/branches").Use(m.AuthJwtTokenMiddleware())
+	branchGroup := rg.Group("/branches").Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("super_admin"))
 	{
-		branchGroup.GET("", r.GetBranchesHandler).Use(m.CheckRoleAccess("super_admin"))
-		branchGroup.POST("", r.CreateBranchHandler).Use(m.CheckRoleAccess("super_admin"))
-		branchGroup.GET("/payment-methods", r.GetPaymentMethodsHandler).Use(m.CheckRoleAccess("super_admin"))
+		branchGroup.GET("", r.GetBranchesHandler)
+		branchGroup.POST("", r.CreateBranchHandler)
+		branchGroup.GET("/payment-methods", r.GetPaymentMethodsHandler)
+		branchGroup.DELETE("/:id", r.DeleteBranchHandler)
 	}
 }

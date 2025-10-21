@@ -54,11 +54,24 @@ func (s *BranchesStore) CreateBranch(ctx context.Context, branch *branchdomain.B
 }
 
 func (s *BranchesStore) GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) (*branchdomain.BranchQueryResults, error) {
-	searchPattern := "%" + fq.Search + "%"
-
 	baseQuery := s.db.WithContext(ctx).
 		Model(&branchdomain.Branch{}).
-		Where("name ILIKE ?", searchPattern)
+		Joins("JOIN states ON states.state_id = branch.state_id").
+		Joins("JOIN countries ON countries.country_id = states.country_id")
+
+	if fq.Search != "" {
+		baseQuery = baseQuery.Where("branch.name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	if fq.Location != "" {
+		locationPattern := "%" + fq.Location + "%"
+		baseQuery = baseQuery.Where("states.name ILIKE ? OR countries.name ILIKE ?", locationPattern, locationPattern)
+	}
+
+	if fq.TaxID != "" {
+		taxIDPattern := "%" + fq.TaxID + "%"
+		baseQuery = baseQuery.Where("branch.tax_id ILIKE ?", taxIDPattern)
+	}
 
 	var counts []branchdomain.StatusCount
 	if err := baseQuery.Session(&gorm.Session{NewDB: true}).
@@ -123,5 +136,24 @@ func (s *BranchesStore) AddPaymentMethodsToBranch(ctx context.Context, branchID 
 			Columns:   []clause.Column{{Name: "branch_id"}, {Name: "method_id"}},
 			DoNothing: true,
 		}).Create(&paymentLinks).Error
+	})
+}
+
+// softdelete
+func (s *BranchesStore) Delete(ctx context.Context, branchID uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+	// transaction
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		result := tx.WithContext(ctx).Delete(&branchdomain.Branch{}, branchID)
+		if result.Error != nil {
+			return result.Error //rollback
+		}
+
+		if result.RowsAffected == 0 {
+			return shared_errors.ErrNotFound //rollback
+		}
+
+		return nil // commit
 	})
 }

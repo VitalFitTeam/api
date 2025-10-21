@@ -57,3 +57,11 @@ func (s *BranchServices) GetPaymentMethods(ctx context.Context) ([]*branchdomain
 	}
 	return paymentMethods, nil
 }
+
+func (s *BranchServices) DeleteBranch(ctx context.Context, branchID uuid.UUID) error {
+	err := s.store.Branches.Delete(ctx, branchID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

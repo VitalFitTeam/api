@@ -7,13 +7,15 @@ import (
 )
 
 type PaginatedFeedQuery struct {
-	Limit  int    `json:"limit" validate:"gte=1,lte=20"`
-	Offset int    `json:"offset" validate:"gte=0"`
-	Sort   string `json:"sort" validate:"oneof=asc desc"`
-	Search string `json:"search" validate:"max=100"`
-	Status string `json:"status" validate:"oneof=Active Inactive"`
-	Since  string `json:"since"`
-	Until  string `json:"until"`
+	Limit    int    `json:"limit" validate:"gte=1,lte=20"`
+	Offset   int    `json:"offset" validate:"gte=0"`
+	Sort     string `json:"sort" validate:"oneof=asc desc"`
+	Search   string `json:"search" validate:"max=100"`
+	Status   string `json:"status" validate:"oneof=Active Inactive Maintenance ''"`
+	Since    string `json:"since"`
+	Until    string `json:"until"`
+	Location string `json:"location"`
+	TaxID    string `json:"tax_id"`
 }
 
 func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) {
@@ -48,6 +50,17 @@ func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) 
 	if search != "" {
 		fq.Search = search
 	}
+
+	location := qs.Get("location")
+	if location != "" {
+		fq.Location = location
+	}
+
+	taxID := qs.Get("tax_id")
+	if taxID != "" {
+		fq.TaxID = taxID
+	}
+
 	status := qs.Get("status")
 	if status != "" {
 		fq.Status = status

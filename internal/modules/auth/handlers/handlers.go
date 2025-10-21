@@ -364,6 +364,7 @@ func (h *AuthHandlers) ResetPasswordHandler(c *gin.Context) {
 		}
 		return
 	}
+	c.JSON(http.StatusNoContent, nil)
 
 }
 
@@ -431,7 +432,7 @@ func (h *AuthHandlers) GetBranchAdmins(c *gin.Context) {
 		responseList = append(responseList, resp)
 	}
 
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"data":       responseList,
 		"pagination": fq,
 	})

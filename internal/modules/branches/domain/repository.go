@@ -13,6 +13,7 @@ type BranchesRepository interface {
 	CreateBranch(ctx context.Context, branch *Branch) (*Branch, error)
 	GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) (*BranchQueryResults, error)
 	AddPaymentMethodsToBranch(ctx context.Context, branchID uuid.UUID, paymentLinks []PaymentMethodsBranch) error
+	Delete(ctx context.Context, branchID uuid.UUID) error
 }
 
 type LocationRepository interface {

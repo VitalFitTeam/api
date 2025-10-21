@@ -52,7 +52,6 @@ type Branch struct {
 
 	Manager authdomain.Users `gorm:"foreignKey:ManagerID" json:"manager"`
 
-	// --- Otras Relaciones (sin cambios) ---
 	OperatingHours      []OperatingHours       `gorm:"foreignKey:BranchID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"operating_hours,omitempty"`
 	PaymentMethodsLinks []PaymentMethodsBranch `gorm:"foreignKey:BranchID" json:"payment_method_links,omitempty"`
 }

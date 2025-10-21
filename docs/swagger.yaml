@@ -506,13 +506,25 @@ paths:
         in: query
         name: sort
         type: string
-      - description: search terms (filter by name)
+      - description: filter by status
+        enum:
+        - Active
+        - Inactive
+        - Maintenance
+        in: query
+        name: status
+        type: string
+      - description: global search across branch, state and country names
         in: query
         name: search
         type: string
-      - description: filter by status
+      - description: filter by location (state or country)
         in: query
-        name: status
+        name: location
+        type: string
+      - description: filter by exact tax id
+        in: query
+        name: tax_id
         type: string
       produces:
       - application/json
@@ -583,6 +595,62 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: create a new branch
+      tags:
+      - Branches
+  /branches/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a specific branch by its UUID. Requires "super_admin" role.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: 'Error: Bad Request - Malformed ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: 'Error: Unauthorized - Token required'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: 'Error: Forbidden - Not super_admin'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Error: Not Found - Branch not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a branch
       tags:
       - Branches
   /branches/payment-methods:
