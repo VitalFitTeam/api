@@ -42,6 +42,7 @@ type application struct {
 // Mount config and return router
 func (app *application) Mount() http.Handler {
 	r := gin.New()
+	r.RedirectTrailingSlash = false
 	docs.SwaggerInfo.BasePath = "/v1"
 	r.Use(gin.Logger(), gin.Recovery())
 	cors.SetupCORS(r)
