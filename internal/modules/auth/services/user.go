@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type UserService struct {
@@ -56,4 +57,12 @@ func (h *UserService) GetRoleByName(ctx context.Context, name string) (*authdoma
 		return nil, err
 	}
 	return role, nil
+}
+
+func (h *UserService) GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+	users, err := h.store.Users.GetBranchAdmins(ctx, fq)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }

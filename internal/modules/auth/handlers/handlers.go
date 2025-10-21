@@ -8,11 +8,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	appservices "github.com/vitalfit/api/internal/app/services"
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	"github.com/vitalfit/api/pkg/mailer"
-	otp "github.com/vitalfit/api/pkg/otp"
+	"github.com/vitalfit/api/pkg/otp"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type AuthHandlersInterface interface {
@@ -380,4 +381,59 @@ func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users
 	}
 
 	return status, nil
+}
+
+// @Summary		Get a user list that are branch admins
+// @Description	Get a user list with the branch admin role
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Param			limit	query	int		false	"limit results per page"					default(10)			minimum(1)	maximum(100)
+// @Param			offset	query	int		false	"number of results to skip (paginación)"	default(0)			minimum(0)
+// @Param			sort	query	string	false	"clasification order (asc or desc)"			enums(asc, desc)	default(desc)
+// @Param			search	query	string	false	"search terms (filter by name)"
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	object{data=[]BranchAdminResponse}	"succed response"
+// @Failure		400	{object}	object{error=string}				"Error: invalid params"
+// @Failure		500	{object}	object{error=string}				"Error: internal server error"
+// @Router			/user/branch-admins [get]
+func (h *AuthHandlers) GetBranchAdmins(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Offset: 0,
+		Sort:   "asc",
+		Search: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	users, err := h.services.UserServices.GetBranchAdmins(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+
+	}
+
+	responseList := make([]BranchAdminResponse, 0, len(users))
+	for _, user := range users {
+		resp := BranchAdminResponse{
+			UserID:    user.UserID,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			RoleID:    user.RoleID,
+			RoleName:  user.Role.Name,
+		}
+		responseList = append(responseList, resp)
+	}
+
+	c.JSON(200, gin.H{
+		"data":       responseList,
+		"pagination": fq,
+	})
+
 }

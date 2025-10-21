@@ -1,5 +1,18 @@
 basePath: /v1
 definitions:
+  authhandlers.BranchAdminResponse:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      role_id:
+        type: string
+      role_name:
+        type: string
+      user_id:
+        type: string
+    type: object
   authhandlers.CodePayload:
     properties:
       code:
@@ -108,6 +121,122 @@ definitions:
     - confirm_password
     - password
     - token
+    type: object
+  branchdomain.PaymentMethodTypeEnum:
+    enum:
+    - Cash
+    - Card
+    - Transfer
+    - Other
+    type: string
+    x-enum-varnames:
+    - PaymentMethodCash
+    - PaymentMethodCard
+    - PaymentMethodTransfer
+    - PaymentMethodOther
+  branchdomain.PaymentMethods:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      global_status:
+        type: boolean
+      method_id:
+        type: string
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/branchdomain.PaymentMethodTypeEnum'
+      updated_at:
+        type: string
+    type: object
+  branchhandlers.BranchListResponse:
+    properties:
+      branch_id:
+        type: string
+      country_name:
+        type: string
+      manager_last_name:
+        type: string
+      manager_name:
+        type: string
+      name:
+        type: string
+      state_name:
+        type: string
+      status:
+        type: string
+      tax_id:
+        type: string
+    type: object
+  branchhandlers.CreateBranchPayload:
+    properties:
+      address:
+        type: string
+      country:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      manager_id:
+        type: string
+      max_capacity:
+        minimum: 1
+        type: integer
+      name:
+        minLength: 3
+        type: string
+      operating_hours:
+        items:
+          $ref: '#/definitions/branchhandlers.OperatingHourPayload'
+        type: array
+      payment_methods:
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      state:
+        type: string
+      status:
+        enum:
+        - Active
+        - Inactive
+        - Maintenance
+        type: string
+      tax_id:
+        minLength: 5
+        type: string
+    required:
+    - country
+    - manager_id
+    - name
+    - state
+    - tax_id
+    type: object
+  branchhandlers.OperatingHourPayload:
+    properties:
+      close_time:
+        type: string
+      day_of_week:
+        enum:
+        - Monday
+        - Tuesday
+        - Wednesday
+        - Thursday
+        - Friday
+        - Saturday
+        - Sunday
+        type: string
+      is_closed:
+        default: false
+        type: boolean
+      open_time:
+        type: string
+    required:
+    - day_of_week
     type: object
 info:
   contact:
@@ -350,6 +479,139 @@ paths:
       summary: Register New User Staff
       tags:
       - Auth
+  /branches:
+    get:
+      consumes:
+      - application/json
+      description: Get a branch list paginated with optional filters
+      parameters:
+      - default: 10
+        description: limit results per page
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - default: 0
+        description: number of results to skip (paginación)
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      - default: desc
+        description: clasification order (asc or desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: search terms (filter by name)
+        in: query
+        name: search
+        type: string
+      - description: filter by status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: succed response
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/branchhandlers.BranchListResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Error: invalid params'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a branch list
+      tags:
+      - Branches
+    post:
+      consumes:
+      - application/json
+      description: adds a new branc to the system with his ubication and configuration
+      parameters:
+      - description: Payload needed for the branch creation
+        in: body
+        name: branch
+        required: true
+        schema:
+          $ref: '#/definitions/branchhandlers.CreateBranchPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: suceed message
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: 'Error: bad request'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: create a new branch
+      tags:
+      - Branches
+  /branches/payment-methods:
+    get:
+      description: Retrieves a list of all available payment methods in the system.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A list of payment methods
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/branchdomain.PaymentMethods'
+                type: array
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all payment methods
+      tags:
+      - Branches
   /health:
     get:
       consumes:
@@ -366,6 +628,68 @@ paths:
       summary: verify service status
       tags:
       - System
+  /user/branch-admins:
+    get:
+      consumes:
+      - application/json
+      description: Get a user list with the branch admin role
+      parameters:
+      - default: 10
+        description: limit results per page
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - default: 0
+        description: number of results to skip (paginación)
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      - default: desc
+        description: clasification order (asc or desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: search terms (filter by name)
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: succed response
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/authhandlers.BranchAdminResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Error: invalid params'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a user list that are branch admins
+      tags:
+      - User
   /user/whoami:
     get:
       description: Retrieves the profile of the user authenticated via the JWT token

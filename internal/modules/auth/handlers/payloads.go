@@ -3,7 +3,8 @@ package authhandlers
 import (
 	"time"
 
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	"github.com/google/uuid"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 )
 
 type CreateUserClientPayload struct {
@@ -61,4 +62,13 @@ type ResetPasswordPayload struct {
 	Password        string `json:"password" binding:"required,min=8"`
 	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"` // Valida en el backend
 	Token           string `json:"token" binding:"required"`
+}
+
+// response
+type BranchAdminResponse struct {
+	UserID    uuid.UUID `json:"user_id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	RoleID    uuid.UUID `json:"role_id"`
+	RoleName  string    `json:"role_name"`
 }

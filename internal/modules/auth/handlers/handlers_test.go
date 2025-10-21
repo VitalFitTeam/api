@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/vitalfit/api/config"
 	"github.com/vitalfit/api/internal/app"
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
-	authmocks "github.com/vitalfit/api/internal/auth/mocks"
-	authservices "github.com/vitalfit/api/internal/auth/services"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	authmocks "github.com/vitalfit/api/internal/modules/auth/mocks"
+	authservices "github.com/vitalfit/api/internal/modules/auth/services"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	mailermocks "github.com/vitalfit/api/pkg/mailer/mocks"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"gorm.io/gorm"
 )

@@ -6,7 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -82,6 +83,14 @@ func (m *UserStoreMock) DeleteResetToken(ctx context.Context, userID uuid.UUID) 
 func (m *UserStoreMock) ResetUserPassword(ctx context.Context, key string, user *authdomain.Users) error {
 	args := m.Called(ctx, key, user)
 	return args.Error(0)
+}
+
+func (m *UserStoreMock) GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+	args := m.Called(ctx, fq)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*authdomain.Users), args.Error(1)
 }
 
 // ROLE MOCK FUNCTIONS

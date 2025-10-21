@@ -9,9 +9,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -45,7 +46,7 @@ func (s *UserStore) Create(ctx context.Context, tx *gorm.DB, user *authdomain.Us
 func (s *UserStore) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.Users, error) {
 	var user authdomain.Users
 
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 
 	result := s.db.WithContext(ctx).
@@ -60,6 +61,21 @@ func (s *UserStore) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.
 		return nil, result.Error
 	}
 	return &user, nil
+}
+
+func (s *UserStore) GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+	var users []*authdomain.Users
+	searchQuery := "%" + fq.Search + "%"
+	err := s.db.WithContext(ctx).
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Preload("Role").
+		Where("roles.name = ?", "branch_admin").
+		Where("users.first_name ILIKE ? OR users.last_name ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?", searchQuery, searchQuery, searchQuery).
+		Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 func (s *UserStore) CreateAndInvitate(ctx context.Context, user *authdomain.Users, token string, invitationExp time.Duration) error {

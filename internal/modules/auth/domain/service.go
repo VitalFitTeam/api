@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type Authenticator interface {
@@ -32,4 +33,5 @@ type UserServicesInterface interface {
 	GetByEmail(ctx context.Context, email string) (*Users, error)
 	GetUserFromContext(c *gin.Context) *Users
 	GetRoleByName(ctx context.Context, name string) (*Roles, error)
+	GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 }

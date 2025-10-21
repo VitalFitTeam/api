@@ -8,7 +8,7 @@ import (
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
-	authmocks "github.com/vitalfit/api/internal/auth/mocks"
+	authmocks "github.com/vitalfit/api/internal/modules/auth/mocks"
 	"github.com/vitalfit/api/internal/store"
 	mailermocks "github.com/vitalfit/api/pkg/mailer/mocks"
 	"github.com/vitalfit/api/pkg/ratelimiter"

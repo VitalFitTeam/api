@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -19,6 +20,7 @@ type UserRepository interface {
 	CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, key string, tokenExp time.Duration) error
 	DeleteResetToken(ctx context.Context, userID uuid.UUID) error
 	ResetUserPassword(ctx context.Context, key string, user *Users) error
+	GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 }
 
 type RolesRepository interface {

@@ -14,6 +14,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	docs "github.com/vitalfit/api/docs"
 	"github.com/vitalfit/api/pkg/cors"
+	"github.com/vitalfit/api/pkg/db"
 	"github.com/vitalfit/api/pkg/ratelimiter"
 
 	"github.com/vitalfit/api/config"
@@ -56,6 +57,9 @@ func (app *application) Mount() http.Handler {
 		app.Handlers.AuthHandlers.AuthRoutes(v1, m)
 		app.Handlers.AuthHandlers.UserRoutes(v1, m)
 
+		//branch routes
+		app.Handlers.BranchHandlers.BranchRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}
@@ -82,7 +86,7 @@ func (app *application) Run(mux http.Handler) error {
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		s := <-quit
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), db.QueryTimeoutDuration)
 		defer cancel()
 
 		app.Logger.Infow("signal caught", "signal", s.String())
