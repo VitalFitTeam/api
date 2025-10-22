@@ -17,6 +17,8 @@ type BranchHandlersInterface interface {
 	CreateBranchHandler(c *gin.Context)
 	GetPaymentMethodsHandler(c *gin.Context)
 	GetBranchesHandler(c *gin.Context)
+	DeleteBranchHandler(c *gin.Context)
+	GetBranchByIDHandler(c *gin.Context)
 }
 
 type BranchHandlers struct {
@@ -202,6 +204,59 @@ func (h *BranchHandlers) DeleteBranchHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Get branch by ID
+// @Description	Retrieves detailed information about a specific branch using its UUID.
+// @Tags			Branches
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id	path		string							true	"Branch UUID"
+// @Success		200	{object}	object{data=BranchResponseData}	"Branch details"
+// @Failure		400	{object}	object{error=string}			"Error: Bad Request - Malformed ID"
+// @Failure		404	{object}	object{error=string}			"Error: Not Found - Branch not found"
+// @Failure		500	{object}	object{error=string}			"Error: Internal Server Error"
+// @Router			/branches/{id} [get]
+func (h *BranchHandlers) GetBranchByIDHandler(c *gin.Context) {
+	idStr := c.Param("id")
+
+	branchID, err := uuid.Parse(idStr)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	ctx := c.Request.Context()
+	branch, err := h.services.BranchesServices.GetBranchByID(ctx, branchID)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+
+	}
+	response := &BranchResponseData{
+		BranchID:         branch.BranchID,
+		Name:             branch.Name,
+		TaxID:            branch.TaxID,
+		Address:          branch.Address,
+		Latitude:         branch.Latitude,
+		Longitude:        branch.Longitude,
+		MaxCapacity:      branch.MaxCapacity,
+		Phone:            branch.Phone,
+		Status:           string(branch.Status),
+		State:            branch.State.Name,
+		Country:          branch.State.Country.Name,
+		ManagerID:        branch.ManagerID,
+		ManagerFirstName: branch.Manager.FirstName,
+		ManagerLastName:  branch.Manager.LastName,
+		OperatingHours:   branch.OperatingHours,
+		PaymentMethods:   branch.PaymentMethodsLinks,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // @Summary		Get all payment methods

@@ -157,3 +157,19 @@ func (s *BranchesStore) Delete(ctx context.Context, branchID uuid.UUID) error {
 		return nil // commit
 	})
 }
+
+func (s *BranchesStore) GetByID(ctx context.Context, branchID uuid.UUID) (*branchdomain.Branch, error) {
+	var branch branchdomain.Branch
+	err := s.db.WithContext(ctx).
+		Joins("State").Joins("State.Country").Joins("Manager").
+		Preload("OperatingHours").
+		Preload("PaymentMethodsLinks.Method").
+		First(&branch, "branch.branch_id = ?", branchID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+	return &branch, nil
+}
