@@ -55,6 +55,22 @@ func (s *OperatingHourPayload) toOperatingHour() (*branchdomain.OperatingHours, 
 	return operatingHour, nil
 }
 
+type UpdateBranchPayload struct {
+	Name           string                 `json:"name" binding:"required,min=3"`
+	TaxID          string                 `json:"tax_id" binding:"required,min=5"`
+	Address        string                 `json:"address"`
+	Latitude       float64                `json:"latitude"`
+	Longitude      float64                `json:"longitude"`
+	MaxCapacity    int                    `json:"max_capacity" binding:"omitempty,min=1"`
+	Phone          string                 `json:"phone"`
+	Status         string                 `json:"status" binding:"omitempty,oneof=Active Inactive Maintenance"`
+	State          string                 `json:"state" binding:"required"`
+	Country        string                 `json:"country" binding:"required"`
+	ManagerID      uuid.UUID              `json:"manager_id" binding:"required"`
+	OperatingHours []OperatingHourPayload `json:"operating_hours" binding:"omitempty,dive"`
+	PaymentMethods []uuid.UUID            `json:"payment_methods" binding:"omitempty,dive"`
+}
+
 // response
 type BranchListResponse struct {
 	BranchID        uuid.UUID `json:"branch_id"`

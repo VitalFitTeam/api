@@ -73,3 +73,11 @@ func (s *BranchServices) GetBranchByID(ctx context.Context, branchID uuid.UUID) 
 	}
 	return branch, nil
 }
+
+func (s *BranchServices) UpdateBranch(ctx context.Context, branch *branchdomain.Branch) error {
+	err := s.store.Branches.Update(ctx, branch)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -14,6 +14,7 @@ type BranchesServicesInterface interface {
 	GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) (*BranchQueryResults, error)
 	DeleteBranch(ctx context.Context, branchID uuid.UUID) error
 	GetBranchByID(ctx context.Context, branchID uuid.UUID) (*Branch, error)
+	UpdateBranch(ctx context.Context, branch *Branch) error
 }
 
 type LocationsServicesInterface interface {

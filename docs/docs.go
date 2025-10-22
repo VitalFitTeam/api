@@ -646,6 +646,88 @@ const docTemplate = `{
                     }
                 }
             },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates an existing branch's information.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Update a branch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payload with the fields to update",
+                        "name": "branch",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/branchhandlers.UpdateBranchPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Branch updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request - Malformed ID or invalid payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Error: Not Found - Branch not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -1628,6 +1710,71 @@ const docTemplate = `{
                 },
                 "open_time": {
                     "type": "string"
+                }
+            }
+        },
+        "branchhandlers.UpdateBranchPayload": {
+            "type": "object",
+            "required": [
+                "country",
+                "manager_id",
+                "name",
+                "state",
+                "tax_id"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "manager_id": {
+                    "type": "string"
+                },
+                "max_capacity": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 3
+                },
+                "operating_hours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/branchhandlers.OperatingHourPayload"
+                    }
+                },
+                "payment_methods": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Active",
+                        "Inactive",
+                        "Maintenance"
+                    ]
+                },
+                "tax_id": {
+                    "type": "string",
+                    "minLength": 5
                 }
             }
         }

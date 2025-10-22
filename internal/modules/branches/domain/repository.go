@@ -9,7 +9,7 @@ import (
 
 type BranchesRepository interface {
 	GetByID(ctx context.Context, branchID uuid.UUID) (*Branch, error)
-	//Update(ctx context.Context, branch *Branch) error
+	Update(ctx context.Context, branch *Branch) error
 	CreateBranch(ctx context.Context, branch *Branch) (*Branch, error)
 	GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) (*BranchQueryResults, error)
 	AddPaymentMethodsToBranch(ctx context.Context, branchID uuid.UUID, paymentLinks []PaymentMethodsBranch) error

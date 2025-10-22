@@ -12,6 +12,7 @@ func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		branchGroup.GET("/:id", r.GetBranchByIDHandler)
 		branchGroup.POST("", r.CreateBranchHandler)
 		branchGroup.GET("/payment-methods", r.GetPaymentMethodsHandler)
+		branchGroup.PUT("/:id", r.UpdateBranchHandler)
 		branchGroup.DELETE("/:id", r.DeleteBranchHandler)
 	}
 }
