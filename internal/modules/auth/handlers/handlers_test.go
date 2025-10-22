@@ -199,7 +199,7 @@ func TestRegisterUserClientHandler(t *testing.T) {
 			"email":             "newuser@example.com",
 			"phone":             "123456789",
 			"identity_document": "1234567890",
-			"password":          "password123",
+			"password":          "Password123!",
 			"birth_date":        "2000-01-01",
 			"gender":            "male",
 		}
@@ -229,6 +229,24 @@ func TestRegisterUserClientHandler(t *testing.T) {
 		rr := app.ExecuteRequest(req, mux)
 
 		// Gin returns 400 for binding validation errors
+		app.CheckResponseCode(t, http.StatusBadRequest, rr.Code)
+	})
+
+	t.Run("should fail with weak password", func(t *testing.T) {
+		payload := map[string]string{
+			"first_name":        "Weak",
+			"last_name":         "Password",
+			"email":             "weakpass@example.com",
+			"phone":             "123456789",
+			"identity_document": "1234567890",
+			"password":          "password", // Contraseña débil
+			"birth_date":        "2000-01-01",
+			"gender":            "male",
+		}
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequest(http.MethodPost, "/v1/auth/register", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		rr := app.ExecuteRequest(req, mux)
 		app.CheckResponseCode(t, http.StatusBadRequest, rr.Code)
 	})
 }
@@ -316,7 +334,7 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 
 		payload := map[string]string{
 			"first_name": "Client", "last_name": "User", "email": "shouldfail@example.com",
-			"phone": "111", "identity_document": "111", "password": "password",
+			"phone": "111", "identity_document": "111", "password": "Password123!",
 			"birth_date": "2000-01-01", "gender": "male",
 			"role_name": "client", // Trying to register a client
 		}
@@ -353,7 +371,7 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 				"email":             email,
 				"phone":             "987654321",
 				"identity_document": identityDoc,
-				"password":          "staffpassword",
+				"password":          "StaffPassword123!",
 				"birth_date":        "1995-01-01",
 				"gender":            "female",
 				"role_name":         role,
@@ -385,7 +403,7 @@ func TestResetPasswordHandler(t *testing.T) {
 	t.Run("should fail with mismatched passwords", func(t *testing.T) {
 		payload := map[string]string{
 			"token":            "valid-token",
-			"password":         "newpassword123",
+			"password":         "NewPassword123!",
 			"confirm_password": "mismatchedpassword",
 		}
 		body, _ := json.Marshal(payload)
@@ -402,8 +420,8 @@ func TestResetPasswordHandler(t *testing.T) {
 
 		payload := map[string]string{
 			"token":            "invalid-token",
-			"password":         "newpassword123",
-			"confirm_password": "newpassword123",
+			"password":         "NewPassword123!",
+			"confirm_password": "NewPassword123!",
 		}
 		body, _ := json.Marshal(payload)
 
@@ -420,8 +438,8 @@ func TestResetPasswordHandler(t *testing.T) {
 
 		payload := map[string]string{
 			"token":            "valid-token",
-			"password":         "newpassword123",
-			"confirm_password": "newpassword123",
+			"password":         "NewPassword123!",
+			"confirm_password": "NewPassword123!",
 		}
 		body, _ := json.Marshal(payload)
 

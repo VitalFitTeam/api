@@ -13,7 +13,7 @@ type CreateUserClientPayload struct {
 	Email             string `json:"email" binding:"required,email"`
 	Phone             string `json:"phone" binding:"required"`
 	IdentityDocument  string `json:"identity_document" binding:"required"`
-	Password          string `json:"password" binding:"required,min=8"`
+	Password          string `json:"password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
 	BirthDate         string `json:"birth_date" binding:"required"`
 	Gender            string `json:"gender" binding:"required"`
 	ProfilePictureURL string `json:"profile_picture_url"`
@@ -59,7 +59,7 @@ type ForgotPasswordPayload struct {
 }
 
 type ResetPasswordPayload struct {
-	Password        string `json:"password" binding:"required,min=8"`
+	Password        string `json:"password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
 	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"` // Valida en el backend
 	Token           string `json:"token" binding:"required"`
 }
