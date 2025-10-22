@@ -1,5 +1,107 @@
 basePath: /v1
 definitions:
+  authdomain.ClientCategoryEnum:
+    enum:
+    - VIP
+    - Regular
+    - New
+    - AtRisk
+    type: string
+    x-enum-varnames:
+    - ClientCategoryVIP
+    - ClientCategoryRegular
+    - ClientCategoryNew
+    - ClientCategoryAtRisk
+  authdomain.ClientProfiles:
+    properties:
+      block_justification:
+        type: string
+      category:
+        $ref: '#/definitions/authdomain.ClientCategoryEnum'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      qr_code:
+        type: string
+      scoring:
+        type: integer
+      status:
+        $ref: '#/definitions/authdomain.ClientStatusEnum'
+      updated_at:
+        type: string
+      user_id:
+        description: Primary Key and Foreign Key to Users
+        type: string
+    type: object
+  authdomain.ClientStatusEnum:
+    enum:
+    - Active
+    - Blocked
+    type: string
+    x-enum-varnames:
+    - ClientStatusActive
+    - ClientStatusBlocked
+  authdomain.GenderEnum:
+    enum:
+    - male
+    - female
+    - prefer-not-to-say
+    type: string
+    x-enum-varnames:
+    - GenderMale
+    - GenderFemale
+    - GenderPreferNotToSay
+  authdomain.Roles:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      level:
+        type: integer
+      name:
+        type: string
+      role_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  authdomain.Users:
+    properties:
+      birth_date:
+        type: string
+      clientProfile:
+        $ref: '#/definitions/authdomain.ClientProfiles'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        $ref: '#/definitions/authdomain.GenderEnum'
+      identity_document:
+        type: string
+      is_validated:
+        type: boolean
+      last_name:
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
+        type: string
+      role:
+        $ref: '#/definitions/authdomain.Roles'
+      role_id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
   authhandlers.BranchAdminResponse:
     properties:
       first_name:
@@ -122,6 +224,103 @@ definitions:
     - password
     - token
     type: object
+  branchdomain.Branch:
+    properties:
+      address:
+        type: string
+      branch_id:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      manager:
+        $ref: '#/definitions/authdomain.Users'
+      manager_id:
+        type: string
+      max_capacity:
+        type: integer
+      name:
+        type: string
+      operating_hours:
+        items:
+          $ref: '#/definitions/branchdomain.OperatingHours'
+        type: array
+      payment_method_links:
+        items:
+          $ref: '#/definitions/branchdomain.PaymentMethodsBranch'
+        type: array
+      phone:
+        type: string
+      state:
+        $ref: '#/definitions/branchdomain.States'
+      state_id:
+        type: string
+      status:
+        $ref: '#/definitions/branchdomain.BranchStatusEnum'
+      tax_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  branchdomain.BranchStatusEnum:
+    enum:
+    - Active
+    - Inactive
+    - Maintenance
+    type: string
+    x-enum-varnames:
+    - BranchStatusActive
+    - BranchStatusInactive
+    - BranchStatusMaintenance
+  branchdomain.Countries:
+    properties:
+      countryID:
+        type: string
+      name:
+        type: string
+      states:
+        items:
+          $ref: '#/definitions/branchdomain.States'
+        type: array
+    type: object
+  branchdomain.DayOfWeekEnum:
+    enum:
+    - Monday
+    - Tuesday
+    - Wednesday
+    - Thursday
+    - Friday
+    - Saturday
+    - Sunday
+    type: string
+    x-enum-varnames:
+    - DayMonday
+    - DayTuesday
+    - DayWednesday
+    - DayThursday
+    - DayFriday
+    - DaySaturday
+    - DaySunday
+  branchdomain.OperatingHours:
+    properties:
+      branch_id:
+        type: string
+      close_time:
+        type: string
+      day_of_week:
+        $ref: '#/definitions/branchdomain.DayOfWeekEnum'
+      hour_id:
+        type: string
+      is_closed:
+        type: boolean
+      open_time:
+        type: string
+    type: object
   branchdomain.PaymentMethodTypeEnum:
     enum:
     - Cash
@@ -151,6 +350,34 @@ definitions:
       updated_at:
         type: string
     type: object
+  branchdomain.PaymentMethodsBranch:
+    properties:
+      branch:
+        $ref: '#/definitions/branchdomain.Branch'
+      branch_id:
+        type: string
+      created_at:
+        type: string
+      is_active:
+        type: boolean
+      method:
+        $ref: '#/definitions/branchdomain.PaymentMethods'
+      method_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  branchdomain.States:
+    properties:
+      country:
+        $ref: '#/definitions/branchdomain.Countries'
+      countryID:
+        type: string
+      name:
+        type: string
+      stateID:
+        type: string
+    type: object
   branchhandlers.BranchListResponse:
     properties:
       branch_id:
@@ -169,6 +396,57 @@ definitions:
         type: string
       tax_id:
         type: string
+    type: object
+  branchhandlers.BranchResponseData:
+    properties:
+      address:
+        type: string
+      branch_id:
+        type: string
+      country:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      manager:
+        type: string
+      manager_first_name:
+        type: string
+      manager_last_name:
+        type: string
+      max_capacity:
+        minimum: 1
+        type: integer
+      name:
+        minLength: 3
+        type: string
+      operating_hours:
+        items:
+          $ref: '#/definitions/branchdomain.OperatingHours'
+        type: array
+      payment_methods:
+        items:
+          $ref: '#/definitions/branchdomain.PaymentMethodsBranch'
+        type: array
+      phone:
+        type: string
+      state:
+        type: string
+      status:
+        enum:
+        - Active
+        - Inactive
+        - Maintenance
+        type: string
+      tax_id:
+        minLength: 5
+        type: string
+    required:
+    - country
+    - name
+    - state
+    - tax_id
     type: object
   branchhandlers.CreateBranchPayload:
     properties:
@@ -237,6 +515,52 @@ definitions:
         type: string
     required:
     - day_of_week
+    type: object
+  branchhandlers.UpdateBranchPayload:
+    properties:
+      address:
+        type: string
+      country:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      manager_id:
+        type: string
+      max_capacity:
+        minimum: 1
+        type: integer
+      name:
+        minLength: 3
+        type: string
+      operating_hours:
+        items:
+          $ref: '#/definitions/branchhandlers.OperatingHourPayload'
+        type: array
+      payment_methods:
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      state:
+        type: string
+      status:
+        enum:
+        - Active
+        - Inactive
+        - Maintenance
+        type: string
+      tax_id:
+        minLength: 5
+        type: string
+    required:
+    - country
+    - manager_id
+    - name
+    - state
+    - tax_id
     type: object
 info:
   contact:
@@ -651,6 +975,103 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Delete a branch
+      tags:
+      - Branches
+    get:
+      description: Retrieves detailed information about a specific branch using its
+        UUID.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Branch details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/branchhandlers.BranchResponseData'
+            type: object
+        "400":
+          description: 'Error: Bad Request - Malformed ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Error: Not Found - Branch not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get branch by ID
+      tags:
+      - Branches
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing branch's information.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with the fields to update
+        in: body
+        name: branch
+        required: true
+        schema:
+          $ref: '#/definitions/branchhandlers.UpdateBranchPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Branch updated successfully
+          schema:
+            properties:
+              data:
+                type: string
+            type: object
+        "400":
+          description: 'Error: Bad Request - Malformed ID or invalid payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Error: Not Found - Branch not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a branch
       tags:
       - Branches
   /branches/payment-methods:

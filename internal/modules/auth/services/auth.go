@@ -115,7 +115,7 @@ func (h *AuthService) CreatePasswordResetToken(ctx context.Context, email string
 }
 
 func (h *AuthService) DeleteResetToken(ctx context.Context, userID uuid.UUID) error {
-	err := h.store.Users.Delete(ctx, userID)
+	err := h.store.Users.DeleteResetToken(ctx, userID)
 	if err != nil {
 		return err
 	}

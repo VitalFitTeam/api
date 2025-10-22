@@ -141,7 +141,7 @@ func TestAuthService(t *testing.T) {
 	})
 
 	t.Run("DeleteResetToken", func(t *testing.T) {
-		userStoreMock.On("Delete", mock.Anything, mockUser.UserID).Return(nil).Once()
+		userStoreMock.On("DeleteResetToken", mock.Anything, mockUser.UserID).Return(nil).Once()
 		err := authService.DeleteResetToken(context.Background(), mockUser.UserID)
 		assert.NoError(t, err)
 		userStoreMock.AssertExpectations(t)

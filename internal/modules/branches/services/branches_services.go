@@ -65,3 +65,19 @@ func (s *BranchServices) DeleteBranch(ctx context.Context, branchID uuid.UUID) e
 	}
 	return nil
 }
+
+func (s *BranchServices) GetBranchByID(ctx context.Context, branchID uuid.UUID) (*branchdomain.Branch, error) {
+	branch, err := s.store.Branches.GetByID(ctx, branchID)
+	if err != nil {
+		return nil, err
+	}
+	return branch, nil
+}
+
+func (s *BranchServices) UpdateBranch(ctx context.Context, branch *branchdomain.Branch) error {
+	err := s.store.Branches.Update(ctx, branch)
+	if err != nil {
+		return err
+	}
+	return nil
+}

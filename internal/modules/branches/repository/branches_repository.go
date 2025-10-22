@@ -157,3 +157,45 @@ func (s *BranchesStore) Delete(ctx context.Context, branchID uuid.UUID) error {
 		return nil // commit
 	})
 }
+
+func (s *BranchesStore) GetByID(ctx context.Context, branchID uuid.UUID) (*branchdomain.Branch, error) {
+	var branch branchdomain.Branch
+	err := s.db.WithContext(ctx).
+		Joins("State").Joins("State.Country").Joins("Manager").
+		Preload("OperatingHours").
+		Preload("PaymentMethodsLinks.Method").
+		First(&branch, "branch.branch_id = ?", branchID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+	return &branch, nil
+}
+
+func (s *BranchesStore) Update(ctx context.Context, branch *branchdomain.Branch) error {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+	// transaction
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).Model(&branchdomain.Branch{BranchID: branch.BranchID}).Omit("OperatingHours", "PaymentMethodsLinks").Updates(branch).Error; err != nil {
+			return err // rollback
+		}
+		if len(branch.OperatingHours) > 0 {
+			err := tx.WithContext(ctx).Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "branch_id"}, {Name: "day_of_week"}},
+				DoUpdates: clause.AssignmentColumns([]string{"open_time", "close_time", "is_closed"}),
+			}).Create(&branch.OperatingHours).Error
+
+			if err != nil {
+				return err // rollback
+			}
+		}
+		if err := s.AddPaymentMethodsToBranch(ctx, branch.BranchID, branch.PaymentMethodsLinks); err != nil {
+			return err // rollback
+		}
+
+		return nil
+	})
+}

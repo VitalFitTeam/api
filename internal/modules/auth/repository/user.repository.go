@@ -223,7 +223,13 @@ func (s *UserStore) getUserFromInvitation(ctx context.Context, tx *gorm.DB, code
 }
 
 func (s *UserStore) CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, key string, tokenExp time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := s.deleteUserReset(ctx, tx, userID); err != nil {
+			return err
+		}
+
 		if err := s.userResetToken(ctx, tx, userID, key, tokenExp); err != nil {
 			return err //rollback
 		}
