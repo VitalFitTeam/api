@@ -379,11 +379,11 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "minimum": 0,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 0,
-                        "description": "number of results to skip (paginación)",
-                        "name": "offset",
+                        "default": 1,
+                        "description": "page number of results (pagination)",
+                        "name": "page",
                         "in": "query"
                     },
                     {
@@ -410,7 +410,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "global search across branch, state and country names",
+                        "description": "global search across branch and manager name",
                         "name": "search",
                         "in": "query"
                     },
@@ -418,12 +418,6 @@ const docTemplate = `{
                         "type": "string",
                         "description": "filter by location (state or country)",
                         "name": "location",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "filter by exact tax id",
-                        "name": "tax_id",
                         "in": "query"
                     }
                 ],

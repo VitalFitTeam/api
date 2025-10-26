@@ -816,11 +816,11 @@ paths:
         minimum: 1
         name: limit
         type: integer
-      - default: 0
-        description: number of results to skip (paginación)
+      - default: 1
+        description: page number of results (pagination)
         in: query
-        minimum: 0
-        name: offset
+        minimum: 1
+        name: page
         type: integer
       - default: desc
         description: clasification order (asc or desc)
@@ -838,17 +838,13 @@ paths:
         in: query
         name: status
         type: string
-      - description: global search across branch, state and country names
+      - description: global search across branch and manager name
         in: query
         name: search
         type: string
       - description: filter by location (state or country)
         in: query
         name: location
-        type: string
-      - description: filter by exact tax id
-        in: query
-        name: tax_id
         type: string
       produces:
       - application/json

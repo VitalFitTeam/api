@@ -401,7 +401,7 @@ func (h *AuthHandlers) GetBranchAdmins(c *gin.Context) {
 	ctx := c.Request.Context()
 	fq := pagination.PaginatedFeedQuery{
 		Limit:  10,
-		Offset: 0,
+		Page:   1,
 		Sort:   "asc",
 		Search: "",
 	}

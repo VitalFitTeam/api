@@ -66,10 +66,13 @@ type OperatingHours struct {
 }
 
 type BranchQueryResults struct {
-	Branches         []*Branch
-	ActiveCount      int64
-	InactiveCount    int64
-	ManteinanceCount int64
+	Branches []*Branch
+}
+
+type BranchStatusCount struct {
+	Active      int64
+	Inactive    int64
+	Maintenance int64
 }
 
 type StatusCount struct {
