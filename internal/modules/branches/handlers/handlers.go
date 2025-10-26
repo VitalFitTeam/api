@@ -21,6 +21,7 @@ type BranchHandlersInterface interface {
 	DeleteBranchHandler(c *gin.Context)
 	GetBranchByIDHandler(c *gin.Context)
 	UpdateBranchHandler(c *gin.Context)
+	GetBranchStatusCount(c *gin.Context)
 }
 
 type BranchHandlers struct {
@@ -352,6 +353,29 @@ func (h *BranchHandlers) GetBranchByIDHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// @Summary		Get a count data for each status branch
+// @Description	Get a count data for each status branch
+// @Tags			Branches
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=[]branchdomain.BranchStatusCount}	"A list of payment methods"
+// @Failure		500	{object}	object{error=string}						"Error: internal server error"
+// @Router			/branches/payment-methods [get]
+func (h *BranchHandlers) GetBranchStatusCount(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	statusCount, err := h.services.BranchesServices.GetBranchStatusCount(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": statusCount,
+	})
+
 }
 
 // @Summary		Get all payment methods
