@@ -1,6 +1,7 @@
 package branchhandlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -189,13 +190,12 @@ func (h *BranchHandlers) UpdateBranchHandler(c *gin.Context) {
 // @Description	Get a branch list paginated with optional filters
 // @Tags			Branches
 // @Security		ApiKeyAuth
-// @Param			limit		query	int		false	"limit results per page"					default(10)			minimum(1)	maximum(100)
-// @Param			offset		query	int		false	"number of results to skip (paginación)"	default(0)			minimum(0)
-// @Param			sort		query	string	false	"clasification order (asc or desc)"			enums(asc, desc)	default(desc)
-// @Param			status		query	string	false	"filter by status"							enums(Active, Inactive, Maintenance)
-// @Param			search		query	string	false	"global search across branch, state and country names"
+// @Param			limit		query	int		false	"limit results per page"				default(10)			minimum(1)	maximum(100)
+// @Param			page		query	int		false	"page number of results (pagination)"	default(1)			minimum(1)
+// @Param			sort		query	string	false	"clasification order (asc or desc)"		enums(asc, desc)	default(desc)
+// @Param			status		query	string	false	"filter by status"						enums(Active, Inactive, Maintenance)
+// @Param			search		query	string	false	"global search across branch and manager name"
 // @Param			location	query	string	false	"filter by location (state or country)"
-// @Param			tax_id		query	string	false	"filter by exact tax id"
 // @Accept			json
 // @Produce		json
 // @Success		200	{object}	object{data=[]BranchListResponse}	"succed response"
@@ -206,11 +206,17 @@ func (h *BranchHandlers) GetBranchesHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	fq := pagination.PaginatedFeedQuery{
 		Limit:  10,
-		Offset: 0,
+		Page:   1,
 		Sort:   "desc",
 		Search: "",
-		Status: "Active",
 	}
+
+	nextURL := fmt.Sprintf("/branches?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/branches?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
 
 	fq, err := fq.Parse(c.Request)
 	if err != nil {
@@ -241,17 +247,21 @@ func (h *BranchHandlers) GetBranchesHandler(c *gin.Context) {
 
 		responseList = append(responseList, resp)
 	}
+	count := int64(len(responseList))
 
-	c.JSON(http.StatusOK, gin.H{
-		"data": responseList,
-		"count": gin.H{
-			"active":      branches.ActiveCount,
-			"inactive":    branches.InactiveCount,
-			"maintenance": branches.ManteinanceCount,
-			"total":       branches.ActiveCount + branches.InactiveCount + branches.ManteinanceCount,
-		},
-		"pagination": fq,
-	})
+	resp := pagination.PaginatedResponse[BranchListResponse]{
+		Data:     responseList,
+		Count:    count,
+		Next:     nextURL,
+		Previous: previousURL,
+	}
+
+	c.JSON(http.StatusOK, resp)
+
+}
+
+func (h *BranchHandlers) BranchStatusCount(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+
 }
 
 // @Summary		Delete a branch

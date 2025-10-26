@@ -15,6 +15,7 @@ type BranchesServicesInterface interface {
 	DeleteBranch(ctx context.Context, branchID uuid.UUID) error
 	GetBranchByID(ctx context.Context, branchID uuid.UUID) (*Branch, error)
 	UpdateBranch(ctx context.Context, branch *Branch) error
+	GetBranchStatusCount(ctx context.Context) (*BranchStatusCount, error)
 }
 
 type LocationsServicesInterface interface {

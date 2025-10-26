@@ -57,41 +57,18 @@ func (s *BranchesStore) GetBranches(ctx context.Context, fq pagination.Paginated
 	baseQuery := s.db.WithContext(ctx).
 		Model(&branchdomain.Branch{}).
 		Joins("JOIN states ON states.state_id = branch.state_id").
-		Joins("JOIN countries ON countries.country_id = states.country_id")
+		Joins("JOIN countries ON countries.country_id = states.country_id").
+		Joins("JOIN users AS manager ON manager.user_id = branch.user_id")
 
 	if fq.Search != "" {
-		baseQuery = baseQuery.Where("branch.name ILIKE ?", "%"+fq.Search+"%")
+		searchPattern := "%" + fq.Search + "%"
+		baseQuery = baseQuery.Where("branch.name ILIKE ? OR manager.first_name ILIKE ? OR manager.last_name ILIKE ? OR concat(manager.first_name, ' ', manager.last_name) ILIKE ?",
+			searchPattern, searchPattern, searchPattern, searchPattern)
 	}
 
 	if fq.Location != "" {
 		locationPattern := "%" + fq.Location + "%"
 		baseQuery = baseQuery.Where("states.name ILIKE ? OR countries.name ILIKE ?", locationPattern, locationPattern)
-	}
-
-	if fq.TaxID != "" {
-		taxIDPattern := "%" + fq.TaxID + "%"
-		baseQuery = baseQuery.Where("branch.tax_id ILIKE ?", taxIDPattern)
-	}
-
-	var counts []branchdomain.StatusCount
-	if err := baseQuery.Session(&gorm.Session{NewDB: true}).
-		Model(&branchdomain.Branch{}).
-		Select("status, COUNT(*) as count").
-		Group("status").
-		Find(&counts).Error; err != nil {
-		return nil, err
-	}
-
-	var activeCount, inactiveCount, manteinanceCount int64
-	for _, c := range counts {
-		switch c.Status {
-		case "Active":
-			activeCount = c.Count
-		case "Inactive":
-			inactiveCount = c.Count
-		case "Manteinance":
-			manteinanceCount = c.Count
-		}
 	}
 
 	var branches []*branchdomain.Branch
@@ -100,7 +77,7 @@ func (s *BranchesStore) GetBranches(ctx context.Context, fq pagination.Paginated
 		Preload("State.Country").
 		Preload("Manager").
 		Limit(fq.Limit).
-		Offset(fq.Offset).
+		Offset(fq.Page*fq.Limit - fq.Limit).
 		Order("created_at " + fq.Sort)
 
 	if fq.Status != "" {
@@ -112,13 +89,25 @@ func (s *BranchesStore) GetBranches(ctx context.Context, fq pagination.Paginated
 	}
 
 	response := &branchdomain.BranchQueryResults{
-		Branches:         branches,
-		ActiveCount:      activeCount,
-		InactiveCount:    inactiveCount,
-		ManteinanceCount: manteinanceCount,
+		Branches: branches,
 	}
 
 	return response, nil
+
+}
+
+func (s *BranchesStore) GetBranchStatusCount(ctx context.Context) (*branchdomain.BranchStatusCount, error) {
+	var result branchdomain.BranchStatusCount
+	err := s.db.WithContext(ctx).
+		Model(&branchdomain.Branch{}).
+		Select("SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) AS active, " +
+			"SUM(CASE WHEN status = 'Inactive' THEN 1 ELSE 0 END) AS inactive, " +
+			"SUM(CASE WHEN status = 'Maintenance' THEN 1 ELSE 0 END) AS maintenance").
+		Scan(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 
 }
 

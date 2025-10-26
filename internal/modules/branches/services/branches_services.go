@@ -81,3 +81,11 @@ func (s *BranchServices) UpdateBranch(ctx context.Context, branch *branchdomain.
 	}
 	return nil
 }
+
+func (s *BranchServices) GetBranchStatusCount(ctx context.Context) (*branchdomain.BranchStatusCount, error) {
+	counts, err := s.store.Branches.GetBranchStatusCount(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return counts, nil
+}
