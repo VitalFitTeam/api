@@ -569,6 +569,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/branches/status": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a count data for each status branch",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branches"
+                ],
+                "summary": "Get a count data for each status branch",
+                "responses": {
+                    "200": {
+                        "description": "general count of branch statuses",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/branchdomain.BranchStatusCount"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/branches/{id}": {
             "get": {
                 "security": [
@@ -1349,6 +1393,23 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "branchdomain.BranchStatusCount": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "inactive": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "maintenance": {
+                    "type": "integer",
+                    "format": "int64"
                 }
             }
         },

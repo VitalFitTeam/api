@@ -267,6 +267,18 @@ definitions:
       updated_at:
         type: string
     type: object
+  branchdomain.BranchStatusCount:
+    properties:
+      active:
+        format: int64
+        type: integer
+      inactive:
+        format: int64
+        type: integer
+      maintenance:
+        format: int64
+        type: integer
+    type: object
   branchdomain.BranchStatusEnum:
     enum:
     - Active
@@ -1095,6 +1107,33 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get all payment methods
+      tags:
+      - Branches
+  /branches/status:
+    get:
+      description: Get a count data for each status branch
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: general count of branch statuses
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/branchdomain.BranchStatusCount'
+                type: array
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a count data for each status branch
       tags:
       - Branches
   /health:
