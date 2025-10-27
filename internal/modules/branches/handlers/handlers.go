@@ -360,9 +360,9 @@ func (h *BranchHandlers) GetBranchByIDHandler(c *gin.Context) {
 // @Tags			Branches
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Success		200	{object}	object{data=[]branchdomain.BranchStatusCount}	"A list of payment methods"
-// @Failure		500	{object}	object{error=string}						"Error: internal server error"
-// @Router			/branches/payment-methods [get]
+// @Success		200	{object}	object{data=[]branchdomain.BranchStatusCount}	"general count of branch statuses"
+// @Failure		500	{object}	object{error=string}							"Error: internal server error"
+// @Router			/branches/status [get]
 func (h *BranchHandlers) GetBranchStatusCount(c *gin.Context) {
 	ctx := c.Request.Context()
 

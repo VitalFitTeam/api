@@ -43,7 +43,7 @@ Follow these instructions to get the project up and running on your local machin
 
 1.  **Start the services with Docker Compose:**
 
-    This command will build and start the application containers along with the database, and you will be able to see the live-reloading logs.
+    This command will build and start the application containers along with the database. You will be able to see the live-reloading logs.
 
     ```bash
     make docker-up
@@ -55,7 +55,7 @@ Follow these instructions to get the project up and running on your local machin
     docker compose up -d
     ```
 
-    The API will be available at the address specified in your `.env` file (default is `localhost:8080`). The service uses `Air` for hot-reloading when it detects changes in the code.
+    The API will be available at the address specified in your `.env` file (default is `localhost:8080`). The service uses `Air` for hot-reloading when it detects code changes.
 
 2.  **Stop the services:**
 
@@ -67,7 +67,7 @@ Follow these instructions to get the project up and running on your local machin
 
 ## Makefile Commands
 
-The `makefile` provides several commands to facilitate common development tasks.
+The `Makefile` provides several commands to facilitate common development tasks.
 
 ### Database Migrations
 
@@ -103,57 +103,55 @@ The `makefile` provides several commands to facilitate common development tasks.
 
     This command parses the code comments and updates the files in the `/docs` directory.
 
-```bash
-make gen-docs
-```
+    ```bash
+    make gen-docs
+    ```
 
-El servidor se iniciará y estará escuchando en el puerto especificado en tu archivo `.env` (por defecto, `http://localhost:8080`).
+The server will start and listen on the port specified in your `.env` file (default: `http://localhost:8080`).
 
 ## Testing
 
-El proyecto está configurado con un flujo de trabajo de CI que ejecuta varias comprobaciones de calidad. Para ejecutar estas comprobaciones localmente:
+The project is configured with a CI workflow that runs several quality checks. To run these checks locally:
 
 ```bash
-# Ejecutar pruebas unitarias y de integración
+# Run unit and integration tests
 go test ./...
 
-# Verificar que no haya código "sospechoso"
+# Check for suspicious code
 go vet ./...
 
-# Ejecutar análisis estático (requiere instalación previa)
+# Run static analysis (requires prior installation)
 # go install honnef.co/go/tools/cmd/staticcheck@latest
 staticcheck ./...
 ```
 
-## Documentación de la API
+## API Documentation
 
-Este proyecto utiliza `swaggo/swag` para generar documentación de la API en formato Swagger/OpenAPI.
+This project uses `swaggo/swag` to generate API documentation in Swagger/OpenAPI format.
 
-*   **Acceder a la documentación**: Una vez que el servidor esté en ejecución, puedes ver la documentación interactiva de la API en tu navegador visitando:
+*   **Access the documentation**: Once the server is running, you can view the interactive API docs in your browser at:
     `http://localhost:8080/swagger/index.html`
 
-*   **Actualizar la documentación**: Si realizas cambios en los comentarios de la API (las anotaciones `// @...`), debes regenerar los archivos de documentación. Ejecuta el siguiente comando desde la raíz del proyecto:
+*   **Update the documentation**: If you make changes to the API comments (the `// @...` annotations), you should regenerate the documentation. Run the following command from the project root:
 
     ```bash
     swag init -g cmd/api/main.go
     ```
 
-## Variables de Entorno
+## Environment Variables
 
-A continuación se detallan las variables de entorno utilizadas por la aplicación:
+Below are the environment variables used by the application:
 
-| Variable            | Descripción                                                              | Ejemplo                                                        |
-| ------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| `API_PORT`          | Puerto en el que se ejecutará el servidor.                               | `8080`                                                         |
-| `API_ENV`           | Entorno de la aplicación (`development`, `staging`, `production`).       | `development`                                                  |
-| `DB_DSN`            | Data Source Name para la conexión a PostgreSQL.                          | `"host=localhost user=postgres ..."`                           |
-| `JWT_SECRET`        | Clave secreta para firmar los tokens JWT.                                | `"un-secreto-muy-largo-y-dificil-de-adivinar"`                 |
-| `JWT_EXPIRATION`    | Duración de validez de los tokens JWT.                                   | `"72h"`                                                        |
-| `RESEND_API_KEY`    | Clave API para el servicio de correo Resend.                             | `"re_xxxxxxxxxxxx"`                                            |
-| `RESEND_FROM_EMAIL` | Dirección de correo electrónico remitente para Resend.                   | `"noreply@tudominio.com"`                                      |
-                                     
+| Variable            | Description                                                               | Example                                                        |
+| ------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `ADDR`          | Port where the server will run.                                           | `8080`                                                         |
+| `ENV`           | Application environment (`development`, `staging`, `production`).         | `development`                                                  |
+| `DB_ADDR`            | Data Source Name for connecting to PostgreSQL.                            | `"host=localhost user=postgres ..."`                           |
+| `JWT_SECRET`        | Secret key used to sign JWT tokens.                                       | `"a-very-long-hard-to-guess-secret"`                           |
+| `JWT_EXPIRATION`    | Duration that JWT tokens are valid.                                       | `"72h"`                                                        |
+| `RESEND_API_KEY`    | API key for the Resend email service.                                     | `"re_xxxxxxxxxxxx"`                                            |
+| `RESEND_FROM_EMAIL` | Sender email address used by Resend.                                      | `"noreply@yourdomain.com"`                                     |
 
+## License
 
-## Licencia
-
-Este proyecto está bajo la Licencia Apache 2.0. Consulta el archivo `LICENSE` para más detalles.
+This project is licensed under the Apache 2.0 License. See the `LICENSE` file for details.
