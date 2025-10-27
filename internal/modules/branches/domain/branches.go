@@ -73,6 +73,7 @@ type BranchStatusCount struct {
 	Active      int64
 	Inactive    int64
 	Maintenance int64
+	Total       int64
 }
 
 type StatusCount struct {

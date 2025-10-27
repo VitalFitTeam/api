@@ -87,5 +87,6 @@ func (s *BranchServices) GetBranchStatusCount(ctx context.Context) (*branchdomai
 	if err != nil {
 		return nil, err
 	}
+	counts.Total = counts.Active + counts.Inactive + counts.Maintenance
 	return counts, nil
 }
