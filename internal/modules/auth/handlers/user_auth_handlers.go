@@ -32,7 +32,7 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := payload.createUser()
+	user, err := payload.CreateUser()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -99,7 +99,7 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := payload.CreateUserClientPayload.createUser()
+	user, err := payload.CreateUserClientPayload.CreateUser()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return

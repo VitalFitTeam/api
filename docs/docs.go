@@ -1356,6 +1356,273 @@ const docTemplate = `{
                 }
             }
         },
+        "/instructor": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all instructors in the system.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "List all instructors",
+                "responses": {
+                    "200": {
+                        "description": "List of instructors",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/instructordomain.Instructor"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new instructor, which also creates an associated user with the 'instructor' role.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Create a new instructor",
+                "parameters": [
+                    {
+                        "description": "Instructor creation payload",
+                        "name": "instructor",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instructorhandler.CreateInstructorPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Instructor created successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict: User with this email or identity document already exists",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/instructor/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves detailed information about a specific instructor by their UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Get instructor by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Instructor UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Instructor details",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/instructordomain.Instructor"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Instructor not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates an instructor's speciality and biography.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Update an instructor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Instructor UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payload with fields to update",
+                        "name": "instructor",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instructorhandler.UpdateInstructorPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Instructor updated successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID or payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Instructor not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deletes a specific instructor by their UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Delete an instructor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Instructor UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Instructor deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Instructor not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/user/branch-admins": {
             "get": {
                 "security": [
@@ -2325,6 +2592,98 @@ const docTemplate = `{
                 "tax_id": {
                     "type": "string",
                     "minLength": 5
+                }
+            }
+        },
+        "instructordomain.Instructor": {
+            "type": "object",
+            "properties": {
+                "biography": {
+                    "type": "string"
+                },
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/branchdomain.Branch"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "instructor_id": {
+                    "type": "string"
+                },
+                "speciality": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/authdomain.Users"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "instructorhandler.CreateInstructorPayload": {
+            "type": "object",
+            "required": [
+                "birth_date",
+                "email",
+                "first_name",
+                "gender",
+                "identity_document",
+                "last_name",
+                "password",
+                "phone"
+            ],
+            "properties": {
+                "biography": {
+                    "type": "string"
+                },
+                "birth_date": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "identity_document": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "profile_picture_url": {
+                    "type": "string"
+                },
+                "speciality": {
+                    "type": "string"
+                }
+            }
+        },
+        "instructorhandler.UpdateInstructorPayload": {
+            "type": "object",
+            "properties": {
+                "biography": {
+                    "type": "string"
+                },
+                "speciality": {
+                    "type": "string"
                 }
             }
         }

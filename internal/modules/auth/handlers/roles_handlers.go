@@ -100,7 +100,9 @@ func (r *AuthHandlers) GetRoleByIDHandler(c *gin.Context) {
 			return
 		}
 	}
-	c.JSON(http.StatusOK, role)
+	c.JSON(200, gin.H{
+		"data": role,
+	})
 }
 
 // @Summary		Update a role

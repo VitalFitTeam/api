@@ -24,7 +24,7 @@ type CreateUserStaffPayload struct {
 	RoleName string `json:"role_name" binding:"omitempty"`
 }
 
-func (c *CreateUserClientPayload) createUser() (*authdomain.Users, error) {
+func (c *CreateUserClientPayload) CreateUser() (*authdomain.Users, error) {
 	birthdate, err := time.Parse("2006-01-02", c.BirthDate)
 	if err != nil {
 		birthdate, err = time.Parse(time.RFC3339, c.BirthDate)

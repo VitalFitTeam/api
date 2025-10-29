@@ -616,6 +616,69 @@ definitions:
     - state
     - tax_id
     type: object
+  instructordomain.Instructor:
+    properties:
+      biography:
+        type: string
+      branches:
+        items:
+          $ref: '#/definitions/branchdomain.Branch'
+        type: array
+      created_at:
+        type: string
+      instructor_id:
+        type: string
+      speciality:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/authdomain.Users'
+      user_id:
+        type: string
+    type: object
+  instructorhandler.CreateInstructorPayload:
+    properties:
+      biography:
+        type: string
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity_document:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
+        type: string
+      speciality:
+        type: string
+    required:
+    - birth_date
+    - email
+    - first_name
+    - gender
+    - identity_document
+    - last_name
+    - password
+    - phone
+    type: object
+  instructorhandler.UpdateInstructorPayload:
+    properties:
+      biography:
+        type: string
+      speciality:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -1500,6 +1563,183 @@ paths:
       summary: verify service status
       tags:
       - System
+  /instructor:
+    get:
+      description: Retrieves a list of all instructors in the system.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of instructors
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/instructordomain.Instructor'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all instructors
+      tags:
+      - Instructors
+    post:
+      consumes:
+      - application/json
+      description: Creates a new instructor, which also creates an associated user
+        with the 'instructor' role.
+      parameters:
+      - description: Instructor creation payload
+        in: body
+        name: instructor
+        required: true
+        schema:
+          $ref: '#/definitions/instructorhandler.CreateInstructorPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Instructor created successfully
+        "400":
+          description: 'Bad Request: Invalid payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 'Conflict: User with this email or identity document already
+            exists'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new instructor
+      tags:
+      - Instructors
+  /instructor/{id}:
+    delete:
+      description: Deletes a specific instructor by their UUID.
+      parameters:
+      - description: Instructor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Instructor deleted successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Instructor not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete an instructor
+      tags:
+      - Instructors
+    get:
+      description: Retrieves detailed information about a specific instructor by their
+        UUID.
+      parameters:
+      - description: Instructor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Instructor details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/instructordomain.Instructor'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Instructor not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get instructor by ID
+      tags:
+      - Instructors
+    put:
+      consumes:
+      - application/json
+      description: Updates an instructor's speciality and biography.
+      parameters:
+      - description: Instructor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with fields to update
+        in: body
+        name: instructor
+        required: true
+        schema:
+          $ref: '#/definitions/instructorhandler.UpdateInstructorPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Instructor updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Instructor not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update an instructor
+      tags:
+      - Instructors
   /user/branch-admins:
     get:
       consumes:
