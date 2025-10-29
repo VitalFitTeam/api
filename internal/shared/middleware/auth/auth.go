@@ -67,9 +67,7 @@ func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-
-// checks role access to the endpoint
-func (j *AuthMiddleware) CheckRoleAccess(requiredRole string) gin.HandlerFunc {
+func (j *AuthMiddleware) RBACPermission(permissionName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := j.services.UserServices.GetUserFromContext(c)
 
@@ -79,8 +77,7 @@ func (j *AuthMiddleware) CheckRoleAccess(requiredRole string) gin.HandlerFunc {
 			return
 		}
 
-		// The rest of the logic is correct
-		allowed, err := j.CheckRolePrecedence(c.Request.Context(), user, requiredRole)
+		allowed, err := j.CheckRolePermission(c.Request.Context(), user, permissionName)
 		if err != nil {
 			j.services.LogErrors.UnauthorizedErrorResponse(c, err)
 			c.Abort()
@@ -92,15 +89,14 @@ func (j *AuthMiddleware) CheckRoleAccess(requiredRole string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
 		c.Next()
 	}
 }
 
-// compares users level with the level required
-func (j *AuthMiddleware) CheckRolePrecedence(ctx context.Context, user *authdomain.Users, roleName string) (bool, error) {
-	role, err := j.services.UserServices.GetRoleByName(ctx, roleName)
-	if err != nil {
-		return false, err
+func (j *AuthMiddleware) CheckRolePermission(ctx context.Context, user *authdomain.Users, permissionName string) (bool, error) {
+	if user.Role.Name == "super_admin" {
+		return true, nil
 	}
-	return user.Role.Level >= role.Level, nil
+	return j.services.UserServices.RoleHasPermission(ctx, user.Role.RoleID, permissionName)
 }

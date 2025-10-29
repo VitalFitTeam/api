@@ -243,7 +243,12 @@ func TestUserService(t *testing.T) {
 	})
 
 	t.Run("GetRoleByName", func(t *testing.T) {
-		mockRole := &authdomain.Roles{Name: "admin", Level: 99}
+		mockRole := &authdomain.Roles{
+			Name: "admin",
+			Permissions: []authdomain.Permission{
+				{Name: "users:create"},
+			},
+		}
 
 		t.Run("success", func(t *testing.T) {
 			roleStoreMock.On("GetByName", mock.Anything, "admin").Return(mockRole, nil).Once()
@@ -257,6 +262,87 @@ func TestUserService(t *testing.T) {
 			roleStoreMock.On("GetByName", mock.Anything, "nonexistent").Return(nil, shared_errors.ErrNotFound).Once()
 			_, err := userService.GetRoleByName(context.Background(), "nonexistent")
 			assert.ErrorIs(t, err, shared_errors.ErrNotFound)
+			roleStoreMock.AssertExpectations(t)
+		})
+	})
+
+	t.Run("CreateRole", func(t *testing.T) {
+		mockRole := &authdomain.Roles{Name: "new_role"}
+		roleStoreMock.On("Create", mock.Anything, mockRole).Return(nil).Once()
+		err := userService.CreateRole(context.Background(), mockRole)
+		assert.NoError(t, err)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("GetRoleByID", func(t *testing.T) {
+		mockRole := &authdomain.Roles{RoleID: uuid.New(), Name: "test_role"}
+		roleStoreMock.On("GetRoleByID", mock.Anything, mockRole.RoleID).Return(mockRole, nil).Once()
+		role, err := userService.GetRoleByID(context.Background(), mockRole.RoleID)
+		assert.NoError(t, err)
+		assert.Equal(t, mockRole, role)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("UpdateRole", func(t *testing.T) {
+		mockRole := &authdomain.Roles{RoleID: uuid.New(), Name: "updated_role"}
+		roleStoreMock.On("Update", mock.Anything, mockRole).Return(nil).Once()
+		err := userService.UpdateRole(context.Background(), mockRole)
+		assert.NoError(t, err)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("DeleteRole", func(t *testing.T) {
+		roleID := uuid.New()
+		roleStoreMock.On("Delete", mock.Anything, roleID).Return(nil).Once()
+		err := userService.DeleteRole(context.Background(), roleID)
+		assert.NoError(t, err)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("GetPermissions", func(t *testing.T) {
+		mockPermissions := []*authdomain.Permission{{Name: "perm1"}, {Name: "perm2"}}
+		roleStoreMock.On("GetPermissions", mock.Anything).Return(mockPermissions, nil).Once()
+		permissions, err := userService.GetPermissions(context.Background())
+		assert.NoError(t, err)
+		assert.Equal(t, mockPermissions, permissions)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("AssignRolePermission", func(t *testing.T) {
+		roleID := uuid.New()
+		permissionIDs := []uuid.UUID{uuid.New()}
+		roleStoreMock.On("AssignRolePermission", mock.Anything, roleID, permissionIDs).Return(nil).Once()
+		err := userService.AssignRolePermission(context.Background(), roleID, permissionIDs)
+		assert.NoError(t, err)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("DeleteRolePermission", func(t *testing.T) {
+		roleID := uuid.New()
+		permissionIDs := []uuid.UUID{uuid.New()}
+		roleStoreMock.On("DeleteRolePermission", mock.Anything, roleID, permissionIDs).Return(nil).Once()
+		err := userService.DeleteRolePermission(context.Background(), roleID, permissionIDs)
+		assert.NoError(t, err)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("RoleHasPermission", func(t *testing.T) {
+		roleID := uuid.New()
+		permissionName := "users:create"
+
+		t.Run("has permission", func(t *testing.T) {
+			roleStoreMock.On("RoleHasPermission", mock.Anything, roleID, permissionName).Return(true, nil).Once()
+			has, err := userService.RoleHasPermission(context.Background(), roleID, permissionName)
+			assert.NoError(t, err)
+			assert.True(t, has)
+			roleStoreMock.AssertExpectations(t)
+		})
+
+		t.Run("does not have permission", func(t *testing.T) {
+			roleStoreMock.On("RoleHasPermission", mock.Anything, roleID, permissionName).Return(false, nil).Once()
+			has, err := userService.RoleHasPermission(context.Background(), roleID, permissionName)
+			assert.NoError(t, err)
+			assert.False(t, has)
 			roleStoreMock.AssertExpectations(t)
 		})
 	})

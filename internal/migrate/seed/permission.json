@@ -1,0 +1,170 @@
+[
+  {
+    "name": "roles:create",
+    "description": "Allows creating new custom user roles"
+  },
+  {
+    "name": "roles:list",
+    "description": "Allows listing all user roles in the system"
+  },
+  {
+    "name": "roles:update",
+    "description": "Allows modifying the name or description of a role"
+  },
+  {
+    "name": "roles:delete",
+    "description": "Allows deleting a custom user role"
+  },
+  {
+    "name": "roles:assign_permissions",
+    "description": "Allows assigning and revoking permissions from a role"
+  },
+  {
+    "name": "permissions:list",
+    "description": "Allows listing all available permissions in the system"
+  },
+  {
+    "name": "branches:create",
+    "description": "Allows creating new branches or franchises"
+  },
+  {
+    "name": "branches:list",
+    "description": "Allows listing all branches in the system"
+  },
+  {
+    "name": "branches:get",
+    "description": "Allows viewing detailed information for a branch"
+  },
+  {
+    "name": "branches:update",
+    "description": "Allows modifying a branch's information"
+  },
+  {
+    "name": "branches:delete",
+    "description": "Allows deleting a branch from the system"
+  },
+  {
+    "name": "equipments:create",
+    "description": "Allows registering new equipment in the inventory"
+  },
+  {
+    "name": "equipments:list",
+    "description": "Allows listing all equipment (global or per-branch)"
+  },
+  {
+    "name": "equipments:get",
+    "description": "Allows viewing details for a piece of equipment"
+  },
+  {
+    "name": "equipments:update",
+    "description": "Allows modifying equipment information or status"
+  },
+  {
+    "name": "equipments:delete",
+    "description": "Allows deleting equipment from the inventory"
+  },
+  {
+    "name": "users:create",
+    "description": "Allows creating new user accounts (employees, staff)"
+  },
+  {
+    "name": "users:list",
+    "description": "Allows listing all system user accounts"
+  },
+  {
+    "name": "users:get",
+    "description": "Allows viewing a user's detailed profile"
+  },
+  {
+    "name": "users:update",
+    "description": "Allows modifying a user's information"
+  },
+  {
+    "name": "users:assign_role",
+    "description": "Allows assigning or changing a user's role"
+  },
+  {
+    "name": "users:deactivate",
+    "description": "Allows deactivating (disabling) a user account"
+  },
+  {
+    "name": "members:create",
+    "description": "Allows registering new gym members (clients)"
+  },
+  {
+    "name": "members:list",
+    "description": "Allows listing all members"
+  },
+  {
+    "name": "members:get",
+    "description": "Allows viewing a member's detailed profile"
+  },
+  {
+    "name": "members:update",
+    "description": "Allows modifying a member's information"
+  },
+  {
+    "name": "members:delete",
+    "description": "Allows deleting (disabling) a member"
+  },
+  {
+    "name": "members:assign_plan",
+    "description": "Allows assigning or changing a member's membership plan"
+  },
+  {
+    "name": "services:create",
+    "description": "Allows creating new services in the global catalog (classes, spa, etc.)"
+  },
+  {
+    "name": "services:list",
+    "description": "Allows listing all services from the global catalog"
+  },
+  {
+    "name": "services:update",
+    "description": "Allows modifying a catalog service"
+  },
+  {
+    "name": "services:delete",
+    "description": "Allows deleting a catalog service"
+  },
+  {
+    "name": "checkins:create",
+    "description": "Allows registering a member's check-in"
+  },
+  {
+    "name": "checkins:list",
+    "description": "Allows viewing the check-in history"
+  },
+  {
+    "name": "schedule:view",
+    "description": "Allows viewing the schedule for classes and appointments"
+  },
+  {
+    "name": "schedule:book",
+    "description": "Allows booking a member into a class or appointment"
+  },
+  {
+    "name": "billing:create_invoice",
+    "description": "Allows manually generating an invoice or charge"
+  },
+  {
+    "name": "billing:process_payment",
+    "description": "Allows registering a received payment"
+  },
+  {
+    "name": "billing:list_invoices",
+    "description": "Allows listing and viewing invoices (own or all)"
+  },
+  {
+    "name": "reports:view_financial",
+    "description": "Allows viewing financial and income reports"
+  },
+  {
+    "name": "reports:view_attendance",
+    "description": "Allows viewing attendance and usage reports"
+  },
+  {
+    "name": "reports:view_sales",
+    "description": "Allows viewing sales reports for memberships or products"
+  }
+]
