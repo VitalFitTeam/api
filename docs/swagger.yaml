@@ -138,6 +138,21 @@ definitions:
     required:
     - code
     type: object
+  authhandlers.CreateRolesPayload:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+    required:
+    - description
+    - name
+    - permissions
+    type: object
   authhandlers.CreateUserClientPayload:
     properties:
       birth_date:
@@ -224,6 +239,15 @@ definitions:
         type: string
     required:
     - email
+    type: object
+  authhandlers.PermissionsPayload:
+    properties:
+      permissions:
+        items:
+          type: string
+        type: array
+    required:
+    - permissions
     type: object
   authhandlers.ResetPasswordPayload:
     properties:
@@ -605,6 +629,34 @@ info:
   termsOfService: http://swagger.io/terms/
   title: VitalFit API
 paths:
+  /admin/permissions:
+    get:
+      description: Lists all permissions defined in the system (from the seeder) that
+        can be assigned to roles.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of all permissions
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/authdomain.Permission'
+                type: array
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all available permissions
+      tags:
+      - RBAC (Admin)
   /admin/roles:
     get:
       consumes:
@@ -614,16 +666,16 @@ paths:
       - application/json
       responses:
         "200":
-          description: succed response
+          description: Success response
           schema:
             properties:
               data:
                 items:
-                  $ref: '#/definitions/authhandlers.BranchAdminResponse'
+                  $ref: '#/definitions/authdomain.Roles'
                 type: array
             type: object
         "500":
-          description: 'Error: internal server error'
+          description: 'Error: Internal server error'
           schema:
             properties:
               error:
@@ -631,9 +683,258 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: List all roles in the system
+      summary: List all roles
       tags:
-      - Admin
+      - RBAC (Admin)
+    post:
+      consumes:
+      - application/json
+      description: Creates a new custom role with a name, description, and an initial
+        set of permission IDs.
+      parameters:
+      - description: Role creation payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.CreateRolesPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Role created successfully
+        "400":
+          description: 'Bad Request: Invalid payload or permissions not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: 'Conflict: A role with this name already exists'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new custom role
+      tags:
+      - RBAC (Admin)
+  /admin/roles/{id}:
+    delete:
+      description: Deletes a custom role from the system.
+      parameters:
+      - description: Role ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Role deleted successfully (No Content)
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Not Found: Role not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a role
+      tags:
+      - RBAC (Admin)
+    get:
+      description: Retrieves the details of a specific role, including its assigned
+        permissions.
+      parameters:
+      - description: Role ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role details response
+          schema:
+            $ref: '#/definitions/authdomain.Roles'
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Not Found: Role not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get role by ID
+      tags:
+      - RBAC (Admin)
+    put:
+      consumes:
+      - application/json
+      description: Updates a role's name, description, and overwrites its assigned
+        permissions with the new set provided.
+      parameters:
+      - description: Role ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.CreateRolesPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Role updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a role
+      tags:
+      - RBAC (Admin)
+  /admin/roles/{id}/permissions:
+    delete:
+      consumes:
+      - application/json
+      description: Revokes one or more permissions from a specific role based on the
+        provided permission IDs.
+      parameters:
+      - description: Role ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: List of permission IDs to revoke
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.PermissionsPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permissions revoked successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Revoke permissions from a role
+      tags:
+      - RBAC (Admin)
+    post:
+      consumes:
+      - application/json
+      description: Assigns one or more permissions to a specific role. This is additive;
+        it does not remove existing permissions.
+      parameters:
+      - description: Role ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: List of permission IDs to assign
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.PermissionsPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Permissions assigned successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign permissions to a role
+      tags:
+      - RBAC (Admin)
   /auth/activate:
     put:
       consumes:
@@ -1216,13 +1517,6 @@ paths:
                 items:
                   $ref: '#/definitions/authhandlers.BranchAdminResponse'
                 type: array
-            type: object
-        "400":
-          description: 'Error: invalid params'
-          schema:
-            properties:
-              error:
-                type: string
             type: object
         "500":
           description: 'Error: internal server error'

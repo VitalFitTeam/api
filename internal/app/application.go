@@ -55,8 +55,10 @@ func (app *application) Mount() http.Handler {
 
 		v1.GET("/health", app.HealthCheckHandler)
 
+		//auth routes
 		app.Handlers.AuthHandlers.AuthRoutes(v1, m)
 		app.Handlers.AuthHandlers.UserRoutes(v1, m)
+		app.Handlers.AuthHandlers.AdminRoutes(v1, m)
 
 		//branch routes
 		app.Handlers.BranchHandlers.BranchRoutes(v1, m)

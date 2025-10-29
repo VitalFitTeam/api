@@ -67,42 +67,6 @@ func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-
-func (j *AuthMiddleware) CheckRoleAccess(requiredRole string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		user := j.services.UserServices.GetUserFromContext(c)
-
-		if user == nil {
-			j.services.LogErrors.UnauthorizedErrorResponse(c, fmt.Errorf("user or user role not found in context for role check"))
-			c.Abort()
-			return
-		}
-
-		// The rest of the logic is correct
-		allowed, err := j.CheckRolePrecedence(c.Request.Context(), user, requiredRole)
-		if err != nil {
-			j.services.LogErrors.UnauthorizedErrorResponse(c, err)
-			c.Abort()
-			return
-		}
-
-		if !allowed {
-			j.services.LogErrors.ForbiddenResponse(c)
-			c.Abort()
-			return
-		}
-		c.Next()
-	}
-}
-
-func (j *AuthMiddleware) CheckRolePrecedence(ctx context.Context, user *authdomain.Users, roleName string) (bool, error) {
-	role, err := j.services.UserServices.GetRoleByName(ctx, roleName)
-	if err != nil {
-		return false, err
-	}
-	return user.Role.Level >= role.Level, nil
-}
-
 func (j *AuthMiddleware) RBACPermission(permissionName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := j.services.UserServices.GetUserFromContext(c)

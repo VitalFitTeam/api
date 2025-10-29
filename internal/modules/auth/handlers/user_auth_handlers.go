@@ -342,7 +342,7 @@ func (h *AuthHandlers) ResetPasswordHandler(c *gin.Context) {
 		}
 		return
 	}
-
+	c.JSON(http.StatusOK, nil)
 }
 
 // function to send emails on register
@@ -368,7 +368,6 @@ func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users
 // @Accept			json
 // @Produce		json
 // @Success		200	{object}	object{data=[]BranchAdminResponse}	"succed response"
-// @Failure		400	{object}	object{error=string}				"Error: invalid params"
 // @Failure		500	{object}	object{error=string}				"Error: internal server error"
 // @Router			/user/branch-admins [get]
 func (h *AuthHandlers) GetBranchAdminsHandler(c *gin.Context) {
@@ -405,9 +404,8 @@ func (h *AuthHandlers) GetBranchAdminsHandler(c *gin.Context) {
 		responseList = append(responseList, resp)
 	}
 
-	c.JSON(200, gin.H{
-		"data":       responseList,
-		"pagination": fq,
+	c.JSON(http.StatusOK, gin.H{
+		"data": responseList,
 	})
 
 }
