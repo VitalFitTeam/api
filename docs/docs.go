@@ -24,6 +24,53 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/roles": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "List all roles in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "List all roles in the system",
+                "responses": {
+                    "200": {
+                        "description": "succed response",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/authhandlers.BranchAdminResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/activate": {
             "put": {
                 "description": "Activates a user's account using the invitation code/token.",
@@ -896,42 +943,6 @@ const docTemplate = `{
                     "User"
                 ],
                 "summary": "Get a user list that are branch admins",
-                "parameters": [
-                    {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer",
-                        "default": 10,
-                        "description": "limit results per page",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 0,
-                        "type": "integer",
-                        "default": 0,
-                        "description": "number of results to skip (paginación)",
-                        "name": "offset",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "default": "desc",
-                        "description": "clasification order (asc or desc)",
-                        "name": "sort",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "search terms (filter by name)",
-                        "name": "search",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "succed response",
@@ -1052,7 +1063,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
-                    "description": "Primary Key and Foreign Key to Users",
                     "type": "string"
                 }
             }
@@ -1081,6 +1091,26 @@ const docTemplate = `{
                 "GenderPreferNotToSay"
             ]
         },
+        "authdomain.Permission": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permission_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "authdomain.Roles": {
             "type": "object",
             "properties": {
@@ -1095,6 +1125,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/authdomain.Permission"
+                    }
                 },
                 "role_id": {
                     "type": "string"
@@ -1408,6 +1444,10 @@ const docTemplate = `{
                     "format": "int64"
                 },
                 "maintenance": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "total": {
                     "type": "integer",
                     "format": "int64"
                 }

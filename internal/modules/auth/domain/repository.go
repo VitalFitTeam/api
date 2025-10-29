@@ -25,4 +25,15 @@ type UserRepository interface {
 
 type RolesRepository interface {
 	GetByName(ctx context.Context, name string) (*Roles, error)
+	GetRoleByID(ctx context.Context, roleID uuid.UUID) (*Roles, error)
+	GetRoles(ctx context.Context) ([]*Roles, error)
+	Create(ctx context.Context, role *Roles) error
+	Update(ctx context.Context, role *Roles) error
+	Delete(ctx context.Context, roleID uuid.UUID) error
+
+	GetPermissions(ctx context.Context) ([]*Permission, error)
+	AssignRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error
+	DeleteRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error
+	RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error)
+	CreatePermission(ctx context.Context, tx *gorm.DB, permission *Permission) error
 }

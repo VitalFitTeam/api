@@ -31,7 +31,6 @@ definitions:
       updated_at:
         type: string
       user_id:
-        description: Primary Key and Foreign Key to Users
         type: string
     type: object
   authdomain.ClientStatusEnum:
@@ -52,6 +51,19 @@ definitions:
     - GenderMale
     - GenderFemale
     - GenderPreferNotToSay
+  authdomain.Permission:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      permission_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   authdomain.Roles:
     properties:
       created_at:
@@ -62,6 +74,10 @@ definitions:
         type: integer
       name:
         type: string
+      permissions:
+        items:
+          $ref: '#/definitions/authdomain.Permission'
+        type: array
       role_id:
         type: string
       updated_at:
@@ -276,6 +292,9 @@ definitions:
         format: int64
         type: integer
       maintenance:
+        format: int64
+        type: integer
+      total:
         format: int64
         type: integer
     type: object
@@ -586,6 +605,35 @@ info:
   termsOfService: http://swagger.io/terms/
   title: VitalFit API
 paths:
+  /admin/roles:
+    get:
+      consumes:
+      - application/json
+      description: List all roles in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: succed response
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/authhandlers.BranchAdminResponse'
+                type: array
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all roles in the system
+      tags:
+      - Admin
   /auth/activate:
     put:
       consumes:
@@ -1157,32 +1205,6 @@ paths:
       consumes:
       - application/json
       description: Get a user list with the branch admin role
-      parameters:
-      - default: 10
-        description: limit results per page
-        in: query
-        maximum: 100
-        minimum: 1
-        name: limit
-        type: integer
-      - default: 0
-        description: number of results to skip (paginación)
-        in: query
-        minimum: 0
-        name: offset
-        type: integer
-      - default: desc
-        description: clasification order (asc or desc)
-        enum:
-        - asc
-        - desc
-        in: query
-        name: sort
-        type: string
-      - description: search terms (filter by name)
-        in: query
-        name: search
-        type: string
       produces:
       - application/json
       responses:

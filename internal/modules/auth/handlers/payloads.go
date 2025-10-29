@@ -64,6 +64,50 @@ type ResetPasswordPayload struct {
 	Token           string `json:"token" binding:"required"`
 }
 
+type CreateRolesPayload struct {
+	Name        string   `json:"name" binding:"required"`
+	Description string   `json:"description" binding:"required"`
+	Permissions []string `json:"permissions" binding:"required"`
+}
+
+func (c *CreateRolesPayload) createRole() (*authdomain.Roles, error) {
+
+	permissions := make([]authdomain.Permission, 0, len(c.Permissions))
+
+	for _, pID := range c.Permissions {
+		id, err := uuid.Parse(pID)
+		if err != nil {
+			return nil, err
+		}
+		permissions = append(permissions, authdomain.Permission{
+			PermissionID: id,
+		})
+	}
+
+	return &authdomain.Roles{
+		Name:        c.Name,
+		Description: c.Description,
+		Permissions: permissions,
+	}, nil
+}
+
+type PermissionsPayload struct {
+	Permissions []string `json:"permissions" binding:"required"`
+}
+
+func (c *PermissionsPayload) toPermission() ([]uuid.UUID, error) {
+	permisions := make([]uuid.UUID, 0, len(c.Permissions))
+
+	for _, pID := range c.Permissions {
+		id, err := uuid.Parse(pID)
+		if err != nil {
+			return nil, err
+		}
+		permisions = append(permisions, id)
+	}
+	return permisions, nil
+}
+
 // response
 type BranchAdminResponse struct {
 	UserID    uuid.UUID `json:"user_id"`

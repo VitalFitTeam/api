@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type RoleStore struct {
@@ -20,15 +23,151 @@ func NewRoleStore(db *gorm.DB) *RoleStore {
 func (s *RoleStore) GetByName(ctx context.Context, name string) (*authdomain.Roles, error) {
 	var role authdomain.Roles
 
-	err := s.db.WithContext(ctx).Where("name = ?", name).First(&role).Error
+	err := s.db.WithContext(ctx).
+		Preload("Permissions").
+		Where("name = ?", name).
+		First(&role).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, shared_errors.ErrNotFound
 		}
-
 		return nil, err
 	}
 
 	return &role, nil
+}
+
+func (s *RoleStore) GetRoleByID(ctx context.Context, roleID uuid.UUID) (*authdomain.Roles, error) {
+	var role authdomain.Roles
+	err := s.db.WithContext(ctx).
+		Preload("Permissions").
+		Where("role_id = ?", roleID).
+		First(&role).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+	return &role, nil
+}
+
+func (s *RoleStore) GetRoles(ctx context.Context) ([]*authdomain.Roles, error) {
+	var roles []*authdomain.Roles
+
+	err := s.db.WithContext(ctx).Find(&roles).Error
+	if err != nil {
+		return nil, err
+	}
+	return roles, nil
+}
+
+func (s *RoleStore) Create(ctx context.Context, role *authdomain.Roles) error {
+	err := s.db.WithContext(ctx).Create(role).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *RoleStore) Update(ctx context.Context, role *authdomain.Roles) error {
+	err := s.db.WithContext(ctx).Save(&role).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *RoleStore) Delete(ctx context.Context, roleID uuid.UUID) error {
+	err := s.db.WithContext(ctx).Delete(&authdomain.Roles{}, roleID).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return shared_errors.ErrNotFound
+		default:
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *RoleStore) GetPermissions(ctx context.Context) ([]*authdomain.Permission, error) {
+	var permissions []*authdomain.Permission
+	err := s.db.WithContext(ctx).Find(&permissions).Error
+	if err != nil {
+		return nil, err
+	}
+	return permissions, nil
+}
+
+func (s *RoleStore) AssignRolePermission(ctx context.Context, roleID uuid.UUID, permissionIDs []uuid.UUID) error {
+
+	var linksToCreate []authdomain.RolePermission
+	for _, pid := range permissionIDs {
+		linksToCreate = append(linksToCreate, authdomain.RolePermission{
+			RoleID:       roleID,
+			PermissionID: pid,
+		})
+	}
+
+	if len(linksToCreate) == 0 {
+		return nil
+	}
+
+	err := db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).
+			Clauses(clause.OnConflict{DoNothing: true}).
+			Create(&linksToCreate).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return err
+}
+
+func (s *RoleStore) DeleteRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error {
+	if len(permissionID) == 0 {
+		return nil
+	}
+
+	err := db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).
+			Where("role_id = ?", roleID).
+			Where("permission_id IN ?", permissionID).
+			Delete(&authdomain.RolePermission{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+func (s *RoleStore) RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error) {
+	var count int64
+
+	err := s.db.WithContext(ctx).Table("roles").
+		Joins("JOIN role_permissions ON roles.role_id = role_permissions.role_id").
+		Joins("JOIN permissions ON permissions.permission_id = role_permissions.permission_id").
+		Where("roles.role_id = ?", roleID).
+		Where("permissions.name = ?", permission).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (s *RoleStore) CreatePermission(ctx context.Context, tx *gorm.DB, permission *authdomain.Permission) error {
+	err := tx.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "name"}},
+			DoNothing: true,
+		}).
+		Create(permission).Error
+
+	return err
 }

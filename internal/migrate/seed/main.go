@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
+	"os"
 	"time"
 
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
@@ -17,6 +19,7 @@ import (
 func Seed(store store.Storage, db *gorm.DB) {
 	ctx := context.Background()
 	CreateSuperAdmin(store, db, ctx)
+	SeedPermissions(store, db, ctx)
 }
 
 func CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -56,6 +59,53 @@ func CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
 	}
 
 	log.Println("User created successfully")
+}
+
+type permissionJSON struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+func SeedPermissions(store store.Storage, db *gorm.DB, ctx context.Context) {
+
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/permission.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read permissions.json file: %v", err)
+		return
+	}
+
+	var permissionsFromJSON []permissionJSON
+	if err = json.Unmarshal(jsonFile, &permissionsFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode JSON: %v", err)
+		return
+	}
+	log.Printf("Found %d permissions in permissions.json. Starting seeder...", len(permissionsFromJSON))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+
+		for _, p := range permissionsFromJSON {
+
+			permissionToCreate := &authdomain.Permission{
+				Name:        p.Name,
+				Description: p.Description,
+			}
+
+			if err := store.Roles.CreatePermission(ctx, tx, permissionToCreate); err != nil {
+				log.Printf("Error creating permission '%s': %v", p.Name, err)
+				return err //rollback
+			}
+		}
+
+		// Commit
+		return nil
+	})
+
+	if err != nil {
+		log.Println("Error in permissions seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Permissions seeder completed successfully.")
 }
 
 func main() {
