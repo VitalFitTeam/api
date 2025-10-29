@@ -411,7 +411,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "Permissions assigned successfully"
                     },
                     "400": {
@@ -1648,8 +1648,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "description",
-                "name",
-                "permissions"
+                "name"
             ],
             "properties": {
                 "description": {

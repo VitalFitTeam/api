@@ -514,11 +514,9 @@ func TestAdminRoleRoutes(t *testing.T) {
 		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "roles:update").Return(true, nil).Once()
 		roleStoreMock.On("Update", mock.Anything, mock.AnythingOfType("*authdomain.Roles")).Return(nil).Once()
 
-		permID := uuid.New().String()
 		payload := map[string]interface{}{
 			"name":        "updated-test-role",
 			"description": "An updated test role",
-			"permissions": []string{permID},
 		}
 		body, _ := json.Marshal(payload)
 
@@ -527,7 +525,7 @@ func TestAdminRoleRoutes(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer "+adminToken)
 		rr := app.ExecuteRequest(req, mux)
 
-		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Equal(t, http.StatusNoContent, rr.Code)
 		roleStoreMock.AssertExpectations(t)
 	})
 
@@ -563,7 +561,7 @@ func TestAdminRoleRoutes(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer "+adminToken)
 		rr := app.ExecuteRequest(req, mux)
 
-		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Equal(t, http.StatusNoContent, rr.Code)
 		roleStoreMock.AssertExpectations(t)
 	})
 
@@ -584,7 +582,7 @@ func TestAdminRoleRoutes(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer "+adminToken)
 		rr := app.ExecuteRequest(req, mux)
 
-		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Equal(t, http.StatusNoContent, rr.Code)
 		roleStoreMock.AssertExpectations(t)
 	})
 

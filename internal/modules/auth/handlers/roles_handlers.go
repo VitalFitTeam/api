@@ -139,7 +139,7 @@ func (r *AuthHandlers) UpdateRoleHandler(c *gin.Context) {
 		r.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusNoContent, nil)
 
 }
 
@@ -165,6 +165,9 @@ func (r *AuthHandlers) DeleteRoleHandler(c *gin.Context) {
 		switch err {
 		case shared_errors.ErrNotFound:
 			r.services.LogErrors.NotFoundResponse(c)
+			return
+		case shared_errors.ErrConflict:
+			r.services.LogErrors.ConflictResponse(c, err)
 			return
 		default:
 			r.services.LogErrors.InternalServerError(c, err)
@@ -204,7 +207,7 @@ func (r *AuthHandlers) GetPermissionsHandler(c *gin.Context) {
 // @Produce		json
 // @Param			id		path		string					true	"Role ID (UUID)"
 // @Param			payload	body		PermissionsPayload		true	"List of permission IDs to assign"
-// @Success		200		{object}	nil						"Permissions assigned successfully"
+// @Success		204		{object}	nil						"Permissions assigned successfully"
 // @Failure		400		{object}	object{error=string}	"Bad Request: Invalid UUID or payload"
 // @Failure		500		{object}	object{error=string}	"Error: Internal server error"
 // @Router			/admin/roles/{id}/permissions [post]
@@ -230,7 +233,7 @@ func (r *AuthHandlers) AssignRolePermissionHandler(c *gin.Context) {
 		r.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusNoContent, nil)
 }
 
 // @Summary		Revoke permissions from a role
@@ -267,5 +270,5 @@ func (r *AuthHandlers) DeleteRolePermissionHandler(c *gin.Context) {
 		r.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, nil)
+	c.JSON(http.StatusNoContent, nil)
 }

@@ -67,7 +67,7 @@ type ResetPasswordPayload struct {
 type CreateRolesPayload struct {
 	Name        string   `json:"name" binding:"required"`
 	Description string   `json:"description" binding:"required"`
-	Permissions []string `json:"permissions" binding:"required"`
+	Permissions []string `json:"permissions" binding:"omitempty"`
 }
 
 func (c *CreateRolesPayload) createRole() (*authdomain.Roles, error) {

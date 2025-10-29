@@ -403,7 +403,7 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "Permissions assigned successfully"
                     },
                     "400": {
@@ -1640,8 +1640,7 @@
             "type": "object",
             "required": [
                 "description",
-                "name",
-                "permissions"
+                "name"
             ],
             "properties": {
                 "description": {

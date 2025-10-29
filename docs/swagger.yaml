@@ -151,7 +151,6 @@ definitions:
     required:
     - description
     - name
-    - permissions
     type: object
   authhandlers.CreateUserClientPayload:
     properties:
@@ -914,7 +913,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "204":
           description: Permissions assigned successfully
         "400":
           description: 'Bad Request: Invalid UUID or payload'

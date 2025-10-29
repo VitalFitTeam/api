@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/jackc/pgx/v5/pgconn"
+
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
@@ -64,7 +66,10 @@ func (s *RoleStore) GetRoles(ctx context.Context) ([]*authdomain.Roles, error) {
 }
 
 func (s *RoleStore) Create(ctx context.Context, role *authdomain.Roles) error {
-	err := s.db.WithContext(ctx).Create(role).Error
+	err := s.db.WithContext(ctx).Select(
+		"Name", "Description", "Permissions",
+	).Create(role).Error
+
 	if err != nil {
 		return err
 	}
@@ -72,7 +77,10 @@ func (s *RoleStore) Create(ctx context.Context, role *authdomain.Roles) error {
 }
 
 func (s *RoleStore) Update(ctx context.Context, role *authdomain.Roles) error {
-	err := s.db.WithContext(ctx).Save(&role).Error
+	err := s.db.WithContext(ctx).Model(&role).Select(
+		"Name", "Description",
+	).Updates(role).Error
+
 	if err != nil {
 		return err
 	}
@@ -86,6 +94,10 @@ func (s *RoleStore) Delete(ctx context.Context, roleID uuid.UUID) error {
 		case gorm.ErrRecordNotFound:
 			return shared_errors.ErrNotFound
 		default:
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+				return shared_errors.ErrConflict
+			}
 			return err
 		}
 	}
