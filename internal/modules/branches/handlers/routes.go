@@ -2,8 +2,28 @@ package branchhandlers
 
 import (
 	"github.com/gin-gonic/gin"
+	appservices "github.com/vitalfit/api/internal/app/services"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 )
+
+type BranchHandlersInterface interface {
+	BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	CreateBranchHandler(c *gin.Context)
+	GetPaymentMethodsHandler(c *gin.Context)
+	GetBranchesHandler(c *gin.Context)
+	DeleteBranchHandler(c *gin.Context)
+	GetBranchByIDHandler(c *gin.Context)
+	UpdateBranchHandler(c *gin.Context)
+	GetBranchStatusCount(c *gin.Context)
+}
+
+type BranchHandlers struct {
+	services appservices.Services
+}
+
+func NewBranchHandlers(services appservices.Services) *BranchHandlers {
+	return &BranchHandlers{services: services}
+}
 
 func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
