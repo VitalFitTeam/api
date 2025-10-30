@@ -9,7 +9,6 @@ import (
 type Roles struct {
 	RoleID      uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"role_id"`
 	Name        string    `gorm:"type:varchar(50);unique;not null" json:"name"`
-	Level       int16     `gorm:"type:smallint;not null;default:0" json:"level"`
 	Description string    `gorm:"type:text" json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`

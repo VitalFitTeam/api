@@ -56,6 +56,10 @@ func (m *UserStoreMock) Activate(ctx context.Context, code string) error {
 	args := m.Called(ctx, code)
 	return args.Error(0)
 }
+func (m *UserStoreMock) ActivateUserStaff(ctx context.Context, token string, password string) error {
+	args := m.Called(ctx, token, password)
+	return args.Error(0)
+}
 
 func (m *UserStoreMock) GetByEmail(ctx context.Context, email string) (*authdomain.Users, error) {
 	args := m.Called(ctx, email)

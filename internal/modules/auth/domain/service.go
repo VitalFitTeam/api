@@ -21,6 +21,7 @@ type AuthServicesInterface interface {
 	MailSender(ctx context.Context, user *Users, key string, template string) (int, error)
 	MailSenderStaff(ctx context.Context, user *Users, token string, template string) (int, error)
 	Activate(ctx context.Context, code string) error
+	ActivateStaff(ctx context.Context, token string, password string) error
 	GenerateToken(user *Users) (string, error)
 	ValidateToken(token string) (*jwt.Token, error)
 	CreatePasswordResetToken(ctx context.Context, email string, key string) error

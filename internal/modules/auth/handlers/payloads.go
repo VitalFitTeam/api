@@ -61,7 +61,7 @@ type ForgotPasswordPayload struct {
 
 type ResetPasswordPayload struct {
 	Password        string `json:"password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
-	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"` // Valida en el backend
+	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"`
 	Token           string `json:"token" binding:"required"`
 }
 
@@ -107,6 +107,11 @@ func (c *PermissionsPayload) toPermission() ([]uuid.UUID, error) {
 		permisions = append(permisions, id)
 	}
 	return permisions, nil
+}
+
+type UpdateStaffPasswordPayload struct {
+	Password        string `json:"password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"`
 }
 
 // response

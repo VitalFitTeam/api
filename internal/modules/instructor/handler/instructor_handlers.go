@@ -52,7 +52,7 @@ func (h *InstructorHandlers) CreateInstructorHandler(c *gin.Context) {
 	}
 
 	//send email -> error -> rollback
-	status, err := h.services.AuthServices.MailSenderStaff(ctx, instructor.User, hashToken, mailer.UserStaffActivate)
+	status, err := h.services.AuthServices.MailSenderStaff(ctx, instructor.User, plainToken, mailer.UserStaffActivate)
 	if err != nil {
 		h.services.Logger.Errorw("error sending activation url to email", "error", err)
 		if err := h.services.AuthServices.DeleteResetToken(ctx, instructor.UserID); err != nil {

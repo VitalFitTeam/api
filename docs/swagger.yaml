@@ -70,8 +70,6 @@ definitions:
         type: string
       description:
         type: string
-      level:
-        type: integer
       name:
         type: string
       permissions:
@@ -251,7 +249,6 @@ definitions:
   authhandlers.ResetPasswordPayload:
     properties:
       confirm_password:
-        description: Valida en el backend
         type: string
       password:
         minLength: 8
@@ -262,6 +259,17 @@ definitions:
     - confirm_password
     - password
     - token
+    type: object
+  authhandlers.UpdateStaffPasswordPayload:
+    properties:
+      confirm_password:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - confirm_password
+    - password
     type: object
   branchdomain.Branch:
     properties:
@@ -1051,6 +1059,47 @@ paths:
             additionalProperties: true
             type: object
       summary: Activate user account
+      tags:
+      - User
+  /auth/activate/{token}:
+    put:
+      consumes:
+      - application/json
+      description: Activates a staff user's account using the invitation token from
+        the URL and sets their initial password.
+      parameters:
+      - description: Activation Token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Password Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.UpdateStaffPasswordPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User successfully activated and password set. No content returned.
+        "400":
+          description: Bad request (e.g., invalid JSON payload, passwords do not match)
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Token is invalid or expired
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Activate staff user account
       tags:
       - User
   /auth/login:

@@ -554,6 +554,65 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/activate/{token}": {
+            "put": {
+                "description": "Activates a staff user's account using the invitation token from the URL and sets their initial password.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Activate staff user account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Activation Token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Password Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authhandlers.UpdateStaffPasswordPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User successfully activated and password set. No content returned."
+                    },
+                    "400": {
+                        "description": "Bad request (e.g., invalid JSON payload, passwords do not match)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Token is invalid or expired",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Authenticates the user with email and password, returning an access token upon success.",
@@ -1807,9 +1866,6 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "level": {
-                    "type": "integer"
-                },
                 "name": {
                     "type": "string"
                 },
@@ -2077,7 +2133,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "confirm_password": {
-                    "description": "Valida en el backend",
                     "type": "string"
                 },
                 "password": {
@@ -2086,6 +2141,22 @@ const docTemplate = `{
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "authhandlers.UpdateStaffPasswordPayload": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "password"
+            ],
+            "properties": {
+                "confirm_password": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
                 }
             }
         },
