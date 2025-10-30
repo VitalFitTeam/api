@@ -42,6 +42,7 @@ type TokenConfig struct {
 	Secret string
 	Exp    time.Duration
 	Iss    string
+	Aud    string
 }
 
 func LoadConfig() *Config {
@@ -67,6 +68,7 @@ func LoadConfig() *Config {
 				Secret: env.GetString("JWT_SECRET", ""),
 				Exp:    time.Hour * 24 * 3, //3 days
 				Iss:    env.GetString("JWT_ISS", ""),
+				Aud:    env.GetString("JWT_AUD", ""),
 			},
 		},
 		RateLimiter: ratelimiter.Config{

@@ -624,6 +624,7 @@ definitions:
     - state
     - tax_id
     type: object
+<<<<<<< HEAD
   instructorhandler.CreateInstructorPayload:
     properties:
       biography:
@@ -705,6 +706,158 @@ definitions:
       profile_picture_url:
         type: string
       speciality:
+=======
+  inventorydomain.BranchInventory:
+    properties:
+      acquisition_date:
+        type: string
+      branch_id:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      equipment:
+        $ref: '#/definitions/inventorydomain.Equipment'
+      equipment_id:
+        type: string
+      inventory_id:
+        type: string
+      last_maintenance_date:
+        type: string
+      notes:
+        type: string
+      serial_number:
+        type: string
+      status:
+        $ref: '#/definitions/inventorydomain.EquipmentStatusEnum'
+      updated_at:
+        type: string
+    type: object
+  inventorydomain.Equipment:
+    properties:
+      brand:
+        type: string
+      category:
+        $ref: '#/definitions/inventorydomain.EquipmentCategoryEnum'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      equipment_id:
+        type: string
+      model:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  inventorydomain.EquipmentCategoryEnum:
+    enum:
+    - Cardio
+    - Strength
+    - FreeWeight
+    - Functional
+    - Accessory
+    type: string
+    x-enum-varnames:
+    - EquipmentCategoryCardio
+    - EquipmentCategoryStrength
+    - EquipmentCategoryFreeWeight
+    - EquipmentCategoryFunctional
+    - EquipmentCategoryAccessory
+  inventorydomain.EquipmentStatusEnum:
+    enum:
+    - Available
+    - InMaintenance
+    - OutOfService
+    type: string
+    x-enum-varnames:
+    - EquipmentAvailable
+    - EquipmentInMaintenance
+    - EquipmentOutOfService
+  inventoryhandlers.CreateEquipmentPayload:
+    properties:
+      brand:
+        type: string
+      category:
+        enum:
+        - Cardio
+        - Strength
+        - FreeWeight
+        - Functional
+        - Accessory
+        type: string
+      description:
+        type: string
+      model:
+        type: string
+      name:
+        minLength: 2
+        type: string
+    required:
+    - category
+    - name
+    type: object
+  inventoryhandlers.CreateInventoryItemPayload:
+    properties:
+      acquisition_date:
+        type: string
+      equipment_id:
+        type: string
+      last_maintenance_date:
+        type: string
+      notes:
+        type: string
+      serial_number:
+        type: string
+      status:
+        enum:
+        - Available
+        - InMaintenance
+        - OutOfService
+        type: string
+    required:
+    - equipment_id
+    type: object
+  inventoryhandlers.UpdateEquipmentPayload:
+    properties:
+      brand:
+        type: string
+      category:
+        enum:
+        - Cardio
+        - Strength
+        - FreeWeight
+        - Functional
+        - Accessory
+        type: string
+      description:
+        type: string
+      model:
+        type: string
+      name:
+        minLength: 2
+        type: string
+    required:
+    - category
+    - name
+    type: object
+  inventoryhandlers.UpdateInventoryItemPayload:
+    properties:
+      last_maintenance_date:
+        type: string
+      notes:
+        type: string
+      status:
+        enum:
+        - Available
+        - InMaintenance
+        - OutOfService
+>>>>>>> dev
         type: string
     type: object
 info:
@@ -1562,6 +1715,186 @@ paths:
       summary: Update a branch
       tags:
       - Branches
+  /branches/{id}/equipment:
+    get:
+      description: Lists all equipment items for a given branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/inventorydomain.BranchInventory'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List branch inventory
+      tags:
+      - Branch Inventory
+    post:
+      consumes:
+      - application/json
+      description: Adds a new equipment instance to a specific branch's inventory.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Inventory item data
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/inventoryhandlers.CreateInventoryItemPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add item to branch inventory
+      tags:
+      - Branch Inventory
+  /branches/{id}/equipment/{inventoryId}:
+    delete:
+      description: Deletes an equipment item from a branch's inventory.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Inventory UUID
+        in: path
+        name: inventoryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete branch inventory item
+      tags:
+      - Branch Inventory
+    patch:
+      consumes:
+      - application/json
+      description: Updates an inventory item's status or details.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Inventory UUID
+        in: path
+        name: inventoryId
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/inventoryhandlers.UpdateInventoryItemPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update branch inventory item
+      tags:
+      - Branch Inventory
   /branches/payment-methods:
     get:
       description: Retrieves a list of all available payment methods in the system.
@@ -1616,6 +1949,165 @@ paths:
       summary: Get a count data for each status branch
       tags:
       - Branches
+  /equipment-types:
+    get:
+      description: Lists all available equipment types in the global catalog.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/inventorydomain.Equipment'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get equipment types
+      tags:
+      - Equipment
+    post:
+      consumes:
+      - application/json
+      description: Adds a new equipment type to the global catalog (Super Admin only).
+      parameters:
+      - description: Equipment data
+        in: body
+        name: equipment
+        required: true
+        schema:
+          $ref: '#/definitions/inventoryhandlers.CreateEquipmentPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create equipment type
+      tags:
+      - Equipment
+  /equipment-types/{id}:
+    delete:
+      description: Deletes an equipment type from the global catalog.
+      parameters:
+      - description: Equipment UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete equipment type
+      tags:
+      - Equipment
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing equipment type in the global catalog.
+      parameters:
+      - description: Equipment UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Equipment update payload
+        in: body
+        name: equipment
+        required: true
+        schema:
+          $ref: '#/definitions/inventoryhandlers.UpdateEquipmentPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update equipment type
+      tags:
+      - Equipment
   /health:
     get:
       consumes:

@@ -27,7 +27,9 @@ func NewBranchHandlers(services appservices.Services) *BranchHandlers {
 
 func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
-	branchGroup := rg.Group("/branches").Use(m.AuthJwtTokenMiddleware())
+	branchGroup := rg.Group("/branches").
+		Use(m.AuthJwtTokenMiddleware())
+
 	{
 
 		branchGroup.GET("", m.RBACPermission("branches:list"), r.GetBranchesHandler)
