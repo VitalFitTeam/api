@@ -6,17 +6,24 @@ import (
 )
 
 func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+
 	branchGroup := rg.Group("/branches").
-		Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("super_admin"))
+		Use(m.AuthJwtTokenMiddleware())
 
 	{
-		branchGroup.GET("", r.GetBranchesHandler)
-		branchGroup.GET("/:id", r.GetBranchByIDHandler)
-		branchGroup.POST("", r.CreateBranchHandler)
-		branchGroup.GET("/payment-methods", r.GetPaymentMethodsHandler)
-		branchGroup.PUT("/:id", r.UpdateBranchHandler)
-		branchGroup.DELETE("/:id", r.DeleteBranchHandler)
-		branchGroup.GET("/status", r.GetBranchStatusCount)
+
+		branchGroup.GET("", m.RBACPermission("branches:list"), r.GetBranchesHandler)
+		branchGroup.GET("/:id", m.RBACPermission("branches:get"), r.GetBranchByIDHandler)
+		branchGroup.POST("", m.RBACPermission("branches:create"), r.CreateBranchHandler)
+		branchGroup.PUT("/:id", m.RBACPermission("branches:update"), r.UpdateBranchHandler)
+		branchGroup.DELETE("/:id", m.RBACPermission("branches:delete"), r.DeleteBranchHandler)
+
+		branchGroup.GET("/payment-methods", m.RBACPermission("branches:list"), r.GetPaymentMethodsHandler)
+		branchGroup.GET("/status", m.RBACPermission("branches:list"), r.GetBranchStatusCount)
+	}
+
+	if r.inventoryHandlers != nil {
+		r.inventoryHandlers.InventoryRoutes(rg, m)
 	}
 
 	if r.inventoryHandlers != nil {
