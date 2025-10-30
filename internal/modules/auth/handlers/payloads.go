@@ -1,6 +1,7 @@
 package authhandlers
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -39,7 +40,7 @@ func (c *CreateUserClientPayload) CreateUser() (*authdomain.Users, error) {
 		Phone:             c.Phone,
 		IdentityDocument:  c.IdentityDocument,
 		BirthDate:         birthdate,
-		Gender:            authdomain.GenderEnum(c.Gender),
+		Gender:            authdomain.GenderEnum(strings.ToLower(c.Gender)),
 		ProfilePictureURL: c.ProfilePictureURL,
 	}, nil
 }

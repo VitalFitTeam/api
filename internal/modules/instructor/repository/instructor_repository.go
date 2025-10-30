@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
@@ -21,22 +22,37 @@ func NewInstructorStore(db *gorm.DB) *InstructorStore {
 }
 
 func (s *InstructorStore) Create(ctx context.Context, instructor *instructordomain.Instructor) error {
-	err := s.db.WithContext(ctx).Create(instructor).Error
-	if err != nil {
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique constraint violation
-			return shared_errors.ErrConflict
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+
+		// 1. Create the associated User record first.
+		if err := tx.WithContext(ctx).Create(&instructor.User).Error; err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique constraint violation
+				return shared_errors.ErrConflict
+			}
+			return err
 		}
-		return err
-	}
-	return nil
+
+		// 2. Explicitly set the foreign key on the Instructor model.
+		instructor.UserID = instructor.User.UserID
+
+		// 3. Create the Instructor record. Omit the User struct to prevent a duplicate insert attempt.
+		if err := tx.WithContext(ctx).Omit("User").Create(instructor).Error; err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique constraint violation
+				return shared_errors.ErrConflict
+			}
+			return err
+		}
+		return nil
+	})
 }
 
 func (s *InstructorStore) GetInstructors(ctx context.Context) ([]*instructordomain.Instructor, error) {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 	var instructors []*instructordomain.Instructor
-	err := s.db.WithContext(ctx).Find(&instructors).Error
+	err := s.db.WithContext(ctx).Preload("User").Find(&instructors).Error
 	if err != nil {
 		return nil, err
 	}
@@ -44,27 +60,35 @@ func (s *InstructorStore) GetInstructors(ctx context.Context) ([]*instructordoma
 }
 
 func (s *InstructorStore) Delete(ctx context.Context, instructorID uuid.UUID) error {
-	err := s.db.WithContext(ctx).Delete(&instructordomain.Instructor{}, instructorID).Error
-	if err != nil {
-		switch err {
-		case gorm.ErrRecordNotFound:
-			return shared_errors.ErrNotFound
-		default:
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == "23503" {
-				return shared_errors.ErrConflict
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		var instructor instructordomain.Instructor
+		if err := tx.WithContext(ctx).Where("instructor_id = ?", instructorID).First(&instructor).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return shared_errors.ErrNotFound
 			}
 			return err
 		}
-	}
-	return nil
+
+		if err := tx.WithContext(ctx).Delete(&instructordomain.Instructor{}, instructorID).Error; err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).Delete(&authdomain.Users{}, instructor.UserID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil
+			}
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (s *InstructorStore) GetByID(ctx context.Context, instructorID uuid.UUID) (*instructordomain.Instructor, error) {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 	var instructor *instructordomain.Instructor
-	err := s.db.WithContext(ctx).Where("instructor_id = ?", instructorID).First(&instructor).Error
+	err := s.db.WithContext(ctx).Preload("User").Where("instructor_id = ?", instructorID).First(&instructor).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, shared_errors.ErrNotFound
@@ -75,12 +99,46 @@ func (s *InstructorStore) GetByID(ctx context.Context, instructorID uuid.UUID) (
 }
 
 func (s *InstructorStore) Update(ctx context.Context, instructor *instructordomain.Instructor) error {
-	result := s.db.WithContext(ctx).Model(&instructordomain.Instructor{}).Where("instructor_id = ?", instructor.InstructorID).Updates(instructor)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return shared_errors.ErrNotFound
-	}
-	return nil
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		var existingInstructor instructordomain.Instructor
+		if err := tx.WithContext(ctx).Where("instructor_id = ?", instructor.InstructorID).First(&existingInstructor).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return shared_errors.ErrNotFound
+			}
+			return err
+		}
+		userUpdates := make(map[string]interface{})
+		if instructor.User.FirstName != "" {
+			userUpdates["first_name"] = instructor.User.FirstName
+		}
+		if instructor.User.LastName != "" {
+			userUpdates["last_name"] = instructor.User.LastName
+		}
+		if instructor.User.Email != "" {
+			userUpdates["email"] = instructor.User.Email
+		}
+		if instructor.User.Phone != "" {
+			userUpdates["phone"] = instructor.User.Phone
+		}
+		if instructor.User.Gender != "" {
+			userUpdates["gender"] = instructor.User.Gender
+		}
+		if !instructor.User.BirthDate.IsZero() {
+			userUpdates["birth_date"] = instructor.User.BirthDate
+		}
+		if instructor.User.ProfilePictureURL != "" {
+			userUpdates["profile_picture_url"] = instructor.User.ProfilePictureURL
+		}
+
+		if len(userUpdates) > 0 {
+			if err := tx.WithContext(ctx).Model(&authdomain.Users{}).Where("user_id = ?", existingInstructor.UserID).Updates(userUpdates).Error; err != nil {
+				return err
+			}
+		}
+
+		if err := tx.WithContext(ctx).Model(instructor).Omit("User").Updates(instructor).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }

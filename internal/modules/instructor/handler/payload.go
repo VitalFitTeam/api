@@ -1,6 +1,7 @@
 package instructorhandler
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -37,10 +38,10 @@ func (c *CreateInstructorPayload) toInstructor() (*instructordomain.Instructor, 
 		Phone:             c.Phone,
 		IdentityDocument:  c.IdentityDocument,
 		BirthDate:         birthdate,
-		Gender:            authdomain.GenderEnum(c.Gender),
+		Gender:            authdomain.GenderEnum(strings.ToLower(c.Gender)),
 		ProfilePictureURL: c.ProfilePictureURL,
 	}
-
+	user.PasswordHash.Set(c.Password)
 	return &instructordomain.Instructor{
 		Speciality: c.Speciality,
 		Biography:  c.Biography,
@@ -50,14 +51,52 @@ func (c *CreateInstructorPayload) toInstructor() (*instructordomain.Instructor, 
 }
 
 type UpdateInstructorPayload struct {
-	Speciality string `json:"speciality"`
-	Biography  string `json:"biography"`
+	FirstName         string `json:"first_name" binding:"omitempty"`
+	LastName          string `json:"last_name" binding:"omitempty"`
+	Email             string `json:"email" binding:"omitempty,email"`
+	Phone             string `json:"phone" binding:"omitempty"`
+	Gender            string `json:"gender" binding:"omitempty,oneof=male female prefer-not-to-say"`
+	BirthDate         string `json:"birth_date" binding:"omitempty"`
+	ProfilePictureURL string `json:"profile_picture_url"`
+	Speciality        string `json:"speciality"`
+	Biography         string `json:"biography"`
 }
 
-func (u *UpdateInstructorPayload) toInstructor(instructorID uuid.UUID) *instructordomain.Instructor {
+func (u *UpdateInstructorPayload) toInstructor(instructorID uuid.UUID) (*instructordomain.Instructor, error) {
+	var birthdate time.Time
+	var err error
+	if u.BirthDate != "" {
+		birthdate, err = time.Parse("2006-01-02", u.BirthDate)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &instructordomain.Instructor{
 		InstructorID: instructorID,
 		Speciality:   u.Speciality,
 		Biography:    u.Biography,
-	}
+		User: authdomain.Users{
+			FirstName: u.FirstName,
+			LastName:  u.LastName,
+			Email:     u.Email,
+			Phone:     u.Phone,
+			Gender:    authdomain.GenderEnum(strings.ToLower(u.Gender)),
+			BirthDate: birthdate,
+		},
+	}, nil
+}
+
+type InstructorResponse struct {
+	InstructorID      uuid.UUID `json:"instructor_id"`
+	UserID            uuid.UUID `json:"user_id"`
+	FirstName         string    `json:"first_name"`
+	LastName          string    `json:"last_name"`
+	Email             string    `json:"email"`
+	Phone             string    `json:"phone"`
+	IdentityDocument  string    `json:"identity_document"`
+	BirthDate         time.Time `json:"birth_date"`
+	Gender            string    `json:"gender"`
+	ProfilePictureURL string    `json:"profile_picture_url"`
+	Speciality        string    `json:"speciality"`
+	Biography         string    `json:"biography"`
 }

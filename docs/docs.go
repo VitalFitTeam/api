@@ -1380,7 +1380,7 @@ const docTemplate = `{
                                 "data": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/definitions/instructordomain.Instructor"
+                                        "$ref": "#/definitions/instructorhandler.InstructorResponse"
                                     }
                                 }
                             }
@@ -1482,7 +1482,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/instructordomain.Instructor"
+                                    "$ref": "#/definitions/instructorhandler.InstructorResponse"
                                 }
                             }
                         }
@@ -2595,38 +2595,6 @@ const docTemplate = `{
                 }
             }
         },
-        "instructordomain.Instructor": {
-            "type": "object",
-            "properties": {
-                "biography": {
-                    "type": "string"
-                },
-                "branches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/branchdomain.Branch"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "instructor_id": {
-                    "type": "string"
-                },
-                "speciality": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/authdomain.Users"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
         "instructorhandler.CreateInstructorPayload": {
             "type": "object",
             "required": [
@@ -2676,10 +2644,77 @@ const docTemplate = `{
                 }
             }
         },
+        "instructorhandler.InstructorResponse": {
+            "type": "object",
+            "properties": {
+                "biography": {
+                    "type": "string"
+                },
+                "birth_date": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "identity_document": {
+                    "type": "string"
+                },
+                "instructor_id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "profile_picture_url": {
+                    "type": "string"
+                },
+                "speciality": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "instructorhandler.UpdateInstructorPayload": {
             "type": "object",
             "properties": {
                 "biography": {
+                    "type": "string"
+                },
+                "birth_date": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "prefer-not-to-say"
+                    ]
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "profile_picture_url": {
                     "type": "string"
                 },
                 "speciality": {

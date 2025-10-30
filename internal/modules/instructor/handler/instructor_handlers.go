@@ -52,8 +52,8 @@ func (h *InstructorHandlers) CreateInstructorHandler(c *gin.Context) {
 // @Tags			Instructors
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Success		200	{object}	object{data=[]instructordomain.Instructor}	"List of instructors"
-// @Failure		500	{object}	map[string]interface{}						"Internal Server Error"
+// @Success		200	{object}	object{data=[]InstructorResponse}	"List of instructors"
+// @Failure		500	{object}	map[string]interface{}				"Internal Server Error"
 // @Router			/instructor [get]
 func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -62,7 +62,27 @@ func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": instructors})
+
+	var response []*InstructorResponse
+
+	for _, instructor := range instructors {
+		ins := &InstructorResponse{
+			InstructorID:      instructor.InstructorID,
+			FirstName:         instructor.User.FirstName,
+			LastName:          instructor.User.LastName,
+			Email:             instructor.User.Email,
+			Phone:             instructor.User.Phone,
+			IdentityDocument:  instructor.User.IdentityDocument,
+			BirthDate:         instructor.User.BirthDate,
+			Gender:            string(instructor.User.Gender),
+			ProfilePictureURL: instructor.User.ProfilePictureURL,
+			Speciality:        instructor.Speciality,
+			Biography:         instructor.Biography,
+		}
+		response = append(response, ins)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": response})
 }
 
 // @Summary		Delete an instructor
@@ -101,11 +121,11 @@ func (h *InstructorHandlers) DeleteInstructorHandler(c *gin.Context) {
 // @Tags			Instructors
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			id	path		string										true	"Instructor UUID"
-// @Success		200	{object}	object{data=instructordomain.Instructor}	"Instructor details"
-// @Failure		400	{object}	map[string]interface{}						"Bad Request: Invalid UUID format"
-// @Failure		404	{object}	map[string]interface{}						"Not Found: Instructor not found"
-// @Failure		500	{object}	map[string]interface{}						"Internal Server Error"
+// @Param			id	path		string							true	"Instructor UUID"
+// @Success		200	{object}	object{data=InstructorResponse}	"Instructor details"
+// @Failure		400	{object}	map[string]interface{}			"Bad Request: Invalid UUID format"
+// @Failure		404	{object}	map[string]interface{}			"Not Found: Instructor not found"
+// @Failure		500	{object}	map[string]interface{}			"Internal Server Error"
 // @Router			/instructor/{id} [get]
 func (h *InstructorHandlers) GetInstructorByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -125,7 +145,21 @@ func (h *InstructorHandlers) GetInstructorByIDHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": instructor})
+	response := &InstructorResponse{
+		InstructorID:      instructor.InstructorID,
+		FirstName:         instructor.User.FirstName,
+		LastName:          instructor.User.LastName,
+		Email:             instructor.User.Email,
+		Phone:             instructor.User.Phone,
+		IdentityDocument:  instructor.User.IdentityDocument,
+		BirthDate:         instructor.User.BirthDate,
+		Gender:            string(instructor.User.Gender),
+		ProfilePictureURL: instructor.User.ProfilePictureURL,
+		Speciality:        instructor.Speciality,
+		Biography:         instructor.Biography,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": response})
 
 }
 
@@ -154,7 +188,11 @@ func (h *InstructorHandlers) UpdateInstructorHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
-	instructor := payload.toInstructor(instructorID)
+	instructor, err := payload.toInstructor(instructorID)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
 
 	err = h.services.InstructorServices.UpdateInstructor(ctx, instructor)
 	if err != nil {
