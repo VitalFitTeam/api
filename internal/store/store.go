@@ -5,23 +5,29 @@ import (
 	authrepository "github.com/vitalfit/api/internal/modules/auth/repository"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchrepository "github.com/vitalfit/api/internal/modules/branches/repository"
+	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
+	inventoryrepository "github.com/vitalfit/api/internal/modules/inventory/repository"
 	"gorm.io/gorm"
 )
 
 type Storage struct {
-	Users          authdomain.UserRepository
-	Roles          authdomain.RolesRepository
-	Branches       branchdomain.BranchesRepository
-	Locations      branchdomain.LocationRepository
-	PaymentMethods branchdomain.PaymentMethodsRepository
+	Users           authdomain.UserRepository
+	Roles           authdomain.RolesRepository
+	Branches        branchdomain.BranchesRepository
+	Locations       branchdomain.LocationRepository
+	PaymentMethods  branchdomain.PaymentMethodsRepository
+	Equipment       inventorydomain.EquipmentRepository
+	BranchInventory inventorydomain.BranchInventoryRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
 	return Storage{
-		Users:          authrepository.NewUserStore(db),
-		Roles:          authrepository.NewRoleStore(db),
-		Branches:       branchrepository.NewBranchesStore(db),
-		Locations:      branchrepository.NewLocationsStore(db),
-		PaymentMethods: branchrepository.NewPaymentMethodsStore(db),
+		Users:           authrepository.NewUserStore(db),
+		Roles:           authrepository.NewRoleStore(db),
+		Branches:        branchrepository.NewBranchesStore(db),
+		Locations:       branchrepository.NewLocationsStore(db),
+		PaymentMethods:  branchrepository.NewPaymentMethodsStore(db),
+		Equipment:       inventoryrepository.NewEquipmentStore(db),
+		BranchInventory: inventoryrepository.NewBranchInventoryStore(db),
 	}
 }

@@ -6,7 +6,9 @@ import (
 )
 
 func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
-	branchGroup := rg.Group("/branches").Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("super_admin"))
+	branchGroup := rg.Group("/branches").
+		Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("super_admin"))
+
 	{
 		branchGroup.GET("", r.GetBranchesHandler)
 		branchGroup.GET("/:id", r.GetBranchByIDHandler)
@@ -15,5 +17,9 @@ func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		branchGroup.PUT("/:id", r.UpdateBranchHandler)
 		branchGroup.DELETE("/:id", r.DeleteBranchHandler)
 		branchGroup.GET("/status", r.GetBranchStatusCount)
+	}
+
+	if r.inventoryHandlers != nil {
+		r.inventoryHandlers.InventoryRoutes(rg, m)
 	}
 }

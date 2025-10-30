@@ -6,6 +6,8 @@ import (
 	authservices "github.com/vitalfit/api/internal/modules/auth/services"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchservices "github.com/vitalfit/api/internal/modules/branches/services"
+	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
+	inventoryservices "github.com/vitalfit/api/internal/modules/inventory/services"
 	logs "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
@@ -17,6 +19,8 @@ type Services struct {
 	UserServices      authdomain.UserServicesInterface
 	BranchesServices  branchdomain.BranchesServicesInterface
 	LocationsServices branchdomain.LocationsServicesInterface
+	EquipmentServices inventorydomain.EquipmentServicesInterface
+	InventoryServices inventorydomain.BranchInventoryServicesInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
@@ -27,6 +31,8 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		UserServices:      authservices.NewUserService(store),
 		BranchesServices:  branchservices.NewBranchServices(store, cfg),
 		LocationsServices: branchservices.NewLocationsServices(store),
+		EquipmentServices: inventoryservices.NewEquipmentServices(store, cfg),
+		InventoryServices: inventoryservices.NewBranchInventoryServices(store, cfg),
 		LogErrors:         logs.NewLogErrors(logger),
 		Logger:            logger,
 	}
