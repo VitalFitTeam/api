@@ -26,7 +26,4 @@ func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		r.inventoryHandlers.InventoryRoutes(rg, m)
 	}
 
-	if r.inventoryHandlers != nil {
-		r.inventoryHandlers.InventoryRoutes(rg, m)
-	}
 }

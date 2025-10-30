@@ -6,25 +6,18 @@ import (
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 )
 
-// ==============================
-// INVENTORY ROUTES REGISTRATION
-// ==============================
-
-// RegisterInventoryRoutes registra las rutas del módulo de inventario dentro del grupo principal /v1.
-// Esto permite que las rutas estén disponibles sin modificar application.go.
 func RegisterInventoryRoutes(router *gin.Engine, services appservices.Services, m *auth.AuthMiddleware) {
 	v1 := router.Group("/v1")
-
 	h := NewInventoryHandlers(services)
 	h.InventoryRoutes(v1, m)
 }
 
 func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	// ==============================
-	//  EQUIPMENT CATALOG (SUPER ADMIN)
+	//  EQUIPMENT CATALOG
 	// ==============================
 	equipmentGroup := rg.Group("/equipment-types").
-		Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("super_admin"))
+		Use(m.AuthJwtTokenMiddleware())
 
 	{
 		equipmentGroup.POST("", r.CreateEquipmentHandler)
@@ -34,10 +27,10 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	}
 
 	// ==============================
-	//  BRANCH INVENTORY (BRANCH ADMIN)
+	//  BRANCH INVENTORY
 	// ==============================
-	branchInventoryGroup := rg.Group("/branches/inventory/:branchId").
-		Use(m.AuthJwtTokenMiddleware(), m.CheckRoleAccess("branch_admin"))
+	branchInventoryGroup := rg.Group("/inventory/branch/:branchId").
+		Use(m.AuthJwtTokenMiddleware())
 
 	{
 		branchInventoryGroup.POST("", r.AddInventoryItemHandler)
