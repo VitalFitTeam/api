@@ -30,10 +30,6 @@ type InventoryHandlers struct {
 	services appservices.Services
 }
 
-func (h *InventoryHandlers) MountInventory(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
-	h.InventoryRoutes(rg, m)
-}
-
 // Constructor
 func NewInventoryHandlers(services appservices.Services) *InventoryHandlers {
 	return &InventoryHandlers{services: services}
@@ -182,14 +178,14 @@ func (h *InventoryHandlers) DeleteEquipmentHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
-// @Param			branchId	path		string						true	"Branch UUID"
-// @Param			item		body		CreateInventoryItemPayload	true	"Inventory item data"
-// @Success		201			{object}	object{message=string}
-// @Failure		400			{object}	object{error=string}
-// @Failure		500			{object}	object{error=string}
-// @Router			/branches/{branchId}/equipment [post]
+// @Param			id		path		string						true	"Branch UUID"
+// @Param			item	body		CreateInventoryItemPayload	true	"Inventory item data"
+// @Success		201		{object}	object{message=string}
+// @Failure		400		{object}	object{error=string}
+// @Failure		500		{object}	object{error=string}
+// @Router			/branches/{id}/equipment [post]
 func (h *InventoryHandlers) AddInventoryItemHandler(c *gin.Context) {
-	branchID, err := uuid.Parse(c.Param("branchId"))
+	branchID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -220,12 +216,12 @@ func (h *InventoryHandlers) AddInventoryItemHandler(c *gin.Context) {
 // @Tags			Branch Inventory
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			branchId	path		string	true	"Branch UUID"
-// @Success		200			{object}	object{data=[]inventorydomain.BranchInventory}
-// @Failure		500			{object}	object{error=string}
-// @Router			/branches/{branchId}/equipment [get]
+// @Param			id	path		string	true	"Branch UUID"
+// @Success		200	{object}	object{data=[]inventorydomain.BranchInventory}
+// @Failure		500	{object}	object{error=string}
+// @Router			/branches/{id}/equipment [get]
 func (h *InventoryHandlers) ListBranchInventoryHandler(c *gin.Context) {
-	branchID, err := uuid.Parse(c.Param("branchId"))
+	branchID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -246,16 +242,21 @@ func (h *InventoryHandlers) ListBranchInventoryHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
-// @Param			branchId	path		string						true	"Branch UUID"
+// @Param			id			path		string						true	"Branch UUID"
 // @Param			inventoryId	path		string						true	"Inventory UUID"
 // @Param			payload		body		UpdateInventoryItemPayload	true	"Update payload"
 // @Success		200			{object}	object{message=string}
 // @Failure		400			{object}	object{error=string}
 // @Failure		404			{object}	object{error=string}
 // @Failure		500			{object}	object{error=string}
-// @Router			/branches/{branchId}/equipment/{inventoryId} [patch]
+// @Router			/branches/{id}/equipment/{inventoryId} [patch]
 func (h *InventoryHandlers) UpdateInventoryItemHandler(c *gin.Context) {
 	inventoryID, err := uuid.Parse(c.Param("inventoryId"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	branchID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -272,7 +273,7 @@ func (h *InventoryHandlers) UpdateInventoryItemHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
-
+	item.BranchID = branchID
 	if err := h.services.InventoryServices.UpdateInventoryItem(c, item); err != nil {
 		switch err {
 		case shared_errors.ErrNotFound:
@@ -291,21 +292,26 @@ func (h *InventoryHandlers) UpdateInventoryItemHandler(c *gin.Context) {
 // @Tags			Branch Inventory
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			branchId	path		string	true	"Branch UUID"
+// @Param			id			path		string	true	"Branch UUID"
 // @Param			inventoryId	path		string	true	"Inventory UUID"
 // @Success		204			{object}	nil
 // @Failure		400			{object}	object{error=string}
 // @Failure		404			{object}	object{error=string}
 // @Failure		500			{object}	object{error=string}
-// @Router			/branches/{branchId}/equipment/{inventoryId} [delete]
+// @Router			/branches/{id}/equipment/{inventoryId} [delete]
 func (h *InventoryHandlers) DeleteInventoryItemHandler(c *gin.Context) {
 	inventoryID, err := uuid.Parse(c.Param("inventoryId"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+	branchID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
 
-	if err := h.services.InventoryServices.DeleteInventoryItem(c, inventoryID); err != nil {
+	if err := h.services.InventoryServices.DeleteInventoryItem(c, inventoryID, branchID); err != nil {
 		switch err {
 		case shared_errors.ErrNotFound:
 			h.services.LogErrors.NotFoundResponse(c)

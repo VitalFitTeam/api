@@ -14,13 +14,10 @@ type Handlers struct {
 }
 
 func NewAppHandlers(services appservices.Services) Handlers {
-	inventoryHandler := inventoryhandlers.NewInventoryHandlers(services)
-	branchHandler := branchhandlers.NewBranchHandlers(services)
-	branchHandler.SetInventoryHandlers(inventoryHandler)
 	return Handlers{
 		AuthHandlers:      authhandlers.NewAuthHandlers(services),
-		BranchHandlers:    branchHandler,
-		InventoryHandlers: inventoryHandler,
+		BranchHandlers:    branchhandlers.NewBranchHandlers(services),
+		InventoryHandlers: inventoryhandlers.NewInventoryHandlers(services),
 	}
 
 }

@@ -53,8 +53,8 @@ func (s *BranchInventoryServices) UpdateInventoryItem(ctx context.Context, item 
 	return nil
 }
 
-func (s *BranchInventoryServices) DeleteInventoryItem(ctx context.Context, inventoryID uuid.UUID) error {
-	err := s.store.BranchInventory.Delete(ctx, inventoryID)
+func (s *BranchInventoryServices) DeleteInventoryItem(ctx context.Context, inventoryID uuid.UUID, branchID uuid.UUID) error {
+	err := s.store.BranchInventory.Delete(ctx, inventoryID, branchID)
 	if err != nil {
 		return err
 	}

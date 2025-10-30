@@ -1,7 +1,6 @@
 package inventorydomain
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,20 +32,4 @@ type BranchInventory struct {
 
 type BranchInventoryQueryResults struct {
 	Inventory []*BranchInventory
-}
-
-type BranchInventoryRepository interface {
-	Create(ctx context.Context, item *BranchInventory) (*BranchInventory, error)
-	GetByBranch(ctx context.Context, branchID uuid.UUID) (*BranchInventoryQueryResults, error)
-	Update(ctx context.Context, item *BranchInventory) error
-	Delete(ctx context.Context, inventoryID uuid.UUID) error
-	GetByID(ctx context.Context, inventoryID uuid.UUID) (*BranchInventory, error)
-}
-
-type BranchInventoryServicesInterface interface {
-	AddInventoryItem(ctx context.Context, item *BranchInventory) error
-	ListBranchInventory(ctx context.Context, branchID uuid.UUID) (*BranchInventoryQueryResults, error)
-	UpdateInventoryItem(ctx context.Context, item *BranchInventory) error
-	DeleteInventoryItem(ctx context.Context, inventoryID uuid.UUID) error
-	GetInventoryItemByID(ctx context.Context, inventoryID uuid.UUID) (*BranchInventory, error)
 }

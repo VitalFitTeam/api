@@ -21,9 +21,4 @@ func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		branchGroup.GET("/payment-methods", m.RBACPermission("branches:list"), r.GetPaymentMethodsHandler)
 		branchGroup.GET("/status", m.RBACPermission("branches:list"), r.GetBranchStatusCount)
 	}
-
-	if r.inventoryHandlers != nil {
-		r.inventoryHandlers.InventoryRoutes(rg, m)
-	}
-
 }

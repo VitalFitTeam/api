@@ -1429,186 +1429,6 @@ paths:
       summary: create a new branch
       tags:
       - Branches
-  /branches/{branchId}/equipment:
-    get:
-      description: Lists all equipment items for a given branch.
-      parameters:
-      - description: Branch UUID
-        in: path
-        name: branchId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/inventorydomain.BranchInventory'
-                type: array
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: List branch inventory
-      tags:
-      - Branch Inventory
-    post:
-      consumes:
-      - application/json
-      description: Adds a new equipment instance to a specific branch's inventory.
-      parameters:
-      - description: Branch UUID
-        in: path
-        name: branchId
-        required: true
-        type: string
-      - description: Inventory item data
-        in: body
-        name: item
-        required: true
-        schema:
-          $ref: '#/definitions/inventoryhandlers.CreateInventoryItemPayload'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            properties:
-              message:
-                type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Add item to branch inventory
-      tags:
-      - Branch Inventory
-  /branches/{branchId}/equipment/{inventoryId}:
-    delete:
-      description: Deletes an equipment item from a branch's inventory.
-      parameters:
-      - description: Branch UUID
-        in: path
-        name: branchId
-        required: true
-        type: string
-      - description: Inventory UUID
-        in: path
-        name: inventoryId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Delete branch inventory item
-      tags:
-      - Branch Inventory
-    patch:
-      consumes:
-      - application/json
-      description: Updates an inventory item's status or details.
-      parameters:
-      - description: Branch UUID
-        in: path
-        name: branchId
-        required: true
-        type: string
-      - description: Inventory UUID
-        in: path
-        name: inventoryId
-        required: true
-        type: string
-      - description: Update payload
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/inventoryhandlers.UpdateInventoryItemPayload'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              message:
-                type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Update branch inventory item
-      tags:
-      - Branch Inventory
   /branches/{id}:
     delete:
       consumes:
@@ -1762,6 +1582,186 @@ paths:
       summary: Update a branch
       tags:
       - Branches
+  /branches/{id}/equipment:
+    get:
+      description: Lists all equipment items for a given branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/inventorydomain.BranchInventory'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List branch inventory
+      tags:
+      - Branch Inventory
+    post:
+      consumes:
+      - application/json
+      description: Adds a new equipment instance to a specific branch's inventory.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Inventory item data
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/inventoryhandlers.CreateInventoryItemPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add item to branch inventory
+      tags:
+      - Branch Inventory
+  /branches/{id}/equipment/{inventoryId}:
+    delete:
+      description: Deletes an equipment item from a branch's inventory.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Inventory UUID
+        in: path
+        name: inventoryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete branch inventory item
+      tags:
+      - Branch Inventory
+    patch:
+      consumes:
+      - application/json
+      description: Updates an inventory item's status or details.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Inventory UUID
+        in: path
+        name: inventoryId
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/inventoryhandlers.UpdateInventoryItemPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update branch inventory item
+      tags:
+      - Branch Inventory
   /branches/payment-methods:
     get:
       description: Retrieves a list of all available payment methods in the system.

@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
-	inventoryhandlers "github.com/vitalfit/api/internal/modules/inventory/handlers"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	"github.com/vitalfit/api/pkg/pagination"
@@ -26,16 +25,11 @@ type BranchHandlersInterface interface {
 }
 
 type BranchHandlers struct {
-	services          appservices.Services
-	inventoryHandlers inventoryhandlers.InventoryHandlersInterface
+	services appservices.Services
 }
 
 func NewBranchHandlers(services appservices.Services) *BranchHandlers {
 	return &BranchHandlers{services: services}
-}
-
-func (h *BranchHandlers) SetInventoryHandlers(inventoryHandler inventoryhandlers.InventoryHandlersInterface) {
-	h.inventoryHandlers = inventoryHandler
 }
 
 // @Summary		create a new branch

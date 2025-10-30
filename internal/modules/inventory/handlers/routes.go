@@ -2,15 +2,8 @@ package inventoryhandlers
 
 import (
 	"github.com/gin-gonic/gin"
-	appservices "github.com/vitalfit/api/internal/app/services"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 )
-
-func RegisterInventoryRoutes(router *gin.Engine, services appservices.Services, m *auth.AuthMiddleware) {
-	v1 := router.Group("/v1")
-	h := NewInventoryHandlers(services)
-	h.InventoryRoutes(v1, m)
-}
 
 func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	// ==============================
@@ -29,7 +22,7 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	// ==============================
 	//  BRANCH INVENTORY
 	// ==============================
-	branchInventoryGroup := rg.Group("/inventory/branch/:branchId").
+	branchInventoryGroup := rg.Group("/branches/:id/equipment").
 		Use(m.AuthJwtTokenMiddleware())
 
 	{

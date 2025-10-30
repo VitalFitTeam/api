@@ -73,7 +73,7 @@ func (s *BranchInventoryStore) Update(ctx context.Context, item *inventorydomain
 
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 		result := tx.WithContext(ctx).
-			Model(&inventorydomain.BranchInventory{InventoryID: item.InventoryID}).
+			Model(item).Where("branch_id = ?", item.BranchID).
 			Clauses(clause.Returning{}).
 			Updates(map[string]interface{}{
 				"status":                item.Status,
@@ -90,13 +90,13 @@ func (s *BranchInventoryStore) Update(ctx context.Context, item *inventorydomain
 	})
 }
 
-func (s *BranchInventoryStore) Delete(ctx context.Context, inventoryID uuid.UUID) error {
+func (s *BranchInventoryStore) Delete(ctx context.Context, inventoryID uuid.UUID, branchID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 		result := tx.WithContext(ctx).
-			Delete(&inventorydomain.BranchInventory{}, "inventory_id = ?", inventoryID)
+			Delete(&inventorydomain.BranchInventory{}, "inventory_id = ? AND branch_id = ?", inventoryID, branchID)
 		if result.Error != nil {
 			return result.Error
 		}

@@ -36,7 +36,7 @@ gen-docs:
 
 .PHONY: seed
 seed: 
-	@go run internal/migrate/seed/main.go
+	@docker compose run --rm $(APP_SERVICE) go run internal/migrate/seed/main.go
 
 .PHONY: run
 run:
