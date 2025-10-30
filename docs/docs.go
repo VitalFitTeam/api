@@ -3204,7 +3204,6 @@ const docTemplate = `{
                 }
             }
         },
-<<<<<<< HEAD
         "instructorhandler.CreateInstructorPayload": {
             "type": "object",
             "required": [
@@ -3324,7 +3323,9 @@ const docTemplate = `{
                 },
                 "speciality": {
                     "type": "string"
-=======
+                }
+            }
+        },
         "inventorydomain.BranchInventory": {
             "type": "object",
             "properties": {
@@ -3539,7 +3540,6 @@ const docTemplate = `{
                         "InMaintenance",
                         "OutOfService"
                     ]
->>>>>>> dev
                 }
             }
         }

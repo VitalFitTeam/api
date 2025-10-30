@@ -3196,7 +3196,6 @@
                 }
             }
         },
-<<<<<<< HEAD
         "instructorhandler.CreateInstructorPayload": {
             "type": "object",
             "required": [
@@ -3316,7 +3315,9 @@
                 },
                 "speciality": {
                     "type": "string"
-=======
+                }
+            }
+        },
         "inventorydomain.BranchInventory": {
             "type": "object",
             "properties": {
@@ -3531,7 +3532,6 @@
                         "InMaintenance",
                         "OutOfService"
                     ]
->>>>>>> dev
                 }
             }
         }

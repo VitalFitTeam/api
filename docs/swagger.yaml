@@ -624,7 +624,6 @@ definitions:
     - state
     - tax_id
     type: object
-<<<<<<< HEAD
   instructorhandler.CreateInstructorPayload:
     properties:
       biography:
@@ -706,7 +705,8 @@ definitions:
       profile_picture_url:
         type: string
       speciality:
-=======
+        type: string
+    type: object
   inventorydomain.BranchInventory:
     properties:
       acquisition_date:
@@ -857,7 +857,6 @@ definitions:
         - Available
         - InMaintenance
         - OutOfService
->>>>>>> dev
         type: string
     type: object
 info:
