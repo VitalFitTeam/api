@@ -18,7 +18,7 @@ type Instructor struct {
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 
-	User     authdomain.Users      `gorm:"foreignKey:UserID;references:UserID" json:"user,omitempty"`
+	User     *authdomain.Users     `gorm:"foreignKey:UserID;references:UserID" json:"user,omitempty"`
 	Branches []branchdomain.Branch `gorm:"many2many:branch_instructors;" json:"branches,omitempty"`
 }
 

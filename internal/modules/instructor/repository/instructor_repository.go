@@ -3,6 +3,7 @@ package instructorrepository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -21,31 +22,27 @@ func NewInstructorStore(db *gorm.DB) *InstructorStore {
 	return &InstructorStore{db: db}
 }
 
-func (s *InstructorStore) Create(ctx context.Context, instructor *instructordomain.Instructor) error {
-	return db.WithTX(s.db, func(tx *gorm.DB) error {
+func (s *InstructorStore) Create(ctx context.Context, tx *gorm.DB, instructor *instructordomain.Instructor) error {
 
-		// 1. Create the associated User record first.
-		if err := tx.WithContext(ctx).Create(&instructor.User).Error; err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique constraint violation
-				return shared_errors.ErrConflict
-			}
-			return err
+	if err := tx.WithContext(ctx).Create(&instructor.User).Error; err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return shared_errors.ErrConflict
 		}
+		return err
+	}
 
-		// 2. Explicitly set the foreign key on the Instructor model.
-		instructor.UserID = instructor.User.UserID
+	instructor.UserID = instructor.User.UserID
 
-		// 3. Create the Instructor record. Omit the User struct to prevent a duplicate insert attempt.
-		if err := tx.WithContext(ctx).Omit("User").Create(instructor).Error; err != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(err, &pgErr) && pgErr.Code == "23505" { // Unique constraint violation
-				return shared_errors.ErrConflict
-			}
-			return err
+	if err := tx.WithContext(ctx).Omit("User").Create(instructor).Error; err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return shared_errors.ErrConflict
 		}
-		return nil
-	})
+		return err
+	}
+	return nil
+
 }
 
 func (s *InstructorStore) GetInstructors(ctx context.Context) ([]*instructordomain.Instructor, error) {
@@ -141,4 +138,30 @@ func (s *InstructorStore) Update(ctx context.Context, instructor *instructordoma
 		}
 		return nil
 	})
+}
+
+func (s *InstructorStore) CreateAndInvitate(ctx context.Context, instructor *instructordomain.Instructor, token string, invitationExp time.Duration) error {
+	//transacction
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+
+		if err := s.Create(ctx, tx, instructor); err != nil {
+			return err //rollback
+		}
+
+		if err := s.createUserInvitation(ctx, tx, token, instructor.UserID, invitationExp); err != nil {
+			return err //rollback
+		}
+
+		return nil //commit
+	})
+}
+
+func (s *InstructorStore) createUserInvitation(ctx context.Context, tx *gorm.DB, code string, userID uuid.UUID, invitationExp time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+	return tx.WithContext(ctx).Create(&authdomain.UserInvitations{
+		Token:  code,
+		UserID: userID,
+		Expiry: time.Now().Add(invitationExp),
+	}).Error
 }

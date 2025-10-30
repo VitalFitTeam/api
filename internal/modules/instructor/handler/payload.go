@@ -15,7 +15,6 @@ type CreateInstructorPayload struct {
 	Email             string `json:"email" binding:"required,email"`
 	Phone             string `json:"phone" binding:"required"`
 	IdentityDocument  string `json:"identity_document" binding:"required"`
-	Password          string `json:"password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
 	BirthDate         string `json:"birth_date" binding:"required"`
 	Gender            string `json:"gender" binding:"required"`
 	ProfilePictureURL string `json:"profile_picture_url"`
@@ -41,11 +40,10 @@ func (c *CreateInstructorPayload) toInstructor() (*instructordomain.Instructor, 
 		Gender:            authdomain.GenderEnum(strings.ToLower(c.Gender)),
 		ProfilePictureURL: c.ProfilePictureURL,
 	}
-	user.PasswordHash.Set(c.Password)
 	return &instructordomain.Instructor{
 		Speciality: c.Speciality,
 		Biography:  c.Biography,
-		User:       *user,
+		User:       user,
 	}, nil
 
 }
@@ -75,7 +73,7 @@ func (u *UpdateInstructorPayload) toInstructor(instructorID uuid.UUID) (*instruc
 		InstructorID: instructorID,
 		Speciality:   u.Speciality,
 		Biography:    u.Biography,
-		User: authdomain.Users{
+		User: &authdomain.Users{
 			FirstName: u.FirstName,
 			LastName:  u.LastName,
 			Email:     u.Email,

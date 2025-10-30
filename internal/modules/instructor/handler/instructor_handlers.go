@@ -1,11 +1,14 @@
 package instructorhandler
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/mailer"
 )
 
 // @Summary		Create a new instructor
@@ -32,8 +35,12 @@ func (h *InstructorHandlers) CreateInstructorHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+	plainToken := uuid.New().String()
 
-	err = h.services.InstructorServices.CreateInstructor(ctx, instructor)
+	hash := sha256.Sum256([]byte(plainToken))
+	hashToken := hex.EncodeToString(hash[:])
+
+	err = h.services.InstructorServices.CreateInstructor(ctx, instructor, hashToken)
 	if err != nil {
 		switch err {
 		case shared_errors.ErrConflict:
@@ -43,7 +50,19 @@ func (h *InstructorHandlers) CreateInstructorHandler(c *gin.Context) {
 		}
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "instructor created"})
+
+	//send email -> error -> rollback
+	status, err := h.services.AuthServices.MailSenderStaff(ctx, instructor.User, hashToken, mailer.UserStaffActivate)
+	if err != nil {
+		h.services.Logger.Errorw("error sending activation url to email", "error", err)
+		if err := h.services.AuthServices.DeleteResetToken(ctx, instructor.UserID); err != nil {
+			h.services.Logger.Errorw("error deleting user activation token ", "error", err)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(status, gin.H{"message": "instructor created"})
 
 }
 

@@ -2596,7 +2596,6 @@
                 "gender",
                 "identity_document",
                 "last_name",
-                "password",
                 "phone"
             ],
             "properties": {
@@ -2620,10 +2619,6 @@
                 },
                 "last_name": {
                     "type": "string"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
                 },
                 "phone": {
                     "type": "string"

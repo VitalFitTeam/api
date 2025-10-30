@@ -2,6 +2,7 @@ package authservices
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -68,6 +69,28 @@ func (h *AuthService) MailSender(ctx context.Context, user *authdomain.Users, ke
 	}{
 		Username: user.FirstName,
 		CODE:     key,
+	}
+
+	// send mail
+	status, err := h.Mailer.Send(template, user.FirstName, user.Email, vars, !isProdEnv)
+	if err != nil {
+		return status, err
+	}
+
+	return status, err
+}
+
+func (h *AuthService) MailSenderStaff(ctx context.Context, user *authdomain.Users, token string, template string) (int, error) {
+
+	//mail -> fail -> roll back -> create invite
+
+	isProdEnv := h.config.Env == "production"
+	vars := struct {
+		Username       string
+		ActivationLink string
+	}{
+		Username:       user.FirstName,
+		ActivationLink: fmt.Sprintf("%s/activate/%s", h.config.FrontURL, token),
 	}
 
 	// send mail

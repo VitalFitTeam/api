@@ -632,9 +632,6 @@ definitions:
         type: string
       last_name:
         type: string
-      password:
-        minLength: 8
-        type: string
       phone:
         type: string
       profile_picture_url:
@@ -648,7 +645,6 @@ definitions:
     - gender
     - identity_document
     - last_name
-    - password
     - phone
     type: object
   instructorhandler.InstructorResponse:

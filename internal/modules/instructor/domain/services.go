@@ -7,7 +7,7 @@ import (
 )
 
 type InstructorServiceInterface interface {
-	CreateInstructor(ctx context.Context, instructor *Instructor) error
+	CreateInstructor(ctx context.Context, instructor *Instructor, token string) error
 	GetInstructors(ctx context.Context) ([]*Instructor, error)
 	DeleteInstructor(ctx context.Context, instructorID uuid.UUID) error
 	GetInstructorByID(ctx context.Context, instructorID uuid.UUID) (*Instructor, error)

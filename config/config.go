@@ -15,6 +15,7 @@ type Config struct {
 	Mail        MailConfig
 	Auth        AuthConfig
 	RateLimiter ratelimiter.Config
+	FrontURL    string
 }
 
 type dbConfig struct {
@@ -73,5 +74,6 @@ func LoadConfig() *Config {
 			TimeFrame:            time.Minute * 1,
 			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
+		FrontURL: env.GetString("FRONT_URL", ""),
 	}
 }

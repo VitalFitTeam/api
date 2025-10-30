@@ -30,7 +30,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		UserServices:       authservices.NewUserService(store),
 		BranchesServices:   branchservices.NewBranchServices(store, cfg),
 		LocationsServices:  branchservices.NewLocationsServices(store),
-		InstructorServices: instructorservices.NewInstructorServices(store),
+		InstructorServices: instructorservices.NewInstructorServices(store, cfg),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,
 	}

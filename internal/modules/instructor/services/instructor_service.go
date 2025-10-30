@@ -4,28 +4,31 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/config"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 )
 
 type InstructorServices struct {
-	store store.Storage
+	store  store.Storage
+	config config.Config
 }
 
-func NewInstructorServices(store store.Storage) *InstructorServices {
+func NewInstructorServices(store store.Storage, config config.Config) *InstructorServices {
 	return &InstructorServices{
-		store: store,
+		store:  store,
+		config: config,
 	}
 }
 
-func (s *InstructorServices) CreateInstructor(ctx context.Context, instructor *instructordomain.Instructor) error {
+func (s *InstructorServices) CreateInstructor(ctx context.Context, instructor *instructordomain.Instructor, token string) error {
 	role, err := s.store.Roles.GetByName(ctx, "instructor")
 	if err != nil {
 		return err
 	}
 	instructor.User.RoleID = role.RoleID
-	if err = s.store.Instructor.Create(ctx, instructor); err != nil {
+	if err = s.store.Instructor.CreateAndInvitate(ctx, instructor, token, s.config.Mail.Exp); err != nil {
 		return err
 	}
 	return nil
