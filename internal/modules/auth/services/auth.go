@@ -131,7 +131,7 @@ func (h *AuthService) GenerateToken(user *authdomain.Users) (string, error) {
 		"iat": time.Now().Unix(),
 		"nbf": time.Now().Unix(),
 		"iss": h.config.Auth.Token.Iss,
-		"aud": h.config.Auth.Token.Iss,
+		"aud": h.config.Auth.Token.Aud,
 	}
 	token, err := h.auth.GenerateToken(claims)
 	if err != nil {

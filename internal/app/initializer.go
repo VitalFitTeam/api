@@ -22,7 +22,7 @@ func BuildApplication(cfg *config.Config, db *gorm.DB) *application {
 	if err != nil {
 		logger.Errorw("error creating mailer", "error", err.Error())
 	}
-	auth := authservices.NewJWTAuthenticator(cfg.Auth.Token.Secret, cfg.Auth.Token.Iss, cfg.Auth.Token.Iss)
+	auth := authservices.NewJWTAuthenticator(cfg.Auth.Token.Secret, cfg.Auth.Token.Aud, cfg.Auth.Token.Iss)
 	rateLimiter := rate_mw.NewFixedWindowLimiter(cfg.RateLimiter.RequestsPerTimeFrame, cfg.RateLimiter.TimeFrame)
 	store := store.NewStorage(db)
 	services := appservices.NewServices(store, logger, *cfg, auth, mailer)
