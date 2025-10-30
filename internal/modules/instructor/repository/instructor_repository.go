@@ -49,7 +49,11 @@ func (s *InstructorStore) GetInstructors(ctx context.Context) ([]*instructordoma
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 	var instructors []*instructordomain.Instructor
-	err := s.db.WithContext(ctx).Preload("User").Find(&instructors).Error
+	err := s.db.WithContext(ctx).
+		Joins("JOIN users ON users.user_id = instructors.user_id").
+		Where("users.is_validated = ?", true).
+		Preload("User").
+		Find(&instructors).Error
 	if err != nil {
 		return nil, err
 	}

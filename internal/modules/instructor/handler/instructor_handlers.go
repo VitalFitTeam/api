@@ -82,8 +82,7 @@ func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 		return
 	}
 
-	var response []*InstructorResponse
-
+	response := make([]*InstructorResponse, 0, len(instructors))
 	for _, instructor := range instructors {
 		ins := &InstructorResponse{
 			InstructorID:      instructor.InstructorID,
