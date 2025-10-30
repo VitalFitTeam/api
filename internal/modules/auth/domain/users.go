@@ -78,15 +78,6 @@ func (p *Password) Scan(value interface{}) error {
 	return nil
 }
 
-type Roles struct {
-	RoleID      uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"role_id"`
-	Name        string    `gorm:"type:varchar(50);unique;not null" json:"name"`
-	Level       int16     `gorm:"type:smallint;not null;default:0" json:"level"`
-	Description string    `gorm:"type:text" json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-}
-
 type Users struct {
 	UserID           uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"user_id"`
 	FirstName        string    `gorm:"type:varchar(100);not null" json:"first_name"`
@@ -111,7 +102,6 @@ type Users struct {
 }
 
 type ClientProfiles struct {
-	// Primary Key and Foreign Key to Users
 	UserID             uuid.UUID          `gorm:"type:uuid;primaryKey" json:"user_id"`
 	QRCode             string             `gorm:"type:text" json:"qr_code"`
 	Scoring            int                `gorm:"type:integer;default:0" json:"scoring"`

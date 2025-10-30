@@ -66,3 +66,39 @@ func (h *UserService) GetBranchAdmins(ctx context.Context, fq pagination.Paginat
 	}
 	return users, nil
 }
+
+//roles
+
+func (h *UserService) RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error) {
+	return h.store.Roles.RoleHasPermission(ctx, roleID, permission)
+}
+
+func (h *UserService) GetRoles(ctx context.Context) ([]*authdomain.Roles, error) {
+	return h.store.Roles.GetRoles(ctx)
+}
+
+func (h *UserService) CreateRole(ctx context.Context, role *authdomain.Roles) error {
+	return h.store.Roles.Create(ctx, role)
+}
+
+func (h *UserService) GetRoleByID(ctx context.Context, roleID uuid.UUID) (*authdomain.Roles, error) {
+	return h.store.Roles.GetRoleByID(ctx, roleID)
+}
+func (h *UserService) UpdateRole(ctx context.Context, role *authdomain.Roles) error {
+	return h.store.Roles.Update(ctx, role)
+}
+
+func (h *UserService) DeleteRole(ctx context.Context, roleID uuid.UUID) error {
+	return h.store.Roles.Delete(ctx, roleID)
+}
+func (h *UserService) GetPermissions(ctx context.Context) ([]*authdomain.Permission, error) {
+	return h.store.Roles.GetPermissions(ctx)
+}
+
+func (h *UserService) AssignRolePermission(ctx context.Context, roleID uuid.UUID, permissionIDs []uuid.UUID) error {
+	return h.store.Roles.AssignRolePermission(ctx, roleID, permissionIDs)
+}
+
+func (g *UserService) DeleteRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error {
+	return g.store.Roles.DeleteRolePermission(ctx, roleID, permissionID)
+}

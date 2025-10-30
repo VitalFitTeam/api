@@ -101,3 +101,62 @@ func (m *RoleStoreMock) GetByName(ctx context.Context, name string) (*authdomain
 	}
 	return args.Get(0).(*authdomain.Roles), args.Error(1)
 }
+
+func (m *RoleStoreMock) GetRoleByID(ctx context.Context, roleID uuid.UUID) (*authdomain.Roles, error) {
+	args := m.Called(ctx, roleID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*authdomain.Roles), args.Error(1)
+}
+
+func (m *RoleStoreMock) GetRoles(ctx context.Context) ([]*authdomain.Roles, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*authdomain.Roles), args.Error(1)
+}
+
+func (m *RoleStoreMock) Create(ctx context.Context, role *authdomain.Roles) error {
+	args := m.Called(ctx, role)
+	return args.Error(0)
+}
+
+func (m *RoleStoreMock) Update(ctx context.Context, role *authdomain.Roles) error {
+	args := m.Called(ctx, role)
+	return args.Error(0)
+}
+
+func (m *RoleStoreMock) Delete(ctx context.Context, roleID uuid.UUID) error {
+	args := m.Called(ctx, roleID)
+	return args.Error(0)
+}
+
+func (m *RoleStoreMock) GetPermissions(ctx context.Context) ([]*authdomain.Permission, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*authdomain.Permission), args.Error(1)
+}
+
+func (m *RoleStoreMock) AssignRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error {
+	args := m.Called(ctx, roleID, permissionID)
+	return args.Error(0)
+}
+
+func (m *RoleStoreMock) DeleteRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error {
+	args := m.Called(ctx, roleID, permissionID)
+	return args.Error(0)
+}
+
+func (m *RoleStoreMock) RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error) {
+	args := m.Called(ctx, roleID, permission)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *RoleStoreMock) CreatePermission(ctx context.Context, tx *gorm.DB, permission *authdomain.Permission) error {
+	args := m.Called(ctx, tx, permission)
+	return args.Error(0)
+}

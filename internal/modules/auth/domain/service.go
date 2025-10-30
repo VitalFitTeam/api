@@ -32,6 +32,16 @@ type UserServicesInterface interface {
 	Update(ctx context.Context, user *Users) error
 	GetByEmail(ctx context.Context, email string) (*Users, error)
 	GetUserFromContext(c *gin.Context) *Users
-	GetRoleByName(ctx context.Context, name string) (*Roles, error)
 	GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
+	//roles
+	GetRoleByName(ctx context.Context, name string) (*Roles, error)
+	RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error)
+	GetRoles(ctx context.Context) ([]*Roles, error)
+	CreateRole(ctx context.Context, role *Roles) error
+	GetRoleByID(ctx context.Context, roleID uuid.UUID) (*Roles, error)
+	UpdateRole(ctx context.Context, role *Roles) error
+	DeleteRole(ctx context.Context, roleID uuid.UUID) error
+	GetPermissions(ctx context.Context) ([]*Permission, error)
+	AssignRolePermission(ctx context.Context, roleID uuid.UUID, permissionIDs []uuid.UUID) error
+	DeleteRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error
 }

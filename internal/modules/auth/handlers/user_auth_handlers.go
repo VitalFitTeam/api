@@ -7,34 +7,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	appservices "github.com/vitalfit/api/internal/app/services"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
-	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	"github.com/vitalfit/api/pkg/mailer"
 	"github.com/vitalfit/api/pkg/otp"
 	"github.com/vitalfit/api/pkg/pagination"
 )
-
-type AuthHandlersInterface interface {
-	AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
-	UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
-	RegisterUserStaffHandler(c *gin.Context)
-	RegisterUserClientHandler(c *gin.Context)
-	ActivateUserHandler(c *gin.Context)
-	LoginHandler(c *gin.Context)
-	WhoAmI(c *gin.Context)
-	ForgotPasswordHandler(c *gin.Context)
-	ResetPasswordHandler(c *gin.Context)
-}
-
-type AuthHandlers struct {
-	services appservices.Services
-}
-
-func NewAuthHandlers(services appservices.Services) *AuthHandlers {
-	return &AuthHandlers{services: services}
-}
 
 // @Summary		Register New User
 // @Description	Register a new user in the system with client role
@@ -364,7 +342,7 @@ func (h *AuthHandlers) ResetPasswordHandler(c *gin.Context) {
 		}
 		return
 	}
-
+	c.JSON(http.StatusOK, nil)
 }
 
 // function to send emails on register
@@ -387,17 +365,12 @@ func (h *AuthHandlers) registerEmail(ctx context.Context, user *authdomain.Users
 // @Description	Get a user list with the branch admin role
 // @Tags			User
 // @Security		ApiKeyAuth
-// @Param			limit	query	int		false	"limit results per page"					default(10)			minimum(1)	maximum(100)
-// @Param			offset	query	int		false	"number of results to skip (paginación)"	default(0)			minimum(0)
-// @Param			sort	query	string	false	"clasification order (asc or desc)"			enums(asc, desc)	default(desc)
-// @Param			search	query	string	false	"search terms (filter by name)"
 // @Accept			json
 // @Produce		json
 // @Success		200	{object}	object{data=[]BranchAdminResponse}	"succed response"
-// @Failure		400	{object}	object{error=string}				"Error: invalid params"
 // @Failure		500	{object}	object{error=string}				"Error: internal server error"
 // @Router			/user/branch-admins [get]
-func (h *AuthHandlers) GetBranchAdmins(c *gin.Context) {
+func (h *AuthHandlers) GetBranchAdminsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	fq := pagination.PaginatedFeedQuery{
 		Limit:  10,
@@ -431,9 +404,8 @@ func (h *AuthHandlers) GetBranchAdmins(c *gin.Context) {
 		responseList = append(responseList, resp)
 	}
 
-	c.JSON(200, gin.H{
-		"data":       responseList,
-		"pagination": fq,
+	c.JSON(http.StatusOK, gin.H{
+		"data": responseList,
 	})
 
 }
