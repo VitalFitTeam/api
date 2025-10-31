@@ -12,6 +12,7 @@ import (
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type InstructorStore struct {
@@ -42,7 +43,6 @@ func (s *InstructorStore) Create(ctx context.Context, tx *gorm.DB, instructor *i
 		return err
 	}
 	return nil
-
 }
 
 func (s *InstructorStore) GetInstructors(ctx context.Context) ([]*instructordomain.Instructor, error) {
@@ -52,7 +52,7 @@ func (s *InstructorStore) GetInstructors(ctx context.Context) ([]*instructordoma
 	err := s.db.WithContext(ctx).
 		Joins("JOIN users ON users.user_id = instructors.user_id").
 		Where("users.is_validated = ?", true).
-		Preload("User").
+		Preload("User").Preload("Specialties").
 		Find(&instructors).Error
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (s *InstructorStore) GetByID(ctx context.Context, instructorID uuid.UUID) (
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 	var instructor *instructordomain.Instructor
-	err := s.db.WithContext(ctx).Preload("User").Where("instructor_id = ?", instructorID).First(&instructor).Error
+	err := s.db.WithContext(ctx).Preload("User").Preload("Specialties").Where("instructor_id = ?", instructorID).First(&instructor).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, shared_errors.ErrNotFound
@@ -131,12 +131,6 @@ func (s *InstructorStore) Update(ctx context.Context, instructor *instructordoma
 			userUpdates["profile_picture_url"] = instructor.User.ProfilePictureURL
 		}
 
-		if len(userUpdates) > 0 {
-			if err := tx.WithContext(ctx).Model(&authdomain.Users{}).Where("user_id = ?", existingInstructor.UserID).Updates(userUpdates).Error; err != nil {
-				return err
-			}
-		}
-
 		if err := tx.WithContext(ctx).Model(instructor).Omit("User").Updates(instructor).Error; err != nil {
 			return err
 		}
@@ -168,4 +162,54 @@ func (s *InstructorStore) createUserInvitation(ctx context.Context, tx *gorm.DB,
 		UserID: userID,
 		Expiry: time.Now().Add(invitationExp),
 	}).Error
+}
+
+func (s *InstructorStore) AssignInstructorSpecialtyTx(ctx context.Context, tx *gorm.DB, instructorID uuid.UUID, specialityID []uuid.UUID) error {
+	var linksToCreate []instructordomain.InstructorSpecialty
+	for _, pid := range specialityID {
+		linksToCreate = append(linksToCreate, instructordomain.InstructorSpecialty{
+			InstructorID: instructorID,
+			CategoryID:   pid,
+		})
+	}
+	if len(linksToCreate) == 0 {
+		return nil
+	}
+	err := tx.WithContext(ctx).
+		Clauses(clause.OnConflict{DoNothing: true}).
+		Create(&linksToCreate).Error
+	if err != nil {
+		switch err {
+		case shared_errors.ErrConflict:
+			return shared_errors.ErrConflict
+		case shared_errors.ErrNotFound:
+			return shared_errors.ErrNotFound
+		default:
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *InstructorStore) AssignInstructorSpecialty(ctx context.Context, instructorID uuid.UUID, specialityID []uuid.UUID) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		return s.AssignInstructorSpecialtyTx(ctx, tx, instructorID, specialityID)
+	})
+}
+func (s *InstructorStore) DeleteInstructorSpecialty(ctx context.Context, instructorID uuid.UUID, specialtyID uuid.UUID) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		result := tx.WithContext(ctx).
+			Where("instructor_id = ? AND category_id = ?", instructorID, specialtyID).
+			Delete(&instructordomain.InstructorSpecialty{})
+
+		if result.Error != nil {
+			return result.Error
+		}
+
+		if result.RowsAffected == 0 {
+			return shared_errors.ErrNotFound
+		}
+
+		return nil
+	})
 }

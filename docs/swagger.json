@@ -2160,7 +2160,7 @@
                                 "data": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/definitions/instructorhandler.InstructorResponse"
+                                        "$ref": "#/definitions/instructorhandler.ListInstructorResponse"
                                     }
                                 }
                             }
@@ -2388,6 +2388,122 @@
                     },
                     "404": {
                         "description": "Not Found: Instructor not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/instructor/{id}/specialty": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Assigns one or more specialties (service categories) to a specific instructor. This is an additive operation; it does not remove existing specialties.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Assign specialties to an instructor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Instructor UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payload with an array of specialty (category) UUIDs",
+                        "name": "specialties",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instructorhandler.AssignInstructorsSpecialtiesPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Specialties assigned successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID format or payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/instructor/{id}/specialty/{specialty_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Removes a specific specialty (service category) from an instructor's profile.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Remove a specialty from an instructor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Instructor UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Specialty (Category) UUID",
+                        "name": "specialty_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Specialty removed successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Instructor or specialty assignment not found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -3387,6 +3503,20 @@
                 }
             }
         },
+        "instructorhandler.AssignInstructorsSpecialtiesPayload": {
+            "type": "object",
+            "required": [
+                "specialties"
+            ],
+            "properties": {
+                "specialties": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "instructorhandler.AssignInstructorsToBranchPayload": {
             "type": "object",
             "required": [
@@ -3456,9 +3586,6 @@
                 },
                 "profile_picture_url": {
                     "type": "string"
-                },
-                "speciality": {
-                    "type": "string"
                 }
             }
         },
@@ -3495,10 +3622,62 @@
                 "profile_picture_url": {
                     "type": "string"
                 },
-                "speciality": {
+                "specialties": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/instructorhandler.SpecialtyResponse"
+                    }
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "instructorhandler.ListInstructorResponse": {
+            "type": "object",
+            "properties": {
+                "biography": {
+                    "type": "string"
+                },
+                "birth_date": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "identity_document": {
+                    "type": "string"
+                },
+                "instructor_id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "profile_picture_url": {
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "instructorhandler.SpecialtyResponse": {
+            "type": "object",
+            "properties": {
+                "specialty_id": {
+                    "type": "string"
+                },
+                "specialty_name": {
                     "type": "string"
                 }
             }
@@ -3533,9 +3712,6 @@
                     "type": "string"
                 },
                 "profile_picture_url": {
-                    "type": "string"
-                },
-                "speciality": {
                     "type": "string"
                 }
             }

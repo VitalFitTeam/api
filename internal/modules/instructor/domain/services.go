@@ -16,4 +16,7 @@ type InstructorServiceInterface interface {
 	AssignInstructorsToBranch(ctx context.Context, branchID uuid.UUID, instructorID []uuid.UUID) error
 	ListBranchInstructors(ctx context.Context, branchID uuid.UUID) ([]*Instructor, error)
 	RemoveInstructorFromBranch(ctx context.Context, branchID uuid.UUID, instructorID uuid.UUID) error
+
+	AssignInstructorSpecialty(ctx context.Context, instructorID uuid.UUID, specialties []uuid.UUID) error
+	DeleteInstructorSpecialty(ctx context.Context, instructorID uuid.UUID, specialtyID uuid.UUID) error
 }

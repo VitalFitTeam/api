@@ -14,6 +14,10 @@ type ServiceCategory struct {
 	Services []Service `gorm:"foreignKey:CategoryID"`
 }
 
+func (ServiceCategory) TableName() string {
+	return "service_categories"
+}
+
 type Service struct {
 	ServiceID       uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()"`
 	CategoryID      uuid.UUID `gorm:"type:uuid;not null"`
@@ -24,7 +28,7 @@ type Service struct {
 	IsFeatured      bool      `gorm:"type:boolean;default:false;not null"`
 	CreatedAt       time.Time `gorm:"default:now()"`
 	UpdatedAt       time.Time
-	DeletedAt       gorm.DeletedAt `gorm:"index"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
 
 	ServiceCategory ServiceCategory `gorm:"foreignKey:CategoryID"`
 
@@ -46,16 +50,14 @@ type ServiceImage struct {
 
 type ServiceBranchDetail struct {
 	ServiceID         uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
-	BranchID          uuid.UUID `gorm:"type:uuid;not null;primaryKey"` // Asumiendo que tienes un modelo Branch
+	BranchID          uuid.UUID `gorm:"type:uuid;not null;primaryKey"`
 	IsVisible         bool      `gorm:"type:boolean;not null;default:true"`
 	MaxCapacity       int       `gorm:"type:int;not null"`
 	PriceForMember    float64   `gorm:"type:decimal(10,2);not null"`
 	PriceForNonMember float64   `gorm:"type:decimal(10,2);not null"`
 	CreatedAt         time.Time `gorm:"default:now()"`
 	UpdatedAt         time.Time
-	DeletedAt         gorm.DeletedAt `gorm:"index"`
+	DeletedAt         gorm.DeletedAt `gorm:"index" json:"-"`
 
-	// Relaciones (Belongs To)
 	Service Service `gorm:"foreignKey:ServiceID"`
-	// Branch  Branch  `gorm:"foreignKey:BranchID"` // Descomenta esto cuando tengas tu struct Branch
 }

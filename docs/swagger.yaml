@@ -624,6 +624,15 @@ definitions:
     - state
     - tax_id
     type: object
+  instructorhandler.AssignInstructorsSpecialtiesPayload:
+    properties:
+      specialties:
+        items:
+          type: string
+        type: array
+    required:
+    - specialties
+    type: object
   instructorhandler.AssignInstructorsToBranchPayload:
     properties:
       instructor:
@@ -664,8 +673,6 @@ definitions:
         type: string
       profile_picture_url:
         type: string
-      speciality:
-        type: string
     required:
     - birth_date
     - email
@@ -697,9 +704,43 @@ definitions:
         type: string
       profile_picture_url:
         type: string
-      speciality:
+      specialties:
+        items:
+          $ref: '#/definitions/instructorhandler.SpecialtyResponse'
+        type: array
+      user_id:
+        type: string
+    type: object
+  instructorhandler.ListInstructorResponse:
+    properties:
+      biography:
+        type: string
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity_document:
+        type: string
+      instructor_id:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
         type: string
       user_id:
+        type: string
+    type: object
+  instructorhandler.SpecialtyResponse:
+    properties:
+      specialty_id:
+        type: string
+      specialty_name:
         type: string
     type: object
   instructorhandler.UpdateInstructorPayload:
@@ -723,8 +764,6 @@ definitions:
       phone:
         type: string
       profile_picture_url:
-        type: string
-      speciality:
         type: string
     type: object
   inventorydomain.BranchInventory:
@@ -2282,7 +2321,7 @@ paths:
             properties:
               data:
                 items:
-                  $ref: '#/definitions/instructorhandler.InstructorResponse'
+                  $ref: '#/definitions/instructorhandler.ListInstructorResponse'
                 type: array
             type: object
         "500":
@@ -2445,6 +2484,84 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update an instructor
+      tags:
+      - Instructors
+  /instructor/{id}/specialty:
+    post:
+      consumes:
+      - application/json
+      description: Assigns one or more specialties (service categories) to a specific
+        instructor. This is an additive operation; it does not remove existing specialties.
+      parameters:
+      - description: Instructor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with an array of specialty (category) UUIDs
+        in: body
+        name: specialties
+        required: true
+        schema:
+          $ref: '#/definitions/instructorhandler.AssignInstructorsSpecialtiesPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Specialties assigned successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign specialties to an instructor
+      tags:
+      - Instructors
+  /instructor/{id}/specialty/{specialty_id}:
+    delete:
+      description: Removes a specific specialty (service category) from an instructor's
+        profile.
+      parameters:
+      - description: Instructor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Specialty (Category) UUID
+        in: path
+        name: specialty_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Specialty removed successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Instructor or specialty assignment not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a specialty from an instructor
       tags:
       - Instructors
   /user/branch-admins:

@@ -3,14 +3,18 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
+
 	"log"
 	"os"
 	"time"
 
 	"strings"
 
+	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
+	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	"github.com/vitalfit/api/internal/store"
 	env "github.com/vitalfit/api/pkg/Env"
 	"github.com/vitalfit/api/pkg/db"
@@ -27,10 +31,11 @@ func NewSeedStruct() *SeedStruct {
 
 func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB) {
 	ctx := context.Background()
-	s.CreateSuperAdmin(store, db, ctx)
-	s.SeedPermissions(store, db, ctx)
+	//s.CreateSuperAdmin(store, db, ctx)
+	//s.SeedPermissions(store, db, ctx)
 	s.SeedInstructors(store, db, ctx)
-	s.SeedUsers(store, db, ctx)
+	//s.SeedUsers(store, db, ctx)
+	//s.SeedServiceCategories(store, db, ctx)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -128,7 +133,6 @@ type instructorJSON struct {
 	BirthDate         string `json:"birth_date"`
 	Gender            string `json:"gender"`
 	ProfilePictureURL string `json:"profile_picture_url"`
-	Speciality        string `json:"speciality"`
 	Biography         string `json:"biography"`
 }
 
@@ -158,6 +162,17 @@ func (s *SeedStruct) SeedInstructors(store store.Storage, db *gorm.DB, ctx conte
 	log.Printf("Found %d instructors in instructors.json. Starting seeder...", len(instructorsFromJSON))
 
 	err = db.Transaction(func(tx *gorm.DB) error {
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+		specialties, err := store.Products.ListServiceCategories(ctx, tx)
+		if err != nil {
+			return err
+		}
+
+		if len(specialties) == 0 {
+			log.Println("No specialties found to assign to instructors.")
+			return nil
+		}
 
 		for _, i := range instructorsFromJSON {
 			user := &authdomain.Users{
@@ -179,19 +194,28 @@ func (s *SeedStruct) SeedInstructors(store store.Storage, db *gorm.DB, ctx conte
 				}
 			}
 			user.BirthDate = date
-
 			user.PasswordHash.Set(password)
-
 			role, err := store.Roles.GetByName(ctx, "instructor")
 			if err != nil {
 				log.Println("Error getting the role", err)
 				return err
 			}
 			user.RoleID = role.RoleID
+
+			// Asignar especialidades aleatorias
+			numSpecialtiesToAssign := r.Intn(len(specialties)) + 1 // Asignar de 1 a len(specialties)
+			r.Shuffle(len(specialties), func(i, j int) {
+				specialties[i], specialties[j] = specialties[j], specialties[i]
+			})
+
+			assignedSpecialties := make([]*productsdomain.ServiceCategory, 0, numSpecialtiesToAssign)
+			for k := 0; k < numSpecialtiesToAssign; k++ {
+				assignedSpecialties = append(assignedSpecialties, &specialties[k])
+			}
+
 			instructor := &instructordomain.Instructor{
-				Speciality: i.Speciality,
-				Biography:  i.Biography,
-				User:       user,
+				Biography: i.Biography,
+				User:      user,
 			}
 			if err := store.Instructor.Create(ctx, tx, instructor); err != nil {
 				log.Printf("Error creating instructor '%s': %v", i.FirstName, err)
@@ -199,6 +223,15 @@ func (s *SeedStruct) SeedInstructors(store store.Storage, db *gorm.DB, ctx conte
 
 			}
 
+			specialtyIDs := make([]uuid.UUID, 0, len(assignedSpecialties))
+			for _, s := range assignedSpecialties {
+				specialtyIDs = append(specialtyIDs, s.CategoryID)
+			}
+
+			if err := store.Instructor.AssignInstructorSpecialtyTx(ctx, tx, instructor.InstructorID, specialtyIDs); err != nil {
+				log.Printf("Error assigning specialties to instructor '%s': %v", i.FirstName, err)
+				return err //rollback
+			}
 		}
 		// Commit
 		return nil
@@ -274,6 +307,47 @@ func (s *SeedStruct) SeedUsers(store store.Storage, dbg *gorm.DB, ctx context.Co
 	log.Println("Users seeder completed successfully.")
 }
 
+type ServiceCategoryJSON struct {
+	Name string `json:"name"`
+}
+
+func (s *SeedStruct) SeedServiceCategories(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/service_categories.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read service_categories.json file: %v", err)
+		return
+	}
+
+	var serviceCategoriesFromJSON []ServiceCategoryJSON
+	if err = json.Unmarshal(jsonFile, &serviceCategoriesFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode JSON: %v", err)
+		return
+	}
+	log.Printf("Found %d service categories in service_categories.json. Starting seeder...", len(serviceCategoriesFromJSON))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+
+		for _, sc := range serviceCategoriesFromJSON {
+			serviceCategory := &productsdomain.ServiceCategory{
+				Name: sc.Name,
+			}
+			err := store.Products.CreateServiceCategory(ctx, tx, serviceCategory)
+			if err != nil {
+				log.Printf("Error creating service category '%s': %v", sc.Name, err)
+				return err //rollback
+			}
+		}
+		// Commit
+		return nil
+	})
+
+	if err != nil {
+		log.Println("Error in service categories seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Service categories seeder completed successfully.")
+}
 func main() {
 	addr := env.GetString("DB_ADDR", "")
 	conn, err := db.New(addr, 3, 3, "15m")
