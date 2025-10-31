@@ -255,6 +255,11 @@ func (h *InstructorHandlers) AssignInstructorsToBranchHandler(c *gin.Context) {
 		return
 	}
 	instructor, err := payload.toInstructor()
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+
+	}
 
 	err = h.services.InstructorServices.AssignInstructorsToBranch(ctx, branchID, instructor)
 	if err != nil {
