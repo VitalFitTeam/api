@@ -5,35 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	appservices "github.com/vitalfit/api/internal/app/services"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
-	"github.com/vitalfit/api/internal/shared/middleware/auth"
 )
-
-type InventoryHandlersInterface interface {
-	InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
-
-	// Equipment
-	CreateEquipmentHandler(c *gin.Context)
-	GetEquipmentsHandler(c *gin.Context)
-	UpdateEquipmentHandler(c *gin.Context)
-	DeleteEquipmentHandler(c *gin.Context)
-
-	// Branch inventory
-	AddInventoryItemHandler(c *gin.Context)
-	ListBranchInventoryHandler(c *gin.Context)
-	UpdateInventoryItemHandler(c *gin.Context)
-	DeleteInventoryItemHandler(c *gin.Context)
-}
-
-type InventoryHandlers struct {
-	services appservices.Services
-}
-
-// Constructor
-func NewInventoryHandlers(services appservices.Services) *InventoryHandlers {
-	return &InventoryHandlers{services: services}
-}
 
 //
 // EQUIPMENT CATALOG HANDLERS (Super Admin)

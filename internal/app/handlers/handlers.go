@@ -6,6 +6,7 @@ import (
 	branchhandlers "github.com/vitalfit/api/internal/modules/branches/handlers"
 	instructorhandler "github.com/vitalfit/api/internal/modules/instructor/handler"
 	inventoryhandlers "github.com/vitalfit/api/internal/modules/inventory/handlers"
+	productshandler "github.com/vitalfit/api/internal/modules/products/handler"
 )
 
 type Handlers struct {
@@ -13,6 +14,7 @@ type Handlers struct {
 	BranchHandlers     branchhandlers.BranchHandlersInterface
 	InventoryHandlers  inventoryhandlers.InventoryHandlersInterface
 	InstructorHandlers instructorhandler.InstructorHandlersInterface
+	ProductsHandlers   productshandler.ProductsHandlerInterface
 }
 
 func NewAppHandlers(services appservices.Services) Handlers {
@@ -21,5 +23,6 @@ func NewAppHandlers(services appservices.Services) Handlers {
 		BranchHandlers:     branchhandlers.NewBranchHandlers(services),
 		InventoryHandlers:  inventoryhandlers.NewInventoryHandlers(services),
 		InstructorHandlers: instructorhandler.NewInstructorHandlers(services),
+		ProductsHandlers:   productshandler.NewProductsHandler(services),
 	}
 }
