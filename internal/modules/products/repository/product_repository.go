@@ -4,6 +4,7 @@ import (
 	"context"
 
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
+	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -30,5 +31,25 @@ func (s *ProductsStore) ListServiceCategories(ctx context.Context, tx *gorm.DB) 
 		return nil, err
 	}
 	return serviceCategories, nil
+}
 
+func (s *ProductsStore) GetServicesCategories(ctx context.Context) ([]productsdomain.ServiceCategory, error) {
+	var serviceCategories []productsdomain.ServiceCategory
+
+	err := db.WithTX(s.db, func(tx *gorm.DB) error {
+		var listErr error
+
+		serviceCategories, listErr = s.ListServiceCategories(ctx, tx)
+		if listErr != nil {
+			return listErr
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return serviceCategories, nil
 }
