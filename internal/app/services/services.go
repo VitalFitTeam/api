@@ -10,6 +10,8 @@ import (
 	instructorservices "github.com/vitalfit/api/internal/modules/instructor/services"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	inventoryservices "github.com/vitalfit/api/internal/modules/inventory/services"
+	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
+	marketingservice "github.com/vitalfit/api/internal/modules/marketing/service"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	productsservice "github.com/vitalfit/api/internal/modules/products/service"
 	logs "github.com/vitalfit/api/internal/shared/errors"
@@ -27,6 +29,7 @@ type Services struct {
 	InventoryServices  inventorydomain.BranchInventoryServicesInterface
 	InstructorServices instructordomain.InstructorServiceInterface
 	ProductsServices   productsdomain.ProductsServiceInterface
+	MarketingServices  marketingdomain.MarketingServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
@@ -41,6 +44,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		InventoryServices:  inventoryservices.NewBranchInventoryServices(store, cfg),
 		InstructorServices: instructorservices.NewInstructorServices(store, cfg),
 		ProductsServices:   productsservice.NewProductsService(store),
+		MarketingServices:  marketingservice.NewMarketingService(store),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,
 	}
