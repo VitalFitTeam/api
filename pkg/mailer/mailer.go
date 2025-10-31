@@ -7,6 +7,7 @@ const (
 	maxRetries           = 3
 	UserWelcomeTemplate  = "user_invitation.tmpl"
 	UserResetPwsTemplate = "user_reset.tmpl"
+	UserStaffActivate    = "user_staff_activate.tmpl"
 )
 
 //go:embed "templates"

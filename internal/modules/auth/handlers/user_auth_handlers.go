@@ -32,7 +32,7 @@ func (h *AuthHandlers) RegisterUserClientHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := payload.createUser()
+	user, err := payload.CreateUser()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -99,7 +99,7 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := payload.CreateUserClientPayload.createUser()
+	user, err := payload.CreateUserClientPayload.CreateUser()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -163,7 +163,46 @@ func (h *AuthHandlers) ActivateUserHandler(c *gin.Context) {
 		return
 	}
 	if err := h.services.AuthServices.Activate(ctx, payload.Code); err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+
+}
+
+// @Summary		Activate staff user account
+// @Description	Activates a staff user's account using the invitation token from the URL and sets their initial password.
+// @Tags			User
+// @Accept			json
+// @Produce		json
+// @Param			token	path	string						true	"Activation Token"
+// @Param			payload	body	UpdateStaffPasswordPayload	true	"Password Payload"
+// @Success		204		"User successfully activated and password set. No content returned."
+// @Failure		400		{object}	map[string]interface{}	"Bad request (e.g., invalid JSON payload, passwords do not match)"
+// @Failure		404		{object}	map[string]interface{}	"Token is invalid or expired"
+// @Failure		500		{object}	map[string]interface{}	"Internal server error"
+// @Router			/auth/activate/{token} [put]
+func (h *AuthHandlers) ActivateStaffHanlder(c *gin.Context) {
+	token := c.Param("token")
+	var payload UpdateStaffPasswordPayload
+	ctx := c.Request.Context()
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	if err := h.services.AuthServices.ActivateStaff(ctx, token, payload.Password); err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
 		return
 	}
 

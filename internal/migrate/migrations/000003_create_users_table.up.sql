@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     email CITEXT UNIQUE NOT NULL,
     phone VARCHAR(50),
     identity_document VARCHAR(50) UNIQUE,
-    password_hash BYTEA NOT NULL,
+    password_hash BYTEA,
     birth_date DATE,
     gender gender_enum,
     profile_picture_url VARCHAR(255),

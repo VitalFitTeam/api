@@ -6,31 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	appservices "github.com/vitalfit/api/internal/app/services"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	"github.com/vitalfit/api/pkg/pagination"
 )
-
-type BranchHandlersInterface interface {
-	BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
-	CreateBranchHandler(c *gin.Context)
-	GetPaymentMethodsHandler(c *gin.Context)
-	GetBranchesHandler(c *gin.Context)
-	DeleteBranchHandler(c *gin.Context)
-	GetBranchByIDHandler(c *gin.Context)
-	UpdateBranchHandler(c *gin.Context)
-	GetBranchStatusCount(c *gin.Context)
-}
-
-type BranchHandlers struct {
-	services appservices.Services
-}
-
-func NewBranchHandlers(services appservices.Services) *BranchHandlers {
-	return &BranchHandlers{services: services}
-}
 
 // @Summary		create a new branch
 // @Description	adds a new branc to the system with his ubication and configuration

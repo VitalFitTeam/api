@@ -14,6 +14,7 @@ type AuthHandlersInterface interface {
 	RegisterUserStaffHandler(c *gin.Context)
 	RegisterUserClientHandler(c *gin.Context)
 	ActivateUserHandler(c *gin.Context)
+	ActivateStaffHanlder(c *gin.Context)
 	LoginHandler(c *gin.Context)
 	WhoAmI(c *gin.Context)
 	ForgotPasswordHandler(c *gin.Context)
@@ -44,6 +45,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	{ //public routes
 		authGroup.POST("/register", r.RegisterUserClientHandler)
 		authGroup.PUT("/activate", r.ActivateUserHandler)
+		authGroup.PUT("/activate/:token", r.ActivateStaffHanlder)
 		authGroup.POST("/login", r.LoginHandler)
 
 		passwordGroup := authGroup.Group("/password")

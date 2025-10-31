@@ -2,6 +2,7 @@ package authservices
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -79,6 +80,28 @@ func (h *AuthService) MailSender(ctx context.Context, user *authdomain.Users, ke
 	return status, err
 }
 
+func (h *AuthService) MailSenderStaff(ctx context.Context, user *authdomain.Users, token string, template string) (int, error) {
+
+	//mail -> fail -> roll back -> create invite
+
+	isProdEnv := h.config.Env == "production"
+	vars := struct {
+		Username       string
+		ActivationLink string
+	}{
+		Username:       user.FirstName,
+		ActivationLink: fmt.Sprintf("%s/activate/%s", h.config.FrontURL, token),
+	}
+
+	// send mail
+	status, err := h.Mailer.Send(template, user.FirstName, user.Email, vars, !isProdEnv)
+	if err != nil {
+		return status, err
+	}
+
+	return status, err
+}
+
 // rollbacks user creations if transaction fails
 func (h *AuthService) Delete(ctx context.Context, userID uuid.UUID) error {
 	if err := h.store.Users.Delete(ctx, userID); err != nil {
@@ -93,6 +116,13 @@ func (h *AuthService) Activate(ctx context.Context, code string) error {
 	}
 	return nil
 
+}
+
+func (h *AuthService) ActivateStaff(ctx context.Context, token string, password string) error {
+	if err := h.store.Users.ActivateUserStaff(ctx, token, password); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (h *AuthService) GetByEmail(ctx context.Context, email string) (*authdomain.Users, error) {

@@ -1,6 +1,7 @@
 package authhandlers
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,7 +25,7 @@ type CreateUserStaffPayload struct {
 	RoleName string `json:"role_name" binding:"omitempty"`
 }
 
-func (c *CreateUserClientPayload) createUser() (*authdomain.Users, error) {
+func (c *CreateUserClientPayload) CreateUser() (*authdomain.Users, error) {
 	birthdate, err := time.Parse("2006-01-02", c.BirthDate)
 	if err != nil {
 		birthdate, err = time.Parse(time.RFC3339, c.BirthDate)
@@ -39,7 +40,7 @@ func (c *CreateUserClientPayload) createUser() (*authdomain.Users, error) {
 		Phone:             c.Phone,
 		IdentityDocument:  c.IdentityDocument,
 		BirthDate:         birthdate,
-		Gender:            authdomain.GenderEnum(c.Gender),
+		Gender:            authdomain.GenderEnum(strings.ToLower(c.Gender)),
 		ProfilePictureURL: c.ProfilePictureURL,
 	}, nil
 }
@@ -60,7 +61,7 @@ type ForgotPasswordPayload struct {
 
 type ResetPasswordPayload struct {
 	Password        string `json:"password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
-	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"` // Valida en el backend
+	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"`
 	Token           string `json:"token" binding:"required"`
 }
 
@@ -106,6 +107,11 @@ func (c *PermissionsPayload) toPermission() ([]uuid.UUID, error) {
 		permisions = append(permisions, id)
 	}
 	return permisions, nil
+}
+
+type UpdateStaffPasswordPayload struct {
+	Password        string `json:"password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"`
 }
 
 // response

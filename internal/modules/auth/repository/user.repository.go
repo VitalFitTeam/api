@@ -126,6 +126,27 @@ func (s *UserStore) Activate(ctx context.Context, code string) error {
 
 }
 
+func (s *UserStore) ActivateUserStaff(ctx context.Context, token string, password string) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		user, err := s.getUserFromInvitation(ctx, tx, token)
+		if err != nil {
+			return err
+		}
+		user.IsValidated = true
+		user.PasswordHash.Set(password)
+		if err := s.Update(ctx, user); err != nil {
+			return err
+		}
+
+		if err := s.deleteUserInvitations(ctx, tx, user.UserID); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+}
+
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*authdomain.Users, error) {
 	var user authdomain.Users
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)

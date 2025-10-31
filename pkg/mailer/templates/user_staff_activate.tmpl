@@ -1,5 +1,4 @@
-{{define "subject"}} ¡Activa tu cuenta VITAL FIT! {{end}}
-
+{{define "subject"}} ¡Bienvenido/a al equipo VITAL FIT! {{end}} 
 {{define "body"}}
 <!doctype html>
 <html>
@@ -34,20 +33,16 @@
         text-align: center;
         padding-bottom: 20px;
       }
-      .logo img {
-        max-width: 150px;
-        height: auto;
-      }
-      /* Estilo del botón (color naranja del logo: #F58A24) */
+      /* Estilo del botón (color naranja: #F58A24) */
       .btn {
         text-align: center;
         width: 100%;
-        margin-top: 20px;
-        margin-bottom: 20px;
+        margin-top: 30px;
+        margin-bottom: 30px;
       }
       .btn a {
         display: inline-block;
-        padding: 10px 25px;
+        padding: 12px 25px;
         border-radius: 5px;
         background-color: #f58a24;
         color: #ffffff;
@@ -61,6 +56,11 @@
         text-align: center;
         padding-top: 20px;
       }
+      .link-fallback {
+          color: #777777;
+          font-size: 11px;
+          word-break: break-all; 
+      }
     </style>
   </head>
   <body>
@@ -73,17 +73,22 @@
       <div class="content">
         <p>Hola **{{.Username}}**, </p>
 
-        <p>¡Gracias por unirte a la familia **VITAL FIT**! Estamos emocionados de ayudarte a activar tu vida y superar tus límites.</p>
+        <p>¡Has sido invitado/a a unirte al equipo de **VITAL FIT**!</p>
 
-        <p>Para comenzar tu viaje fitness, solo falta un paso: **confirmar tu dirección de correo electrónico**.</p>
+        <p>Para unirte y acceder a la plataforma, solo falta un paso: **activar tu cuenta y crear tu contraseña personal**.</p>
         
         <div class="btn">
-          <h1>{{.CODE}}</h1>
+          <a href="{{.ActivationLink}}" target="_blank">Activar mi Cuenta y Crear Contraseña</a>
         </div>
-
-
+        <p>Este enlace de activación expirará por seguridad. Si tienes algún problema, por favor contacta a tu administrador.</p>
         <p>¡Te esperamos!</p>
         <p>El equipo VITAL FIT</p>
+
+        <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;">
+
+        <p style="font-size: 12px; color: #999999;">Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:</p>
+        <p class="link-fallback">{{.ActivationLink}}</p>
+
       </div>
       
       <div class="footer">
