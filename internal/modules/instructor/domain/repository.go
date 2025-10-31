@@ -14,6 +14,9 @@ type InstructorRepository interface {
 	Delete(context.Context, uuid.UUID) error
 	GetByID(context.Context, uuid.UUID) (*Instructor, error)
 	Update(context.Context, *Instructor) error
-
 	CreateAndInvitate(ctx context.Context, instructor *Instructor, token string, invitationExp time.Duration) error
+
+	AssignInstructorsToBranch(ctx context.Context, branchID uuid.UUID, instructorID []uuid.UUID) error
+	ListBranchInstructors(ctx context.Context, branchID uuid.UUID) ([]*Instructor, error)
+	RemoveInstructorFromBranch(ctx context.Context, branchID uuid.UUID, instructorID uuid.UUID) error
 }

@@ -624,6 +624,26 @@ definitions:
     - state
     - tax_id
     type: object
+  instructorhandler.AssignInstructorsToBranchPayload:
+    properties:
+      instructor:
+        items:
+          type: string
+        type: array
+    required:
+    - instructor
+    type: object
+  instructorhandler.BranchInstructorResponse:
+    properties:
+      email:
+        type: string
+      instructor_id:
+        type: string
+      instructor_name:
+        type: string
+      phone:
+        type: string
+    type: object
   instructorhandler.CreateInstructorPayload:
     properties:
       biography:
@@ -1894,6 +1914,133 @@ paths:
       summary: Update branch inventory item
       tags:
       - Branch Inventory
+  /branches/{id}/instructor:
+    get:
+      description: Retrieves a list of all instructors assigned to a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of branch instructors
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/instructorhandler.BranchInstructorResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Branch not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List instructors in a branch
+      tags:
+      - Branch Instructors
+    post:
+      consumes:
+      - application/json
+      description: Assigns one or more instructors to a specific branch using their
+        UUIDs.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with instructor UUIDs to assign
+        in: body
+        name: instructors
+        required: true
+        schema:
+          $ref: '#/definitions/instructorhandler.AssignInstructorsToBranchPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Instructors assigned successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Branch or one of the instructors not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 'Conflict: Instructor already assigned to this branch'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign instructors to a branch
+      tags:
+      - Branch Instructors
+  /branches/{id}/instructor/{instructor_id}:
+    delete:
+      description: Removes a specific instructor from a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Instructor UUID
+        in: path
+        name: instructor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Instructor removed successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Branch, instructor, or assignment not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove an instructor from a branch
+      tags:
+      - Branch Instructors
   /branches/payment-methods:
     get:
       description: Retrieves a list of all available payment methods in the system.

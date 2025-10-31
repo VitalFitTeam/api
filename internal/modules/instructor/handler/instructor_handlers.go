@@ -86,6 +86,7 @@ func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 	for _, instructor := range instructors {
 		ins := &InstructorResponse{
 			InstructorID:      instructor.InstructorID,
+			UserID:            instructor.UserID,
 			FirstName:         instructor.User.FirstName,
 			LastName:          instructor.User.LastName,
 			Email:             instructor.User.Email,
@@ -223,6 +224,114 @@ func (h *InstructorHandlers) UpdateInstructorHandler(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusNoContent, nil)
+
+}
+
+// @Summary		Assign instructors to a branch
+// @Description	Assigns one or more instructors to a specific branch using their UUIDs.
+// @Tags			Branch Instructors
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id			path		string								true	"Branch UUID"
+// @Param			instructors	body		AssignInstructorsToBranchPayload	true	"Payload with instructor UUIDs to assign"
+// @Success		204			{object}	nil									"Instructors assigned successfully"
+// @Failure		400			{object}	map[string]interface{}				"Bad Request: Invalid UUID or payload"
+// @Failure		404			{object}	map[string]interface{}				"Not Found: Branch or one of the instructors not found"
+// @Failure		409			{object}	map[string]interface{}				"Conflict: Instructor already assigned to this branch"
+// @Failure		500			{object}	map[string]interface{}				"Internal Server Error"
+// @Router			/branches/{id}/instructor [post]
+func (h *InstructorHandlers) AssignInstructorsToBranchHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var payload AssignInstructorsToBranchPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	branchID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	instructor, err := payload.toInstructor()
+
+	err = h.services.InstructorServices.AssignInstructorsToBranch(ctx, branchID, instructor)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+
+}
+
+// @Summary		List instructors in a branch
+// @Description	Retrieves a list of all instructors assigned to a specific branch.
+// @Tags			Branch Instructors
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id	path		string									true	"Branch UUID"
+// @Success		200	{object}	object{data=[]BranchInstructorResponse}	"List of branch instructors"
+// @Failure		400	{object}	map[string]interface{}					"Bad Request: Invalid UUID format"
+// @Failure		404	{object}	map[string]interface{}					"Not Found: Branch not found"
+// @Failure		500	{object}	map[string]interface{}					"Internal Server Error"
+// @Router			/branches/{id}/instructor [get]
+func (h *InstructorHandlers) ListBranchInstructorsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	branchID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	instructors, err := h.services.InstructorServices.ListBranchInstructors(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	response := make([]*BranchInstructorResponse, 0, len(instructors))
+	for _, instructor := range instructors {
+		ins := &BranchInstructorResponse{
+			InstructorID:   instructor.InstructorID,
+			InstructorName: instructor.User.FirstName + " " + instructor.User.LastName,
+			Email:          instructor.User.Email,
+			Phone:          instructor.User.Phone,
+		}
+		response = append(response, ins)
+	}
+	c.JSON(http.StatusOK, gin.H{"data": response})
+}
+
+// @Summary		Remove an instructor from a branch
+// @Description	Removes a specific instructor from a specific branch.
+// @Tags			Branch Instructors
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id				path		string					true	"Branch UUID"
+// @Param			instructor_id	path		string					true	"Instructor UUID"
+// @Success		204				{object}	nil						"Instructor removed successfully"
+// @Failure		400				{object}	map[string]interface{}	"Bad Request: Invalid UUID format"
+// @Failure		404				{object}	map[string]interface{}	"Not Found: Branch, instructor, or assignment not found"
+// @Failure		500				{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/branches/{id}/instructor/{instructor_id} [delete]
+func (h *InstructorHandlers) RemoveInstructorFromBranchHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	branchID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	instructorID, err := uuid.Parse(c.Param("instructor_id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	err = h.services.InstructorServices.RemoveInstructorFromBranch(ctx, branchID, instructorID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
 	c.JSON(http.StatusNoContent, nil)
 
 }

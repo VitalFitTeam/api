@@ -1667,6 +1667,197 @@
                 }
             }
         },
+        "/branches/{id}/instructor": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all instructors assigned to a specific branch.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch Instructors"
+                ],
+                "summary": "List instructors in a branch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of branch instructors",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/instructorhandler.BranchInstructorResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Branch not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Assigns one or more instructors to a specific branch using their UUIDs.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch Instructors"
+                ],
+                "summary": "Assign instructors to a branch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payload with instructor UUIDs to assign",
+                        "name": "instructors",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instructorhandler.AssignInstructorsToBranchPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Instructors assigned successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID or payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Branch or one of the instructors not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict: Instructor already assigned to this branch",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/branches/{id}/instructor/{instructor_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Removes a specific instructor from a specific branch.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch Instructors"
+                ],
+                "summary": "Remove an instructor from a branch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Instructor UUID",
+                        "name": "instructor_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Instructor removed successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Branch, instructor, or assignment not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/equipment-types": {
             "get": {
                 "security": [
@@ -3193,6 +3384,37 @@
                 "tax_id": {
                     "type": "string",
                     "minLength": 5
+                }
+            }
+        },
+        "instructorhandler.AssignInstructorsToBranchPayload": {
+            "type": "object",
+            "required": [
+                "instructor"
+            ],
+            "properties": {
+                "instructor": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "instructorhandler.BranchInstructorResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "instructor_id": {
+                    "type": "string"
+                },
+                "instructor_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
                 }
             }
         },

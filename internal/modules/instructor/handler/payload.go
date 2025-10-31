@@ -98,3 +98,27 @@ type InstructorResponse struct {
 	Speciality        string    `json:"speciality"`
 	Biography         string    `json:"biography"`
 }
+
+type AssignInstructorsToBranchPayload struct {
+	Instructor []string `json:"instructor" binding:"required"`
+}
+
+func (a *AssignInstructorsToBranchPayload) toInstructor() ([]uuid.UUID, error) {
+	instructor := make([]uuid.UUID, 0, len(a.Instructor))
+
+	for _, i := range a.Instructor {
+		id, err := uuid.Parse(i)
+		if err != nil {
+			return nil, err
+		}
+		instructor = append(instructor, id)
+	}
+	return instructor, nil
+}
+
+type BranchInstructorResponse struct {
+	InstructorID   uuid.UUID `json:"instructor_id"`
+	InstructorName string    `json:"instructor_name"`
+	Email          string    `json:"email"`
+	Phone          string    `json:"phone"`
+}
