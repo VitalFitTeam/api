@@ -3,6 +3,8 @@ package store
 import (
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	authrepository "github.com/vitalfit/api/internal/modules/auth/repository"
+	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
+	billingrepository "github.com/vitalfit/api/internal/modules/billing/repository"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchrepository "github.com/vitalfit/api/internal/modules/branches/repository"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
@@ -30,6 +32,7 @@ type Storage struct {
 	Products        productsdomain.ProductsRepository
 	Marketing       marketingdomain.MarketingRepository
 	Membership      membershipsdomain.MembershipsRepository
+	Billing         billingdomain.BillingRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -45,5 +48,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Products:        productsrepository.NewProductsStore(db),
 		Marketing:       marketingrepository.NewMarketingStore(db),
 		Membership:      membershipsrepository.NewMembershipStore(db),
+		Billing:         billingrepository.NewBillingStore(db),
 	}
 }
