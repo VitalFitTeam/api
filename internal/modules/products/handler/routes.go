@@ -1,5 +1,6 @@
 package productshandler
 
+<<<<<<< HEAD
 import (
 	"github.com/gin-gonic/gin"
 	appservices "github.com/vitalfit/api/internal/app/services"
@@ -21,6 +22,11 @@ type ProductsHandlerInterface interface {
 	UpdateBranchServiceHandler(c *gin.Context)
 	DeleteBranchServiceHandler(c *gin.Context)
 	GetBranchServiceByIDHandler(c *gin.Context)
+=======
+import appservices "github.com/vitalfit/api/internal/app/services"
+
+type ProductsHandlerInterface interface {
+>>>>>>> dev
 }
 
 type ProductsHandler struct {
@@ -30,6 +36,7 @@ type ProductsHandler struct {
 func NewProductsHandler(services appservices.Services) *ProductsHandler {
 	return &ProductsHandler{services: services}
 }
+<<<<<<< HEAD
 
 func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	ProductGroup := rg.Group("/services")
@@ -54,3 +61,5 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 		BranchServicesGroup.DELETE("/:service_id", m.RBACPermission("services:delete"), r.DeleteBranchServiceHandler)
 	}
 }
+=======
+>>>>>>> dev

@@ -3554,6 +3554,45 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/v1/public/branches-map": {
+            "get": {
+                "description": "Returns a lightweight list of active branches for public map usage (no auth required)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Get public active branches (Mapbox)",
+                "responses": {
+                    "200": {
+                        "description": "List of active branches for map display",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/branchhandlers.PublicBranchMapResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -4388,6 +4427,29 @@ const docTemplate = `{
                     "default": false
                 },
                 "open_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "branchhandlers.PublicBranchMapResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "branch_id": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
                     "type": "string"
                 }
             }

@@ -377,3 +377,24 @@ func (h *BranchHandlers) GetPaymentMethodsHandler(c *gin.Context) {
 	})
 
 }
+
+// @Summary		Get public active branches (Mapbox)
+// @Description	Returns a lightweight list of active branches for public map usage (no auth required)
+// @Tags			Public
+// @Produce		json
+// @Success		200	{object}	object{data=[]PublicBranchMapResponse}	"List of active branches for map display"
+// @Failure		500	{object}	object{error=string}					"Error: internal server error"
+// @Router			/public/branches-map [get]
+func (h *BranchHandlers) GetPublicBranchesMapHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	branches, err := h.services.BranchesServices.GetPublicBranchesMap(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": branches,
+	})
+}

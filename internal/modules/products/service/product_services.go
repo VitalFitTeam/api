@@ -1,5 +1,6 @@
 package productsservice
 
+<<<<<<< HEAD
 import (
 	"context"
 
@@ -7,6 +8,9 @@ import (
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	"github.com/vitalfit/api/internal/store"
 )
+=======
+import "github.com/vitalfit/api/internal/store"
+>>>>>>> dev
 
 type ProductsService struct {
 	store store.Storage
@@ -17,6 +21,7 @@ func NewProductsService(store store.Storage) *ProductsService {
 		store: store,
 	}
 }
+<<<<<<< HEAD
 
 func (s *ProductsService) ListServiceCategories(ctx context.Context) ([]productsdomain.ServiceCategory, error) {
 	return s.store.Products.GetServicesCategories(ctx)
@@ -41,3 +46,5 @@ func (s *ProductsService) GetServiceByID(ctx context.Context, serviceID uuid.UUI
 func (s *ProductsService) UpdateService(ctx context.Context, service *productsdomain.Service, bannerID uuid.UUID) error {
 	return s.store.Products.UpdateService(ctx, service, bannerID)
 }
+=======
+>>>>>>> dev

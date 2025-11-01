@@ -16,6 +16,7 @@ type BranchesServicesInterface interface {
 	GetBranchByID(ctx context.Context, branchID uuid.UUID) (*Branch, error)
 	UpdateBranch(ctx context.Context, branch *Branch) error
 	GetBranchStatusCount(ctx context.Context) (*BranchStatusCount, error)
+	GetPublicBranchesMap(ctx context.Context) ([]PublicBranchMapResponse, error)
 }
 
 type LocationsServicesInterface interface {

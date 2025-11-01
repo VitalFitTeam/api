@@ -1,4 +1,5 @@
 package productshandler
+<<<<<<< HEAD
 
 import (
 	"time"
@@ -142,3 +143,5 @@ type ServiceCategoryResponse struct {
 	CategoryID uuid.UUID `json:"category_id"`
 	Name       string    `json:"name"`
 }
+=======
+>>>>>>> dev
