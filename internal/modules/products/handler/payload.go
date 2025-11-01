@@ -8,6 +8,7 @@ import (
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 )
 
+// requests
 type CreateServicePayload struct {
 	Name          string                  `json:"name" binding:"required"`
 	CategoryID    string                  `json:"category_id" binding:"required"`
@@ -67,6 +68,46 @@ func (s *ServiceImagesPayloads) ToServiceImage() (*productsdomain.ServiceImage, 
 	return serviceImage, nil
 }
 
+type BranchServicePayload struct {
+	ServiceID         string  `json:"service_id"`
+	BranchID          string  `json:"branch_id"`
+	IsVsible          bool    `json:"is_visible"`
+	MaxCapacity       int     `json:"max_capacity"`
+	PriceForMember    float64 `json:"price_for_member"`
+	PriceForNonMember float64 `json:"price_for_non_member"`
+}
+
+type AssignBranchServicePayload struct {
+	Services []BranchServicePayload `json:"services"`
+}
+
+func (s *BranchServicePayload) ToServiceBranchDetail() (*productsdomain.ServiceBranchDetail, error) {
+	serviceID, err := uuid.Parse(s.ServiceID)
+	if err != nil {
+		return nil, err
+	}
+
+	branchID, err := uuid.Parse(s.BranchID)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceBranchDetail := &productsdomain.ServiceBranchDetail{
+		ServiceID:         serviceID,
+		BranchID:          branchID,
+		IsVisible:         s.IsVsible,
+		MaxCapacity:       s.MaxCapacity,
+		PriceForMember:    s.PriceForMember,
+		PriceForNonMember: s.PriceForNonMember,
+	}
+	return serviceBranchDetail, nil
+}
+
+type UpdateBranchServicePayload struct {
+	BranchServicePayload
+}
+
+// responses
 type ServiceResponse struct {
 	ServiceID       uuid.UUID                          `json:"service_id"`
 	CategoryID      uuid.UUID                          `json:"category_id"`

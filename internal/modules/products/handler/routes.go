@@ -15,6 +15,12 @@ type ProductsHandlerInterface interface {
 	DeleteServiceHandler(c *gin.Context)
 	GetServiceByIDHandler(c *gin.Context)
 	UpdateServiceHandler(c *gin.Context)
+
+	AssignBranchServiceHandler(c *gin.Context)
+	GetBranchServiceHandler(c *gin.Context)
+	UpdateBranchServiceHandler(c *gin.Context)
+	DeleteBranchServiceHandler(c *gin.Context)
+	GetBranchServiceByIDHandler(c *gin.Context)
 }
 
 type ProductsHandler struct {
@@ -36,5 +42,15 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 		ProductGroup.GET("/:id", m.RBACPermission("services:get"), r.GetServiceByIDHandler)
 		ProductGroup.DELETE("/:id", m.RBACPermission("services:delete"), r.DeleteServiceHandler)
 		ProductGroup.PUT("/:id", m.RBACPermission("services:update"), r.UpdateServiceHandler)
+	}
+
+	BranchServicesGroup := rg.Group("/branches/:id/services")
+	{
+		BranchServicesGroup.Use(m.AuthJwtTokenMiddleware())
+		BranchServicesGroup.POST("", m.RBACPermission("services:create"), r.AssignBranchServiceHandler)
+		BranchServicesGroup.GET("", m.RBACPermission("services:list"), r.GetBranchServiceHandler)
+		BranchServicesGroup.GET("/:service_id", m.RBACPermission("services:get"), r.GetBranchServiceByIDHandler)
+		BranchServicesGroup.PUT("/:service_id", m.RBACPermission("services:update"), r.UpdateBranchServiceHandler)
+		BranchServicesGroup.DELETE("/:service_id", m.RBACPermission("services:delete"), r.DeleteBranchServiceHandler)
 	}
 }

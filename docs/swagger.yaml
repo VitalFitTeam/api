@@ -1055,6 +1055,28 @@ definitions:
       serviceID:
         type: string
     type: object
+  productshandler.AssignBranchServicePayload:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/productshandler.BranchServicePayload'
+        type: array
+    type: object
+  productshandler.BranchServicePayload:
+    properties:
+      branch_id:
+        type: string
+      is_visible:
+        type: boolean
+      max_capacity:
+        type: integer
+      price_for_member:
+        type: number
+      price_for_non_member:
+        type: number
+      service_id:
+        type: string
+    type: object
   productshandler.CreateServicePayload:
     properties:
       banner_id:
@@ -1149,6 +1171,21 @@ definitions:
       service_id:
         type: string
       updated_at:
+        type: string
+    type: object
+  productshandler.UpdateBranchServicePayload:
+    properties:
+      branch_id:
+        type: string
+      is_visible:
+        type: boolean
+      max_capacity:
+        type: integer
+      price_for_member:
+        type: number
+      price_for_non_member:
+        type: number
+      service_id:
         type: string
     type: object
   productshandler.UpdateServicePayload:
@@ -2345,6 +2382,210 @@ paths:
       summary: Remove an instructor from a branch
       tags:
       - Branch Instructors
+  /branches/{id}/services:
+    get:
+      description: Retrieves a list of all services assigned to a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of branch services
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productsdomain.ServiceBranchDetail'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Branch not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List services for a branch
+      tags:
+      - Branch Services
+    post:
+      consumes:
+      - application/json
+      description: Assigns a list of services with their specific details to a branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with services to assign
+        in: body
+        name: services
+        required: true
+        schema:
+          $ref: '#/definitions/productshandler.AssignBranchServicePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Branch services assigned successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign services to a branch
+      tags:
+      - Branch Services
+  /branches/{id}/services/{service_id}:
+    delete:
+      description: Removes a specific service from a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service UUID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Service removed successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Branch, service, or assignment not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a service from a branch
+      tags:
+      - Branch Services
+    get:
+      description: Retrieves detailed information about a specific service for a specific
+        branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service UUID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Branch service details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/productsdomain.ServiceBranchDetail'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Branch or service not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get branch service by ID
+      tags:
+      - Branch Services
+    put:
+      consumes:
+      - application/json
+      description: Updates the details of a specific service within a branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service UUID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      - description: Payload with fields to update
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/productshandler.UpdateBranchServicePayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Service updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a branch service
+      tags:
+      - Branch Services
   /branches/payment-methods:
     get:
       description: Retrieves a list of all available payment methods in the system.

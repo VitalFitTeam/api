@@ -91,6 +91,36 @@ func (s *ProductsStore) CreateService(ctx context.Context, service *productsdoma
 
 	return err
 }
+
+func (s *ProductsStore) CreateServiceTX(ctx context.Context, tx *gorm.DB, service *productsdomain.Service, bannerID uuid.UUID) error {
+
+	if err := tx.Create(service).Error; err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return shared_errors.ErrConflict
+			}
+		}
+		return err
+	}
+
+	if bannerID == uuid.Nil {
+		return nil
+	}
+
+	bannerlink := &marketingdomain.BannerService{
+		ServiceID: service.ServiceID,
+		BannerID:  bannerID,
+	}
+
+	if err := tx.Clauses(clause.OnConflict{DoNothing: true}).Create(bannerlink).Error; err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 func (s *ProductsStore) GetServices(ctx context.Context) ([]productsdomain.Service, error) {
 	var services []productsdomain.Service
 	if err := s.db.Preload("Images").Preload("Category").Preload("Banners").Find(&services).Error; err != nil {
