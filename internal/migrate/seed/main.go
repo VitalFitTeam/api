@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
+	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	"github.com/vitalfit/api/internal/store"
 	env "github.com/vitalfit/api/pkg/Env"
@@ -33,9 +34,10 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB) {
 	ctx := context.Background()
 	//s.CreateSuperAdmin(store, db, ctx)
 	//s.SeedPermissions(store, db, ctx)
-	s.SeedInstructors(store, db, ctx)
+	//s.SeedInstructors(store, db, ctx)
 	//s.SeedUsers(store, db, ctx)
 	//s.SeedServiceCategories(store, db, ctx)
+	s.SeedBanners(store, db, ctx)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -348,6 +350,55 @@ func (s *SeedStruct) SeedServiceCategories(store store.Storage, db *gorm.DB, ctx
 
 	log.Println("Service categories seeder completed successfully.")
 }
+
+type bannerJSON struct {
+	Name     string `json:"name"`
+	ImageURL string `json:"image_url"`
+	LinkURL  string `json:"link_url"`
+	IsActive bool   `json:"is_active"`
+}
+
+func (s *SeedStruct) SeedBanners(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/banners.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read banners.json file: %v", err)
+		return
+	}
+
+	var bannersFromJSON []bannerJSON
+	if err = json.Unmarshal(jsonFile, &bannersFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode JSON: %v", err)
+		return
+	}
+	log.Printf("Found %d banners in banners.json. Starting seeder...", len(bannersFromJSON))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+
+		for _, b := range bannersFromJSON {
+			banner := &marketingdomain.Banner{
+				Name:     b.Name,
+				ImageURL: b.ImageURL,
+				LinkURL:  b.LinkURL,
+				IsActive: b.IsActive,
+			}
+			err := store.Marketing.CreateBannerTX(ctx, tx, banner)
+			if err != nil {
+				log.Printf("Error creating banner '%s': %v", b.Name, err)
+				return err //rollback
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Println("Error in banners seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Banners seeder completed successfully.")
+
+}
+
 func main() {
 	addr := env.GetString("DB_ADDR", "")
 	conn, err := db.New(addr, 3, 3, "15m")

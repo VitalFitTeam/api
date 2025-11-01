@@ -35,6 +35,20 @@ func (s *MarketingStore) CreateBanner(ctx context.Context, banner *marketingdoma
 	return nil
 }
 
+func (s *MarketingStore) CreateBannerTX(ctx context.Context, tx *gorm.DB, banner *marketingdomain.Banner) error {
+	err := tx.WithContext(ctx).Create(banner).Error
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return shared_errors.ErrConflict
+			}
+		}
+		return err
+	}
+	return nil
+}
+
 func (s *MarketingStore) UpdateBanner(ctx context.Context, banner *marketingdomain.Banner) error {
 	err := s.db.Save(banner).Error
 	if err != nil {
