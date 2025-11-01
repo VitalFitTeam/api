@@ -20,4 +20,8 @@ type InstructorResponse struct {
 	Biography         string    `json:"biography"`
 }
 type CreateServicePayload struct {
+	Name        string `json:"name" binding:"required"`
+	CategoryID  string `json:"category_id" binding:"required"`
+	Description string `json:"description" binding:"required"`
+	Duration    int64  `json:"duration" binding:"required"`
 }
