@@ -56,15 +56,6 @@ func (h *BranchHandlers) CreateBranchHandler(c *gin.Context) {
 		branchOperatingHours = append(branchOperatingHours, *operatingHour)
 	}
 	branch.OperatingHours = branchOperatingHours
-	//payment methods
-	var branchPaymentMethods []branchdomain.PaymentMethodsBranch
-	for _, paymentMethod := range payload.PaymentMethods {
-		branchPaymentMethod := branchdomain.PaymentMethodsBranch{
-			MethodID: paymentMethod,
-		}
-		branchPaymentMethods = append(branchPaymentMethods, branchPaymentMethod)
-	}
-	branch.PaymentMethodsLinks = branchPaymentMethods
 	//state
 	state, err := h.services.LocationsServices.FindOrCreateStateByCountry(ctx, payload.State, payload.Country)
 	if err != nil {
@@ -128,28 +119,19 @@ func (h *BranchHandlers) UpdateBranchHandler(c *gin.Context) {
 		branchOperatingHours = append(branchOperatingHours, *operatingHour)
 	}
 
-	var branchPaymentMethods []branchdomain.PaymentMethodsBranch
-	for _, paymentMethod := range payload.PaymentMethods {
-		branchPaymentMethod := branchdomain.PaymentMethodsBranch{
-			MethodID: paymentMethod,
-		}
-		branchPaymentMethods = append(branchPaymentMethods, branchPaymentMethod)
-	}
-
 	updatedbranch := &branchdomain.Branch{
-		BranchID:            branchID,
-		Name:                payload.Name,
-		TaxID:               payload.TaxID,
-		Address:             payload.Address,
-		Latitude:            payload.Latitude,
-		Longitude:           payload.Longitude,
-		MaxCapacity:         payload.MaxCapacity,
-		Phone:               payload.Phone,
-		Status:              branchdomain.BranchStatusEnum(payload.Status),
-		ManagerID:           payload.ManagerID,
-		StateID:             States.StateID,
-		OperatingHours:      branchOperatingHours,
-		PaymentMethodsLinks: branchPaymentMethods,
+		BranchID:       branchID,
+		Name:           payload.Name,
+		TaxID:          payload.TaxID,
+		Address:        payload.Address,
+		Latitude:       payload.Latitude,
+		Longitude:      payload.Longitude,
+		MaxCapacity:    payload.MaxCapacity,
+		Phone:          payload.Phone,
+		Status:         branchdomain.BranchStatusEnum(payload.Status),
+		ManagerID:      payload.ManagerID,
+		StateID:        States.StateID,
+		OperatingHours: branchOperatingHours,
 	}
 
 	if err := h.services.BranchesServices.UpdateBranch(ctx, updatedbranch); err != nil {
@@ -329,7 +311,6 @@ func (h *BranchHandlers) GetBranchByIDHandler(c *gin.Context) {
 		ManagerFirstName: branch.Manager.FirstName,
 		ManagerLastName:  branch.Manager.LastName,
 		OperatingHours:   branch.OperatingHours,
-		PaymentMethods:   branch.PaymentMethodsLinks,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -378,17 +359,13 @@ func (h *BranchHandlers) GetPaymentMethodsHandler(c *gin.Context) {
 
 }
 
-// ===================================================
-// =============== PUBLIC HANDLER (NO AUTH) ===========
-// ===================================================
-
-// @Summary		Get public active branches (Mapbox)
-// @Description	Returns a lightweight list of active branches for public map usage (no auth required)
+// @Summary		Get public branches for map
+// @Description	Retrieves a list of public branches with minimal information for map display.
 // @Tags			Public
 // @Produce		json
-// @Success		200	{object}	object{data=[]PublicBranchMapResponse}	"List of active branches for map display"
-// @Failure		500	{object}	object{error=string}					"Error: internal server error"
-// @Router			/v1/public/branches-map [get]
+// @Success		200	{object}	object{data=[]PublicBranchMapResponse}	"A list of public branches for the map"
+// @Failure		500	{object}	object{error=string}					"Error: Internal Server Error"
+// @Router			/public/branches-map [get]
 func (h *BranchHandlers) GetPublicBranchesMapHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 

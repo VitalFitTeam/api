@@ -23,11 +23,8 @@ func NewBranchServices(store store.Storage, cfg config.Config) *BranchServices {
 }
 
 func (s *BranchServices) CreateBranch(ctx context.Context, branch *branchdomain.Branch) error {
-	branch, err := s.store.Branches.CreateBranch(ctx, branch)
+	err := s.store.Branches.CreateBranch(ctx, branch)
 	if err != nil {
-		return err
-	}
-	if err := s.store.Branches.AddPaymentMethodsToBranch(ctx, branch.BranchID, branch.PaymentMethodsLinks); err != nil {
 		return err
 	}
 	return nil
@@ -89,10 +86,6 @@ func (s *BranchServices) GetBranchStatusCount(ctx context.Context) (*branchdomai
 	counts.Total = counts.Active + counts.Inactive + counts.Maintenance
 	return counts, nil
 }
-
-// ===================================================
-// =============== PUBLIC SERVICE ====================
-// ===================================================
 
 func (s *BranchServices) GetPublicBranchesMap(ctx context.Context) ([]branchdomain.PublicBranchMapResponse, error) {
 	branches, err := s.store.Branches.GetPublicBranchesMap(ctx)

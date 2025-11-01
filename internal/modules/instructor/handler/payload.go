@@ -18,7 +18,6 @@ type CreateInstructorPayload struct {
 	BirthDate         string `json:"birth_date" binding:"required"`
 	Gender            string `json:"gender" binding:"required"`
 	ProfilePictureURL string `json:"profile_picture_url"`
-	Speciality        string `json:"speciality"`
 	Biography         string `json:"biography"`
 }
 
@@ -41,9 +40,8 @@ func (c *CreateInstructorPayload) toInstructor() (*instructordomain.Instructor, 
 		ProfilePictureURL: c.ProfilePictureURL,
 	}
 	return &instructordomain.Instructor{
-		Speciality: c.Speciality,
-		Biography:  c.Biography,
-		User:       user,
+		Biography: c.Biography,
+		User:      user,
 	}, nil
 
 }
@@ -56,7 +54,6 @@ type UpdateInstructorPayload struct {
 	Gender            string `json:"gender" binding:"omitempty,oneof=male female prefer-not-to-say"`
 	BirthDate         string `json:"birth_date" binding:"omitempty"`
 	ProfilePictureURL string `json:"profile_picture_url"`
-	Speciality        string `json:"speciality"`
 	Biography         string `json:"biography"`
 }
 
@@ -71,7 +68,6 @@ func (u *UpdateInstructorPayload) toInstructor(instructorID uuid.UUID) (*instruc
 	}
 	return &instructordomain.Instructor{
 		InstructorID: instructorID,
-		Speciality:   u.Speciality,
 		Biography:    u.Biography,
 		User: &authdomain.Users{
 			FirstName: u.FirstName,
@@ -85,6 +81,21 @@ func (u *UpdateInstructorPayload) toInstructor(instructorID uuid.UUID) (*instruc
 }
 
 type InstructorResponse struct {
+	InstructorID      uuid.UUID            `json:"instructor_id"`
+	UserID            uuid.UUID            `json:"user_id"`
+	FirstName         string               `json:"first_name"`
+	LastName          string               `json:"last_name"`
+	Email             string               `json:"email"`
+	Phone             string               `json:"phone"`
+	IdentityDocument  string               `json:"identity_document"`
+	BirthDate         time.Time            `json:"birth_date"`
+	Gender            string               `json:"gender"`
+	ProfilePictureURL string               `json:"profile_picture_url"`
+	Specialties       []*SpecialtyResponse `json:"specialties"`
+	Biography         string               `json:"biography"`
+}
+
+type ListInstructorResponse struct {
 	InstructorID      uuid.UUID `json:"instructor_id"`
 	UserID            uuid.UUID `json:"user_id"`
 	FirstName         string    `json:"first_name"`
@@ -95,7 +106,6 @@ type InstructorResponse struct {
 	BirthDate         time.Time `json:"birth_date"`
 	Gender            string    `json:"gender"`
 	ProfilePictureURL string    `json:"profile_picture_url"`
-	Speciality        string    `json:"speciality"`
 	Biography         string    `json:"biography"`
 }
 
@@ -121,4 +131,25 @@ type BranchInstructorResponse struct {
 	InstructorName string    `json:"instructor_name"`
 	Email          string    `json:"email"`
 	Phone          string    `json:"phone"`
+}
+
+type AssignInstructorsSpecialtiesPayload struct {
+	Specialties []string `json:"specialties" binding:"required"`
+}
+
+func (a *AssignInstructorsSpecialtiesPayload) toUUID() ([]uuid.UUID, error) {
+	specialties := make([]uuid.UUID, 0, len(a.Specialties))
+	for _, s := range a.Specialties {
+		id, err := uuid.Parse(s)
+		if err != nil {
+			return nil, err
+		}
+		specialties = append(specialties, id)
+	}
+	return specialties, nil
+}
+
+type SpecialtyResponse struct {
+	SpecialtyID   uuid.UUID `json:"specialty_id"`
+	SpecialtyName string    `json:"specialty_name"`
 }

@@ -113,7 +113,7 @@ func (r *AuthHandlers) GetRoleByIDHandler(c *gin.Context) {
 // @Produce		json
 // @Param			id		path		string					true	"Role ID (UUID)"
 // @Param			payload	body		CreateRolesPayload		true	"Role update payload"
-// @Success		200		{object}	nil						"Role updated successfully"
+// @Success		204		{object}	nil						"Role updated successfully"
 // @Failure		400		{object}	object{error=string}	"Bad Request: Invalid UUID or payload"
 // @Failure		500		{object}	object{error=string}	"Error: Internal server error"
 // @Router			/admin/roles/{id} [put]
@@ -246,7 +246,7 @@ func (r *AuthHandlers) AssignRolePermissionHandler(c *gin.Context) {
 // @Produce		json
 // @Param			id		path		string					true	"Role ID (UUID)"
 // @Param			payload	body		PermissionsPayload		true	"List of permission IDs to revoke"
-// @Success		200		{object}	nil						"Permissions revoked successfully"
+// @Success		204		{object}	nil						"Permissions revoked successfully"
 // @Failure		400		{object}	object{error=string}	"Bad Request: Invalid UUID or payload"
 // @Failure		500		{object}	object{error=string}	"Error: Internal server error"
 // @Router			/admin/roles/{id}/permissions [delete]

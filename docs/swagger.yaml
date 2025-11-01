@@ -1,56 +1,5 @@
 basePath: /v1
 definitions:
-  authdomain.ClientCategoryEnum:
-    enum:
-    - VIP
-    - Regular
-    - New
-    - AtRisk
-    type: string
-    x-enum-varnames:
-    - ClientCategoryVIP
-    - ClientCategoryRegular
-    - ClientCategoryNew
-    - ClientCategoryAtRisk
-  authdomain.ClientProfiles:
-    properties:
-      block_justification:
-        type: string
-      category:
-        $ref: '#/definitions/authdomain.ClientCategoryEnum'
-      created_at:
-        type: string
-      deleted_at:
-        type: string
-      qr_code:
-        type: string
-      scoring:
-        type: integer
-      status:
-        $ref: '#/definitions/authdomain.ClientStatusEnum'
-      updated_at:
-        type: string
-      user_id:
-        type: string
-    type: object
-  authdomain.ClientStatusEnum:
-    enum:
-    - Active
-    - Blocked
-    type: string
-    x-enum-varnames:
-    - ClientStatusActive
-    - ClientStatusBlocked
-  authdomain.GenderEnum:
-    enum:
-    - male
-    - female
-    - prefer-not-to-say
-    type: string
-    x-enum-varnames:
-    - GenderMale
-    - GenderFemale
-    - GenderPreferNotToSay
   authdomain.Permission:
     properties:
       created_at:
@@ -79,41 +28,6 @@ definitions:
       role_id:
         type: string
       updated_at:
-        type: string
-    type: object
-  authdomain.Users:
-    properties:
-      birth_date:
-        type: string
-      clientProfile:
-        $ref: '#/definitions/authdomain.ClientProfiles'
-      created_at:
-        type: string
-      deleted_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      gender:
-        $ref: '#/definitions/authdomain.GenderEnum'
-      identity_document:
-        type: string
-      is_validated:
-        type: boolean
-      last_name:
-        type: string
-      phone:
-        type: string
-      profile_picture_url:
-        type: string
-      role:
-        $ref: '#/definitions/authdomain.Roles'
-      role_id:
-        type: string
-      updated_at:
-        type: string
-      user_id:
         type: string
     type: object
   authhandlers.BranchAdminResponse:
@@ -271,49 +185,6 @@ definitions:
     - confirm_password
     - password
     type: object
-  branchdomain.Branch:
-    properties:
-      address:
-        type: string
-      branch_id:
-        type: string
-      created_at:
-        type: string
-      deleted_at:
-        type: string
-      latitude:
-        type: number
-      longitude:
-        type: number
-      manager:
-        $ref: '#/definitions/authdomain.Users'
-      manager_id:
-        type: string
-      max_capacity:
-        type: integer
-      name:
-        type: string
-      operating_hours:
-        items:
-          $ref: '#/definitions/branchdomain.OperatingHours'
-        type: array
-      payment_method_links:
-        items:
-          $ref: '#/definitions/branchdomain.PaymentMethodsBranch'
-        type: array
-      phone:
-        type: string
-      state:
-        $ref: '#/definitions/branchdomain.States'
-      state_id:
-        type: string
-      status:
-        $ref: '#/definitions/branchdomain.BranchStatusEnum'
-      tax_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
   branchdomain.BranchStatusCount:
     properties:
       active:
@@ -328,27 +199,6 @@ definitions:
       total:
         format: int64
         type: integer
-    type: object
-  branchdomain.BranchStatusEnum:
-    enum:
-    - Active
-    - Inactive
-    - Maintenance
-    type: string
-    x-enum-varnames:
-    - BranchStatusActive
-    - BranchStatusInactive
-    - BranchStatusMaintenance
-  branchdomain.Countries:
-    properties:
-      countryID:
-        type: string
-      name:
-        type: string
-      states:
-        items:
-          $ref: '#/definitions/branchdomain.States'
-        type: array
     type: object
   branchdomain.DayOfWeekEnum:
     enum:
@@ -412,34 +262,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  branchdomain.PaymentMethodsBranch:
-    properties:
-      branch:
-        $ref: '#/definitions/branchdomain.Branch'
-      branch_id:
-        type: string
-      created_at:
-        type: string
-      is_active:
-        type: boolean
-      method:
-        $ref: '#/definitions/branchdomain.PaymentMethods'
-      method_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  branchdomain.States:
-    properties:
-      country:
-        $ref: '#/definitions/branchdomain.Countries'
-      countryID:
-        type: string
-      name:
-        type: string
-      stateID:
-        type: string
-    type: object
   branchhandlers.BranchListResponse:
     properties:
       branch_id:
@@ -487,10 +309,6 @@ definitions:
         items:
           $ref: '#/definitions/branchdomain.OperatingHours'
         type: array
-      payment_methods:
-        items:
-          $ref: '#/definitions/branchdomain.PaymentMethodsBranch'
-        type: array
       phone:
         type: string
       state:
@@ -531,10 +349,6 @@ definitions:
       operating_hours:
         items:
           $ref: '#/definitions/branchhandlers.OperatingHourPayload'
-        type: array
-      payment_methods:
-        items:
-          type: string
         type: array
       phone:
         type: string
@@ -578,6 +392,21 @@ definitions:
     required:
     - day_of_week
     type: object
+  branchhandlers.PublicBranchMapResponse:
+    properties:
+      address:
+        type: string
+      branch_id:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      phone:
+        type: string
+    type: object
   branchhandlers.UpdateBranchPayload:
     properties:
       address:
@@ -600,10 +429,6 @@ definitions:
         items:
           $ref: '#/definitions/branchhandlers.OperatingHourPayload'
         type: array
-      payment_methods:
-        items:
-          type: string
-        type: array
       phone:
         type: string
       state:
@@ -623,6 +448,15 @@ definitions:
     - name
     - state
     - tax_id
+    type: object
+  instructorhandler.AssignInstructorsSpecialtiesPayload:
+    properties:
+      specialties:
+        items:
+          type: string
+        type: array
+    required:
+    - specialties
     type: object
   instructorhandler.AssignInstructorsToBranchPayload:
     properties:
@@ -664,8 +498,6 @@ definitions:
         type: string
       profile_picture_url:
         type: string
-      speciality:
-        type: string
     required:
     - birth_date
     - email
@@ -697,9 +529,43 @@ definitions:
         type: string
       profile_picture_url:
         type: string
-      speciality:
+      specialties:
+        items:
+          $ref: '#/definitions/instructorhandler.SpecialtyResponse'
+        type: array
+      user_id:
+        type: string
+    type: object
+  instructorhandler.ListInstructorResponse:
+    properties:
+      biography:
+        type: string
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity_document:
+        type: string
+      instructor_id:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
         type: string
       user_id:
+        type: string
+    type: object
+  instructorhandler.SpecialtyResponse:
+    properties:
+      specialty_id:
+        type: string
+      specialty_name:
         type: string
     type: object
   instructorhandler.UpdateInstructorPayload:
@@ -723,8 +589,6 @@ definitions:
       phone:
         type: string
       profile_picture_url:
-        type: string
-      speciality:
         type: string
     type: object
   inventorydomain.BranchInventory:
@@ -878,6 +742,300 @@ definitions:
         - InMaintenance
         - OutOfService
         type: string
+    type: object
+  marketingdomain.Banner:
+    properties:
+      banner_id:
+        type: string
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      link_url:
+        type: string
+      name:
+        type: string
+    type: object
+  marketinghandlers.BannerResponse:
+    properties:
+      banner_id:
+        type: string
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      link_url:
+        type: string
+      name:
+        type: string
+    type: object
+  marketinghandlers.CreateBannerPayload:
+    properties:
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      link_url:
+        type: string
+      name:
+        type: string
+    required:
+    - image_url
+    - is_active
+    - link_url
+    - name
+    type: object
+  marketinghandlers.UpdateBannerPayload:
+    properties:
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      link_url:
+        type: string
+      name:
+        type: string
+    type: object
+  productsdomain.Service:
+    properties:
+      banners:
+        items:
+          $ref: '#/definitions/marketingdomain.Banner'
+        type: array
+      branchDetails:
+        items:
+          $ref: '#/definitions/productsdomain.ServiceBranchDetail'
+        type: array
+      category:
+        $ref: '#/definitions/productsdomain.ServiceCategory'
+      categoryID:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      durationMinutes:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/productsdomain.ServiceImage'
+        type: array
+      isFeatured:
+        type: boolean
+      name:
+        type: string
+      priorityScore:
+        type: integer
+      serviceID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  productsdomain.ServiceBranchDetail:
+    properties:
+      branchID:
+        type: string
+      createdAt:
+        type: string
+      isVisible:
+        type: boolean
+      maxCapacity:
+        type: integer
+      priceForMember:
+        type: number
+      priceForNonMember:
+        type: number
+      serviceID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  productsdomain.ServiceCategory:
+    properties:
+      categoryID:
+        type: string
+      name:
+        type: string
+      services:
+        items:
+          $ref: '#/definitions/productsdomain.Service'
+        type: array
+    type: object
+  productsdomain.ServiceImage:
+    properties:
+      altText:
+        type: string
+      displayOrder:
+        type: integer
+      imageID:
+        type: string
+      imageURL:
+        type: string
+      isPrimary:
+        type: boolean
+      service:
+        $ref: '#/definitions/productsdomain.Service'
+      serviceID:
+        type: string
+    type: object
+  productshandler.AssignBranchServicePayload:
+    properties:
+      services:
+        items:
+          $ref: '#/definitions/productshandler.BranchServicePayload'
+        type: array
+    type: object
+  productshandler.BranchServicePayload:
+    properties:
+      is_visible:
+        type: boolean
+      max_capacity:
+        type: integer
+      price_for_member:
+        type: number
+      price_for_non_member:
+        type: number
+      service_id:
+        type: string
+    type: object
+  productshandler.CreateServicePayload:
+    properties:
+      banner_id:
+        type: string
+      category_id:
+        type: string
+      description:
+        type: string
+      duration:
+        maximum: 60
+        minimum: 1
+        type: integer
+      is_featured:
+        type: boolean
+      name:
+        type: string
+      priority:
+        maximum: 100
+        minimum: 1
+        type: integer
+      service_images:
+        items:
+          $ref: '#/definitions/productshandler.ServiceImagesPayloads'
+        type: array
+    required:
+    - banner_id
+    - category_id
+    - description
+    - duration
+    - name
+    - priority
+    type: object
+  productshandler.ImagesRensponse:
+    properties:
+      alt_text:
+        type: string
+      display_order:
+        type: integer
+      image_id:
+        type: string
+      image_url:
+        type: string
+      is_primary:
+        type: boolean
+    type: object
+  productshandler.ServiceCategoryResponse:
+    properties:
+      category_id:
+        type: string
+      name:
+        type: string
+    type: object
+  productshandler.ServiceImagesPayloads:
+    properties:
+      alt_text:
+        type: string
+      display_order:
+        type: integer
+      image_url:
+        type: string
+      is_primary:
+        type: boolean
+    required:
+    - image_url
+    type: object
+  productshandler.ServiceResponse:
+    properties:
+      banners:
+        items:
+          $ref: '#/definitions/marketinghandlers.BannerResponse'
+        type: array
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/productshandler.ImagesRensponse'
+        type: array
+      is_featured:
+        type: boolean
+      name:
+        type: string
+      priority_score:
+        type: integer
+      service_category:
+        $ref: '#/definitions/productshandler.ServiceCategoryResponse'
+      service_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  productshandler.UpdateBranchServicePayload:
+    properties:
+      is_visible:
+        type: boolean
+      max_capacity:
+        type: integer
+      price_for_member:
+        type: number
+      price_for_non_member:
+        type: number
+    type: object
+  productshandler.UpdateServicePayload:
+    properties:
+      banner_id:
+        type: string
+      category_id:
+        type: string
+      description:
+        type: string
+      duration:
+        maximum: 60
+        minimum: 1
+        type: integer
+      is_featured:
+        type: boolean
+      name:
+        type: string
+      priority:
+        maximum: 100
+        minimum: 1
+        type: integer
+      service_images:
+        items:
+          $ref: '#/definitions/productshandler.ServiceImagesPayloads'
+        type: array
+    required:
+    - banner_id
+    - category_id
+    - description
+    - duration
+    - name
+    - priority
     type: object
 info:
   contact:
@@ -1093,7 +1251,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "204":
           description: Role updated successfully
         "400":
           description: 'Bad Request: Invalid UUID or payload'
@@ -1135,7 +1293,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "204":
           description: Permissions revoked successfully
         "400":
           description: 'Bad Request: Invalid UUID or payload'
@@ -2041,6 +2199,210 @@ paths:
       summary: Remove an instructor from a branch
       tags:
       - Branch Instructors
+  /branches/{id}/services:
+    get:
+      description: Retrieves a list of all services assigned to a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of branch services
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productsdomain.ServiceBranchDetail'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Branch not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List services for a branch
+      tags:
+      - Branch Services
+    post:
+      consumes:
+      - application/json
+      description: Assigns a list of services with their specific details to a branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with services to assign
+        in: body
+        name: services
+        required: true
+        schema:
+          $ref: '#/definitions/productshandler.AssignBranchServicePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Branch services assigned successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign services to a branch
+      tags:
+      - Branch Services
+  /branches/{id}/services/{service_id}:
+    delete:
+      description: Removes a specific service from a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service UUID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Service removed successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Branch, service, or assignment not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a service from a branch
+      tags:
+      - Branch Services
+    get:
+      description: Retrieves detailed information about a specific service for a specific
+        branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service UUID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Branch service details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/productsdomain.ServiceBranchDetail'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Branch or service not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get branch service by ID
+      tags:
+      - Branch Services
+    put:
+      consumes:
+      - application/json
+      description: Updates the details of a specific service within a branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Service UUID
+        in: path
+        name: service_id
+        required: true
+        type: string
+      - description: Payload with fields to update
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/productshandler.UpdateBranchServicePayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Service updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a branch service
+      tags:
+      - Branch Services
   /branches/payment-methods:
     get:
       description: Retrieves a list of all available payment methods in the system.
@@ -2282,7 +2644,7 @@ paths:
             properties:
               data:
                 items:
-                  $ref: '#/definitions/instructorhandler.InstructorResponse'
+                  $ref: '#/definitions/instructorhandler.ListInstructorResponse'
                 type: array
             type: object
         "500":
@@ -2447,6 +2809,518 @@ paths:
       summary: Update an instructor
       tags:
       - Instructors
+  /instructor/{id}/specialty:
+    post:
+      consumes:
+      - application/json
+      description: Assigns one or more specialties (service categories) to a specific
+        instructor. This is an additive operation; it does not remove existing specialties.
+      parameters:
+      - description: Instructor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with an array of specialty (category) UUIDs
+        in: body
+        name: specialties
+        required: true
+        schema:
+          $ref: '#/definitions/instructorhandler.AssignInstructorsSpecialtiesPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Specialties assigned successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign specialties to an instructor
+      tags:
+      - Instructors
+  /instructor/{id}/specialty/{specialty_id}:
+    delete:
+      description: Removes a specific specialty (service category) from an instructor's
+        profile.
+      parameters:
+      - description: Instructor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Specialty (Category) UUID
+        in: path
+        name: specialty_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Specialty removed successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Instructor or specialty assignment not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a specialty from an instructor
+      tags:
+      - Instructors
+  /marketing/banners:
+    get:
+      description: Retrieves a list of all promotional banners.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/marketinghandlers.BannerResponse'
+                type: array
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all banners
+      tags:
+      - Marketing
+    post:
+      consumes:
+      - application/json
+      description: Adds a new promotional banner to the system.
+      parameters:
+      - description: Banner creation payload
+        in: body
+        name: banner
+        required: true
+        schema:
+          $ref: '#/definitions/marketinghandlers.CreateBannerPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Banner created successfully
+          schema:
+            $ref: '#/definitions/marketingdomain.Banner'
+        "400":
+          description: 'error: Bad Request'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: 'error: Conflict'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new banner
+      tags:
+      - Marketing
+  /marketing/banners/{id}:
+    delete:
+      description: Deletes a promotional banner from the system.
+      parameters:
+      - description: Banner UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: 'error: Bad Request - Invalid ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Banner not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a banner
+      tags:
+      - Marketing
+    get:
+      description: Retrieves a single promotional banner by its UUID.
+      parameters:
+      - description: Banner UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/marketinghandlers.BannerResponse'
+            type: object
+        "400":
+          description: 'error: Bad Request - Invalid ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Banner not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get banner by ID
+      tags:
+      - Marketing
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing promotional banner's details.
+      parameters:
+      - description: Banner UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Banner update payload
+        in: body
+        name: banner
+        required: true
+        schema:
+          $ref: '#/definitions/marketinghandlers.UpdateBannerPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Banner updated successfully
+          schema:
+            $ref: '#/definitions/marketingdomain.Banner'
+        "400":
+          description: 'error: Bad Request - Invalid ID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Banner not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a banner
+      tags:
+      - Marketing
+  /public/branches-map:
+    get:
+      description: Retrieves a list of public branches with minimal information for
+        map display.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A list of public branches for the map
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/branchhandlers.PublicBranchMapResponse'
+                type: array
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Get public branches for map
+      tags:
+      - Public
+  /services:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new service to the system.
+      parameters:
+      - description: Service creation payload
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/productshandler.CreateServicePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Service created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'Bad Request: Invalid payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 'Conflict: A service with this name already exists'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new service
+      tags:
+      - Services
+  /services/{id}:
+    delete:
+      description: Deletes a specific service by its UUID.
+      parameters:
+      - description: Service UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Service deleted successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Service not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a service
+      tags:
+      - Services
+    get:
+      description: Retrieves detailed information about a specific service by its
+        UUID.
+      parameters:
+      - description: Service UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/productshandler.ServiceResponse'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Service not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get service by ID
+      tags:
+      - Services
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing service's information.
+      parameters:
+      - description: Service UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with fields to update
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/productshandler.UpdateServicePayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Service updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Service not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a service
+      tags:
+      - Services
+  /services/all:
+    get:
+      description: Retrieves a list of all available services.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of services
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productshandler.ServiceResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all services
+      tags:
+      - Services
+  /services/categories:
+    get:
+      description: Retrieves a list of all service categories.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of service categories
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productsdomain.ServiceCategory'
+                type: array
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List service categories
+      tags:
+      - Services Categories
   /user/branch-admins:
     get:
       consumes:

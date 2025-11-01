@@ -62,12 +62,15 @@ func (app *application) Mount() http.Handler {
 
 		//branch routes
 		app.Handlers.BranchHandlers.BranchRoutes(v1, m)
-
 		app.Handlers.BranchHandlers.PublicBranchRoutes(v1)
 
 		app.Handlers.InventoryHandlers.InventoryRoutes(v1, m)
 
 		app.Handlers.InstructorHandlers.InstructorRoutes(v1, m)
+
+		//marketing routes
+		app.Handlers.MarketingHandlers.MarketingRoutes(v1, m)
+		app.Handlers.ProductsHandlers.ProductsRoutes(v1, m)
 
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

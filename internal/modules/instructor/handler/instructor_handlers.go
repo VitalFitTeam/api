@@ -71,8 +71,8 @@ func (h *InstructorHandlers) CreateInstructorHandler(c *gin.Context) {
 // @Tags			Instructors
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Success		200	{object}	object{data=[]InstructorResponse}	"List of instructors"
-// @Failure		500	{object}	map[string]interface{}				"Internal Server Error"
+// @Success		200	{object}	object{data=[]ListInstructorResponse}	"List of instructors"
+// @Failure		500	{object}	map[string]interface{}					"Internal Server Error"
 // @Router			/instructor [get]
 func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -82,9 +82,9 @@ func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 		return
 	}
 
-	response := make([]*InstructorResponse, 0, len(instructors))
+	response := make([]*ListInstructorResponse, 0, len(instructors))
 	for _, instructor := range instructors {
-		ins := &InstructorResponse{
+		ins := &ListInstructorResponse{
 			InstructorID:      instructor.InstructorID,
 			UserID:            instructor.UserID,
 			FirstName:         instructor.User.FirstName,
@@ -95,7 +95,6 @@ func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 			BirthDate:         instructor.User.BirthDate,
 			Gender:            string(instructor.User.Gender),
 			ProfilePictureURL: instructor.User.ProfilePictureURL,
-			Speciality:        instructor.Speciality,
 			Biography:         instructor.Biography,
 		}
 		response = append(response, ins)
@@ -164,8 +163,17 @@ func (h *InstructorHandlers) GetInstructorByIDHandler(c *gin.Context) {
 		return
 	}
 
+	specialtiesResponse := make([]*SpecialtyResponse, 0, len(instructor.Specialties))
+	for _, s := range instructor.Specialties {
+		specialtiesResponse = append(specialtiesResponse, &SpecialtyResponse{
+			SpecialtyID:   s.CategoryID,
+			SpecialtyName: s.Name,
+		})
+	}
+
 	response := &InstructorResponse{
 		InstructorID:      instructor.InstructorID,
+		UserID:            instructor.UserID,
 		FirstName:         instructor.User.FirstName,
 		LastName:          instructor.User.LastName,
 		Email:             instructor.User.Email,
@@ -174,7 +182,7 @@ func (h *InstructorHandlers) GetInstructorByIDHandler(c *gin.Context) {
 		BirthDate:         instructor.User.BirthDate,
 		Gender:            string(instructor.User.Gender),
 		ProfilePictureURL: instructor.User.ProfilePictureURL,
-		Speciality:        instructor.Speciality,
+		Specialties:       specialtiesResponse,
 		Biography:         instructor.Biography,
 	}
 
@@ -335,6 +343,83 @@ func (h *InstructorHandlers) RemoveInstructorFromBranchHandler(c *gin.Context) {
 	err = h.services.InstructorServices.RemoveInstructorFromBranch(ctx, branchID, instructorID)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+
+}
+
+// @Summary		Assign specialties to an instructor
+// @Description	Assigns one or more specialties (service categories) to a specific instructor. This is an additive operation; it does not remove existing specialties.
+// @Tags			Instructors
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id			path		string								true	"Instructor UUID"
+// @Param			specialties	body		AssignInstructorsSpecialtiesPayload	true	"Payload with an array of specialty (category) UUIDs"
+// @Success		204			{object}	nil									"Specialties assigned successfully"
+// @Failure		400			{object}	map[string]interface{}				"Bad Request: Invalid UUID format or payload"
+// @Failure		500			{object}	map[string]interface{}				"Internal Server Error"
+// @Router			/instructor/{id}/specialty [post]
+func (h *InstructorHandlers) AssignInstructorSpecialtyHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	instructorID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	var payload AssignInstructorsSpecialtiesPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	specialties, err := payload.toUUID()
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	err = h.services.InstructorServices.AssignInstructorSpecialty(ctx, instructorID, specialties)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Remove a specialty from an instructor
+// @Description	Removes a specific specialty (service category) from an instructor's profile.
+// @Tags			Instructors
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id				path		string					true	"Instructor UUID"
+// @Param			specialty_id	path		string					true	"Specialty (Category) UUID"
+// @Success		204				{object}	nil						"Specialty removed successfully"
+// @Failure		400				{object}	map[string]interface{}	"Bad Request: Invalid UUID format"
+// @Failure		404				{object}	map[string]interface{}	"Not Found: Instructor or specialty assignment not found"
+// @Failure		500				{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/instructor/{id}/specialty/{specialty_id} [delete]
+func (h *InstructorHandlers) DeleteInstructorSpecialtyHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	instructorID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	specialtyID, err := uuid.Parse(c.Param("specialty_id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	err = h.services.InstructorServices.DeleteInstructorSpecialty(ctx, instructorID, specialtyID)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)

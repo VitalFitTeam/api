@@ -74,3 +74,11 @@ func (s *InstructorServices) UpdateInstructor(ctx context.Context, instructor *i
 	}
 	return nil
 }
+
+func (s *InstructorServices) AssignInstructorSpecialty(ctx context.Context, instructorID uuid.UUID, specialties []uuid.UUID) error {
+	return s.store.Instructor.AssignInstructorSpecialty(ctx, instructorID, specialties)
+}
+
+func (s *InstructorServices) DeleteInstructorSpecialty(ctx context.Context, instructorID uuid.UUID, specialtyID uuid.UUID) error {
+	return s.store.Instructor.DeleteInstructorSpecialty(ctx, instructorID, specialtyID)
+}
