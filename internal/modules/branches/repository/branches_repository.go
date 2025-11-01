@@ -36,7 +36,7 @@ func (s *BranchesStore) create(ctx context.Context, tx *gorm.DB, branch *branchd
 	return nil
 
 }
-func (s *BranchesStore) CreateBranch(ctx context.Context, branch *branchdomain.Branch) (*branchdomain.Branch, error) {
+func (s *BranchesStore) CreateBranch(ctx context.Context, branch *branchdomain.Branch) error {
 	// transaction
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
 		err := s.create(ctx, tx, branch)
@@ -47,10 +47,10 @@ func (s *BranchesStore) CreateBranch(ctx context.Context, branch *branchdomain.B
 	})
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return branch, nil
+	return nil
 }
 
 func (s *BranchesStore) GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) (*branchdomain.BranchQueryResults, error) {
