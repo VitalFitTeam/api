@@ -15,6 +15,7 @@ type BranchesRepository interface {
 	AddPaymentMethodsToBranch(ctx context.Context, branchID uuid.UUID, paymentLinks []PaymentMethodsBranch) error
 	Delete(ctx context.Context, branchID uuid.UUID) error
 	GetBranchStatusCount(ctx context.Context) (*BranchStatusCount, error)
+	GetPublicBranchesMap(ctx context.Context) ([]PublicBranchMapResponse, error)
 }
 
 type LocationRepository interface {

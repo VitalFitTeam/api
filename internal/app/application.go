@@ -63,6 +63,8 @@ func (app *application) Mount() http.Handler {
 		//branch routes
 		app.Handlers.BranchHandlers.BranchRoutes(v1, m)
 
+		app.Handlers.BranchHandlers.PublicBranchRoutes(v1)
+
 		app.Handlers.InventoryHandlers.InventoryRoutes(v1, m)
 
 		app.Handlers.InstructorHandlers.InstructorRoutes(v1, m)

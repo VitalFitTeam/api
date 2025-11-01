@@ -15,6 +15,8 @@ type BranchHandlersInterface interface {
 	GetBranchByIDHandler(c *gin.Context)
 	UpdateBranchHandler(c *gin.Context)
 	GetBranchStatusCount(c *gin.Context)
+	GetPublicBranchesMapHandler(c *gin.Context)
+	PublicBranchRoutes(rg *gin.RouterGroup)
 }
 
 type BranchHandlers struct {
@@ -31,7 +33,6 @@ func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		Use(m.AuthJwtTokenMiddleware())
 
 	{
-
 		branchGroup.GET("", m.RBACPermission("branches:list"), r.GetBranchesHandler)
 		branchGroup.GET("/:id", m.RBACPermission("branches:get"), r.GetBranchByIDHandler)
 		branchGroup.POST("", m.RBACPermission("branches:create"), r.CreateBranchHandler)
@@ -40,5 +41,12 @@ func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 
 		branchGroup.GET("/payment-methods", m.RBACPermission("branches:list"), r.GetPaymentMethodsHandler)
 		branchGroup.GET("/status", m.RBACPermission("branches:list"), r.GetBranchStatusCount)
+	}
+}
+
+func (r *BranchHandlers) PublicBranchRoutes(rg *gin.RouterGroup) {
+	publicGroup := rg.Group("/public")
+	{
+		publicGroup.GET("/branches-map", r.GetPublicBranchesMapHandler)
 	}
 }
