@@ -1,5 +1,4 @@
 package productshandler
-<<<<<<< HEAD
 
 import (
 	"net/http"
@@ -286,5 +285,3 @@ func (h *ProductsHandler) UpdateServiceHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusNoContent, nil)
 }
-=======
->>>>>>> dev

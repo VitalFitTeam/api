@@ -3281,6 +3281,32 @@ paths:
       summary: Update a banner
       tags:
       - Marketing
+  /public/branches-map:
+    get:
+      description: Retrieves a list of public branches with minimal information for
+        map display.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A list of public branches for the map
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/branchhandlers.PublicBranchMapResponse'
+                type: array
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Get public branches for map
+      tags:
+      - Public
   /services:
     post:
       consumes:
@@ -3537,32 +3563,6 @@ paths:
       summary: Get current user profile
       tags:
       - User
-  /v1/public/branches-map:
-    get:
-      description: Returns a lightweight list of active branches for public map usage
-        (no auth required)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of active branches for map display
-          schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/branchhandlers.PublicBranchMapResponse'
-                type: array
-            type: object
-        "500":
-          description: 'Error: internal server error'
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-      summary: Get public active branches (Mapbox)
-      tags:
-      - Public
 securityDefinitions:
   ApiKeyAuth:
     in: header

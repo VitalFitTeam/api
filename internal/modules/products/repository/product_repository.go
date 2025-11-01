@@ -1,6 +1,5 @@
 package productsrepository
 
-<<<<<<< HEAD
 import (
 	"context"
 	"errors"
@@ -14,9 +13,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
-=======
-import "gorm.io/gorm"
->>>>>>> dev
 
 type ProductsStore struct {
 	db *gorm.DB
@@ -27,7 +23,6 @@ func NewProductsStore(db *gorm.DB) *ProductsStore {
 		db: db,
 	}
 }
-<<<<<<< HEAD
 
 func (s *ProductsStore) CreateServiceCategory(ctx context.Context, tx *gorm.DB, serviceCategory *productsdomain.ServiceCategory) error {
 	if err := tx.Create(serviceCategory).Error; err != nil {
@@ -194,5 +189,3 @@ func (s *ProductsStore) UpdateService(ctx context.Context, service *productsdoma
 		return nil
 	})
 }
-=======
->>>>>>> dev

@@ -3152,6 +3152,45 @@
                 }
             }
         },
+        "/public/branches-map": {
+            "get": {
+                "description": "Retrieves a list of public branches with minimal information for map display.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Get public branches for map",
+                "responses": {
+                    "200": {
+                        "description": "A list of public branches for the map",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/branchhandlers.PublicBranchMapResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/services": {
             "post": {
                 "security": [
@@ -3541,45 +3580,6 @@
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/public/branches-map": {
-            "get": {
-                "description": "Returns a lightweight list of active branches for public map usage (no auth required)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Public"
-                ],
-                "summary": "Get public active branches (Mapbox)",
-                "responses": {
-                    "200": {
-                        "description": "List of active branches for map display",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/branchhandlers.PublicBranchMapResponse"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error: internal server error",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
                             }
                         }
                     }
