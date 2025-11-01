@@ -1020,8 +1020,6 @@ definitions:
         type: number
       priceForNonMember:
         type: number
-      service:
-        $ref: '#/definitions/productsdomain.Service'
       serviceID:
         type: string
       updatedAt:
@@ -1064,8 +1062,6 @@ definitions:
     type: object
   productshandler.BranchServicePayload:
     properties:
-      branch_id:
-        type: string
       is_visible:
         type: boolean
       max_capacity:
@@ -1175,8 +1171,6 @@ definitions:
     type: object
   productshandler.UpdateBranchServicePayload:
     properties:
-      branch_id:
-        type: string
       is_visible:
         type: boolean
       max_capacity:
@@ -1185,8 +1179,6 @@ definitions:
         type: number
       price_for_non_member:
         type: number
-      service_id:
-        type: string
     type: object
   productshandler.UpdateServicePayload:
     properties:

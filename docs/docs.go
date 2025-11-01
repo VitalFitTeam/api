@@ -5041,9 +5041,6 @@ const docTemplate = `{
                 "priceForNonMember": {
                     "type": "number"
                 },
-                "service": {
-                    "$ref": "#/definitions/productsdomain.Service"
-                },
                 "serviceID": {
                     "type": "string"
                 },
@@ -5109,9 +5106,6 @@ const docTemplate = `{
         "productshandler.BranchServicePayload": {
             "type": "object",
             "properties": {
-                "branch_id": {
-                    "type": "string"
-                },
                 "is_visible": {
                     "type": "boolean"
                 },
@@ -5274,9 +5268,6 @@ const docTemplate = `{
         "productshandler.UpdateBranchServicePayload": {
             "type": "object",
             "properties": {
-                "branch_id": {
-                    "type": "string"
-                },
                 "is_visible": {
                     "type": "boolean"
                 },
@@ -5288,9 +5279,6 @@ const docTemplate = `{
                 },
                 "price_for_non_member": {
                     "type": "number"
-                },
-                "service_id": {
-                    "type": "string"
                 }
             }
         },

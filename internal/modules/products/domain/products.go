@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	"gorm.io/gorm"
 )
@@ -69,7 +70,8 @@ type ServiceBranchDetail struct {
 	UpdatedAt         time.Time
 	DeletedAt         gorm.DeletedAt `gorm:"index" json:"-"`
 
-	Service Service `gorm:"foreignKey:ServiceID"`
+	Service Service             `gorm:"foreignKey:ServiceID" json:"-"`
+	Branch  branchdomain.Branch `gorm:"foreignKey:BranchID" json:"-"`
 }
 
 func (ServiceBranchDetail) TableName() string {

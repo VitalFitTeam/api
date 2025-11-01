@@ -27,19 +27,23 @@ func (h *ProductsHandler) AssignBranchServiceHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
-	branchID := c.Param("id")
+	branchID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
 
 	branchServices := make([]*productsdomain.ServiceBranchDetail, 0, len(payload.Services))
 	for _, service := range payload.Services {
-		service.BranchID = branchID
 		branchService, err := service.ToServiceBranchDetail()
 		if err != nil {
 			h.services.LogErrors.BadRequestResponse(c, err)
 			return
 		}
+		branchService.BranchID = branchID
 		branchServices = append(branchServices, branchService)
 	}
-	err := h.services.ProductsServices.AssignBranchService(ctx, branchServices)
+	err = h.services.ProductsServices.AssignBranchService(ctx, branchServices)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -94,15 +98,24 @@ func (h *ProductsHandler) UpdateBranchServiceHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
-	payload.BranchID = c.Param("id")
-	payload.ServiceID = c.Param("service_id")
 
 	service, err := payload.ToServiceBranchDetail()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+	service.BranchID, err = uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
 
+	}
+	service.ServiceID, err = uuid.Parse(c.Param("service_id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+
+	}
 	err = h.services.ProductsServices.UpdateBranchService(ctx, service)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)

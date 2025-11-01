@@ -5033,9 +5033,6 @@
                 "priceForNonMember": {
                     "type": "number"
                 },
-                "service": {
-                    "$ref": "#/definitions/productsdomain.Service"
-                },
                 "serviceID": {
                     "type": "string"
                 },
@@ -5101,9 +5098,6 @@
         "productshandler.BranchServicePayload": {
             "type": "object",
             "properties": {
-                "branch_id": {
-                    "type": "string"
-                },
                 "is_visible": {
                     "type": "boolean"
                 },
@@ -5266,9 +5260,6 @@
         "productshandler.UpdateBranchServicePayload": {
             "type": "object",
             "properties": {
-                "branch_id": {
-                    "type": "string"
-                },
                 "is_visible": {
                     "type": "boolean"
                 },
@@ -5280,9 +5271,6 @@
                 },
                 "price_for_non_member": {
                     "type": "number"
-                },
-                "service_id": {
-                    "type": "string"
                 }
             }
         },

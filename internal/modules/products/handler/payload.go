@@ -70,8 +70,7 @@ func (s *ServiceImagesPayloads) ToServiceImage() (*productsdomain.ServiceImage, 
 
 type BranchServicePayload struct {
 	ServiceID         string  `json:"service_id"`
-	BranchID          string  `json:"branch_id"`
-	IsVsible          bool    `json:"is_visible"`
+	IsVisible         bool    `json:"is_visible"`
 	MaxCapacity       int     `json:"max_capacity"`
 	PriceForMember    float64 `json:"price_for_member"`
 	PriceForNonMember float64 `json:"price_for_non_member"`
@@ -87,15 +86,9 @@ func (s *BranchServicePayload) ToServiceBranchDetail() (*productsdomain.ServiceB
 		return nil, err
 	}
 
-	branchID, err := uuid.Parse(s.BranchID)
-	if err != nil {
-		return nil, err
-	}
-
 	serviceBranchDetail := &productsdomain.ServiceBranchDetail{
 		ServiceID:         serviceID,
-		BranchID:          branchID,
-		IsVisible:         s.IsVsible,
+		IsVisible:         s.IsVisible,
 		MaxCapacity:       s.MaxCapacity,
 		PriceForMember:    s.PriceForMember,
 		PriceForNonMember: s.PriceForNonMember,
@@ -104,7 +97,21 @@ func (s *BranchServicePayload) ToServiceBranchDetail() (*productsdomain.ServiceB
 }
 
 type UpdateBranchServicePayload struct {
-	BranchServicePayload
+	IsVsible          bool    `json:"is_visible"`
+	MaxCapacity       int     `json:"max_capacity"`
+	PriceForMember    float64 `json:"price_for_member"`
+	PriceForNonMember float64 `json:"price_for_non_member"`
+}
+
+func (s *UpdateBranchServicePayload) ToServiceBranchDetail() (*productsdomain.ServiceBranchDetail, error) {
+
+	serviceBranchDetail := &productsdomain.ServiceBranchDetail{
+		IsVisible:         s.IsVsible,
+		MaxCapacity:       s.MaxCapacity,
+		PriceForMember:    s.PriceForMember,
+		PriceForNonMember: s.PriceForNonMember,
+	}
+	return serviceBranchDetail, nil
 }
 
 // responses
