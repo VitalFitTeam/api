@@ -80,3 +80,12 @@ type StatusCount struct {
 	Status string
 	Count  int64
 }
+
+type PublicBranchMapResponse struct {
+	BranchID  uuid.UUID `json:"branch_id"`
+	Name      string    `json:"name"`
+	Address   string    `json:"address"`
+	Latitude  float64   `json:"latitude"`
+	Longitude float64   `json:"longitude"`
+	Phone     string    `json:"phone"`
+}

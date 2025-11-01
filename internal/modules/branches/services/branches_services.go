@@ -20,7 +20,6 @@ func NewBranchServices(store store.Storage, cfg config.Config) *BranchServices {
 		store:  store,
 		config: cfg,
 	}
-
 }
 
 func (s *BranchServices) CreateBranch(ctx context.Context, branch *branchdomain.Branch) error {
@@ -89,4 +88,16 @@ func (s *BranchServices) GetBranchStatusCount(ctx context.Context) (*branchdomai
 	}
 	counts.Total = counts.Active + counts.Inactive + counts.Maintenance
 	return counts, nil
+}
+
+// ===================================================
+// =============== PUBLIC SERVICE ====================
+// ===================================================
+
+func (s *BranchServices) GetPublicBranchesMap(ctx context.Context) ([]branchdomain.PublicBranchMapResponse, error) {
+	branches, err := s.store.Branches.GetPublicBranchesMap(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return branches, nil
 }

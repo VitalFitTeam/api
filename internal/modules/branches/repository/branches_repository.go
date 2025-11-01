@@ -188,3 +188,22 @@ func (s *BranchesStore) Update(ctx context.Context, branch *branchdomain.Branch)
 		return nil
 	})
 }
+
+func (s *BranchesStore) GetPublicBranchesMap(ctx context.Context) ([]branchdomain.PublicBranchMapResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
+	var results []branchdomain.PublicBranchMapResponse
+
+	err := s.db.WithContext(ctx).
+		Model(&branchdomain.Branch{}).
+		Select("branch_id, name, address, latitude, longitude, phone").
+		Where("status = ?", "Active").
+		Find(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}

@@ -101,3 +101,12 @@ type BranchResponseData struct {
 	OperatingHours   []branchdomain.OperatingHours       `json:"operating_hours" binding:"omitempty,dive"`
 	PaymentMethods   []branchdomain.PaymentMethodsBranch `json:"payment_methods" binding:"omitempty,dive"`
 }
+
+type PublicBranchMapResponse struct {
+	BranchID  uuid.UUID `json:"branch_id"`
+	Name      string    `json:"name"`
+	Address   string    `json:"address"`
+	Latitude  float64   `json:"latitude"`
+	Longitude float64   `json:"longitude"`
+	Phone     string    `json:"phone"`
+}
