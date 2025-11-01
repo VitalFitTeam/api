@@ -14,7 +14,7 @@ type ProductsHandlerInterface interface {
 	GetServicesHandler(c *gin.Context)
 	DeleteServiceHandler(c *gin.Context)
 	GetServiceByIDHandler(c *gin.Context)
-	UpdatServicetHandler(c *gin.Context)
+	UpdateServiceHandler(c *gin.Context)
 }
 
 type ProductsHandler struct {
@@ -26,5 +26,15 @@ func NewProductsHandler(services appservices.Services) *ProductsHandler {
 }
 
 func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+	ProductGroup := rg.Group("/services")
+	{
+		ProductGroup.Use(m.AuthJwtTokenMiddleware())
+		ProductGroup.GET("/categories", m.RBACPermission("services:list"), r.ListServiceCategoriesHandler)
+		ProductGroup.GET("/all", m.RBACPermission("services:list"), r.GetServicesHandler)
 
+		ProductGroup.POST("", m.RBACPermission("services:create"), r.CreateServiceHandler)
+		ProductGroup.GET("/:id", m.RBACPermission("services:get"), r.GetServiceByIDHandler)
+		ProductGroup.DELETE("/:id", m.RBACPermission("services:delete"), r.DeleteServiceHandler)
+		ProductGroup.PUT("/:id", m.RBACPermission("services:update"), r.UpdateServiceHandler)
+	}
 }

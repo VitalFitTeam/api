@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	"gorm.io/gorm"
 )
 
@@ -23,18 +24,23 @@ type Service struct {
 	CategoryID      uuid.UUID `gorm:"type:uuid;not null"`
 	Name            string    `gorm:"type:varchar(255);unique;not null"`
 	Description     string    `gorm:"type:text"`
-	DurationMinutes int       `gorm:"type:int"`
-	PriorityScore   int       `gorm:"type:int;default:50"`
+	DurationMinutes int64     `gorm:"type:int"`
+	PriorityScore   int64     `gorm:"type:int;default:50"`
 	IsFeatured      bool      `gorm:"type:boolean;default:false;not null"`
 	CreatedAt       time.Time `gorm:"default:now()"`
 	UpdatedAt       time.Time
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
 
-	ServiceCategory ServiceCategory `gorm:"foreignKey:CategoryID"`
+	Category ServiceCategory `gorm:"foreignKey:CategoryID;references:CategoryID"`
 
 	Images []ServiceImage `gorm:"foreignKey:ServiceID"`
 
-	BranchDetails []ServiceBranchDetail `gorm:"foreignKey:ServiceID"`
+	BranchDetails []ServiceBranchDetail    `gorm:"foreignKey:ServiceID"`
+	Banners       []marketingdomain.Banner `gorm:"many2many:banner_services;foreignKey:ServiceID;joinForeignKey:ServiceID;References:BannerID;joinReferences:BannerID" json:"banners,omitempty"`
+}
+
+func (Service) TableName() string {
+	return "services"
 }
 
 type ServiceImage struct {
@@ -46,6 +52,10 @@ type ServiceImage struct {
 	IsPrimary    bool      `gorm:"type:boolean;not null;default:false"`
 
 	Service Service `gorm:"foreignKey:ServiceID"`
+}
+
+func (ServiceImage) TableName() string {
+	return "service_images"
 }
 
 type ServiceBranchDetail struct {
@@ -60,4 +70,8 @@ type ServiceBranchDetail struct {
 	DeletedAt         gorm.DeletedAt `gorm:"index" json:"-"`
 
 	Service Service `gorm:"foreignKey:ServiceID"`
+}
+
+func (ServiceBranchDetail) TableName() string {
+	return "service_branch_details"
 }

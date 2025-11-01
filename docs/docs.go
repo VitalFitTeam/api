@@ -2852,6 +2852,319 @@ const docTemplate = `{
                 }
             }
         },
+        "/services": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Adds a new service to the system.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Create a new service",
+                "parameters": [
+                    {
+                        "description": "Service creation payload",
+                        "name": "service",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/productshandler.CreateServicePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Service created successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict: A service with this name already exists",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/services/all": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all available services.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "List all services",
+                "responses": {
+                    "200": {
+                        "description": "List of services",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/productshandler.ServiceResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/services/categories": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all service categories.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services Categories"
+                ],
+                "summary": "List service categories",
+                "responses": {
+                    "200": {
+                        "description": "List of service categories",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/productsdomain.ServiceCategory"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/services/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves detailed information about a specific service by its UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Get service by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service details",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/productshandler.ServiceResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Service not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates an existing service's information.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Update a service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payload with fields to update",
+                        "name": "service",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/productshandler.UpdateServicePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Service updated successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID or payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Service not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deletes a specific service by its UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Delete a service",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Service deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID format",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Service not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/user/branch-admins": {
             "get": {
                 "security": [
@@ -4283,12 +4596,6 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "services": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/productsdomain.Service"
-                    }
                 }
             }
         },
@@ -4355,11 +4662,20 @@ const docTemplate = `{
         "productsdomain.Service": {
             "type": "object",
             "properties": {
+                "banners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/marketingdomain.Banner"
+                    }
+                },
                 "branchDetails": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/productsdomain.ServiceBranchDetail"
                     }
+                },
+                "category": {
+                    "$ref": "#/definitions/productsdomain.ServiceCategory"
                 },
                 "categoryID": {
                     "type": "string"
@@ -4387,9 +4703,6 @@ const docTemplate = `{
                 },
                 "priorityScore": {
                     "type": "integer"
-                },
-                "serviceCategory": {
-                    "$ref": "#/definitions/productsdomain.ServiceCategory"
                 },
                 "serviceID": {
                     "type": "string"
@@ -4471,6 +4784,192 @@ const docTemplate = `{
                 },
                 "serviceID": {
                     "type": "string"
+                }
+            }
+        },
+        "productshandler.CreateServicePayload": {
+            "type": "object",
+            "required": [
+                "banner_id",
+                "category_id",
+                "description",
+                "duration",
+                "name",
+                "priority"
+            ],
+            "properties": {
+                "banner_id": {
+                    "type": "string"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer",
+                    "maximum": 60,
+                    "minimum": 1
+                },
+                "is_featured": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
+                },
+                "service_images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/productshandler.ServiceImagesPayloads"
+                    }
+                }
+            }
+        },
+        "productshandler.ImagesRensponse": {
+            "type": "object",
+            "properties": {
+                "alt_text": {
+                    "type": "string"
+                },
+                "display_order": {
+                    "type": "integer"
+                },
+                "image_id": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "productshandler.ServiceCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "productshandler.ServiceImagesPayloads": {
+            "type": "object",
+            "required": [
+                "image_url"
+            ],
+            "properties": {
+                "alt_text": {
+                    "type": "string"
+                },
+                "display_order": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "productshandler.ServiceResponse": {
+            "type": "object",
+            "properties": {
+                "banners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/marketinghandlers.BannerResponse"
+                    }
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/productshandler.ImagesRensponse"
+                    }
+                },
+                "is_featured": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority_score": {
+                    "type": "integer"
+                },
+                "service_category": {
+                    "$ref": "#/definitions/productshandler.ServiceCategoryResponse"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "productshandler.UpdateServicePayload": {
+            "type": "object",
+            "required": [
+                "banner_id",
+                "category_id",
+                "description",
+                "duration",
+                "name",
+                "priority"
+            ],
+            "properties": {
+                "banner_id": {
+                    "type": "string"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer",
+                    "maximum": 60,
+                    "minimum": 1
+                },
+                "is_featured": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
+                },
+                "service_images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/productshandler.ServiceImagesPayloads"
+                    }
                 }
             }
         }

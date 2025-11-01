@@ -930,10 +930,6 @@ definitions:
         type: string
       name:
         type: string
-      services:
-        items:
-          $ref: '#/definitions/productsdomain.Service'
-        type: array
     type: object
   marketinghandlers.BannerResponse:
     properties:
@@ -977,10 +973,16 @@ definitions:
     type: object
   productsdomain.Service:
     properties:
+      banners:
+        items:
+          $ref: '#/definitions/marketingdomain.Banner'
+        type: array
       branchDetails:
         items:
           $ref: '#/definitions/productsdomain.ServiceBranchDetail'
         type: array
+      category:
+        $ref: '#/definitions/productsdomain.ServiceCategory'
       categoryID:
         type: string
       createdAt:
@@ -999,8 +1001,6 @@ definitions:
         type: string
       priorityScore:
         type: integer
-      serviceCategory:
-        $ref: '#/definitions/productsdomain.ServiceCategory'
       serviceID:
         type: string
       updatedAt:
@@ -1054,6 +1054,134 @@ definitions:
         $ref: '#/definitions/productsdomain.Service'
       serviceID:
         type: string
+    type: object
+  productshandler.CreateServicePayload:
+    properties:
+      banner_id:
+        type: string
+      category_id:
+        type: string
+      description:
+        type: string
+      duration:
+        maximum: 60
+        minimum: 1
+        type: integer
+      is_featured:
+        type: boolean
+      name:
+        type: string
+      priority:
+        maximum: 100
+        minimum: 1
+        type: integer
+      service_images:
+        items:
+          $ref: '#/definitions/productshandler.ServiceImagesPayloads'
+        type: array
+    required:
+    - banner_id
+    - category_id
+    - description
+    - duration
+    - name
+    - priority
+    type: object
+  productshandler.ImagesRensponse:
+    properties:
+      alt_text:
+        type: string
+      display_order:
+        type: integer
+      image_id:
+        type: string
+      image_url:
+        type: string
+      is_primary:
+        type: boolean
+    type: object
+  productshandler.ServiceCategoryResponse:
+    properties:
+      category_id:
+        type: string
+      name:
+        type: string
+    type: object
+  productshandler.ServiceImagesPayloads:
+    properties:
+      alt_text:
+        type: string
+      display_order:
+        type: integer
+      image_url:
+        type: string
+      is_primary:
+        type: boolean
+    required:
+    - image_url
+    type: object
+  productshandler.ServiceResponse:
+    properties:
+      banners:
+        items:
+          $ref: '#/definitions/marketinghandlers.BannerResponse'
+        type: array
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/productshandler.ImagesRensponse'
+        type: array
+      is_featured:
+        type: boolean
+      name:
+        type: string
+      priority_score:
+        type: integer
+      service_category:
+        $ref: '#/definitions/productshandler.ServiceCategoryResponse'
+      service_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  productshandler.UpdateServicePayload:
+    properties:
+      banner_id:
+        type: string
+      category_id:
+        type: string
+      description:
+        type: string
+      duration:
+        maximum: 60
+        minimum: 1
+        type: integer
+      is_featured:
+        type: boolean
+      name:
+        type: string
+      priority:
+        maximum: 100
+        minimum: 1
+        type: integer
+      service_images:
+        items:
+          $ref: '#/definitions/productshandler.ServiceImagesPayloads'
+        type: array
+    required:
+    - banner_id
+    - category_id
+    - description
+    - duration
+    - name
+    - priority
     type: object
 info:
   contact:
@@ -2905,6 +3033,210 @@ paths:
       summary: Update a banner
       tags:
       - Marketing
+  /services:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new service to the system.
+      parameters:
+      - description: Service creation payload
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/productshandler.CreateServicePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Service created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'Bad Request: Invalid payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 'Conflict: A service with this name already exists'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new service
+      tags:
+      - Services
+  /services/{id}:
+    delete:
+      description: Deletes a specific service by its UUID.
+      parameters:
+      - description: Service UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Service deleted successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Service not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a service
+      tags:
+      - Services
+    get:
+      description: Retrieves detailed information about a specific service by its
+        UUID.
+      parameters:
+      - description: Service UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/productshandler.ServiceResponse'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Service not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get service by ID
+      tags:
+      - Services
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing service's information.
+      parameters:
+      - description: Service UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with fields to update
+        in: body
+        name: service
+        required: true
+        schema:
+          $ref: '#/definitions/productshandler.UpdateServicePayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Service updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Service not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a service
+      tags:
+      - Services
+  /services/all:
+    get:
+      description: Retrieves a list of all available services.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of services
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productshandler.ServiceResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all services
+      tags:
+      - Services
+  /services/categories:
+    get:
+      description: Retrieves a list of all service categories.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of service categories
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productsdomain.ServiceCategory'
+                type: array
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List service categories
+      tags:
+      - Services Categories
   /user/branch-admins:
     get:
       consumes:
