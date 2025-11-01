@@ -166,5 +166,25 @@
   {
     "name": "reports:view_sales",
     "description": "Allows viewing sales reports for memberships or products"
+  },
+  {
+    "name": "marketing:create",
+    "description": "Allows creating new banners or marketing campaigns"
+  },
+  {
+    "name": "marketing:list",
+    "description": "Allows listing all banners or marketing campaigns"
+  },
+  {
+    "name": "marketing:get",
+    "description": "Allows viewing details of a specific banner"
+  },
+  {
+    "name": "marketing:update",
+    "description": "Allows modifying a banner or marketing campaign"
+  },
+  {
+    "name": "marketing:delete",
+    "description": "Allows deleting a banner or marketing campaign"
   }
 ]

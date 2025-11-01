@@ -918,6 +918,143 @@ definitions:
         - OutOfService
         type: string
     type: object
+  marketingdomain.Banner:
+    properties:
+      banner_id:
+        type: string
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      link_url:
+        type: string
+      name:
+        type: string
+      services:
+        items:
+          $ref: '#/definitions/productsdomain.Service'
+        type: array
+    type: object
+  marketinghandlers.BannerResponse:
+    properties:
+      banner_id:
+        type: string
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      link_url:
+        type: string
+      name:
+        type: string
+    type: object
+  marketinghandlers.CreateBannerPayload:
+    properties:
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      link_url:
+        type: string
+      name:
+        type: string
+    required:
+    - image_url
+    - is_active
+    - link_url
+    - name
+    type: object
+  marketinghandlers.UpdateBannerPayload:
+    properties:
+      image_url:
+        type: string
+      is_active:
+        type: boolean
+      link_url:
+        type: string
+      name:
+        type: string
+    type: object
+  productsdomain.Service:
+    properties:
+      branchDetails:
+        items:
+          $ref: '#/definitions/productsdomain.ServiceBranchDetail'
+        type: array
+      categoryID:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      durationMinutes:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/productsdomain.ServiceImage'
+        type: array
+      isFeatured:
+        type: boolean
+      name:
+        type: string
+      priorityScore:
+        type: integer
+      serviceCategory:
+        $ref: '#/definitions/productsdomain.ServiceCategory'
+      serviceID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  productsdomain.ServiceBranchDetail:
+    properties:
+      branchID:
+        type: string
+      createdAt:
+        type: string
+      isVisible:
+        type: boolean
+      maxCapacity:
+        type: integer
+      priceForMember:
+        type: number
+      priceForNonMember:
+        type: number
+      service:
+        $ref: '#/definitions/productsdomain.Service'
+      serviceID:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  productsdomain.ServiceCategory:
+    properties:
+      categoryID:
+        type: string
+      name:
+        type: string
+      services:
+        items:
+          $ref: '#/definitions/productsdomain.Service'
+        type: array
+    type: object
+  productsdomain.ServiceImage:
+    properties:
+      altText:
+        type: string
+      displayOrder:
+        type: integer
+      imageID:
+        type: string
+      imageURL:
+        type: string
+      isPrimary:
+        type: boolean
+      service:
+        $ref: '#/definitions/productsdomain.Service'
+      serviceID:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -2564,6 +2701,210 @@ paths:
       summary: Remove a specialty from an instructor
       tags:
       - Instructors
+  /marketing/banners:
+    get:
+      description: Retrieves a list of all promotional banners.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/marketinghandlers.BannerResponse'
+                type: array
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all banners
+      tags:
+      - Marketing
+    post:
+      consumes:
+      - application/json
+      description: Adds a new promotional banner to the system.
+      parameters:
+      - description: Banner creation payload
+        in: body
+        name: banner
+        required: true
+        schema:
+          $ref: '#/definitions/marketinghandlers.CreateBannerPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Banner created successfully
+          schema:
+            $ref: '#/definitions/marketingdomain.Banner'
+        "400":
+          description: 'error: Bad Request'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: 'error: Conflict'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new banner
+      tags:
+      - Marketing
+  /marketing/banners/{id}:
+    delete:
+      description: Deletes a promotional banner from the system.
+      parameters:
+      - description: Banner UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: 'error: Bad Request - Invalid ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Banner not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a banner
+      tags:
+      - Marketing
+    get:
+      description: Retrieves a single promotional banner by its UUID.
+      parameters:
+      - description: Banner UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/marketinghandlers.BannerResponse'
+            type: object
+        "400":
+          description: 'error: Bad Request - Invalid ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Banner not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get banner by ID
+      tags:
+      - Marketing
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing promotional banner's details.
+      parameters:
+      - description: Banner UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Banner update payload
+        in: body
+        name: banner
+        required: true
+        schema:
+          $ref: '#/definitions/marketinghandlers.UpdateBannerPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Banner updated successfully
+          schema:
+            $ref: '#/definitions/marketingdomain.Banner'
+        "400":
+          description: 'error: Bad Request - Invalid ID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Banner not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a banner
+      tags:
+      - Marketing
   /user/branch-admins:
     get:
       consumes:
