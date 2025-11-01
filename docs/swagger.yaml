@@ -1,56 +1,5 @@
 basePath: /v1
 definitions:
-  authdomain.ClientCategoryEnum:
-    enum:
-    - VIP
-    - Regular
-    - New
-    - AtRisk
-    type: string
-    x-enum-varnames:
-    - ClientCategoryVIP
-    - ClientCategoryRegular
-    - ClientCategoryNew
-    - ClientCategoryAtRisk
-  authdomain.ClientProfiles:
-    properties:
-      block_justification:
-        type: string
-      category:
-        $ref: '#/definitions/authdomain.ClientCategoryEnum'
-      created_at:
-        type: string
-      deleted_at:
-        type: string
-      qr_code:
-        type: string
-      scoring:
-        type: integer
-      status:
-        $ref: '#/definitions/authdomain.ClientStatusEnum'
-      updated_at:
-        type: string
-      user_id:
-        type: string
-    type: object
-  authdomain.ClientStatusEnum:
-    enum:
-    - Active
-    - Blocked
-    type: string
-    x-enum-varnames:
-    - ClientStatusActive
-    - ClientStatusBlocked
-  authdomain.GenderEnum:
-    enum:
-    - male
-    - female
-    - prefer-not-to-say
-    type: string
-    x-enum-varnames:
-    - GenderMale
-    - GenderFemale
-    - GenderPreferNotToSay
   authdomain.Permission:
     properties:
       created_at:
@@ -79,41 +28,6 @@ definitions:
       role_id:
         type: string
       updated_at:
-        type: string
-    type: object
-  authdomain.Users:
-    properties:
-      birth_date:
-        type: string
-      clientProfile:
-        $ref: '#/definitions/authdomain.ClientProfiles'
-      created_at:
-        type: string
-      deleted_at:
-        type: string
-      email:
-        type: string
-      first_name:
-        type: string
-      gender:
-        $ref: '#/definitions/authdomain.GenderEnum'
-      identity_document:
-        type: string
-      is_validated:
-        type: boolean
-      last_name:
-        type: string
-      phone:
-        type: string
-      profile_picture_url:
-        type: string
-      role:
-        $ref: '#/definitions/authdomain.Roles'
-      role_id:
-        type: string
-      updated_at:
-        type: string
-      user_id:
         type: string
     type: object
   authhandlers.BranchAdminResponse:
@@ -271,49 +185,6 @@ definitions:
     - confirm_password
     - password
     type: object
-  branchdomain.Branch:
-    properties:
-      address:
-        type: string
-      branch_id:
-        type: string
-      created_at:
-        type: string
-      deleted_at:
-        type: string
-      latitude:
-        type: number
-      longitude:
-        type: number
-      manager:
-        $ref: '#/definitions/authdomain.Users'
-      manager_id:
-        type: string
-      max_capacity:
-        type: integer
-      name:
-        type: string
-      operating_hours:
-        items:
-          $ref: '#/definitions/branchdomain.OperatingHours'
-        type: array
-      payment_method_links:
-        items:
-          $ref: '#/definitions/branchdomain.PaymentMethodsBranch'
-        type: array
-      phone:
-        type: string
-      state:
-        $ref: '#/definitions/branchdomain.States'
-      state_id:
-        type: string
-      status:
-        $ref: '#/definitions/branchdomain.BranchStatusEnum'
-      tax_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
   branchdomain.BranchStatusCount:
     properties:
       active:
@@ -328,27 +199,6 @@ definitions:
       total:
         format: int64
         type: integer
-    type: object
-  branchdomain.BranchStatusEnum:
-    enum:
-    - Active
-    - Inactive
-    - Maintenance
-    type: string
-    x-enum-varnames:
-    - BranchStatusActive
-    - BranchStatusInactive
-    - BranchStatusMaintenance
-  branchdomain.Countries:
-    properties:
-      countryID:
-        type: string
-      name:
-        type: string
-      states:
-        items:
-          $ref: '#/definitions/branchdomain.States'
-        type: array
     type: object
   branchdomain.DayOfWeekEnum:
     enum:
@@ -412,34 +262,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  branchdomain.PaymentMethodsBranch:
-    properties:
-      branch:
-        $ref: '#/definitions/branchdomain.Branch'
-      branch_id:
-        type: string
-      created_at:
-        type: string
-      is_active:
-        type: boolean
-      method:
-        $ref: '#/definitions/branchdomain.PaymentMethods'
-      method_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  branchdomain.States:
-    properties:
-      country:
-        $ref: '#/definitions/branchdomain.Countries'
-      countryID:
-        type: string
-      name:
-        type: string
-      stateID:
-        type: string
-    type: object
   branchhandlers.BranchListResponse:
     properties:
       branch_id:
@@ -487,10 +309,6 @@ definitions:
         items:
           $ref: '#/definitions/branchdomain.OperatingHours'
         type: array
-      payment_methods:
-        items:
-          $ref: '#/definitions/branchdomain.PaymentMethodsBranch'
-        type: array
       phone:
         type: string
       state:
@@ -531,10 +349,6 @@ definitions:
       operating_hours:
         items:
           $ref: '#/definitions/branchhandlers.OperatingHourPayload'
-        type: array
-      payment_methods:
-        items:
-          type: string
         type: array
       phone:
         type: string
@@ -614,10 +428,6 @@ definitions:
       operating_hours:
         items:
           $ref: '#/definitions/branchhandlers.OperatingHourPayload'
-        type: array
-      payment_methods:
-        items:
-          type: string
         type: array
       phone:
         type: string

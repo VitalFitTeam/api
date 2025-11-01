@@ -181,9 +181,6 @@ func (s *BranchesStore) Update(ctx context.Context, branch *branchdomain.Branch)
 				return err // rollback
 			}
 		}
-		if err := s.AddPaymentMethodsToBranch(ctx, branch.BranchID, branch.PaymentMethodsLinks); err != nil {
-			return err // rollback
-		}
 
 		return nil
 	})

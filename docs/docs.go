@@ -3596,77 +3596,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "authdomain.ClientCategoryEnum": {
-            "type": "string",
-            "enum": [
-                "VIP",
-                "Regular",
-                "New",
-                "AtRisk"
-            ],
-            "x-enum-varnames": [
-                "ClientCategoryVIP",
-                "ClientCategoryRegular",
-                "ClientCategoryNew",
-                "ClientCategoryAtRisk"
-            ]
-        },
-        "authdomain.ClientProfiles": {
-            "type": "object",
-            "properties": {
-                "block_justification": {
-                    "type": "string"
-                },
-                "category": {
-                    "$ref": "#/definitions/authdomain.ClientCategoryEnum"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "string"
-                },
-                "qr_code": {
-                    "type": "string"
-                },
-                "scoring": {
-                    "type": "integer"
-                },
-                "status": {
-                    "$ref": "#/definitions/authdomain.ClientStatusEnum"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "authdomain.ClientStatusEnum": {
-            "type": "string",
-            "enum": [
-                "Active",
-                "Blocked"
-            ],
-            "x-enum-varnames": [
-                "ClientStatusActive",
-                "ClientStatusBlocked"
-            ]
-        },
-        "authdomain.GenderEnum": {
-            "type": "string",
-            "enum": [
-                "male",
-                "female",
-                "prefer-not-to-say"
-            ],
-            "x-enum-varnames": [
-                "GenderMale",
-                "GenderFemale",
-                "GenderPreferNotToSay"
-            ]
-        },
         "authdomain.Permission": {
             "type": "object",
             "properties": {
@@ -3709,59 +3638,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "authdomain.Users": {
-            "type": "object",
-            "properties": {
-                "birth_date": {
-                    "type": "string"
-                },
-                "clientProfile": {
-                    "$ref": "#/definitions/authdomain.ClientProfiles"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "$ref": "#/definitions/authdomain.GenderEnum"
-                },
-                "identity_document": {
-                    "type": "string"
-                },
-                "is_validated": {
-                    "type": "boolean"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "profile_picture_url": {
-                    "type": "string"
-                },
-                "role": {
-                    "$ref": "#/definitions/authdomain.Roles"
-                },
-                "role_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
                     "type": "string"
                 }
             }
@@ -3990,71 +3866,6 @@ const docTemplate = `{
                 }
             }
         },
-        "branchdomain.Branch": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "branch_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "string"
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "manager": {
-                    "$ref": "#/definitions/authdomain.Users"
-                },
-                "manager_id": {
-                    "type": "string"
-                },
-                "max_capacity": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "operating_hours": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/branchdomain.OperatingHours"
-                    }
-                },
-                "payment_method_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/branchdomain.PaymentMethodsBranch"
-                    }
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "state": {
-                    "$ref": "#/definitions/branchdomain.States"
-                },
-                "state_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/branchdomain.BranchStatusEnum"
-                },
-                "tax_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "branchdomain.BranchStatusCount": {
             "type": "object",
             "properties": {
@@ -4073,36 +3884,6 @@ const docTemplate = `{
                 "total": {
                     "type": "integer",
                     "format": "int64"
-                }
-            }
-        },
-        "branchdomain.BranchStatusEnum": {
-            "type": "string",
-            "enum": [
-                "Active",
-                "Inactive",
-                "Maintenance"
-            ],
-            "x-enum-varnames": [
-                "BranchStatusActive",
-                "BranchStatusInactive",
-                "BranchStatusMaintenance"
-            ]
-        },
-        "branchdomain.Countries": {
-            "type": "object",
-            "properties": {
-                "countryID": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "states": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/branchdomain.States"
-                    }
                 }
             }
         },
@@ -4191,49 +3972,6 @@ const docTemplate = `{
                 }
             }
         },
-        "branchdomain.PaymentMethodsBranch": {
-            "type": "object",
-            "properties": {
-                "branch": {
-                    "$ref": "#/definitions/branchdomain.Branch"
-                },
-                "branch_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "method": {
-                    "$ref": "#/definitions/branchdomain.PaymentMethods"
-                },
-                "method_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "branchdomain.States": {
-            "type": "object",
-            "properties": {
-                "country": {
-                    "$ref": "#/definitions/branchdomain.Countries"
-                },
-                "countryID": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "stateID": {
-                    "type": "string"
-                }
-            }
-        },
         "branchhandlers.BranchListResponse": {
             "type": "object",
             "properties": {
@@ -4310,12 +4048,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/branchdomain.OperatingHours"
                     }
                 },
-                "payment_methods": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/branchdomain.PaymentMethodsBranch"
-                    }
-                },
                 "phone": {
                     "type": "string"
                 },
@@ -4373,12 +4105,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/branchhandlers.OperatingHourPayload"
-                    }
-                },
-                "payment_methods": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
                     }
                 },
                 "phone": {
@@ -4491,12 +4217,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/branchhandlers.OperatingHourPayload"
-                    }
-                },
-                "payment_methods": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
                     }
                 },
                 "phone": {

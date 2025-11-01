@@ -23,11 +23,8 @@ func NewBranchServices(store store.Storage, cfg config.Config) *BranchServices {
 }
 
 func (s *BranchServices) CreateBranch(ctx context.Context, branch *branchdomain.Branch) error {
-	branch, err := s.store.Branches.CreateBranch(ctx, branch)
+	err := s.store.Branches.CreateBranch(ctx, branch)
 	if err != nil {
-		return err
-	}
-	if err := s.store.Branches.AddPaymentMethodsToBranch(ctx, branch.BranchID, branch.PaymentMethodsLinks); err != nil {
 		return err
 	}
 	return nil
