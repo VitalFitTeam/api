@@ -284,7 +284,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "Role updated successfully"
                     },
                     "400": {
@@ -474,7 +474,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "204": {
                         "description": "Permissions revoked successfully"
                     },
                     "400": {

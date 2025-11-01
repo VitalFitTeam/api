@@ -1441,7 +1441,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "204":
           description: Role updated successfully
         "400":
           description: 'Bad Request: Invalid UUID or payload'
@@ -1483,7 +1483,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "204":
           description: Permissions revoked successfully
         "400":
           description: 'Bad Request: Invalid UUID or payload'
