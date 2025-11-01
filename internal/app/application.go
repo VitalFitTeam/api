@@ -72,6 +72,9 @@ func (app *application) Mount() http.Handler {
 		app.Handlers.MarketingHandlers.MarketingRoutes(v1, m)
 		app.Handlers.ProductsHandlers.ProductsRoutes(v1, m)
 
+		//memberships routes
+		app.Handlers.MembershipHandlers.MembershipRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}
