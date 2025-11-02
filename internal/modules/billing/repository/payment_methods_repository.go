@@ -3,6 +3,7 @@ package billingrepository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -10,6 +11,7 @@ import (
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type PaymentMethodsStore struct {
@@ -81,19 +83,53 @@ func (s *PaymentMethodsStore) DeletePaymentMethod(ctx context.Context, methodID 
 	return nil
 }
 
-// func (s *BranchesStore) AddPaymentMethodsToBranch(ctx context.Context, branchID uuid.UUID, paymentLinks []branchdomain.PaymentMethodsBranch) error {
-// 	if len(paymentLinks) == 0 {
-// 		return nil
-// 	}
+func (s *PaymentMethodsStore) AddPaymentMethodsToBranch(ctx context.Context, branchMethod []*billingdomain.PaymentMethodsBranch) error {
+	if len(branchMethod) == 0 {
+		return nil
+	}
 
-// 	for i := range paymentLinks {
-// 		paymentLinks[i].BranchID = branchID
-// 	}
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		return tx.WithContext(ctx).Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "branch_id"}, {Name: "method_id"}},
+			DoNothing: true,
+		}).Create(&branchMethod).Error
+	})
+}
 
-// 	return db.WithTX(s.db, func(tx *gorm.DB) error {
-// 		return tx.WithContext(ctx).Clauses(clause.OnConflict{
-// 			Columns:   []clause.Column{{Name: "branch_id"}, {Name: "method_id"}},
-// 			DoNothing: true,
-// 		}).Create(&paymentLinks).Error
-// 	})
-// }
+func (s *PaymentMethodsStore) DeletePaymentMethodsFromBranch(ctx context.Context, branchID, methodID uuid.UUID) error {
+	err := s.db.WithContext(ctx).Where("branch_id = ? AND method_id = ?", branchID, methodID).Delete(&billingdomain.PaymentMethodsBranch{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *PaymentMethodsStore) GetPaymentMethodsFromBranch(ctx context.Context, branchID uuid.UUID) ([]*billingdomain.PaymentMethodsBranch, error) {
+	var Branchmethods []*billingdomain.PaymentMethodsBranch
+	err := s.db.WithContext(ctx).Where("branch_id = ?", branchID).Find(&Branchmethods).Error
+	if err != nil {
+		return nil, err
+	}
+	return Branchmethods, nil
+}
+
+func (s *PaymentMethodsStore) UpsertBranchPaymentConfig(ctx context.Context, branchMethod *billingdomain.PaymentMethodsBranch) error {
+	branchMethod.UpdatedAt = time.Now()
+
+	result := s.db.WithContext(ctx).Clauses(clause.OnConflict{
+
+		Columns: []clause.Column{{Name: "branch_id"}, {Name: "method_id"}},
+
+		DoUpdates: clause.AssignmentColumns([]string{
+			"is_active",
+			"display_name",
+			"configuration",
+			"visibility",
+			"surcharge_fixed",
+			"surcharge_percentage",
+			"updated_at",
+		}),
+	}).Create(branchMethod)
+
+	return result.Error
+}

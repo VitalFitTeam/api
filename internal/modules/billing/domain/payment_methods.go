@@ -51,14 +51,14 @@ type PaymentMethodsBranch struct {
 	MethodID            uuid.UUID                   `gorm:"type:uuid;primaryKey" json:"method_id"`
 	IsActive            bool                        `gorm:"type:bool;not null;default:true" json:"is_active"`
 	DisplayName         string                      `gorm:"type:varchar(100)" json:"display_name,omitempty"`
-	Configuration       json.RawMessage             `gorm:"type:jsonb;default:'{}'" json:"configuration,omitempty"`
+	Configuration       json.RawMessage             `gorm:"type:jsonb;default:'{}'" json:"configuration,omitempty" swaggertype:"object"`
 	Visibility          BranchPaymentVisibilityEnum `gorm:"type:branch_payment_visibility_enum;not null;default:'All'" json:"visibility"`
 	SurchargeFixed      int64                       `gorm:"type:bigint;not null;default:0" json:"surcharge_fixed"`
 	SurchargePercentage float64                     `gorm:"type:decimal(4,2);not null;default:0" json:"surcharge_percentage"`
 	CreatedAt           time.Time                   `json:"created_at"`
 	UpdatedAt           time.Time                   `json:"updated_at"`
-	Branch              *branchdomain.Branch        `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
-	Method              *PaymentMethods             `gorm:"foreignKey:MethodID" json:"method,omitempty"`
+	Branch              *branchdomain.Branch        `gorm:"foreignKey:BranchID" json:"-"`
+	Method              *PaymentMethods             `gorm:"foreignKey:MethodID" json:"-"`
 }
 
 func (PaymentMethodsBranch) TableName() string {

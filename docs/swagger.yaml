@@ -185,6 +185,16 @@ definitions:
     - confirm_password
     - password
     type: object
+  billingdomain.BranchPaymentVisibilityEnum:
+    enum:
+    - Client
+    - Staff
+    - All
+    type: string
+    x-enum-varnames:
+    - BranchPaymentVisibilityClient
+    - BranchPaymentVisibilityStaff
+    - BranchPaymentVisibilityAll
   billingdomain.PaymentMethodTypeEnum:
     enum:
     - Cash
@@ -216,6 +226,29 @@ definitions:
       updated_at:
         type: string
     type: object
+  billingdomain.PaymentMethodsBranch:
+    properties:
+      branch_id:
+        type: string
+      configuration:
+        type: object
+      created_at:
+        type: string
+      display_name:
+        type: string
+      is_active:
+        type: boolean
+      method_id:
+        type: string
+      surcharge_fixed:
+        type: integer
+      surcharge_percentage:
+        type: number
+      updated_at:
+        type: string
+      visibility:
+        $ref: '#/definitions/billingdomain.BranchPaymentVisibilityEnum'
+    type: object
   billingdomain.PaymentProcessingTypeEnum:
     enum:
     - Gateway
@@ -238,6 +271,44 @@ definitions:
     - name
     - processing_type
     - type
+    type: object
+  billinghandlers.MethodBranchConfigPayload:
+    properties:
+      configuration:
+        type: object
+      display_name:
+        type: string
+      method_id:
+        type: string
+      surcharge_fixed:
+        type: integer
+      surcharge_percentage:
+        type: number
+      visibility:
+        type: string
+    required:
+    - method_id
+    type: object
+  billinghandlers.UpdateBranchConfigPayload:
+    properties:
+      configuration:
+        type: object
+      display_name:
+        type: string
+      is_active:
+        type: string
+      surcharge_fixed:
+        minimum: 0
+        type: integer
+      surcharge_percentage:
+        minimum: 0
+        type: number
+      visibility:
+        enum:
+        - Client
+        - Staff
+        - All
+        type: string
     type: object
   billinghandlers.UpdatePaymentMethodPayload:
     properties:
@@ -2435,6 +2506,198 @@ paths:
       summary: Remove an instructor from a branch
       tags:
       - Branch Instructors
+  /branches/{id}/payment-methods:
+    get:
+      description: Retrieves all payment methods configured for a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/billingdomain.PaymentMethodsBranch'
+                type: array
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List payment methods for a branch
+      tags:
+      - Branch Payment Methods
+    post:
+      consumes:
+      - application/json
+      description: Assigns one or more payment methods to a specific branch with custom
+        configurations.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: An array of payment method configurations to add to the branch
+        in: body
+        name: payload
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/billinghandlers.MethodBranchConfigPayload'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Payment methods added to branch
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID, invalid payload)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found (e.g., branch or payment method not found)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add payment methods to a branch
+      tags:
+      - Branch Payment Methods
+  /branches/{id}/payment-methods/{method_id}:
+    delete:
+      description: Removes a specific payment method configuration from a specific
+        branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payment Method UUID
+        in: path
+        name: method_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request (e.g., invalid UUID)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a payment method from a branch
+      tags:
+      - Branch Payment Methods
+    put:
+      consumes:
+      - application/json
+      description: Updates the configuration of a specific payment method for a specific
+        branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payment Method UUID
+        in: path
+        name: method_id
+        required: true
+        type: string
+      - description: Configuration update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.UpdateBranchConfigPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment method configuration updated
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID, invalid payload)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found (e.g., payment method not found)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a branch payment method configuration
+      tags:
+      - Branch Payment Methods
   /branches/{id}/services:
     get:
       description: Retrieves a list of all services assigned to a specific branch.

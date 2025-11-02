@@ -2,9 +2,12 @@ package billinghandlers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 )
+
+var validate = validator.New()
 
 type BillingHandlersInterface interface {
 	BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
@@ -14,6 +17,11 @@ type BillingHandlersInterface interface {
 	CreatePaymentMethodHandler(c *gin.Context)
 	UpdatePaymentMethodHandler(c *gin.Context)
 	DeletePaymentMethodHandler(c *gin.Context)
+
+	AddPaymentMethodsToBranchHandler(c *gin.Context)
+	DeletePaymentMethodsFromBranchHandler(c *gin.Context)
+	GetPaymentMethodsFromBranchHandler(c *gin.Context)
+	UpdatePaymentMethodFromBranchHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -37,4 +45,14 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 		paymentMethodsGroup.PUT("/:id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodHandler)
 		paymentMethodsGroup.DELETE("/:id", m.RBACPermission("billing:delete"), r.DeletePaymentMethodHandler)
 	}
+
+	branchPaymentMethodsGroup := rg.Group("/branches/:id/payment-methods")
+	branchPaymentMethodsGroup.Use(m.AuthJwtTokenMiddleware())
+	{
+		branchPaymentMethodsGroup.GET("", m.RBACPermission("billing:list"), r.GetPaymentMethodsFromBranchHandler)
+		branchPaymentMethodsGroup.POST("", m.RBACPermission("billing:create"), r.AddPaymentMethodsToBranchHandler)
+		branchPaymentMethodsGroup.PUT("/:method_id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodFromBranchHandler)
+		branchPaymentMethodsGroup.DELETE("/:method_id", m.RBACPermission("billing:delete"), r.DeletePaymentMethodsFromBranchHandler)
+	}
+
 }

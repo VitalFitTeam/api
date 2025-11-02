@@ -47,3 +47,32 @@ func (s *BillingService) DeletePaymentMethod(ctx context.Context, methodID uuid.
 	}
 	return nil
 }
+
+func (s *BillingService) AddPaymentMethodsToBranch(ctx context.Context, branchMethod []*billingdomain.PaymentMethodsBranch) error {
+	err := s.store.PaymentMethods.AddPaymentMethodsToBranch(ctx, branchMethod)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (s *BillingService) DeletePaymentMethodsFromBranch(ctx context.Context, branchID, methodID uuid.UUID) error {
+	err := s.store.PaymentMethods.DeletePaymentMethodsFromBranch(ctx, branchID, methodID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (s *BillingService) GetPaymentMethodsFromBranch(ctx context.Context, branchID uuid.UUID) ([]*billingdomain.PaymentMethodsBranch, error) {
+	Branchmethods, err := s.store.PaymentMethods.GetPaymentMethodsFromBranch(ctx, branchID)
+	if err != nil {
+		return nil, err
+	}
+	return Branchmethods, nil
+}
+func (s *BillingService) UpsertBranchPaymentConfig(ctx context.Context, branchMethod *billingdomain.PaymentMethodsBranch) error {
+	err := s.store.PaymentMethods.UpsertBranchPaymentConfig(ctx, branchMethod)
+	if err != nil {
+		return err
+	}
+	return nil
+}
