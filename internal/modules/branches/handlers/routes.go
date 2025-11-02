@@ -9,7 +9,6 @@ import (
 type BranchHandlersInterface interface {
 	BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	CreateBranchHandler(c *gin.Context)
-	GetPaymentMethodsHandler(c *gin.Context)
 	GetBranchesHandler(c *gin.Context)
 	DeleteBranchHandler(c *gin.Context)
 	GetBranchByIDHandler(c *gin.Context)
@@ -39,7 +38,6 @@ func (r *BranchHandlers) BranchRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		branchGroup.PUT("/:id", m.RBACPermission("branches:update"), r.UpdateBranchHandler)
 		branchGroup.DELETE("/:id", m.RBACPermission("branches:delete"), r.DeleteBranchHandler)
 
-		branchGroup.GET("/payment-methods", m.RBACPermission("branches:list"), r.GetPaymentMethodsHandler)
 		branchGroup.GET("/status", m.RBACPermission("branches:list"), r.GetBranchStatusCount)
 	}
 }

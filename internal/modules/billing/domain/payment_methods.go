@@ -1,9 +1,19 @@
-package branchdomain
+package billingdomain
 
 import (
 	"time"
 
 	"github.com/google/uuid"
+	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
+)
+
+type PaymentMethodTypeEnum string
+
+const (
+	PaymentMethodCash     PaymentMethodTypeEnum = "Cash"
+	PaymentMethodCard     PaymentMethodTypeEnum = "Card"
+	PaymentMethodTransfer PaymentMethodTypeEnum = "Transfer"
+	PaymentMethodOther    PaymentMethodTypeEnum = "Other"
 )
 
 type PaymentMethods struct {
@@ -25,6 +35,6 @@ type PaymentMethodsBranch struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	Branch *Branch         `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
-	Method *PaymentMethods `gorm:"foreignKey:MethodID" json:"method,omitempty"`
+	Branch *branchdomain.Branch `gorm:"foreignKey:BranchID" json:"branch,omitempty"`
+	Method *PaymentMethods      `gorm:"foreignKey:MethodID" json:"method,omitempty"`
 }

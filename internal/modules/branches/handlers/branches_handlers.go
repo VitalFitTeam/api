@@ -339,26 +339,6 @@ func (h *BranchHandlers) GetBranchStatusCount(c *gin.Context) {
 
 }
 
-// @Summary		Get all payment methods
-// @Description	Retrieves a list of all available payment methods in the system.
-// @Tags			Branches
-// @Security		ApiKeyAuth
-// @Produce		json
-// @Success		200	{object}	object{data=[]branchdomain.PaymentMethods}	"A list of payment methods"
-// @Failure		500	{object}	object{error=string}						"Error: internal server error"
-// @Router			/branches/payment-methods [get]
-func (h *BranchHandlers) GetPaymentMethodsHandler(c *gin.Context) {
-	paymentMethods, err := h.services.BranchesServices.GetPaymentMethods(c)
-	if err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
-		return
-	}
-	c.JSON(200, gin.H{
-		"data": paymentMethods,
-	})
-
-}
-
 // @Summary		Get public branches for map
 // @Description	Retrieves a list of public branches with minimal information for map display.
 // @Tags			Public

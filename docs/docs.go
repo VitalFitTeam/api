@@ -887,6 +887,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/payment-methods": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all available payment methods in the system.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Get all payment methods",
+                "responses": {
+                    "200": {
+                        "description": "A list of available payment methods",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/billingdomain.PaymentMethods"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/branches": {
             "get": {
                 "security": [
@@ -1044,50 +1088,6 @@ const docTemplate = `{
                             "properties": {
                                 "error": {
                                     "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error: internal server error",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/branches/payment-methods": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieves a list of all available payment methods in the system.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branches"
-                ],
-                "summary": "Get all payment methods",
-                "responses": {
-                    "200": {
-                        "description": "A list of payment methods",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/branchdomain.PaymentMethods"
-                                    }
                                 }
                             }
                         }
@@ -3866,6 +3866,47 @@ const docTemplate = `{
                 }
             }
         },
+        "billingdomain.PaymentMethodTypeEnum": {
+            "type": "string",
+            "enum": [
+                "Cash",
+                "Card",
+                "Transfer",
+                "Other"
+            ],
+            "x-enum-varnames": [
+                "PaymentMethodCash",
+                "PaymentMethodCard",
+                "PaymentMethodTransfer",
+                "PaymentMethodOther"
+            ]
+        },
+        "billingdomain.PaymentMethods": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "global_status": {
+                    "type": "boolean"
+                },
+                "method_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/billingdomain.PaymentMethodTypeEnum"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "branchdomain.BranchStatusCount": {
             "type": "object",
             "properties": {
@@ -3927,47 +3968,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "open_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "branchdomain.PaymentMethodTypeEnum": {
-            "type": "string",
-            "enum": [
-                "Cash",
-                "Card",
-                "Transfer",
-                "Other"
-            ],
-            "x-enum-varnames": [
-                "PaymentMethodCash",
-                "PaymentMethodCard",
-                "PaymentMethodTransfer",
-                "PaymentMethodOther"
-            ]
-        },
-        "branchdomain.PaymentMethods": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "global_status": {
-                    "type": "boolean"
-                },
-                "method_id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "$ref": "#/definitions/branchdomain.PaymentMethodTypeEnum"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }

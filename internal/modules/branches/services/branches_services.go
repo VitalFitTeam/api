@@ -38,22 +38,6 @@ func (s *BranchServices) GetBranches(ctx context.Context, fq pagination.Paginate
 	return branches, nil
 }
 
-func (s *BranchServices) GetPaymentMethodByID(ctx context.Context, methodID uuid.UUID) (*branchdomain.PaymentMethods, error) {
-	paymentMethod, err := s.store.PaymentMethods.GetPaymentMethodByID(ctx, methodID)
-	if err != nil {
-		return nil, err
-	}
-	return paymentMethod, nil
-}
-
-func (s *BranchServices) GetPaymentMethods(ctx context.Context) ([]*branchdomain.PaymentMethods, error) {
-	paymentMethods, err := s.store.PaymentMethods.GetPaymentMethods(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return paymentMethods, nil
-}
-
 func (s *BranchServices) DeleteBranch(ctx context.Context, branchID uuid.UUID) error {
 	err := s.store.Branches.Delete(ctx, branchID)
 	if err != nil {

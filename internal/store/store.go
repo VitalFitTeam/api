@@ -25,7 +25,7 @@ type Storage struct {
 	Roles           authdomain.RolesRepository
 	Branches        branchdomain.BranchesRepository
 	Locations       branchdomain.LocationRepository
-	PaymentMethods  branchdomain.PaymentMethodsRepository
+	PaymentMethods  billingdomain.PaymentMethodsRepository
 	Equipment       inventorydomain.EquipmentRepository
 	BranchInventory inventorydomain.BranchInventoryRepository
 	Instructor      instructordomain.InstructorRepository
@@ -41,7 +41,7 @@ func NewStorage(db *gorm.DB) Storage {
 		Roles:           authrepository.NewRoleStore(db),
 		Branches:        branchrepository.NewBranchesStore(db),
 		Locations:       branchrepository.NewLocationsStore(db),
-		PaymentMethods:  branchrepository.NewPaymentMethodsStore(db),
+		PaymentMethods:  billingrepository.NewPaymentMethodsStore(db),
 		Equipment:       inventoryrepository.NewEquipmentStore(db),
 		BranchInventory: inventoryrepository.NewBranchInventoryStore(db),
 		Instructor:      instructorrepository.NewInstructorStore(db),

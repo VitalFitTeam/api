@@ -185,6 +185,35 @@ definitions:
     - confirm_password
     - password
     type: object
+  billingdomain.PaymentMethodTypeEnum:
+    enum:
+    - Cash
+    - Card
+    - Transfer
+    - Other
+    type: string
+    x-enum-varnames:
+    - PaymentMethodCash
+    - PaymentMethodCard
+    - PaymentMethodTransfer
+    - PaymentMethodOther
+  billingdomain.PaymentMethods:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      global_status:
+        type: boolean
+      method_id:
+        type: string
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/billingdomain.PaymentMethodTypeEnum'
+      updated_at:
+        type: string
+    type: object
   branchdomain.BranchStatusCount:
     properties:
       active:
@@ -231,35 +260,6 @@ definitions:
       is_closed:
         type: boolean
       open_time:
-        type: string
-    type: object
-  branchdomain.PaymentMethodTypeEnum:
-    enum:
-    - Cash
-    - Card
-    - Transfer
-    - Other
-    type: string
-    x-enum-varnames:
-    - PaymentMethodCash
-    - PaymentMethodCard
-    - PaymentMethodTransfer
-    - PaymentMethodOther
-  branchdomain.PaymentMethods:
-    properties:
-      created_at:
-        type: string
-      description:
-        type: string
-      global_status:
-        type: boolean
-      method_id:
-        type: string
-      name:
-        type: string
-      type:
-        $ref: '#/definitions/branchdomain.PaymentMethodTypeEnum'
-      updated_at:
         type: string
     type: object
   branchhandlers.BranchListResponse:
@@ -1625,6 +1625,33 @@ paths:
       summary: Register New User Staff
       tags:
       - Auth
+  /billing/payment-methods:
+    get:
+      description: Retrieves a list of all available payment methods in the system.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A list of available payment methods
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/billingdomain.PaymentMethods'
+                type: array
+            type: object
+        "500":
+          description: 'Error: internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all payment methods
+      tags:
+      - Billing
   /branches:
     get:
       consumes:
@@ -2403,33 +2430,6 @@ paths:
       summary: Update a branch service
       tags:
       - Branch Services
-  /branches/payment-methods:
-    get:
-      description: Retrieves a list of all available payment methods in the system.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: A list of payment methods
-          schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/branchdomain.PaymentMethods'
-                type: array
-            type: object
-        "500":
-          description: 'Error: internal server error'
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get all payment methods
-      tags:
-      - Branches
   /branches/status:
     get:
       description: Get a count data for each status branch

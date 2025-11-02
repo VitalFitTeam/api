@@ -8,6 +8,7 @@ import (
 
 type BillingHandlersInterface interface {
 	BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	GetPaymentMethodsHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -21,5 +22,9 @@ func NewBillingHandlers(services appservices.Services) *BillingHandlers {
 }
 
 func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
-
+	billingGroup := rg.Group("/billing").
+		Use(m.AuthJwtTokenMiddleware())
+	{
+		billingGroup.GET("/payment-methods", m.RBACPermission("billing:list"), r.GetPaymentMethodsHandler)
+	}
 }

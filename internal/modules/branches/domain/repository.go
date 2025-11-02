@@ -12,7 +12,6 @@ type BranchesRepository interface {
 	Update(ctx context.Context, branch *Branch) error
 	CreateBranch(ctx context.Context, branch *Branch) error
 	GetBranches(ctx context.Context, fq pagination.PaginatedFeedQuery) (*BranchQueryResults, error)
-	AddPaymentMethodsToBranch(ctx context.Context, branchID uuid.UUID, paymentLinks []PaymentMethodsBranch) error
 	Delete(ctx context.Context, branchID uuid.UUID) error
 	GetBranchStatusCount(ctx context.Context) (*BranchStatusCount, error)
 	GetPublicBranchesMap(ctx context.Context) ([]PublicBranchMapResponse, error)
@@ -20,9 +19,4 @@ type BranchesRepository interface {
 
 type LocationRepository interface {
 	FindOrCreateStateByCountry(ctx context.Context, stateName string, countryName string) (*States, error)
-}
-
-type PaymentMethodsRepository interface {
-	GetPaymentMethods(ctx context.Context) ([]*PaymentMethods, error)
-	GetPaymentMethodByID(ctx context.Context, methodID uuid.UUID) (*PaymentMethods, error)
 }
