@@ -32,12 +32,12 @@ func NewSeedStruct() *SeedStruct {
 
 func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB) {
 	ctx := context.Background()
-	//s.CreateSuperAdmin(store, db, ctx)
-	//s.SeedPermissions(store, db, ctx)
-	//s.SeedInstructors(store, db, ctx)
-	//s.SeedUsers(store, db, ctx)
-	//s.SeedServiceCategories(store, db, ctx)
+	s.CreateSuperAdmin(store, db, ctx)
+	s.SeedPermissions(store, db, ctx)
+	s.SeedUsers(store, db, ctx)
+	s.SeedServiceCategories(store, db, ctx)
 	s.SeedBanners(store, db, ctx)
+	s.SeedInstructors(store, db, ctx)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {

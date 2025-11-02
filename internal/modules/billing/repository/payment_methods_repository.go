@@ -2,8 +2,10 @@ package billingrepository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
@@ -39,6 +41,44 @@ func (s *PaymentMethodsStore) GetPaymentMethodByID(ctx context.Context, methodID
 		return nil, err
 	}
 	return &paymentMethod, nil
+}
+
+func (s *PaymentMethodsStore) CreatePaymentMethod(ctx context.Context, paymentMethod *billingdomain.PaymentMethods) error {
+	err := s.db.WithContext(ctx).Create(&paymentMethod).Error
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return shared_errors.ErrConflict
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *PaymentMethodsStore) UpdatePaymentMethod(ctx context.Context, paymentMethod *billingdomain.PaymentMethods) error {
+	err := s.db.WithContext(ctx).Model(&billingdomain.PaymentMethods{}).Where("method_id = ?", paymentMethod.MethodID).Updates(paymentMethod).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return shared_errors.ErrNotFound
+		default:
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *PaymentMethodsStore) DeletePaymentMethod(ctx context.Context, methodID uuid.UUID) error {
+	err := s.db.WithContext(ctx).Delete(&billingdomain.PaymentMethods{}, methodID).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return shared_errors.ErrNotFound
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 // func (s *BranchesStore) AddPaymentMethodsToBranch(ctx context.Context, branchID uuid.UUID, paymentLinks []branchdomain.PaymentMethodsBranch) error {
