@@ -15,6 +15,7 @@ import (
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
+	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	"github.com/vitalfit/api/internal/store"
@@ -34,13 +35,14 @@ func NewSeedStruct() *SeedStruct {
 
 func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB) {
 	ctx := context.Background()
-	s.CreateSuperAdmin(store, db, ctx)
-	s.SeedPermissions(store, db, ctx)
-	s.SeedUsers(store, db, ctx)
-	s.SeedServiceCategories(store, db, ctx)
-	s.SeedBanners(store, db, ctx)
-	s.SeedInstructors(store, db, ctx)
-	s.SeedBranches(store, db, ctx)
+	//s.CreateSuperAdmin(store, db, ctx)
+	//s.SeedPermissions(store, db, ctx)
+	//s.SeedUsers(store, db, ctx)
+	//s.SeedServiceCategories(store, db, ctx)
+	//s.SeedBanners(store, db, ctx)
+	//s.SeedInstructors(store, db, ctx)
+	//s.SeedBranches(store, db, ctx)
+	s.SeedEquipment(store, db, ctx)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -498,6 +500,54 @@ func (s *SeedStruct) SeedBranches(store store.Storage, db *gorm.DB, ctx context.
 	}
 
 	log.Println("Branchs seeder completed successfully.")
+
+}
+
+type equipmentJSON struct {
+	Brand       string
+	Category    string
+	Description string
+	Model       string
+	Name        string
+}
+
+func (s *SeedStruct) SeedEquipment(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/equipments.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read equipment.json file: %v", err)
+		return
+	}
+
+	var equipmentFromJSON []equipmentJSON
+	if err = json.Unmarshal(jsonFile, &equipmentFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode JSON: %v", err)
+		return
+	}
+	log.Printf("Found %d equipment in equipment.json. Starting seeder...", len(equipmentFromJSON))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+
+		for _, e := range equipmentFromJSON {
+			equipment := &inventorydomain.Equipment{
+				Brand:       e.Brand,
+				Category:    inventorydomain.EquipmentCategoryEnum(e.Category),
+				Description: e.Description,
+				Model:       e.Model,
+				Name:        e.Name,
+			}
+			err := tx.WithContext(ctx).Create(&equipment).Error
+			if err != nil {
+				log.Printf("Error creating equipment '%s': %v", e.Name, err)
+				return err //rollback
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Println("Error in equipment seeder, transaction was rolled back:", err)
+		return
+	}
+	log.Println("Equipment seeder completed successfully.")
 
 }
 
