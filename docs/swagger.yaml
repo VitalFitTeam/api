@@ -905,6 +905,72 @@ definitions:
       name:
         type: string
     type: object
+  membershipsdomain.MembershipType:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      duration_days:
+        type: integer
+      is_active:
+        type: boolean
+      membership_type_id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  membershipshandlers.CreateMembershipPayload:
+    properties:
+      description:
+        type: string
+      duration_days:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+    required:
+    - duration_days
+    - name
+    - price
+    type: object
+  membershipshandlers.MembershipResponse:
+    properties:
+      description:
+        type: string
+      duration_days:
+        type: integer
+      is_active:
+        type: boolean
+      membership_type_id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  membershipshandlers.UpdateMembershipPayload:
+    properties:
+      description:
+        type: string
+      duration_days:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+    type: object
   productsdomain.Service:
     properties:
       banners:
@@ -3563,6 +3629,210 @@ paths:
       summary: Update a banner
       tags:
       - Marketing
+  /memberships/types:
+    get:
+      description: Retrieves a list of all membership types.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/membershipshandlers.MembershipResponse'
+                type: array
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all membership types
+      tags:
+      - Memberships
+    post:
+      consumes:
+      - application/json
+      description: Adds a new membership type (plan) to the system.
+      parameters:
+      - description: Membership creation payload
+        in: body
+        name: membership
+        required: true
+        schema:
+          $ref: '#/definitions/membershipshandlers.CreateMembershipPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Membership type created successfully
+          schema:
+            $ref: '#/definitions/membershipsdomain.MembershipType'
+        "400":
+          description: 'error: Bad Request'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: 'error: Conflict'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new membership type
+      tags:
+      - Memberships
+  /memberships/types/{id}:
+    delete:
+      description: Soft deletes a membership type from the system (sets inactive).
+      parameters:
+      - description: Membership Type UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: 'error: Bad Request - Invalid ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Membership type not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a membership type
+      tags:
+      - Memberships
+    get:
+      description: Retrieves a single membership type by its UUID.
+      parameters:
+      - description: Membership Type UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/membershipshandlers.MembershipResponse'
+            type: object
+        "400":
+          description: 'error: Bad Request - Invalid ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Membership type not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get membership type by ID
+      tags:
+      - Memberships
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing membership type’s details.
+      parameters:
+      - description: Membership Type UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Membership update payload
+        in: body
+        name: membership
+        required: true
+        schema:
+          $ref: '#/definitions/membershipshandlers.UpdateMembershipPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Membership type updated successfully
+          schema:
+            $ref: '#/definitions/membershipsdomain.MembershipType'
+        "400":
+          description: 'error: Bad Request - Invalid ID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Membership type not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a membership type
+      tags:
+      - Memberships
   /public/branches-map:
     get:
       description: Retrieves a list of public branches with minimal information for
