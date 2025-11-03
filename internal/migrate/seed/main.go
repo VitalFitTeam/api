@@ -13,12 +13,14 @@ import (
 
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	"github.com/vitalfit/api/internal/store"
 	env "github.com/vitalfit/api/pkg/Env"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 
 	_ "github.com/lib/pq"
@@ -38,6 +40,7 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB) {
 	s.SeedServiceCategories(store, db, ctx)
 	s.SeedBanners(store, db, ctx)
 	s.SeedInstructors(store, db, ctx)
+	s.SeedBranches(store, db, ctx)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -396,6 +399,105 @@ func (s *SeedStruct) SeedBanners(store store.Storage, db *gorm.DB, ctx context.C
 	}
 
 	log.Println("Banners seeder completed successfully.")
+
+}
+
+type branchJSON struct {
+	Address        string               `json:"address"`
+	Country        string               `json:"country"`
+	Latitude       float64              `json:"latitude"`
+	Longitude      float64              `json:"longitude"`
+	MaxCapacity    int                  `json:"max_capacity"`
+	Name           string               `json:"name"`
+	OperatingHours []operatingHoursJSON `json:"operating_hours"`
+	Phone          string               `json:"phone"`
+	State          string               `json:"state"`
+	Status         string               `json:"status"`
+	TaxID          string               `json:"tax_id"`
+}
+
+type operatingHoursJSON struct {
+	DayOfWeek string `json:"day_of_week"`
+	OpenTime  string `json:"open_time"`
+	CloseTime string `json:"close_time"`
+	IsClosed  bool   `json:"is_closed"`
+}
+
+func (s *SeedStruct) SeedBranches(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/branches.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read branches.json file: %v", err)
+		return
+	}
+
+	var branchesFromJSON []branchJSON
+	if err = json.Unmarshal(jsonFile, &branchesFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode JSON: %v", err)
+		return
+	}
+	log.Printf("Found %d branches in branches.json. Starting seeder...", len(branchesFromJSON))
+
+	branchAdminsFeed, err := store.Users.GetBranchAdmins(ctx, pagination.PaginatedFeedQuery{})
+	if err != nil {
+		log.Printf("Error getting branch admins: %v", err)
+		return
+	}
+
+	if len(branchAdminsFeed) == 0 {
+		log.Println("Warning: No branch admins found. Branches will be created without a manager.")
+	}
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+
+		for _, b := range branchesFromJSON {
+			branch := &branchdomain.Branch{
+				Address:     b.Address,
+				MaxCapacity: b.MaxCapacity,
+				Name:        b.Name,
+				Phone:       b.Phone,
+				Status:      branchdomain.BranchStatusEnum(b.Status),
+				TaxID:       b.TaxID,
+			}
+
+			state, err := store.Locations.FindOrCreateStateByCountry(ctx, b.State, b.Country)
+			if err != nil {
+				log.Printf("Error creating state '%s': %v", b.State, err)
+				return err //rollback
+			}
+			branch.StateID = state.StateID
+
+			for _, oh := range b.OperatingHours {
+				branch.OperatingHours = append(branch.OperatingHours, branchdomain.OperatingHours{
+					DayOfWeek: branchdomain.DayOfWeekEnum(oh.DayOfWeek),
+					OpenTime:  &oh.OpenTime,
+					CloseTime: &oh.CloseTime,
+					IsClosed:  oh.IsClosed,
+				})
+			}
+
+			if len(branchAdminsFeed) > 0 {
+
+				randomIndex := rand.Intn(len(branchAdminsFeed))
+				randomAdmin := branchAdminsFeed[randomIndex]
+
+				branch.ManagerID = randomAdmin.UserID
+			}
+
+			err = store.Branches.Create(ctx, tx, branch)
+			if err != nil {
+				log.Printf("Error creating branch '%s': %v", b.Name, err)
+				return err //rollback
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Printf("Seeder transaction failed: %v", err)
+	}
+
+	log.Println("Branchs seeder completed successfully.")
 
 }
 

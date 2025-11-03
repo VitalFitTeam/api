@@ -22,7 +22,7 @@ func NewBranchesStore(db *gorm.DB) *BranchesStore {
 	return &BranchesStore{db: db}
 }
 
-func (s *BranchesStore) create(ctx context.Context, tx *gorm.DB, branch *branchdomain.Branch) error {
+func (s *BranchesStore) Create(ctx context.Context, tx *gorm.DB, branch *branchdomain.Branch) error {
 	err := tx.WithContext(ctx).Omit("PaymentMethodsLinks").Create(&branch).Error
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -39,7 +39,7 @@ func (s *BranchesStore) create(ctx context.Context, tx *gorm.DB, branch *branchd
 func (s *BranchesStore) CreateBranch(ctx context.Context, branch *branchdomain.Branch) error {
 	// transaction
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
-		err := s.create(ctx, tx, branch)
+		err := s.Create(ctx, tx, branch)
 		if err != nil {
 			return err // rollback
 		}
