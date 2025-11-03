@@ -1955,6 +1955,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Retrieves a list of all instructors assigned to a specific branch.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1969,6 +1972,36 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for first name, last name, or email",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by identity document",
+                        "name": "identity_doc",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1987,7 +2020,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid UUID format",
+                        "description": "Bad Request: Invalid UUID format or invalid query parameters",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -3030,6 +3063,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Retrieves a list of all instructors in the system.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -3037,6 +3073,38 @@ const docTemplate = `{
                     "Instructors"
                 ],
                 "summary": "List all instructors",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for first name, last name, or email",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by identity document",
+                        "name": "identity_doc",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "List of instructors",
@@ -3048,6 +3116,17 @@ const docTemplate = `{
                                     "items": {
                                         "$ref": "#/definitions/instructorhandler.ListInstructorResponse"
                                     }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request (e.g., invalid query parameters)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -3730,7 +3809,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/memberships/types": {
+        "/membership-plans": {
             "get": {
                 "security": [
                     {
@@ -3844,7 +3923,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/memberships/types/{id}": {
+        "/membership-plans/{id}": {
             "get": {
                 "security": [
                     {

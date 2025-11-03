@@ -467,9 +467,6 @@ func (h *AuthHandlers) GetBranchAdminsHandler(c *gin.Context) {
 func (h *AuthHandlers) GetUsersHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	fq := pagination.PaginatedFeedQuery{
-		Limit:  100,
-		Page:   1,
-		Sort:   "asc",
 		Search: "",
 		Role:   "",
 	}
@@ -523,9 +520,6 @@ func (h *AuthHandlers) GetUsersHandler(c *gin.Context) {
 func (h *AuthHandlers) GetClientsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	fq := pagination.PaginatedFeedQuery{
-		Limit:  100,
-		Page:   1,
-		Sort:   "asc",
 		Search: "",
 	}
 

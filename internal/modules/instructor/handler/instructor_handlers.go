@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/mailer"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 // @Summary		Create a new instructor
@@ -70,13 +71,29 @@ func (h *InstructorHandlers) CreateInstructorHandler(c *gin.Context) {
 // @Description	Retrieves a list of all instructors in the system.
 // @Tags			Instructors
 // @Security		ApiKeyAuth
+// @Accept			json
 // @Produce		json
-// @Success		200	{object}	object{data=[]ListInstructorResponse}	"List of instructors"
-// @Failure		500	{object}	map[string]interface{}					"Internal Server Error"
+// @Param			limit			query		int										false	"Number of results per page"
+// @Param			page			query		int										false	"Page number"
+// @Param			sort			query		string									false	"Sort order (asc/desc)"
+// @Param			search			query		string									false	"Search term for first name, last name, or email"
+// @Param			identity_doc	query		string									false	"Filter by identity document"
+// @Success		200				{object}	object{data=[]ListInstructorResponse}	"List of instructors"
+// @Failure		400				{object}	object{error=string}					"Error: Bad Request (e.g., invalid query parameters)"
+// @Failure		500				{object}	map[string]interface{}					"Internal Server Error"
 // @Router			/instructor [get]
 func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
-	instructors, err := h.services.InstructorServices.GetInstructors(ctx)
+	fq := pagination.PaginatedFeedQuery{
+		Search:       "",
+		Identity_doc: "",
+	}
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	instructors, err := h.services.InstructorServices.GetInstructors(ctx, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -282,15 +299,31 @@ func (h *InstructorHandlers) AssignInstructorsToBranchHandler(c *gin.Context) {
 // @Description	Retrieves a list of all instructors assigned to a specific branch.
 // @Tags			Branch Instructors
 // @Security		ApiKeyAuth
+// @Accept			json
 // @Produce		json
-// @Param			id	path		string									true	"Branch UUID"
-// @Success		200	{object}	object{data=[]BranchInstructorResponse}	"List of branch instructors"
-// @Failure		400	{object}	map[string]interface{}					"Bad Request: Invalid UUID format"
-// @Failure		404	{object}	map[string]interface{}					"Not Found: Branch not found"
-// @Failure		500	{object}	map[string]interface{}					"Internal Server Error"
+// @Param			id				path		string									true	"Branch UUID"
+// @Param			limit			query		int										false	"Number of results per page"
+// @Param			page			query		int										false	"Page number"
+// @Param			sort			query		string									false	"Sort order (asc/desc)"
+// @Param			search			query		string									false	"Search term for first name, last name, or email"
+// @Param			identity_doc	query		string									false	"Filter by identity document"
+// @Success		200				{object}	object{data=[]BranchInstructorResponse}	"List of branch instructors"
+// @Failure		400				{object}	map[string]interface{}					"Bad Request: Invalid UUID format or invalid query parameters"
+// @Failure		404				{object}	map[string]interface{}					"Not Found: Branch not found"
+// @Failure		500				{object}	map[string]interface{}					"Internal Server Error"
 // @Router			/branches/{id}/instructor [get]
 func (h *InstructorHandlers) ListBranchInstructorsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Search:       "",
+		Identity_doc: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
 
 	branchID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -298,7 +331,7 @@ func (h *InstructorHandlers) ListBranchInstructorsHandler(c *gin.Context) {
 		return
 	}
 
-	instructors, err := h.services.InstructorServices.ListBranchInstructors(ctx, branchID)
+	instructors, err := h.services.InstructorServices.ListBranchInstructors(ctx, branchID, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return

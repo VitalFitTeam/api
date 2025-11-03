@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 func (s *InstructorServices) AssignInstructorsToBranch(ctx context.Context, branchID uuid.UUID, instructorID []uuid.UUID) error {
@@ -16,8 +17,8 @@ func (s *InstructorServices) AssignInstructorsToBranch(ctx context.Context, bran
 
 }
 
-func (s *InstructorServices) ListBranchInstructors(ctx context.Context, branchID uuid.UUID) ([]*instructordomain.Instructor, error) {
-	instructors, err := s.store.Instructor.ListBranchInstructors(ctx, branchID)
+func (s *InstructorServices) ListBranchInstructors(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*instructordomain.Instructor, error) {
+	instructors, err := s.store.Instructor.ListBranchInstructors(ctx, branchID, fq)
 	if err != nil {
 		return nil, err
 	}

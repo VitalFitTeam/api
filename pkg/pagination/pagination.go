@@ -8,15 +8,17 @@ import (
 )
 
 type PaginatedFeedQuery struct {
-	Limit    int    `json:"limit" validate:"gte=1,lte=20"`
-	Page     int    `json:"page" validate:"gte=1"`
-	Sort     string `json:"sort" validate:"oneof=asc desc"`
-	Search   string `json:"search" validate:"max=100"`
-	Status   string `json:"status" validate:"oneof=Active Inactive Maintenance ''"`
-	Since    string `json:"since"`
-	Until    string `json:"until"`
-	Location string `json:"location"`
-	Role     string `json:"role"`
+	Limit        int    `json:"limit" validate:"gte=1,lte=20"`
+	Page         int    `json:"page" validate:"gte=1"`
+	Sort         string `json:"sort" validate:"oneof=asc desc"`
+	Search       string `json:"search" validate:"max=100"`
+	Status       string `json:"status" validate:"oneof=Active Inactive Maintenance ''"`
+	Since        string `json:"since"`
+	Until        string `json:"until"`
+	Location     string `json:"location"`
+	Role         string `json:"role"`
+	Category     string `json:"category"`
+	Identity_doc string `json:"identity_doc"`
 }
 
 func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) {
@@ -65,6 +67,15 @@ func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) 
 	role := qs.Get("role")
 	if role != "" {
 		fq.Role = role
+	}
+	category := qs.Get("category")
+	if category != "" {
+		fq.Category = category
+	}
+
+	identity_doc := qs.Get("identity_doc")
+	if identity_doc != "" {
+		fq.Identity_doc = identity_doc
 	}
 
 	status := qs.Get("status")

@@ -19,7 +19,7 @@ import (
 // @Failure		400			{object}	object{error=string}				"error: Bad Request"
 // @Failure		409			{object}	object{error=string}				"error: Conflict"
 // @Failure		500			{object}	object{error=string}				"error: Internal Server Error"
-// @Router			/memberships/types [post]
+// @Router			/membership-plans [post]
 func (h *MembershipHandler) CreateMembershipHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	var payload CreateMembershipPayload
@@ -61,7 +61,7 @@ func (h *MembershipHandler) CreateMembershipHandler(c *gin.Context) {
 // @Failure		400			{object}	object{error=string}				"error: Bad Request - Invalid ID or payload"
 // @Failure		404			{object}	object{error=string}				"error: Not Found - Membership type not found"
 // @Failure		500			{object}	object{error=string}				"error: Internal Server Error"
-// @Router			/memberships/types/{id} [put]
+// @Router			/membership-plans/{id} [put]
 func (h *MembershipHandler) UpdateMembershipHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	var payload UpdateMembershipPayload
@@ -109,7 +109,7 @@ func (h *MembershipHandler) UpdateMembershipHandler(c *gin.Context) {
 // @Failure		400	{object}	object{error=string}	"error: Bad Request - Invalid ID"
 // @Failure		404	{object}	object{error=string}	"error: Not Found - Membership type not found"
 // @Failure		500	{object}	object{error=string}	"error: Internal Server Error"
-// @Router			/memberships/types/{id} [delete]
+// @Router			/membership-plans/{id} [delete]
 func (h *MembershipHandler) DeleteMembershipHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	membershipID, err := uuid.Parse(c.Param("id"))
@@ -142,7 +142,7 @@ func (h *MembershipHandler) DeleteMembershipHandler(c *gin.Context) {
 // @Failure		400	{object}	object{error=string}	"error: Bad Request - Invalid ID"
 // @Failure		404	{object}	object{error=string}	"error: Not Found - Membership type not found"
 // @Failure		500	{object}	object{error=string}	"error: Internal Server Error"
-// @Router			/memberships/types/{id} [get]
+// @Router			/membership-plans/{id} [get]
 func (h *MembershipHandler) GetMembershipByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	membershipID, err := uuid.Parse(c.Param("id"))
@@ -180,7 +180,7 @@ func (h *MembershipHandler) GetMembershipByIDHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Success		200	{object}	object{data=[]MembershipResponse}
 // @Failure		500	{object}	object{error=string}	"error: Internal Server Error"
-// @Router			/memberships/types [get]
+// @Router			/membership-plans [get]
 func (h *MembershipHandler) GetMembershipsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	memberships, err := h.services.MembershipServices.GetMembershipTypes(ctx)
