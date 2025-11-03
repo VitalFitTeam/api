@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -34,15 +35,29 @@ func (s *InstructorStore) AssignInstructorsToBranch(ctx context.Context, branchI
 
 	return err
 }
-func (s *InstructorStore) ListBranchInstructors(ctx context.Context, branchID uuid.UUID) ([]*instructordomain.Instructor, error) {
+func (s *InstructorStore) ListBranchInstructors(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*instructordomain.Instructor, error) {
 	var instructors []*instructordomain.Instructor
 
-	err := s.db.WithContext(ctx).
+	query := s.db.WithContext(ctx).
 		Preload("User").
 		Joins("JOIN branch_instructors ON branch_instructors.instructor_id = instructors.instructor_id").
-		Where("branch_instructors.branch_id = ?", branchID).
-		Find(&instructors).Error
+		Joins("JOIN users ON users.user_id = instructors.user_id").
+		Where("branch_instructors.branch_id = ?", branchID)
 
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		query = query.Where(
+			"users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?",
+			searchQuery, searchQuery, searchQuery, searchQuery,
+		)
+	}
+
+	if fq.Identity_doc != "" {
+		idQuery := "%" + fq.Identity_doc + "%"
+		query = query.Where("users.identity_document ILIKE ?", idQuery)
+	}
+
+	err := query.Find(&instructors).Error
 	if err != nil {
 		return nil, err
 	}

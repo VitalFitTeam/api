@@ -1955,6 +1955,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Retrieves a list of all instructors assigned to a specific branch.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1969,6 +1972,36 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for first name, last name, or email",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by identity document",
+                        "name": "identity_doc",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1987,7 +2020,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request: Invalid UUID format",
+                        "description": "Bad Request: Invalid UUID format or invalid query parameters",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -3030,6 +3063,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Retrieves a list of all instructors in the system.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -3037,6 +3073,38 @@ const docTemplate = `{
                     "Instructors"
                 ],
                 "summary": "List all instructors",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for first name, last name, or email",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by identity document",
+                        "name": "identity_doc",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "List of instructors",
@@ -3048,6 +3116,17 @@ const docTemplate = `{
                                     "items": {
                                         "$ref": "#/definitions/instructorhandler.ListInstructorResponse"
                                     }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request (e.g., invalid query parameters)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -3730,7 +3809,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/memberships/types": {
+        "/membership-plans": {
             "get": {
                 "security": [
                     {
@@ -3844,7 +3923,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/memberships/types/{id}": {
+        "/membership-plans/{id}": {
             "get": {
                 "security": [
                     {
@@ -4454,6 +4533,180 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/clients": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of all users with the 'client' role. Supports searching by name.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "List client users",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for first name or last name",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of client users",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/authhandlers.UserResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request (e.g., invalid query parameters)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of all users who are not clients. Supports filtering by role and searching by name or email.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "List staff users",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for first name, last name, or email",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by role name",
+                        "name": "role",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of staff users",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/authhandlers.UserResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request (e.g., invalid query parameters)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user/whoami": {
             "get": {
                 "security": [
@@ -4758,6 +5011,35 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 8
+                }
+            }
+        },
+        "authhandlers.UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "identity_document": {
+                    "type": "string"
+                },
+                "is_validated": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "string"
+                },
+                "role_name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },

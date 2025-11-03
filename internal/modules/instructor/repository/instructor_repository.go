@@ -11,6 +11,7 @@ import (
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -45,18 +46,36 @@ func (s *InstructorStore) Create(ctx context.Context, tx *gorm.DB, instructor *i
 	return nil
 }
 
-func (s *InstructorStore) GetInstructors(ctx context.Context) ([]*instructordomain.Instructor, error) {
+func (s *InstructorStore) GetInstructors(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*instructordomain.Instructor, error) {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
+
 	var instructors []*instructordomain.Instructor
-	err := s.db.WithContext(ctx).
+
+	query := s.db.WithContext(ctx).
 		Joins("JOIN users ON users.user_id = instructors.user_id").
 		Where("users.is_validated = ?", true).
-		Preload("User").Preload("Specialties").
-		Find(&instructors).Error
+		Preload("User").
+		Preload("Specialties")
+
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		query = query.Where(
+			"users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?",
+			searchQuery, searchQuery, searchQuery, searchQuery,
+		)
+	}
+
+	if fq.Identity_doc != "" {
+		idQuery := "%" + fq.Identity_doc + "%"
+		query = query.Where("users.identity_document ILIKE ?", idQuery)
+	}
+
+	err := query.Find(&instructors).Error
 	if err != nil {
 		return nil, err
 	}
+
 	return instructors, nil
 }
 

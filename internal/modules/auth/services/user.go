@@ -67,6 +67,21 @@ func (h *UserService) GetBranchAdmins(ctx context.Context, fq pagination.Paginat
 	return users, nil
 }
 
+func (h *UserService) GetUsers(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+	users, err := h.store.Users.GetUsers(ctx, fq)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+func (h *UserService) GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+	users, err := h.store.Users.GetClients(ctx, fq)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 //roles
 
 func (h *UserService) RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error) {

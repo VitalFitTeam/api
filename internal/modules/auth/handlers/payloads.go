@@ -122,3 +122,14 @@ type BranchAdminResponse struct {
 	RoleID    uuid.UUID `json:"role_id"`
 	RoleName  string    `json:"role_name"`
 }
+
+type UserResponse struct {
+	UserID           uuid.UUID `json:"user_id"`
+	FirstName        string    `json:"first_name"`
+	LastName         string    `json:"last_name"`
+	RoleID           uuid.UUID `json:"role_id"`
+	RoleName         string    `json:"role_name"`
+	Email            string    `json:"email"`
+	IdentityDocument string    `json:"identity_document"`
+	IsValidated      bool      `json:"is_validated"`
+}

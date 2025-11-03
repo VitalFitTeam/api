@@ -185,6 +185,25 @@ definitions:
     - confirm_password
     - password
     type: object
+  authhandlers.UserResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      identity_document:
+        type: string
+      is_validated:
+        type: boolean
+      last_name:
+        type: string
+      role_id:
+        type: string
+      role_name:
+        type: string
+      user_id:
+        type: string
+    type: object
   billingdomain.BranchPaymentVisibilityEnum:
     enum:
     - Client
@@ -2447,12 +2466,34 @@ paths:
       - Branch Inventory
   /branches/{id}/instructor:
     get:
+      consumes:
+      - application/json
       description: Retrieves a list of all instructors assigned to a specific branch.
       parameters:
       - description: Branch UUID
         in: path
         name: id
         required: true
+        type: string
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term for first name, last name, or email
+        in: query
+        name: search
+        type: string
+      - description: Filter by identity document
+        in: query
+        name: identity_doc
         type: string
       produces:
       - application/json
@@ -2467,7 +2508,7 @@ paths:
                 type: array
             type: object
         "400":
-          description: 'Bad Request: Invalid UUID format'
+          description: 'Bad Request: Invalid UUID format or invalid query parameters'
           schema:
             additionalProperties: true
             type: object
@@ -3172,7 +3213,30 @@ paths:
       - System
   /instructor:
     get:
+      consumes:
+      - application/json
       description: Retrieves a list of all instructors in the system.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term for first name, last name, or email
+        in: query
+        name: search
+        type: string
+      - description: Filter by identity document
+        in: query
+        name: identity_doc
+        type: string
       produces:
       - application/json
       responses:
@@ -3184,6 +3248,13 @@ paths:
                 items:
                   $ref: '#/definitions/instructorhandler.ListInstructorResponse'
                 type: array
+            type: object
+        "400":
+          description: 'Error: Bad Request (e.g., invalid query parameters)'
+          schema:
+            properties:
+              error:
+                type: string
             type: object
         "500":
           description: Internal Server Error
@@ -3629,7 +3700,7 @@ paths:
       summary: Update a banner
       tags:
       - Marketing
-  /memberships/types:
+  /membership-plans:
     get:
       description: Retrieves a list of all membership types.
       produces:
@@ -3700,7 +3771,7 @@ paths:
       summary: Create a new membership type
       tags:
       - Memberships
-  /memberships/types/{id}:
+  /membership-plans/{id}:
     delete:
       description: Soft deletes a membership type from the system (sets inactive).
       parameters:
@@ -4090,6 +4161,118 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get a user list that are branch admins
+      tags:
+      - User
+  /user/clients:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a paginated list of all users with the 'client' role.
+        Supports searching by name.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term for first name or last name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A list of client users
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/authhandlers.UserResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Error: Bad Request (e.g., invalid query parameters)'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List client users
+      tags:
+      - User
+  /user/users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a paginated list of all users who are not clients. Supports
+        filtering by role and searching by name or email.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term for first name, last name, or email
+        in: query
+        name: search
+        type: string
+      - description: Filter by role name
+        in: query
+        name: role
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A list of staff users
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/authhandlers.UserResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Error: Bad Request (e.g., invalid query parameters)'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List staff users
       tags:
       - User
   /user/whoami:

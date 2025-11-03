@@ -8,6 +8,7 @@ import (
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type InstructorServices struct {
@@ -34,8 +35,8 @@ func (s *InstructorServices) CreateInstructor(ctx context.Context, instructor *i
 	return nil
 }
 
-func (s *InstructorServices) GetInstructors(ctx context.Context) ([]*instructordomain.Instructor, error) {
-	instructors, err := s.store.Instructor.GetInstructors(ctx)
+func (s *InstructorServices) GetInstructors(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*instructordomain.Instructor, error) {
+	instructors, err := s.store.Instructor.GetInstructors(ctx, fq)
 	if err != nil {
 		return nil, err
 	}
