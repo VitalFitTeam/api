@@ -11,15 +11,24 @@ type MembershipsHandlerInterface interface {
 }
 
 type MembershipHandler struct {
-	service appservices.Services
+	services appservices.Services
 }
 
-func NewMembershipHandler(service appservices.Services) *MembershipHandler {
+func NewMembershipHandler(services appservices.Services) *MembershipHandler {
 	return &MembershipHandler{
-		service: service,
+		services: services,
 	}
 }
 
 func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+	membershipPlansGroup := rg.Group("/membership-plans")
+	{
+		membershipPlansGroup.Use(m.AuthJwtTokenMiddleware())
 
+		membershipPlansGroup.POST("", m.RBACPermission("memberships:create"), r.CreateMembershipHandler)
+		membershipPlansGroup.GET("", m.RBACPermission("memberships:list"), r.GetMembershipsHandler)
+		membershipPlansGroup.GET("/:id", m.RBACPermission("memberships:get"), r.GetMembershipByIDHandler)
+		membershipPlansGroup.PUT("/:id", m.RBACPermission("memberships:update"), r.UpdateMembershipHandler)
+		membershipPlansGroup.DELETE("/:id", m.RBACPermission("memberships:delete"), r.DeleteMembershipHandler)
+	}
 }
