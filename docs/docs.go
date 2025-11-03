@@ -887,6 +887,322 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/payment-methods": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all available payment methods in the system.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Get all payment methods",
+                "responses": {
+                    "200": {
+                        "description": "A list of available payment methods",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/billingdomain.PaymentMethods"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Adds a new payment method to the system.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Create a new payment method",
+                "parameters": [
+                    {
+                        "description": "Payment method creation payload",
+                        "name": "paymentMethod",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/billinghandlers.CreatePaymentMethodPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "payment method created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/billing/payment-methods/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a single payment method by its UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Get payment method by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment Method UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment method details",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/billingdomain.PaymentMethods"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates an existing payment method's details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Update a payment method",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment Method UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payment method update payload",
+                        "name": "paymentMethod",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/billinghandlers.UpdatePaymentMethodPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Deletes a payment method from the system.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Delete a payment method",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment Method UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/branches": {
             "get": {
                 "security": [
@@ -1044,50 +1360,6 @@ const docTemplate = `{
                             "properties": {
                                 "error": {
                                     "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error: internal server error",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/branches/payment-methods": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Retrieves a list of all available payment methods in the system.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Branches"
-                ],
-                "summary": "Get all payment methods",
-                "responses": {
-                    "200": {
-                        "description": "A list of payment methods",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/branchdomain.PaymentMethods"
-                                    }
                                 }
                             }
                         }
@@ -1861,6 +2133,304 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/branches/{id}/payment-methods": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all payment methods configured for a specific branch.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch Payment Methods"
+                ],
+                "summary": "List payment methods for a branch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/billingdomain.PaymentMethodsBranch"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., invalid UUID)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Assigns one or more payment methods to a specific branch with custom configurations.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch Payment Methods"
+                ],
+                "summary": "Add payment methods to a branch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "An array of payment method configurations to add to the branch",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/billinghandlers.MethodBranchConfigPayload"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Payment methods added to branch",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., invalid UUID, invalid payload)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found (e.g., branch or payment method not found)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/branches/{id}/payment-methods/{method_id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates the configuration of a specific payment method for a specific branch.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch Payment Methods"
+                ],
+                "summary": "Update a branch payment method configuration",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Payment Method UUID",
+                        "name": "method_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Configuration update payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/billinghandlers.UpdateBranchConfigPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment method configuration updated",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., invalid UUID, invalid payload)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found (e.g., payment method not found)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Removes a specific payment method configuration from a specific branch.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch Payment Methods"
+                ],
+                "summary": "Remove a payment method from a branch",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Payment Method UUID",
+                        "name": "method_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., invalid UUID)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 }
@@ -3866,6 +4436,207 @@ const docTemplate = `{
                 }
             }
         },
+        "billingdomain.BranchPaymentVisibilityEnum": {
+            "type": "string",
+            "enum": [
+                "Client",
+                "Staff",
+                "All"
+            ],
+            "x-enum-varnames": [
+                "BranchPaymentVisibilityClient",
+                "BranchPaymentVisibilityStaff",
+                "BranchPaymentVisibilityAll"
+            ]
+        },
+        "billingdomain.PaymentMethodTypeEnum": {
+            "type": "string",
+            "enum": [
+                "Cash",
+                "Card",
+                "Transfer",
+                "Other"
+            ],
+            "x-enum-varnames": [
+                "PaymentMethodCash",
+                "PaymentMethodCard",
+                "PaymentMethodTransfer",
+                "PaymentMethodOther"
+            ]
+        },
+        "billingdomain.PaymentMethods": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "global_status": {
+                    "type": "boolean"
+                },
+                "method_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "processing_type": {
+                    "$ref": "#/definitions/billingdomain.PaymentProcessingTypeEnum"
+                },
+                "type": {
+                    "$ref": "#/definitions/billingdomain.PaymentMethodTypeEnum"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "billingdomain.PaymentMethodsBranch": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "configuration": {
+                    "type": "object"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "method_id": {
+                    "type": "string"
+                },
+                "surcharge_fixed": {
+                    "type": "integer"
+                },
+                "surcharge_percentage": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "visibility": {
+                    "$ref": "#/definitions/billingdomain.BranchPaymentVisibilityEnum"
+                }
+            }
+        },
+        "billingdomain.PaymentProcessingTypeEnum": {
+            "type": "string",
+            "enum": [
+                "Gateway",
+                "Offline"
+            ],
+            "x-enum-varnames": [
+                "PaymentProcessingGateway",
+                "PaymentProcessingOffline"
+            ]
+        },
+        "billinghandlers.CreatePaymentMethodPayload": {
+            "type": "object",
+            "required": [
+                "name",
+                "processing_type",
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "processing_type": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "billinghandlers.MethodBranchConfigPayload": {
+            "type": "object",
+            "required": [
+                "method_id"
+            ],
+            "properties": {
+                "configuration": {
+                    "type": "object"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "method_id": {
+                    "type": "string"
+                },
+                "surcharge_fixed": {
+                    "type": "integer"
+                },
+                "surcharge_percentage": {
+                    "type": "number"
+                },
+                "visibility": {
+                    "type": "string"
+                }
+            }
+        },
+        "billinghandlers.UpdateBranchConfigPayload": {
+            "type": "object",
+            "properties": {
+                "configuration": {
+                    "type": "object"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "string"
+                },
+                "surcharge_fixed": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "surcharge_percentage": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "visibility": {
+                    "type": "string",
+                    "enum": [
+                        "Client",
+                        "Staff",
+                        "All"
+                    ]
+                }
+            }
+        },
+        "billinghandlers.UpdatePaymentMethodPayload": {
+            "type": "object",
+            "required": [
+                "processing_type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "processing_type": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "branchdomain.BranchStatusCount": {
             "type": "object",
             "properties": {
@@ -3927,47 +4698,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "open_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "branchdomain.PaymentMethodTypeEnum": {
-            "type": "string",
-            "enum": [
-                "Cash",
-                "Card",
-                "Transfer",
-                "Other"
-            ],
-            "x-enum-varnames": [
-                "PaymentMethodCash",
-                "PaymentMethodCard",
-                "PaymentMethodTransfer",
-                "PaymentMethodOther"
-            ]
-        },
-        "branchdomain.PaymentMethods": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "global_status": {
-                    "type": "boolean"
-                },
-                "method_id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "type": {
-                    "$ref": "#/definitions/branchdomain.PaymentMethodTypeEnum"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }

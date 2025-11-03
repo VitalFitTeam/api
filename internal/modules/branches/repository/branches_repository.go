@@ -22,7 +22,7 @@ func NewBranchesStore(db *gorm.DB) *BranchesStore {
 	return &BranchesStore{db: db}
 }
 
-func (s *BranchesStore) create(ctx context.Context, tx *gorm.DB, branch *branchdomain.Branch) error {
+func (s *BranchesStore) Create(ctx context.Context, tx *gorm.DB, branch *branchdomain.Branch) error {
 	err := tx.WithContext(ctx).Omit("PaymentMethodsLinks").Create(&branch).Error
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -39,7 +39,7 @@ func (s *BranchesStore) create(ctx context.Context, tx *gorm.DB, branch *branchd
 func (s *BranchesStore) CreateBranch(ctx context.Context, branch *branchdomain.Branch) error {
 	// transaction
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
-		err := s.create(ctx, tx, branch)
+		err := s.Create(ctx, tx, branch)
 		if err != nil {
 			return err // rollback
 		}
@@ -111,23 +111,6 @@ func (s *BranchesStore) GetBranchStatusCount(ctx context.Context) (*branchdomain
 
 }
 
-func (s *BranchesStore) AddPaymentMethodsToBranch(ctx context.Context, branchID uuid.UUID, paymentLinks []branchdomain.PaymentMethodsBranch) error {
-	if len(paymentLinks) == 0 {
-		return nil
-	}
-
-	for i := range paymentLinks {
-		paymentLinks[i].BranchID = branchID
-	}
-
-	return db.WithTX(s.db, func(tx *gorm.DB) error {
-		return tx.WithContext(ctx).Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "branch_id"}, {Name: "method_id"}},
-			DoNothing: true,
-		}).Create(&paymentLinks).Error
-	})
-}
-
 // softdelete
 func (s *BranchesStore) Delete(ctx context.Context, branchID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
@@ -152,7 +135,6 @@ func (s *BranchesStore) GetByID(ctx context.Context, branchID uuid.UUID) (*branc
 	err := s.db.WithContext(ctx).
 		Joins("State").Joins("State.Country").Joins("Manager").
 		Preload("OperatingHours").
-		Preload("PaymentMethodsLinks.Method").
 		First(&branch, "branch.branch_id = ?", branchID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

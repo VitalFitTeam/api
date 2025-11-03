@@ -4,6 +4,8 @@ import (
 	"github.com/vitalfit/api/config"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	authservices "github.com/vitalfit/api/internal/modules/auth/services"
+	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
+	billingservice "github.com/vitalfit/api/internal/modules/billing/service"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchservices "github.com/vitalfit/api/internal/modules/branches/services"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
@@ -12,6 +14,8 @@ import (
 	inventoryservices "github.com/vitalfit/api/internal/modules/inventory/services"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	marketingservice "github.com/vitalfit/api/internal/modules/marketing/service"
+	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
+	membershipsservice "github.com/vitalfit/api/internal/modules/memberships/service"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	productsservice "github.com/vitalfit/api/internal/modules/products/service"
 	logs "github.com/vitalfit/api/internal/shared/errors"
@@ -30,6 +34,8 @@ type Services struct {
 	InstructorServices instructordomain.InstructorServiceInterface
 	ProductsServices   productsdomain.ProductsServiceInterface
 	MarketingServices  marketingdomain.MarketingServiceInterface
+	MembershipServices membershipsdomain.MembershipsServiceInterface
+	BillingServices    billingdomain.BillingServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
@@ -45,6 +51,8 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		InstructorServices: instructorservices.NewInstructorServices(store, cfg),
 		ProductsServices:   productsservice.NewProductsService(store),
 		MarketingServices:  marketingservice.NewMarketingService(store),
+		MembershipServices: membershipsservice.NewMembershipService(store),
+		BillingServices:    billingservice.NewBillingService(store),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,
 	}

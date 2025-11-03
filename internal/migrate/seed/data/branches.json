@@ -1,0 +1,212 @@
+[
+  {
+    "address": "Av. Libertador, Edificio A, Piso 10",
+    "country": "Venezuela",
+    "latitude": 10.4903,
+    "longitude": -66.8835,
+    "max_capacity": 50,
+    "name": "Vitalfit Caracas Centro",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "09:00:00", "close_time": "13:00:00", "is_closed": false},
+      {"day_of_week": "Sunday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true}
+    ],
+    "phone": "+58-212-555-0101",
+    "state": "Distrito Capital",
+    "status": "Active",
+    "tax_id": "J-12345678-9"
+  },
+  {
+    "address": "C.C. Sambil, Nivel Feria",
+    "country": "Venezuela",
+    "latitude": 10.4999,
+    "longitude": -66.8533,
+    "max_capacity": 75,
+    "name": "Vitalfit Chacao Express",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Sunday", "open_time": "12:00:00", "close_time": "19:00:00", "is_closed": false}
+    ],
+    "phone": "+58-212-555-0102",
+    "state": "Miranda",
+    "status": "Active",
+    "tax_id": "J-23456789-0"
+  },
+  {
+    "address": "Av. 5 de Julio, Torre Empresarial",
+    "country": "Venezuela",
+    "latitude": 10.6625,
+    "longitude": -71.6122,
+    "max_capacity": 60,
+    "name": "Vitalfit Maracaibo Norte",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "08:30:00", "close_time": "17:30:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "08:30:00", "close_time": "17:30:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "08:30:00", "close_time": "17:30:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "08:30:00", "close_time": "17:30:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "08:30:00", "close_time": "17:30:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "09:00:00", "close_time": "13:00:00", "is_closed": false},
+      {"day_of_week": "Sunday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true}
+    ],
+    "phone": "+58-261-555-0201",
+    "state": "Zulia",
+    "status": "Active",
+    "tax_id": "J-34567890-1"
+  },
+  {
+    "address": "Sector La Lago, Calle 72",
+    "country": "Venezuela",
+    "latitude": 10.6690,
+    "longitude": -71.6030,
+    "max_capacity": 40,
+    "name": "Vitalfit La Lago",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true},
+      {"day_of_week": "Sunday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true}
+    ],
+    "phone": "+58-261-555-0202",
+    "state": "Zulia",
+    "status": "Active",
+    "tax_id": "J-45678901-2"
+  },
+  {
+    "address": "Av. Bolívar Norte, C.C. Camoruco",
+    "country": "Venezuela",
+    "latitude": 10.2163,
+    "longitude": -68.0030,
+    "max_capacity": 100,
+    "name": "Vitalfit Valencia Principal",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "09:00:00", "close_time": "13:00:00", "is_closed": false},
+      {"day_of_week": "Sunday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true}
+    ],
+    "phone": "+58-241-555-0301",
+    "state": "Carabobo",
+    "status": "Active",
+    "tax_id": "J-56789012-3"
+  },
+  {
+    "address": "Zona Industrial, Galpón 22",
+    "country": "Venezuela",
+    "latitude": 10.1691,
+    "longitude": -67.9701,
+    "max_capacity": 150,
+    "name": "Vitalfit Almacén Valencia",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "07:00:00", "close_time": "16:00:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "07:00:00", "close_time": "16:00:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "07:00:00", "close_time": "16:00:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "07:00:00", "close_time": "16:00:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "07:00:00", "close_time": "16:00:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true},
+      {"day_of_week": "Sunday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true}
+    ],
+    "phone": "+58-241-555-0302",
+    "state": "Carabobo",
+    "status": "Active",
+    "tax_id": "J-67890123-4"
+  },
+  {
+    "address": "Av. Venezuela con Calle 22",
+    "country": "Venezuela",
+    "latitude": 10.0650,
+    "longitude": -69.3175,
+    "max_capacity": 80,
+    "name": "Vitalfit Barquisimeto Centro",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "09:00:00", "close_time": "13:00:00", "is_closed": false},
+      {"day_of_week": "Sunday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true}
+    ],
+    "phone": "+58-251-555-0401",
+    "state": "Lara",
+    "status": "Active",
+    "tax_id": "J-78901234-5"
+  },
+  {
+    "address": "Av. Lara, C.C. Metrópolis",
+    "country": "Venezuela",
+    "latitude": 10.0592,
+    "longitude": -69.2990,
+    "max_capacity": 90,
+    "name": "Vitalfit Barquisimeto Este",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "10:00:00", "close_time": "20:00:00", "is_closed": false},
+      {"day_of_week": "Sunday", "open_time": "12:00:00", "close_time": "19:00:00", "is_closed": false}
+    ],
+    "phone": "+58-251-555-0402",
+    "state": "Lara",
+    "status": "Active",
+    "tax_id": "J-89012345-6"
+  },
+  {
+    "address": "Av. Guayana, Alta Vista",
+    "country": "Venezuela",
+    "latitude": 8.2976,
+    "longitude": -62.7230,
+    "max_capacity": 120,
+    "name": "Vitalfit Puerto Ordaz",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "08:00:00", "close_time": "17:00:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "09:00:00", "close_time": "13:00:00", "is_closed": false},
+      {"day_of_week": "Sunday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true}
+    ],
+    "phone": "+58-286-555-0501",
+    "state": "Bolívar",
+    "status": "Active",
+    "tax_id": "J-90123456-7"
+  },
+  {
+    "address": "Paseo Colón, Sector D",
+    "country": "Venezuela",
+    "latitude": 10.2230,
+    "longitude": -64.6361,
+    "max_capacity": 65,
+    "name": "Vitalfit Puerto La Cruz",
+    "operating_hours": [
+      {"day_of_week": "Monday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Tuesday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Wednesday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Thursday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Friday", "open_time": "09:00:00", "close_time": "18:00:00", "is_closed": false},
+      {"day_of_week": "Saturday", "open_time": "10:00:00", "close_time": "16:00:00", "is_closed": false},
+      {"day_of_week": "Sunday", "open_time": "00:00:00", "close_time": "00:00:00", "is_closed": true}
+    ],
+    "phone": "+58-281-555-0601",
+    "state": "Anzoátegui",
+    "status": "Active",
+    "tax_id": "J-01234567-8"
+  }
+]
