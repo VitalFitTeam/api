@@ -448,3 +448,115 @@ func (h *AuthHandlers) GetBranchAdminsHandler(c *gin.Context) {
 	})
 
 }
+
+// @Summary		List staff users
+// @Description	Retrieves a paginated list of all users who are not clients. Supports filtering by role and searching by name or email.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			limit	query		int							false	"Number of results per page"
+// @Param			page	query		int							false	"Page number"
+// @Param			sort	query		string						false	"Sort order (asc/desc)"
+// @Param			search	query		string						false	"Search term for first name, last name, or email"
+// @Param			role	query		string						false	"Filter by role name"
+// @Success		200		{object}	object{data=[]UserResponse}	"A list of staff users"
+// @Failure		400		{object}	object{error=string}		"Error: Bad Request (e.g., invalid query parameters)"
+// @Failure		500		{object}	object{error=string}		"Error: Internal Server Error"
+// @Router			/user/users [get]
+func (h *AuthHandlers) GetUsersHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  100,
+		Page:   1,
+		Sort:   "asc",
+		Search: "",
+		Role:   "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	users, err := h.services.UserServices.GetUsers(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	responseList := make([]UserResponse, 0, len(users))
+	for _, user := range users {
+		resp := UserResponse{
+
+			UserID:           user.UserID,
+			FirstName:        user.FirstName,
+			LastName:         user.LastName,
+			Email:            user.Email,
+			RoleID:           user.RoleID,
+			RoleName:         user.Role.Name,
+			IdentityDocument: user.IdentityDocument,
+			IsValidated:      user.IsValidated,
+		}
+		responseList = append(responseList, resp)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": responseList,
+	})
+}
+
+// @Summary		List client users
+// @Description	Retrieves a paginated list of all users with the 'client' role. Supports searching by name.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			limit	query		int							false	"Number of results per page"
+// @Param			page	query		int							false	"Page number"
+// @Param			sort	query		string						false	"Sort order (asc/desc)"
+// @Param			search	query		string						false	"Search term for first name or last name"
+// @Success		200		{object}	object{data=[]UserResponse}	"A list of client users"
+// @Failure		400		{object}	object{error=string}		"Error: Bad Request (e.g., invalid query parameters)"
+// @Failure		500		{object}	object{error=string}		"Error: Internal Server Error"
+// @Router			/user/clients [get]
+func (h *AuthHandlers) GetClientsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  100,
+		Page:   1,
+		Sort:   "asc",
+		Search: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	users, err := h.services.UserServices.GetClients(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	responseList := make([]UserResponse, 0, len(users))
+	for _, user := range users {
+		resp := UserResponse{
+
+			UserID:           user.UserID,
+			FirstName:        user.FirstName,
+			LastName:         user.LastName,
+			Email:            user.Email,
+			RoleID:           user.RoleID,
+			RoleName:         user.Role.Name,
+			IdentityDocument: user.IdentityDocument,
+			IsValidated:      user.IsValidated,
+		}
+		responseList = append(responseList, resp)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": responseList,
+	})
+}

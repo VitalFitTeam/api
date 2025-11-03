@@ -77,6 +77,46 @@ func (s *UserStore) GetBranchAdmins(ctx context.Context, fq pagination.Paginated
 	}
 	return users, nil
 }
+func (s *UserStore) GetUsers(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+	var users []*authdomain.Users
+	searchQuery := "%" + fq.Search + "%"
+
+	query := s.db.WithContext(ctx).
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Preload("Role").
+		Where("roles.name <> ?", "client")
+
+	query = query.Where(
+		"users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?",
+		searchQuery, searchQuery, searchQuery, searchQuery,
+	)
+
+	if fq.Role != "" {
+		query = query.Where("roles.name = ?", fq.Role)
+	}
+
+	err := query.Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (s *UserStore) GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+	var users []*authdomain.Users
+	searchQuery := "%" + fq.Search + "%"
+	err := s.db.WithContext(ctx).
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Preload("Role").
+		Where("roles.name = ?", "client").
+		Where("users.first_name ILIKE ? OR users.last_name ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?", searchQuery, searchQuery, searchQuery).
+		Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
 
 func (s *UserStore) CreateAndInvitate(ctx context.Context, user *authdomain.Users, token string, invitationExp time.Duration) error {
 	//transacction

@@ -35,6 +35,8 @@ type UserServicesInterface interface {
 	GetByEmail(ctx context.Context, email string) (*Users, error)
 	GetUserFromContext(c *gin.Context) *Users
 	GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
+	GetUsers(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
+	GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 	//roles
 	GetRoleByName(ctx context.Context, name string) (*Roles, error)
 	RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error)

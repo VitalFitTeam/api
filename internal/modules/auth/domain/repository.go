@@ -22,6 +22,8 @@ type UserRepository interface {
 	DeleteResetToken(ctx context.Context, userID uuid.UUID) error
 	ResetUserPassword(ctx context.Context, key string, user *Users) error
 	GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
+	GetUsers(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
+	GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 }
 
 type RolesRepository interface {

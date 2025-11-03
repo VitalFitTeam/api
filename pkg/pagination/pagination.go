@@ -16,6 +16,7 @@ type PaginatedFeedQuery struct {
 	Since    string `json:"since"`
 	Until    string `json:"until"`
 	Location string `json:"location"`
+	Role     string `json:"role"`
 }
 
 func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) {
@@ -59,6 +60,11 @@ func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) 
 	location := qs.Get("location")
 	if location != "" {
 		fq.Location = location
+	}
+
+	role := qs.Get("role")
+	if role != "" {
+		fq.Role = role
 	}
 
 	status := qs.Get("status")

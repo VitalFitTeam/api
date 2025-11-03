@@ -97,6 +97,22 @@ func (m *UserStoreMock) GetBranchAdmins(ctx context.Context, fq pagination.Pagin
 	return args.Get(0).([]*authdomain.Users), args.Error(1)
 }
 
+func (m *UserStoreMock) GetUsers(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+	args := m.Called(ctx, fq)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*authdomain.Users), args.Error(1)
+}
+
+func (m *UserStoreMock) GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+	args := m.Called(ctx, fq)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*authdomain.Users), args.Error(1)
+}
+
 // ROLE MOCK FUNCTIONS
 func (m *RoleStoreMock) GetByName(ctx context.Context, name string) (*authdomain.Roles, error) {
 	args := m.Called(ctx, name)

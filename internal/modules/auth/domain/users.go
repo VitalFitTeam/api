@@ -32,7 +32,6 @@ type Password struct {
 	hash []byte
 }
 
-// Set hashs the given text and sets it to the Password struct
 func (p *Password) Set(text string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(text), 12)
 	if err != nil {
@@ -43,7 +42,6 @@ func (p *Password) Set(text string) error {
 	return nil
 }
 
-// compares users password with the given text
 func (p *Password) Matches(text string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword(p.hash, []byte(text))
 	if err == nil {
@@ -55,16 +53,13 @@ func (p *Password) Matches(text string) (bool, error) {
 	return false, err
 }
 
-// Value implements driver.Valuer: indicates to GORM how to save the field in the DB.
 func (p Password) Value() (driver.Value, error) {
 	if len(p.hash) == 0 {
 		return nil, nil
 	}
-	// GORM saves only basic types, so we return the hash as a byte slice
 	return p.hash, nil
 }
 
-// Scan implements sql.Scanner: indicates to GORM how to read the field from the DB.
 func (p *Password) Scan(value interface{}) error {
 	if value == nil {
 		p.hash = nil

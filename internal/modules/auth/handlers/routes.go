@@ -20,6 +20,8 @@ type AuthHandlersInterface interface {
 	ForgotPasswordHandler(c *gin.Context)
 	ResetPasswordHandler(c *gin.Context)
 	GetBranchAdminsHandler(c *gin.Context)
+	GetUsersHandler(c *gin.Context)
+	GetClientsHandler(c *gin.Context)
 	//Roles
 	GetRolesHandler(c *gin.Context)
 	CreateRoleHandler(c *gin.Context)
@@ -74,6 +76,10 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 			m.RBACPermission("users:list"),
 			r.GetBranchAdminsHandler,
 		)
+
+		userGroup.GET("/users", m.RBACPermission("users:list"), r.GetUsersHandler)
+		userGroup.GET("/clients", m.RBACPermission("users:list"), r.GetClientsHandler)
+
 	}
 }
 
