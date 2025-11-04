@@ -67,7 +67,7 @@ func (h *InventoryHandlers) GetEquipmentsHandler(c *gin.Context) {
 // @Tags			Equipment
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			id	path		string					true	"Equipment UUID"
+// @Param			id	path		string	true	"Equipment UUID"
 // @Success		200	{object}	object{data=EquipmentListResponse}
 // @Failure		400	{object}	object{error=string}	"Error: Bad Request (e.g., invalid UUID)"
 // @Failure		404	{object}	object{error=string}	"Error: Not Found"

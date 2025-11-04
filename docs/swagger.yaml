@@ -276,6 +276,26 @@ definitions:
     x-enum-varnames:
     - PaymentProcessingGateway
     - PaymentProcessingOffline
+  billinghandlers.BranchPaymentMethodResponse:
+    properties:
+      branch_id:
+        type: string
+      configuration:
+        type: object
+      display_name:
+        type: string
+      method_id:
+        type: string
+      surcharge_fixed:
+        type: integer
+      surcharge_percentage:
+        type: number
+      visibility:
+        type: string
+    required:
+    - branch_id
+    - method_id
+    type: object
   billinghandlers.CreatePaymentMethodPayload:
     properties:
       description:
@@ -791,6 +811,23 @@ definitions:
     - EquipmentAvailable
     - EquipmentInMaintenance
     - EquipmentOutOfService
+  inventoryhandlers.BranchInventoryResponse:
+    properties:
+      acquisition_date:
+        type: string
+      equipment_id:
+        type: string
+      inventory_id:
+        type: string
+      last_maintenance_date:
+        type: string
+      notes:
+        type: string
+      serial_number:
+        type: string
+      status:
+        type: string
+    type: object
   inventoryhandlers.CreateEquipmentPayload:
     properties:
       brand:
@@ -834,6 +871,21 @@ definitions:
         type: string
     required:
     - equipment_id
+    type: object
+  inventoryhandlers.EquipmentListResponse:
+    properties:
+      brand:
+        type: string
+      category:
+        type: string
+      description:
+        type: string
+      equipment_id:
+        type: string
+      model:
+        type: string
+      name:
+        type: string
     type: object
   inventoryhandlers.UpdateEquipmentPayload:
     properties:
@@ -2407,6 +2459,55 @@ paths:
       summary: Delete branch inventory item
       tags:
       - Branch Inventory
+    get:
+      description: Retrieves a single inventory item from a branch by its UUID.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Inventory Item UUID
+        in: path
+        name: inventoryId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/inventoryhandlers.BranchInventoryResponse'
+            type: object
+        "400":
+          description: 'Error: Bad Request (e.g., invalid UUID)'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Error: Not Found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get branch inventory item by ID
+      tags:
+      - Branch Inventory
     patch:
       consumes:
       - application/json
@@ -2745,6 +2846,56 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Remove a payment method from a branch
+      tags:
+      - Branch Payment Methods
+    get:
+      description: Retrieves a single payment method configuration for a specific
+        branch by its UUID and the method's UUID.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payment Method UUID
+        in: path
+        name: method_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/billinghandlers.BranchPaymentMethodResponse'
+            type: object
+        "400":
+          description: 'Error: Bad Request (e.g., invalid UUID)'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Error: Not Found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get branch payment method by ID
       tags:
       - Branch Payment Methods
     put:
@@ -3141,6 +3292,51 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Delete equipment type
+      tags:
+      - Equipment
+    get:
+      description: Retrieves a single equipment type from the global catalog by its
+        UUID.
+      parameters:
+      - description: Equipment UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/inventoryhandlers.EquipmentListResponse'
+            type: object
+        "400":
+          description: 'Error: Bad Request (e.g., invalid UUID)'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Error: Not Found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get equipment type by ID
       tags:
       - Equipment
     put:
