@@ -62,6 +62,98 @@ func (h *InventoryHandlers) GetEquipmentsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": equipments.Equipments})
 }
 
+// @Summary		Get equipment type by ID
+// @Description	Retrieves a single equipment type from the global catalog by its UUID.
+// @Tags			Equipment
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id	path		string					true	"Equipment UUID"
+// @Success		200	{object}	object{data=EquipmentListResponse}
+// @Failure		400	{object}	object{error=string}	"Error: Bad Request (e.g., invalid UUID)"
+// @Failure		404	{object}	object{error=string}	"Error: Not Found"
+// @Failure		500	{object}	object{error=string}	"Error: Internal Server Error"
+// @Router			/equipment-types/{id} [get]
+func (h *InventoryHandlers) GetEquipmentByID(c *gin.Context) {
+	idStr := c.Param("id")
+	equipmentID, err := uuid.Parse(idStr)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	equipment, err := h.services.EquipmentServices.GetEquipmentByID(c, equipmentID)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	resp := EquipmentListResponse{
+		EquipmentID: equipment.EquipmentID,
+		Name:        equipment.Name,
+		Category:    string(equipment.Category),
+		Description: equipment.Description,
+		Brand:       equipment.Brand,
+		Model:       equipment.Model,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+// @Summary		Get branch inventory item by ID
+// @Description	Retrieves a single inventory item from a branch by its UUID.
+// @Tags			Branch Inventory
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id			path		string	true	"Branch UUID"
+// @Param			inventoryId	path		string	true	"Inventory Item UUID"
+// @Success		200			{object}	object{data=BranchInventoryResponse}
+// @Failure		400			{object}	object{error=string}	"Error: Bad Request (e.g., invalid UUID)"
+// @Failure		404			{object}	object{error=string}	"Error: Not Found"
+// @Failure		500			{object}	object{error=string}	"Error: Internal Server Error"
+// @Router			/branches/{id}/equipment/{inventoryId} [get]
+func (h *InventoryHandlers) GetInventoryByID(c *gin.Context) {
+	idStr := c.Param("inventoryId")
+	inventoryID, err := uuid.Parse(idStr)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	equipment, err := h.services.InventoryServices.GetInventoryItemByID(c, inventoryID)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	var acquisitionDate, lastMaintenanceDate string
+	if equipment.AcquisitionDate != nil {
+		acquisitionDate = equipment.AcquisitionDate.Format("2006-01-02")
+	}
+	if equipment.LastMaintenanceDate != nil {
+		lastMaintenanceDate = equipment.LastMaintenanceDate.Format("2006-01-02")
+	}
+
+	resp := BranchInventoryResponse{
+		InventoryID:         equipment.InventoryID,
+		EquipmentID:         equipment.EquipmentID,
+		SerialNumber:        equipment.SerialNumber,
+		Status:              string(equipment.Status),
+		AcquisitionDate:     acquisitionDate,
+		LastMaintenanceDate: lastMaintenanceDate,
+		Notes:               equipment.Notes,
+	}
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
 // @Summary		Update equipment type
 // @Description	Updates an existing equipment type in the global catalog.
 // @Tags			Equipment

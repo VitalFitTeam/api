@@ -133,3 +133,18 @@ func (s *PaymentMethodsStore) UpsertBranchPaymentConfig(ctx context.Context, bra
 
 	return result.Error
 }
+
+func (s *PaymentMethodsStore) GetBranchPaymentMethodByID(ctx context.Context, branchID uuid.UUID, methodID uuid.UUID) (*billingdomain.PaymentMethodsBranch, error) {
+	var branchMethod billingdomain.PaymentMethodsBranch
+	err := s.db.WithContext(ctx).Model(&billingdomain.PaymentMethodsBranch{}).Where("branch_id = ? AND method_id = ?", branchID, methodID).First(&branchMethod).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &branchMethod, nil
+
+}

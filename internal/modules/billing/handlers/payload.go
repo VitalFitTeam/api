@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/google/uuid"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 )
 
@@ -69,6 +70,16 @@ type UpdateBranchConfigPayload struct {
 	Visibility          string          `json:"visibility,omitempty" binding:"omitempty,oneof=Client Staff All"`
 	SurchargeFixed      int64           `json:"surcharge_fixed,omitempty" binding:"omitempty,min=0"`
 	SurchargePercentage float64         `json:"surcharge_percentage,omitempty" binding:"omitempty,min=0"`
+}
+
+type BranchPaymentMethodResponse struct {
+	BranchID            uuid.UUID       `json:"branch_id" binding:"required"`
+	MethodID            uuid.UUID       `json:"method_id" binding:"required"`
+	DisplayName         string          `json:"display_name"`
+	Configuration       json.RawMessage `json:"configuration,omitempty" swaggertype:"object"`
+	Visibility          string          `json:"visibility"`
+	SurchargeFixed      int64           `json:"surcharge_fixed"`
+	SurchargePercentage float64         `json:"surcharge_percentage"`
 }
 
 func (h *BillingHandlers) validateBranchConfig(payloadConfig json.RawMessage, method *billingdomain.PaymentMethods) error {

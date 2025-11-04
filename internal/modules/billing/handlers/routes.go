@@ -22,6 +22,7 @@ type BillingHandlersInterface interface {
 	DeletePaymentMethodsFromBranchHandler(c *gin.Context)
 	GetPaymentMethodsFromBranchHandler(c *gin.Context)
 	UpdatePaymentMethodFromBranchHandler(c *gin.Context)
+	GetBranchPaymentMethodByIDHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -51,6 +52,7 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	{
 		branchPaymentMethodsGroup.GET("", m.RBACPermission("billing:list"), r.GetPaymentMethodsFromBranchHandler)
 		branchPaymentMethodsGroup.POST("", m.RBACPermission("billing:create"), r.AddPaymentMethodsToBranchHandler)
+		branchPaymentMethodsGroup.GET("/:method_id", m.RBACPermission("billing:get"), r.GetBranchPaymentMethodByIDHandler)
 		branchPaymentMethodsGroup.PUT("/:method_id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodFromBranchHandler)
 		branchPaymentMethodsGroup.DELETE("/:method_id", m.RBACPermission("billing:delete"), r.DeletePaymentMethodsFromBranchHandler)
 	}
