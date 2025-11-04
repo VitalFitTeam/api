@@ -376,3 +376,50 @@ func (h *BillingHandlers) UpdatePaymentMethodFromBranchHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Payment method configuration updated"})
 }
+
+// @Summary		Get branch payment method by ID
+// @Description	Retrieves a single payment method configuration for a specific branch by its UUID and the method's UUID.
+// @Tags			Branch Payment Methods
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id			path		string	true	"Branch UUID"
+// @Param			method_id	path		string	true	"Payment Method UUID"
+// @Success		200			{object}	object{data=BranchPaymentMethodResponse}
+// @Failure		400			{object}	object{error=string}	"Error: Bad Request (e.g., invalid UUID)"
+// @Failure		404			{object}	object{error=string}	"Error: Not Found"
+// @Failure		500			{object}	object{error=string}	"Error: Internal Server Error"
+// @Router			/branches/{id}/payment-methods/{method_id} [get]
+func (h *BillingHandlers) GetBranchPaymentMethodByIDHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	branchID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	methodID, err := uuid.Parse(c.Param("method_id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	branchMethod, err := h.services.BillingServices.GetBranchPaymentMethodByID(ctx, branchID, methodID)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	resp := BranchPaymentMethodResponse{
+		BranchID:            branchMethod.BranchID,
+		MethodID:            branchMethod.MethodID,
+		DisplayName:         branchMethod.DisplayName,
+		Configuration:       branchMethod.Configuration,
+		Visibility:          string(branchMethod.Visibility),
+		SurchargeFixed:      branchMethod.SurchargeFixed,
+		SurchargePercentage: branchMethod.SurchargePercentage,
+	}
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}

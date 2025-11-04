@@ -18,4 +18,5 @@ type BillingServiceInterface interface {
 	DeletePaymentMethodsFromBranch(ctx context.Context, branchID, methodID uuid.UUID) error
 	GetPaymentMethodsFromBranch(ctx context.Context, branchID uuid.UUID) ([]*PaymentMethodsBranch, error)
 	UpsertBranchPaymentConfig(ctx context.Context, branchMethod *PaymentMethodsBranch) error
+	GetBranchPaymentMethodByID(ctx context.Context, branchID uuid.UUID, methodID uuid.UUID) (*PaymentMethodsBranch, error)
 }

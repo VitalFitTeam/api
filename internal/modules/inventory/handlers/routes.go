@@ -14,12 +14,14 @@ type InventoryHandlersInterface interface {
 	GetEquipmentsHandler(c *gin.Context)
 	UpdateEquipmentHandler(c *gin.Context)
 	DeleteEquipmentHandler(c *gin.Context)
+	GetEquipmentByID(c *gin.Context)
 
 	// Branch inventory
 	AddInventoryItemHandler(c *gin.Context)
 	ListBranchInventoryHandler(c *gin.Context)
 	UpdateInventoryItemHandler(c *gin.Context)
 	DeleteInventoryItemHandler(c *gin.Context)
+	GetInventoryByID(c *gin.Context)
 }
 
 type InventoryHandlers struct {
@@ -42,6 +44,7 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 		equipmentGroup.POST("", r.CreateEquipmentHandler)
 		equipmentGroup.GET("", r.GetEquipmentsHandler)
 		equipmentGroup.PUT("/:id", r.UpdateEquipmentHandler)
+		equipmentGroup.GET("/:id", r.GetEquipmentByID)
 		equipmentGroup.DELETE("/:id", r.DeleteEquipmentHandler)
 	}
 
@@ -54,6 +57,7 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	{
 		branchInventoryGroup.POST("", r.AddInventoryItemHandler)
 		branchInventoryGroup.GET("", r.ListBranchInventoryHandler)
+		branchInventoryGroup.GET("/:inventoryId", r.GetInventoryByID)
 		branchInventoryGroup.PATCH("/:inventoryId", r.UpdateInventoryItemHandler)
 		branchInventoryGroup.DELETE("/:inventoryId", r.DeleteInventoryItemHandler)
 	}

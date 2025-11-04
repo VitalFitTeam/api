@@ -76,3 +76,11 @@ func (s *BillingService) UpsertBranchPaymentConfig(ctx context.Context, branchMe
 	}
 	return nil
 }
+
+func (s *BillingService) GetBranchPaymentMethodByID(ctx context.Context, branchID uuid.UUID, methodID uuid.UUID) (*billingdomain.PaymentMethodsBranch, error) {
+	branchMethod, err := s.store.PaymentMethods.GetBranchPaymentMethodByID(ctx, branchID, methodID)
+	if err != nil {
+		return nil, err
+	}
+	return branchMethod, nil
+}

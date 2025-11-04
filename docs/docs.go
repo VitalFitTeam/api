@@ -1788,6 +1788,83 @@ const docTemplate = `{
             }
         },
         "/branches/{id}/equipment/{inventoryId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a single inventory item from a branch by its UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch Inventory"
+                ],
+                "summary": "Get branch inventory item by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Inventory Item UUID",
+                        "name": "inventoryId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/inventoryhandlers.BranchInventoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request (e.g., invalid UUID)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Error: Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -2321,6 +2398,83 @@ const docTemplate = `{
             }
         },
         "/branches/{id}/payment-methods/{method_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a single payment method configuration for a specific branch by its UUID and the method's UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Branch Payment Methods"
+                ],
+                "summary": "Get branch payment method by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Payment Method UUID",
+                        "name": "method_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/billinghandlers.BranchPaymentMethodResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request (e.g., invalid UUID)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Error: Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -2886,6 +3040,76 @@ const docTemplate = `{
             }
         },
         "/equipment-types/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a single equipment type from the global catalog by its UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Get equipment type by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Equipment UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/inventoryhandlers.EquipmentListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request (e.g., invalid UUID)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Error: Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "security": [
                     {
@@ -5146,6 +5370,36 @@ const docTemplate = `{
                 "PaymentProcessingOffline"
             ]
         },
+        "billinghandlers.BranchPaymentMethodResponse": {
+            "type": "object",
+            "required": [
+                "branch_id",
+                "method_id"
+            ],
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "configuration": {
+                    "type": "object"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "method_id": {
+                    "type": "string"
+                },
+                "surcharge_fixed": {
+                    "type": "integer"
+                },
+                "surcharge_percentage": {
+                    "type": "number"
+                },
+                "visibility": {
+                    "type": "string"
+                }
+            }
+        },
         "billinghandlers.CreatePaymentMethodPayload": {
             "type": "object",
             "required": [
@@ -5892,6 +6146,32 @@ const docTemplate = `{
                 "EquipmentOutOfService"
             ]
         },
+        "inventoryhandlers.BranchInventoryResponse": {
+            "type": "object",
+            "properties": {
+                "acquisition_date": {
+                    "type": "string"
+                },
+                "equipment_id": {
+                    "type": "string"
+                },
+                "inventory_id": {
+                    "type": "string"
+                },
+                "last_maintenance_date": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "serial_number": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "inventoryhandlers.CreateEquipmentPayload": {
             "type": "object",
             "required": [
@@ -5952,6 +6232,29 @@ const docTemplate = `{
                         "InMaintenance",
                         "OutOfService"
                     ]
+                }
+            }
+        },
+        "inventoryhandlers.EquipmentListResponse": {
+            "type": "object",
+            "properties": {
+                "brand": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "equipment_id": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
