@@ -10,5 +10,4 @@ func NewBillingStore(db *gorm.DB) *Billingstore {
 	return &Billingstore{
 		db: db,
 	}
-
 }
