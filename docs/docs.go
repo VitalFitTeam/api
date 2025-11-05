@@ -2656,7 +2656,7 @@ const docTemplate = `{
                                 "data": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/definitions/productsdomain.ServiceBranchDetail"
+                                        "$ref": "#/definitions/productshandler.BranchServiceResponse"
                                     }
                                 }
                             }
@@ -2783,7 +2783,7 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "$ref": "#/definitions/productsdomain.ServiceBranchDetail"
+                                    "$ref": "#/definitions/productshandler.BranchServiceResponse"
                                 }
                             }
                         }
@@ -6641,6 +6641,32 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "service_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "productshandler.BranchServiceResponse": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "is_visible": {
+                    "type": "boolean"
+                },
+                "max_capacity": {
+                    "type": "integer"
+                },
+                "price_for_member": {
+                    "type": "number"
+                },
+                "price_for_non_member": {
+                    "type": "number"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "service_name": {
                     "type": "string"
                 }
             }

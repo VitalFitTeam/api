@@ -142,3 +142,13 @@ type ServiceCategoryResponse struct {
 	CategoryID uuid.UUID `json:"category_id"`
 	Name       string    `json:"name"`
 }
+
+type BranchServiceResponse struct {
+	BranchID          uuid.UUID `json:"branch_id"`
+	ServiceID         uuid.UUID `json:"service_id"`
+	ServiceName       string    `json:"service_name"`
+	IsVisible         bool      `json:"is_visible"`
+	MaxCapacity       int       `json:"max_capacity"`
+	PriceForMember    float64   `json:"price_for_member"`
+	PriceForNonMember float64   `json:"price_for_non_member"`
+}

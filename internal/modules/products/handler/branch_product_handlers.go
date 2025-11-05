@@ -57,11 +57,11 @@ func (h *ProductsHandler) AssignBranchServiceHandler(c *gin.Context) {
 // @Tags			Branch Services
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			id	path		string												true	"Branch UUID"
-// @Success		200	{object}	object{data=[]productsdomain.ServiceBranchDetail}	"List of branch services"
-// @Failure		400	{object}	map[string]interface{}								"Bad Request: Invalid UUID format"
-// @Failure		404	{object}	map[string]interface{}								"Not Found: Branch not found"
-// @Failure		500	{object}	map[string]interface{}								"Internal Server Error"
+// @Param			id	path		string									true	"Branch UUID"
+// @Success		200	{object}	object{data=[]BranchServiceResponse}	"List of branch services"
+// @Failure		400	{object}	map[string]interface{}					"Bad Request: Invalid UUID format"
+// @Failure		404	{object}	map[string]interface{}					"Not Found: Branch not found"
+// @Failure		500	{object}	map[string]interface{}					"Internal Server Error"
 // @Router			/branches/{id}/services [get]
 func (h *ProductsHandler) GetBranchServiceHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -75,7 +75,19 @@ func (h *ProductsHandler) GetBranchServiceHandler(c *gin.Context) {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": services})
+	resp := make([]BranchServiceResponse, 0, len(services))
+	for _, service := range services {
+		resp = append(resp, BranchServiceResponse{
+			BranchID:          service.BranchID,
+			ServiceID:         service.ServiceID,
+			ServiceName:       service.Service.Name,
+			IsVisible:         service.IsVisible,
+			MaxCapacity:       service.MaxCapacity,
+			PriceForMember:    service.PriceForMember,
+			PriceForNonMember: service.PriceForNonMember,
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{"data": resp})
 }
 
 // @Summary		Update a branch service
@@ -161,12 +173,12 @@ func (h *ProductsHandler) DeleteBranchServiceHandler(c *gin.Context) {
 // @Tags			Branch Services
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			id			path		string											true	"Branch UUID"
-// @Param			service_id	path		string											true	"Service UUID"
-// @Success		200			{object}	object{data=productsdomain.ServiceBranchDetail}	"Branch service details"
-// @Failure		400			{object}	map[string]interface{}							"Bad Request: Invalid UUID format"
-// @Failure		404			{object}	map[string]interface{}							"Not Found: Branch or service not found"
-// @Failure		500			{object}	map[string]interface{}							"Internal Server Error"
+// @Param			id			path		string								true	"Branch UUID"
+// @Param			service_id	path		string								true	"Service UUID"
+// @Success		200			{object}	object{data=BranchServiceResponse}	"Branch service details"
+// @Failure		400			{object}	map[string]interface{}				"Bad Request: Invalid UUID format"
+// @Failure		404			{object}	map[string]interface{}				"Not Found: Branch or service not found"
+// @Failure		500			{object}	map[string]interface{}				"Internal Server Error"
 // @Router			/branches/{id}/services/{service_id} [get]
 func (h *ProductsHandler) GetBranchServiceByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -185,5 +197,14 @@ func (h *ProductsHandler) GetBranchServiceByIDHandler(c *gin.Context) {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": service})
+	resp := BranchServiceResponse{
+		BranchID:          service.BranchID,
+		ServiceID:         service.ServiceID,
+		ServiceName:       service.Service.Name,
+		IsVisible:         service.IsVisible,
+		MaxCapacity:       service.MaxCapacity,
+		PriceForMember:    service.PriceForMember,
+		PriceForNonMember: service.PriceForNonMember,
+	}
+	c.JSON(http.StatusOK, gin.H{"data": resp})
 }
