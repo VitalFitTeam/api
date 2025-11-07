@@ -2938,7 +2938,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Lists all available equipment types in the global catalog.",
+                "description": "Lists all available equipment types in the global catalog with pagination and filtering.",
                 "produces": [
                     "application/json"
                 ],
@@ -2946,9 +2946,55 @@ const docTemplate = `{
                     "Equipment"
                 ],
                 "summary": "Get equipment types",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for equipment name",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Cardio",
+                            "Strength",
+                            "FreeWeight",
+                            "Functional",
+                            "Accessory"
+                        ],
+                        "type": "string",
+                        "description": "Filter by equipment category",
+                        "name": "category",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "A paginated list of equipment types",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -2961,8 +3007,19 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "400": {
+                        "description": "Error: Bad Request (e.g., invalid query parameters)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Error: Internal Server Error",
                         "schema": {
                             "type": "object",
                             "properties": {

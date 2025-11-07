@@ -9,6 +9,7 @@ import (
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -39,13 +40,52 @@ func (s *EquipmentStore) Create(ctx context.Context, equipment *inventorydomain.
 	return equipment, nil
 }
 
-func (s *EquipmentStore) GetAll(ctx context.Context) (*inventorydomain.EquipmentQueryResults, error) {
+func (s *EquipmentStore) GetAll(ctx context.Context, fq pagination.PaginatedFeedQuery) (*inventorydomain.EquipmentQueryResults, error) {
 	var equipments []*inventorydomain.Equipment
-	err := s.db.WithContext(ctx).Order("created_at desc").Find(&equipments).Error
+	query := s.db.WithContext(ctx).Model(&inventorydomain.Equipment{})
+
+	if fq.Category != "" {
+		query = query.Where("category::text ILIKE ?", "%"+fq.Category+"%")
+	}
+	if fq.Search != "" {
+		searchTerm := "%" + fq.Search + "%"
+		query = query.Where(
+			"name ILIKE ?",
+			searchTerm,
+		)
+	}
+
+	err := query.Order("created_at " + fq.Sort).Limit(fq.Limit).Offset(fq.Page*fq.Limit - fq.Limit).Find(&equipments).Error
 	if err != nil {
 		return nil, err
 	}
+
 	return &inventorydomain.EquipmentQueryResults{Equipments: equipments}, nil
+}
+
+func (s *EquipmentStore) GetTotalCount(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	var count int64
+
+	query := s.db.WithContext(ctx).Model(&inventorydomain.Equipment{})
+
+	if fq.Category != "" {
+		query = query.Where("category::text ILIKE ?", "%"+fq.Category+"%")
+	}
+	if fq.Search != "" {
+		searchTerm := "%" + fq.Search + "%"
+		query = query.Where(
+			"name ILIKE ?",
+			searchTerm,
+		)
+	}
+
+	err := query.Order("created_at " + fq.Sort).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return count, err
+
 }
 
 func (s *EquipmentStore) GetByID(ctx context.Context, equipmentID uuid.UUID) (*inventorydomain.Equipment, error) {

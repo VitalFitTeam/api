@@ -111,3 +111,11 @@ type PaginatedResponse[T any] struct {
 	Next     string `json:"next,omitempty"`
 	Previous string `json:"previous,omitempty"`
 }
+
+type PaginatedResponseTotal[T any] struct {
+	Data     []T    `json:"data"`
+	Count    int64  `json:"count"`
+	Next     string `json:"next,omitempty"`
+	Previous string `json:"previous,omitempty"`
+	Total    int64  `json:"total"`
+}

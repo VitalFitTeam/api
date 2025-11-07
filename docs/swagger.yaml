@@ -3206,12 +3206,46 @@ paths:
       - Branches
   /equipment-types:
     get:
-      description: Lists all available equipment types in the global catalog.
+      description: Lists all available equipment types in the global catalog with
+        pagination and filtering.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for equipment name
+        in: query
+        name: search
+        type: string
+      - description: Filter by equipment category
+        enum:
+        - Cardio
+        - Strength
+        - FreeWeight
+        - Functional
+        - Accessory
+        in: query
+        name: category
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: A paginated list of equipment types
           schema:
             properties:
               data:
@@ -3219,8 +3253,15 @@ paths:
                   $ref: '#/definitions/inventorydomain.Equipment'
                 type: array
             type: object
+        "400":
+          description: 'Error: Bad Request (e.g., invalid query parameters)'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
         "500":
-          description: Internal Server Error
+          description: 'Error: Internal Server Error'
           schema:
             properties:
               error:
