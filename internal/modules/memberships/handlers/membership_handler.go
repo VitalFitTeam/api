@@ -1,11 +1,13 @@
 package membershipshandlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 // @Summary		Create a new membership type
@@ -174,24 +176,49 @@ func (h *MembershipHandler) GetMembershipByIDHandler(c *gin.Context) {
 }
 
 // @Summary		List all membership types
-// @Description	Retrieves a list of all membership types.
+// @Description	Retrieves a paginated list of all membership types, with optional searching.
 // @Tags			Memberships
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Success		200	{object}	object{data=[]MembershipResponse}
-// @Failure		500	{object}	object{error=string}	"error: Internal Server Error"
+// @Param			limit	query		int								false	"Number of results per page"	default(10)
+// @Param			page	query		int								false	"Page number for pagination"	default(1)
+// @Param			sort	query		string							false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search	query		string							false	"Search term for membership name"
+// @Success		200		{object}	object{data=MembershipResponse}	"A paginated list of membership types"
+// @Failure		400		{object}	map[string]interface{}			"Bad Request: Invalid query parameters"
+// @Failure		500		{object}	object{error=string}			"error: Internal Server Error"
 // @Router			/membership-plans [get]
 func (h *MembershipHandler) GetMembershipsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
-	memberships, err := h.services.MembershipServices.GetMembershipTypes(ctx)
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Search: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/membership-plans?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/membership-plans?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+
+	memberships, err := h.services.MembershipServices.GetMembershipTypes(ctx, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
-	resp := make([]*MembershipResponse, 0, len(memberships))
+	data := make([]*MembershipResponse, 0, len(memberships))
 	for _, m := range memberships {
-		resp = append(resp, &MembershipResponse{
+		data = append(data, &MembershipResponse{
 			MembershipTypeID: m.MembershipTypeID,
 			Name:             m.Name,
 			Description:      m.Description,
@@ -200,6 +227,36 @@ func (h *MembershipHandler) GetMembershipsHandler(c *gin.Context) {
 			IsActive:         m.IsActive,
 		})
 	}
+	total, err := h.services.MembershipServices.GetMembershipTypesFTotal(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	resp := pagination.PaginatedResponseTotal[*MembershipResponse]{
+		Data:     data,
+		Count:    int64(len(memberships)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
 
-	c.JSON(http.StatusOK, gin.H{"data": resp})
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary		Get a summary of membership types
+// @Description	Retrieves a count of total, active, and inactive membership types.
+// @Tags			Memberships
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Success		200	{object}	object{data=membershipsdomain.MembershipSummary}	"Summary of membership types"
+// @Failure		500	{object}	map[string]interface{}								"Internal Server Error"
+// @Router			/membership-plans/summary [get]
+func (h *MembershipHandler) GetSummaryMembershipsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	summary, err := h.services.MembershipServices.GetSummary(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": summary})
 }

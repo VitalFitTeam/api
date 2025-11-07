@@ -113,12 +113,12 @@ func (h *ProductsHandler) GetServicesHandler(c *gin.Context) {
 		return
 	}
 
-	nextURL := fmt.Sprintf("/equipment-types?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	nextURL := fmt.Sprintf("/services/all?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
 	previousPage := fq.Page - 1
 	if previousPage <= 0 {
 		previousPage = 1
 	}
-	previousURL := fmt.Sprintf("/equipment-types?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+	previousURL := fmt.Sprintf("/services/all?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
 
 	services, err := h.services.ProductsServices.GetServices(ctx, fq)
 	if err != nil {

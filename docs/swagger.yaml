@@ -976,6 +976,15 @@ definitions:
       name:
         type: string
     type: object
+  membershipsdomain.MembershipSummary:
+    properties:
+      actives:
+        type: integer
+      inactives:
+        type: integer
+      total:
+        type: integer
+    type: object
   membershipsdomain.MembershipType:
     properties:
       created_at:
@@ -3965,18 +3974,45 @@ paths:
       - Marketing
   /membership-plans:
     get:
-      description: Retrieves a list of all membership types.
+      description: Retrieves a paginated list of all membership types, with optional
+        searching.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for membership name
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: A paginated list of membership types
           schema:
             properties:
               data:
-                items:
-                  $ref: '#/definitions/membershipshandlers.MembershipResponse'
-                type: array
+                $ref: '#/definitions/membershipshandlers.MembershipResponse'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
             type: object
         "500":
           description: 'error: Internal Server Error'
@@ -4165,6 +4201,29 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a membership type
+      tags:
+      - Memberships
+  /membership-plans/summary:
+    get:
+      description: Retrieves a count of total, active, and inactive membership types.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Summary of membership types
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/membershipsdomain.MembershipSummary'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a summary of membership types
       tags:
       - Memberships
   /public/branches-map:

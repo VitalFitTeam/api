@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -102,13 +103,58 @@ func (s *MembershipStore) GetMembershipTypeByID(ctx context.Context, id uuid.UUI
 }
 
 // GetMembershipTypes devuelve todos los tipos de membresía activos.
-func (s *MembershipStore) GetMembershipTypes(ctx context.Context) ([]*membershipsdomain.MembershipType, error) {
-	memberships := []*membershipsdomain.MembershipType{}
-	err := s.db.WithContext(ctx).
-		Where("deleted_at IS NULL").
-		Find(&memberships).Error
+func (s *MembershipStore) GetMembershipTypes(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.MembershipType, error) {
+	var memberships []*membershipsdomain.MembershipType
+
+	baseQuery := s.db.WithContext(ctx).Model(&membershipsdomain.MembershipType{})
+
+	if fq.Search != "" {
+		baseQuery = baseQuery.Where("name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	query := baseQuery.
+		Limit(fq.Limit).
+		Offset(fq.Page*fq.Limit - fq.Limit).
+		Order("created_at " + fq.Sort)
+
+	if err := query.Find(&memberships).Error; err != nil {
+		return nil, err
+	}
+
+	return memberships, nil
+}
+
+func (s *MembershipStore) GetMembershipTypesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	var count int64
+	baseQuery := s.db.WithContext(ctx).Model(&membershipsdomain.MembershipType{})
+
+	if fq.Search != "" {
+		baseQuery = baseQuery.Where("name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	query := baseQuery.
+		Order("created_at " + fq.Sort)
+
+	if err := query.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (s *MembershipStore) GetSummary(ctx context.Context) (*membershipsdomain.MembershipSummary, error) {
+	var summary membershipsdomain.MembershipSummary
+
+	query := s.db.WithContext(ctx).Model(&membershipsdomain.MembershipType{})
+
+	err := query.Select(
+		"COUNT(*) as total",
+		"COUNT(CASE WHEN is_active = true THEN 1 END) as actives",
+		"COUNT(CASE WHEN is_active = false THEN 1 END) as inactives",
+	).Take(&summary).Error
+
 	if err != nil {
 		return nil, err
 	}
-	return memberships, nil
+
+	return &summary, nil
 }

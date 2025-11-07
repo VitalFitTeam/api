@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 // MembershipService implementa la lógica de negocio para los tipos de membresía.
@@ -57,10 +58,26 @@ func (s *MembershipService) GetMembershipTypeByID(ctx context.Context, id uuid.U
 }
 
 // GetMembershipTypes devuelve todos los tipos de membresía activos.
-func (s *MembershipService) GetMembershipTypes(ctx context.Context) ([]*membershipsdomain.MembershipType, error) {
-	memberships, err := s.store.Membership.GetMembershipTypes(ctx)
+func (s *MembershipService) GetMembershipTypes(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.MembershipType, error) {
+	memberships, err := s.store.Membership.GetMembershipTypes(ctx, fq)
 	if err != nil {
 		return nil, err
 	}
 	return memberships, nil
+}
+
+func (s *MembershipService) GetMembershipTypesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	total, err := s.store.Membership.GetMembershipTypesFTotal(ctx, fq)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
+func (s *MembershipService) GetSummary(ctx context.Context) (*membershipsdomain.MembershipSummary, error) {
+	summary, err := s.store.Membership.GetSummary(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return summary, nil
 }
