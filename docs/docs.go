@@ -3477,6 +3477,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/instructor/summary": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a count of total, active, and blocked instructors.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Get a summary of instructors",
+                "responses": {
+                    "200": {
+                        "description": "Summary of instructors",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/instructordomain.InstructorSummary"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/instructor/{id}": {
             "get": {
                 "security": [
@@ -6041,6 +6078,20 @@ const docTemplate = `{
                 "tax_id": {
                     "type": "string",
                     "minLength": 5
+                }
+            }
+        },
+        "instructordomain.InstructorSummary": {
+            "type": "object",
+            "properties": {
+                "actives": {
+                    "type": "integer"
+                },
+                "blocked": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

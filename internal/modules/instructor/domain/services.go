@@ -10,6 +10,8 @@ import (
 type InstructorServiceInterface interface {
 	CreateInstructor(ctx context.Context, instructor *Instructor, token string) error
 	GetInstructors(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Instructor, error)
+	GetInstructorsFTotal(context.Context, pagination.PaginatedFeedQuery) (int64, error)
+	GetSummary(context.Context) (*InstructorSummary, error)
 	DeleteInstructor(ctx context.Context, instructorID uuid.UUID) error
 	GetInstructorByID(ctx context.Context, instructorID uuid.UUID) (*Instructor, error)
 	UpdateInstructor(ctx context.Context, instructor *Instructor) error

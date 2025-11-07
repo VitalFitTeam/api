@@ -597,6 +597,15 @@ definitions:
     - state
     - tax_id
     type: object
+  instructordomain.InstructorSummary:
+    properties:
+      actives:
+        type: integer
+      blocked:
+        type: integer
+      total:
+        type: integer
+    type: object
   instructorhandler.AssignInstructorsSpecialtiesPayload:
     properties:
       specialties:
@@ -3766,6 +3775,29 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Remove a specialty from an instructor
+      tags:
+      - Instructors
+  /instructor/summary:
+    get:
+      description: Retrieves a count of total, active, and blocked instructors.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Summary of instructors
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/instructordomain.InstructorSummary'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a summary of instructors
       tags:
       - Instructors
   /marketing/banners:

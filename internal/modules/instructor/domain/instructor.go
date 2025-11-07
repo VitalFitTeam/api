@@ -46,3 +46,9 @@ type InstructorSpecialty struct {
 func (InstructorSpecialty) TableName() string {
 	return "instructor_specialties"
 }
+
+type InstructorSummary struct {
+	Total   int64 `json:"total"`
+	Actives int64 `json:"actives"`
+	Blocked int64 `json:"blocked"`
+}
