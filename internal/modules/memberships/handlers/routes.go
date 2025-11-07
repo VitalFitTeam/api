@@ -27,6 +27,7 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 
 		membershipPlansGroup.POST("", m.RBACPermission("memberships:create"), r.CreateMembershipHandler)
 		membershipPlansGroup.GET("", m.RBACPermission("memberships:list"), r.GetMembershipsHandler)
+		membershipPlansGroup.GET("/summary", m.RBACPermission("memberships:list"), r.GetSummaryMembershipsHandler)
 		membershipPlansGroup.GET("/:id", m.RBACPermission("memberships:get"), r.GetMembershipByIDHandler)
 		membershipPlansGroup.PUT("/:id", m.RBACPermission("memberships:update"), r.UpdateMembershipHandler)
 		membershipPlansGroup.DELETE("/:id", m.RBACPermission("memberships:delete"), r.DeleteMembershipHandler)

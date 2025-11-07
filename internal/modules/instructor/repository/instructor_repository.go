@@ -54,7 +54,6 @@ func (s *InstructorStore) GetInstructors(ctx context.Context, fq pagination.Pagi
 
 	query := s.db.WithContext(ctx).
 		Joins("JOIN users ON users.user_id = instructors.user_id").
-		Where("users.is_validated = ?", true).
 		Preload("User").
 		Preload("Specialties")
 
@@ -71,12 +70,59 @@ func (s *InstructorStore) GetInstructors(ctx context.Context, fq pagination.Pagi
 		query = query.Where("users.identity_document ILIKE ?", idQuery)
 	}
 
-	err := query.Find(&instructors).Error
+	err := query.Limit(fq.Limit).Offset(fq.Page*fq.Limit - fq.Limit).Order("instructors.created_at " + fq.Sort).Find(&instructors).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return instructors, nil
+}
+
+func (s *InstructorStore) GetSummary(ctx context.Context) (*instructordomain.InstructorSummary, error) {
+	var summary instructordomain.InstructorSummary
+
+	query := s.db.WithContext(ctx).
+		Model(&instructordomain.Instructor{}).
+		Joins("JOIN users ON users.user_id = instructors.user_id")
+
+	err := query.Select(
+		"COUNT(instructors.instructor_id) as total",
+		"COUNT(CASE WHEN users.status = 'Active' THEN 1 END) as actives",
+		"COUNT(CASE WHEN users.status = 'Blocked' THEN 1 END) as blocked",
+	).Take(&summary).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &summary, nil
+}
+
+func (s *InstructorStore) GetInstructorsFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	var count int64
+	query := s.db.WithContext(ctx).Model(&instructordomain.Instructor{}).
+		Joins("JOIN users ON users.user_id = instructors.user_id").
+		Preload("User").
+		Preload("Specialties")
+
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		query = query.Where(
+			"users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?",
+			searchQuery, searchQuery, searchQuery, searchQuery,
+		)
+	}
+
+	if fq.Identity_doc != "" {
+		idQuery := "%" + fq.Identity_doc + "%"
+		query = query.Where("users.identity_document ILIKE ?", idQuery)
+	}
+
+	err := query.Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func (s *InstructorStore) Delete(ctx context.Context, instructorID uuid.UUID) error {

@@ -2938,7 +2938,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Lists all available equipment types in the global catalog.",
+                "description": "Lists all available equipment types in the global catalog with pagination and filtering.",
                 "produces": [
                     "application/json"
                 ],
@@ -2946,9 +2946,55 @@ const docTemplate = `{
                     "Equipment"
                 ],
                 "summary": "Get equipment types",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for equipment name",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Cardio",
+                            "Strength",
+                            "FreeWeight",
+                            "Functional",
+                            "Accessory"
+                        ],
+                        "type": "string",
+                        "description": "Filter by equipment category",
+                        "name": "category",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "A paginated list of equipment types",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -2961,8 +3007,19 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "400": {
+                        "description": "Error: Bad Request (e.g., invalid query parameters)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Error: Internal Server Error",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -3408,6 +3465,43 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/instructor/summary": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a count of total, active, and blocked instructors.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Get a summary of instructors",
+                "responses": {
+                    "200": {
+                        "description": "Summary of instructors",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/instructordomain.InstructorSummary"
+                                }
+                            }
                         }
                     },
                     "500": {
@@ -4040,7 +4134,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves a list of all membership types.",
+                "description": "Retrieves a paginated list of all membership types, with optional searching.",
                 "produces": [
                     "application/json"
                 ],
@@ -4048,19 +4142,56 @@ const docTemplate = `{
                     "Memberships"
                 ],
                 "summary": "List all membership types",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for membership name",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "A paginated list of membership types",
                         "schema": {
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/membershipshandlers.MembershipResponse"
-                                    }
+                                    "$ref": "#/definitions/membershipshandlers.MembershipResponse"
                                 }
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
@@ -4142,6 +4273,43 @@ const docTemplate = `{
                                     "type": "string"
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/membership-plans/summary": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a count of total, active, and inactive membership types.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Get a summary of membership types",
+                "responses": {
+                    "200": {
+                        "description": "Summary of membership types",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/membershipsdomain.MembershipSummary"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -4465,7 +4633,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves a list of all available services.",
+                "description": "Retrieves a paginated list of all available services, with optional filtering and searching.",
                 "produces": [
                     "application/json"
                 ],
@@ -4473,9 +4641,48 @@ const docTemplate = `{
                     "Services"
                 ],
                 "summary": "List all services",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for service name",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by service category name",
+                        "name": "category",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of services",
+                        "description": "A paginated list of services",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -4486,6 +4693,13 @@ const docTemplate = `{
                                     }
                                 }
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
@@ -4530,6 +4744,43 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/services/summary": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a count of total, active, and featured services.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Get a summary of services",
+                "responses": {
+                    "200": {
+                        "description": "Summary of services",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/productsdomain.ServicesSummary"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -5830,6 +6081,20 @@ const docTemplate = `{
                 }
             }
         },
+        "instructordomain.InstructorSummary": {
+            "type": "object",
+            "properties": {
+                "actives": {
+                    "type": "integer"
+                },
+                "blocked": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "instructorhandler.AssignInstructorsSpecialtiesPayload": {
             "type": "object",
             "required": [
@@ -6389,6 +6654,20 @@ const docTemplate = `{
                 }
             }
         },
+        "membershipsdomain.MembershipSummary": {
+            "type": "object",
+            "properties": {
+                "actives": {
+                    "type": "integer"
+                },
+                "inactives": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "membershipsdomain.MembershipType": {
             "type": "object",
             "properties": {
@@ -6611,6 +6890,20 @@ const docTemplate = `{
                 },
                 "serviceID": {
                     "type": "string"
+                }
+            }
+        },
+        "productsdomain.ServicesSummary": {
+            "type": "object",
+            "properties": {
+                "actives": {
+                    "type": "integer"
+                },
+                "featured": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

@@ -7,6 +7,7 @@ import (
 	"github.com/vitalfit/api/config"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type EquipmentServices struct {
@@ -29,12 +30,20 @@ func (s *EquipmentServices) CreateEquipment(ctx context.Context, equipment *inve
 	return nil
 }
 
-func (s *EquipmentServices) GetEquipments(ctx context.Context) (*inventorydomain.EquipmentQueryResults, error) {
-	equipments, err := s.store.Equipment.GetAll(ctx)
+func (s *EquipmentServices) GetEquipments(ctx context.Context, fq pagination.PaginatedFeedQuery) (*inventorydomain.EquipmentQueryResults, error) {
+	equipments, err := s.store.Equipment.GetAll(ctx, fq)
 	if err != nil {
 		return nil, err
 	}
 	return equipments, nil
+}
+
+func (s *EquipmentServices) GetTotalCount(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	count, err := s.store.Equipment.GetTotalCount(ctx, fq)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func (s *EquipmentServices) GetEquipmentByID(ctx context.Context, equipmentID uuid.UUID) (*inventorydomain.Equipment, error) {

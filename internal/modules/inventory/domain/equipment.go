@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -36,7 +37,8 @@ type EquipmentQueryResults struct {
 
 type EquipmentRepository interface {
 	Create(ctx context.Context, equipment *Equipment) (*Equipment, error)
-	GetAll(ctx context.Context) (*EquipmentQueryResults, error)
+	GetAll(ctx context.Context, fq pagination.PaginatedFeedQuery) (*EquipmentQueryResults, error)
+	GetTotalCount(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
 	Update(ctx context.Context, equipment *Equipment) error
 	Delete(ctx context.Context, equipmentID uuid.UUID) error
 	GetByID(ctx context.Context, equipmentID uuid.UUID) (*Equipment, error)
@@ -44,7 +46,8 @@ type EquipmentRepository interface {
 
 type EquipmentServicesInterface interface {
 	CreateEquipment(ctx context.Context, equipment *Equipment) error
-	GetEquipments(ctx context.Context) (*EquipmentQueryResults, error)
+	GetEquipments(ctx context.Context, fq pagination.PaginatedFeedQuery) (*EquipmentQueryResults, error)
+	GetTotalCount(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
 	UpdateEquipment(ctx context.Context, equipment *Equipment) error
 	DeleteEquipment(ctx context.Context, equipmentID uuid.UUID) error
 	GetEquipmentByID(ctx context.Context, equipmentID uuid.UUID) (*Equipment, error)

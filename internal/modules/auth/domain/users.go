@@ -13,14 +13,14 @@ import (
 // ENUMS
 type GenderEnum string
 type ClientCategoryEnum string
-type ClientStatusEnum string
+type UserStatusEnum string
 
 const (
 	GenderMale            GenderEnum         = "male"
 	GenderFemale          GenderEnum         = "female"
 	GenderPreferNotToSay  GenderEnum         = "prefer-not-to-say"
-	ClientStatusActive    ClientStatusEnum   = "Active"
-	ClientStatusBlocked   ClientStatusEnum   = "Blocked"
+	ClientStatusActive    UserStatusEnum     = "Active"
+	ClientStatusBlocked   UserStatusEnum     = "Blocked"
 	ClientCategoryVIP     ClientCategoryEnum = "VIP"
 	ClientCategoryRegular ClientCategoryEnum = "Regular"
 	ClientCategoryNew     ClientCategoryEnum = "New"
@@ -81,12 +81,14 @@ type Users struct {
 	Phone            string    `gorm:"type:varchar(50)" json:"phone"`
 	IdentityDocument string    `gorm:"type:varchar(50);unique" json:"identity_document"`
 
-	PasswordHash      Password       `gorm:"column:password_hash;type:bytea;not null" json:"-"`
-	BirthDate         time.Time      `gorm:"type:date" json:"birth_date"`
-	Gender            GenderEnum     `gorm:"type:gender_enum" json:"gender"`
-	ProfilePictureURL string         `gorm:"type:varchar(255)" json:"profile_picture_url"`
-	IsValidated       bool           `gorm:"default:false" json:"is_validated"`
-	ClientProfile     ClientProfiles `gorm:"foreignKey:UserID;references:UserID"`
+	PasswordHash       Password       `gorm:"column:password_hash;type:bytea;not null" json:"-"`
+	BirthDate          time.Time      `gorm:"type:date" json:"birth_date"`
+	Gender             GenderEnum     `gorm:"type:gender_enum" json:"gender"`
+	Status             UserStatusEnum `gorm:"type:user_status;not null;default:'Active'" json:"status"`
+	BlockJustification string         `gorm:"type:text" json:"block_justification"`
+	ProfilePictureURL  string         `gorm:"type:varchar(255)" json:"profile_picture_url"`
+	IsValidated        bool           `gorm:"default:false" json:"is_validated"`
+	ClientProfile      ClientProfiles `gorm:"foreignKey:UserID;references:UserID"`
 
 	RoleID uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
 	Role   Roles     `gorm:"foreignKey:RoleID;references:RoleID" json:"role"`
@@ -97,15 +99,13 @@ type Users struct {
 }
 
 type ClientProfiles struct {
-	UserID             uuid.UUID          `gorm:"type:uuid;primaryKey" json:"user_id"`
-	QRCode             string             `gorm:"type:text" json:"qr_code"`
-	Scoring            int                `gorm:"type:integer;default:0" json:"scoring"`
-	Status             ClientStatusEnum   `gorm:"type:client_status;not null;default:'Active'" json:"status"`
-	BlockJustification string             `gorm:"type:text" json:"block_justification"`
-	Category           ClientCategoryEnum `gorm:"type:client_category;not null;default:'New'" json:"category"`
-	CreatedAt          time.Time          `json:"created_at"`
-	UpdatedAt          time.Time          `json:"updated_at"`
-	DeletedAt          gorm.DeletedAt     `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
+	UserID    uuid.UUID          `gorm:"type:uuid;primaryKey" json:"user_id"`
+	QRCode    string             `gorm:"type:text" json:"qr_code"`
+	Scoring   int                `gorm:"type:integer;default:0" json:"scoring"`
+	Category  ClientCategoryEnum `gorm:"type:client_category;not null;default:'New'" json:"category"`
+	CreatedAt time.Time          `json:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at"`
+	DeletedAt gorm.DeletedAt     `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
 }
 
 type UserInvitations struct {

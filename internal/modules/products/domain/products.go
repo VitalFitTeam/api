@@ -77,3 +77,9 @@ type ServiceBranchDetail struct {
 func (ServiceBranchDetail) TableName() string {
 	return "service_branch_details"
 }
+
+type ServicesSummary struct {
+	Total    int64 `json:"total"`
+	Actives  int64 `json:"actives"`
+	Featured int64 `json:"featured"`
+}

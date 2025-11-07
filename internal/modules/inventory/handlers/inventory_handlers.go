@@ -1,11 +1,14 @@
 package inventoryhandlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 //
@@ -45,21 +48,61 @@ func (h *InventoryHandlers) CreateEquipmentHandler(c *gin.Context) {
 }
 
 // @Summary		Get equipment types
-// @Description	Lists all available equipment types in the global catalog.
+// @Description	Lists all available equipment types in the global catalog with pagination and filtering.
 // @Tags			Equipment
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Success		200	{object}	object{data=[]inventorydomain.Equipment}
-// @Failure		500	{object}	object{error=string}
+// @Param			limit		query		int											false	"Number of results per page"	default(10)
+// @Param			page		query		int											false	"Page number for pagination"	default(1)
+// @Param			sort		query		string										false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search		query		string										false	"Search term for equipment name"
+// @Param			category	query		string										false	"Filter by equipment category"	enums(Cardio, Strength, FreeWeight, Functional, Accessory)
+// @Success		200			{object}	object{data=[]inventorydomain.Equipment}	"A paginated list of equipment types"
+// @Failure		400			{object}	object{error=string}						"Error: Bad Request (e.g., invalid query parameters)"
+// @Failure		500			{object}	object{error=string}						"Error: Internal Server Error"
 // @Router			/equipment-types [get]
 func (h *InventoryHandlers) GetEquipmentsHandler(c *gin.Context) {
-	equipments, err := h.services.EquipmentServices.GetEquipments(c)
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit:    10,
+		Page:     1,
+		Sort:     "desc",
+		Search:   "",
+		Category: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/equipment-types?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/equipment-types?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+
+	equipments, err := h.services.EquipmentServices.GetEquipments(ctx, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
+	total, err := h.services.EquipmentServices.GetTotalCount(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	resp := pagination.PaginatedResponseTotal[*inventorydomain.Equipment]{
+		Data:     equipments.Equipments,
+		Count:    int64(len(equipments.Equipments)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
 
-	c.JSON(http.StatusOK, gin.H{"data": equipments.Equipments})
+	c.JSON(http.StatusOK, resp)
 }
 
 // @Summary		Get equipment type by ID

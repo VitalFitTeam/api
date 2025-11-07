@@ -12,6 +12,8 @@ import (
 type InstructorRepository interface {
 	Create(context.Context, *gorm.DB, *Instructor) error
 	GetInstructors(context.Context, pagination.PaginatedFeedQuery) ([]*Instructor, error)
+	GetInstructorsFTotal(context.Context, pagination.PaginatedFeedQuery) (int64, error)
+	GetSummary(context.Context) (*InstructorSummary, error)
 	Delete(context.Context, uuid.UUID) error
 	GetByID(context.Context, uuid.UUID) (*Instructor, error)
 	Update(context.Context, *Instructor) error

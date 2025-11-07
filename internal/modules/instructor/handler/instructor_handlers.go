@@ -3,6 +3,7 @@ package instructorhandler
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -85,7 +86,10 @@ func (h *InstructorHandlers) CreateInstructorHandler(c *gin.Context) {
 func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	fq := pagination.PaginatedFeedQuery{
+		Limit:        10,
+		Page:         1,
 		Search:       "",
+		Sort:         "desc",
 		Identity_doc: "",
 	}
 	fq, err := fq.Parse(c.Request)
@@ -93,6 +97,14 @@ func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+
+	nextURL := fmt.Sprintf("/instructor/all?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/instructor/all?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+
 	instructors, err := h.services.InstructorServices.GetInstructors(ctx, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
@@ -116,8 +128,38 @@ func (h *InstructorHandlers) GetInstructorsHandler(c *gin.Context) {
 		}
 		response = append(response, ins)
 	}
+	total, err := h.services.InstructorServices.GetInstructorsFTotal(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"data": response})
+	pagResponse := pagination.PaginatedResponseTotal[*ListInstructorResponse]{
+		Data:     response,
+		Count:    int64(len(instructors)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+	c.JSON(http.StatusOK, pagResponse)
+}
+
+// @Summary		Get a summary of instructors
+// @Description	Retrieves a count of total, active, and blocked instructors.
+// @Tags			Instructors
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=instructordomain.InstructorSummary}	"Summary of instructors"
+// @Failure		500	{object}	map[string]interface{}							"Internal Server Error"
+// @Router			/instructor/summary [get]
+func (h *InstructorHandlers) GetSummaryHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	summary, err := h.services.InstructorServices.GetSummary(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": summary})
 }
 
 // @Summary		Delete an instructor

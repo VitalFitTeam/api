@@ -597,6 +597,15 @@ definitions:
     - state
     - tax_id
     type: object
+  instructordomain.InstructorSummary:
+    properties:
+      actives:
+        type: integer
+      blocked:
+        type: integer
+      total:
+        type: integer
+    type: object
   instructorhandler.AssignInstructorsSpecialtiesPayload:
     properties:
       specialties:
@@ -976,6 +985,15 @@ definitions:
       name:
         type: string
     type: object
+  membershipsdomain.MembershipSummary:
+    properties:
+      actives:
+        type: integer
+      inactives:
+        type: integer
+      total:
+        type: integer
+    type: object
   membershipsdomain.MembershipType:
     properties:
       created_at:
@@ -1123,6 +1141,15 @@ definitions:
         $ref: '#/definitions/productsdomain.Service'
       serviceID:
         type: string
+    type: object
+  productsdomain.ServicesSummary:
+    properties:
+      actives:
+        type: integer
+      featured:
+        type: integer
+      total:
+        type: integer
     type: object
   productshandler.AssignBranchServicePayload:
     properties:
@@ -3206,12 +3233,46 @@ paths:
       - Branches
   /equipment-types:
     get:
-      description: Lists all available equipment types in the global catalog.
+      description: Lists all available equipment types in the global catalog with
+        pagination and filtering.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for equipment name
+        in: query
+        name: search
+        type: string
+      - description: Filter by equipment category
+        enum:
+        - Cardio
+        - Strength
+        - FreeWeight
+        - Functional
+        - Accessory
+        in: query
+        name: category
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: A paginated list of equipment types
           schema:
             properties:
               data:
@@ -3219,8 +3280,15 @@ paths:
                   $ref: '#/definitions/inventorydomain.Equipment'
                 type: array
             type: object
+        "400":
+          description: 'Error: Bad Request (e.g., invalid query parameters)'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
         "500":
-          description: Internal Server Error
+          description: 'Error: Internal Server Error'
           schema:
             properties:
               error:
@@ -3709,6 +3777,29 @@ paths:
       summary: Remove a specialty from an instructor
       tags:
       - Instructors
+  /instructor/summary:
+    get:
+      description: Retrieves a count of total, active, and blocked instructors.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Summary of instructors
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/instructordomain.InstructorSummary'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a summary of instructors
+      tags:
+      - Instructors
   /marketing/banners:
     get:
       description: Retrieves a list of all promotional banners.
@@ -3915,18 +4006,45 @@ paths:
       - Marketing
   /membership-plans:
     get:
-      description: Retrieves a list of all membership types.
+      description: Retrieves a paginated list of all membership types, with optional
+        searching.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for membership name
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: A paginated list of membership types
           schema:
             properties:
               data:
-                items:
-                  $ref: '#/definitions/membershipshandlers.MembershipResponse'
-                type: array
+                $ref: '#/definitions/membershipshandlers.MembershipResponse'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
             type: object
         "500":
           description: 'error: Internal Server Error'
@@ -4117,6 +4235,29 @@ paths:
       summary: Update a membership type
       tags:
       - Memberships
+  /membership-plans/summary:
+    get:
+      description: Retrieves a count of total, active, and inactive membership types.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Summary of membership types
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/membershipsdomain.MembershipSummary'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a summary of membership types
+      tags:
+      - Memberships
   /public/branches-map:
     get:
       description: Retrieves a list of public branches with minimal information for
@@ -4299,18 +4440,51 @@ paths:
       - Services
   /services/all:
     get:
-      description: Retrieves a list of all available services.
+      description: Retrieves a paginated list of all available services, with optional
+        filtering and searching.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for service name
+        in: query
+        name: search
+        type: string
+      - description: Filter by service category name
+        in: query
+        name: category
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: List of services
+          description: A paginated list of services
           schema:
             properties:
               data:
                 items:
                   $ref: '#/definitions/productshandler.ServiceResponse'
                 type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
             type: object
         "500":
           description: Internal server error
@@ -4347,6 +4521,29 @@ paths:
       summary: List service categories
       tags:
       - Services Categories
+  /services/summary:
+    get:
+      description: Retrieves a count of total, active, and featured services.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Summary of services
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/productsdomain.ServicesSummary'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a summary of services
+      tags:
+      - Services
   /user/branch-admins:
     get:
       consumes:

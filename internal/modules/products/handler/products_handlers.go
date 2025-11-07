@@ -1,10 +1,12 @@
 package productshandler
 
 import (
+	"fmt"
 	"net/http"
 
 	marketinghandlers "github.com/vitalfit/api/internal/modules/marketing/handlers"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -82,16 +84,43 @@ func (h *ProductsHandler) CreateServiceHandler(c *gin.Context) {
 }
 
 // @Summary		List all services
-// @Description	Retrieves a list of all available services.
+// @Description	Retrieves a paginated list of all available services, with optional filtering and searching.
 // @Tags			Services
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Success		200	{object}	object{data=[]ServiceResponse}	"List of services"
-// @Failure		500	{object}	map[string]interface{}			"Internal server error"
+// @Param			limit		query		int								false	"Number of results per page"	default(10)
+// @Param			page		query		int								false	"Page number for pagination"	default(1)
+// @Param			sort		query		string							false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search		query		string							false	"Search term for service name"
+// @Param			category	query		string							false	"Filter by service category name"
+// @Success		200			{object}	object{data=[]ServiceResponse}	"A paginated list of services"
+// @Failure		400			{object}	map[string]interface{}			"Bad Request: Invalid query parameters"
+// @Failure		500			{object}	map[string]interface{}			"Internal server error"
 // @Router			/services/all [get]
 func (h *ProductsHandler) GetServicesHandler(c *gin.Context) {
 	ctx := c.Request.Context()
-	services, err := h.services.ProductsServices.GetServices(ctx)
+	fq := pagination.PaginatedFeedQuery{
+		Limit:    10,
+		Page:     1,
+		Sort:     "desc",
+		Search:   "",
+		Category: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/services/all?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/services/all?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+
+	services, err := h.services.ProductsServices.GetServices(ctx, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -134,7 +163,39 @@ func (h *ProductsHandler) GetServicesHandler(c *gin.Context) {
 			UpdatedAt:       s.UpdatedAt,
 		}
 	}
-	c.JSON(http.StatusOK, gin.H{"data": serviceResponses})
+
+	total, err := h.services.ProductsServices.GetTotalCount(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	resp := pagination.PaginatedResponseTotal[ServiceResponse]{
+		Data:     serviceResponses,
+		Count:    int64(len(services)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary		Get a summary of services
+// @Description	Retrieves a count of total, active, and featured services.
+// @Tags			Services
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=productsdomain.ServicesSummary}	"Summary of services"
+// @Failure		500	{object}	map[string]interface{}						"Internal Server Error"
+// @Router			/services/summary [get]
+func (h *ProductsHandler) GetSummaryServicesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	summary, err := h.services.ProductsServices.GetServiceSummary(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": summary})
 }
 
 // @Summary		Delete a service

@@ -21,3 +21,9 @@ type MembershipType struct {
 func (MembershipType) TableName() string {
 	return "membership_types"
 }
+
+type MembershipSummary struct {
+	Total     int64 `json:"total"`
+	Actives   int64 `json:"actives"`
+	Inactives int64 `json:"inactives"`
+}

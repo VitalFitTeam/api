@@ -43,6 +43,14 @@ func (s *InstructorServices) GetInstructors(ctx context.Context, fq pagination.P
 	return instructors, nil
 }
 
+func (s *InstructorServices) GetInstructorsFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	total, err := s.store.Instructor.GetInstructorsFTotal(ctx, fq)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
 func (s *InstructorServices) DeleteInstructor(ctx context.Context, instructorID uuid.UUID) error {
 	err := s.store.Instructor.Delete(ctx, instructorID)
 	if err != nil {
@@ -63,6 +71,14 @@ func (s *InstructorServices) GetInstructorByID(ctx context.Context, instructorID
 		return nil, err
 	}
 	return instructor, nil
+}
+
+func (s *InstructorServices) GetSummary(ctx context.Context) (*instructordomain.InstructorSummary, error) {
+	summary, err := s.store.Instructor.GetSummary(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return summary, nil
 }
 
 func (s *InstructorServices) UpdateInstructor(ctx context.Context, instructor *instructordomain.Instructor) error {
