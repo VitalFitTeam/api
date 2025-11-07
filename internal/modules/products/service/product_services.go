@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type ProductsService struct {
@@ -26,8 +27,11 @@ func (s *ProductsService) CreateService(ctx context.Context, service *productsdo
 	return s.store.Products.CreateService(ctx, service, bannerID)
 }
 
-func (s *ProductsService) GetServices(ctx context.Context) ([]productsdomain.Service, error) {
-	return s.store.Products.GetServices(ctx)
+func (s *ProductsService) GetServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]productsdomain.Service, error) {
+	return s.store.Products.GetServices(ctx, fq)
+}
+func (s *ProductsService) GetTotalCount(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	return s.store.Products.GetTotalCount(ctx, fq)
 }
 
 func (s *ProductsService) DeleteService(ctx context.Context, serviceID uuid.UUID) error {

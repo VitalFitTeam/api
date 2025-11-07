@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type ProductsServiceInterface interface {
 	ListServiceCategories(ctx context.Context) ([]ServiceCategory, error)
 	CreateService(ctx context.Context, service *Service, bannerID uuid.UUID) error
-	GetServices(ctx context.Context) ([]Service, error)
+	GetServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]Service, error)
+	GetTotalCount(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
 	DeleteService(ctx context.Context, serviceID uuid.UUID) error
 	GetServiceByID(ctx context.Context, serviceID uuid.UUID) (*Service, error)
 	UpdateService(ctx context.Context, service *Service, bannerID uuid.UUID) error

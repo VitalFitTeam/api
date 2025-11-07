@@ -10,6 +10,7 @@ import (
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -121,14 +122,63 @@ func (s *ProductsStore) CreateServiceTX(ctx context.Context, tx *gorm.DB, servic
 
 }
 
-func (s *ProductsStore) GetServices(ctx context.Context) ([]productsdomain.Service, error) {
+func (s *ProductsStore) GetServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]productsdomain.Service, error) {
 	var services []productsdomain.Service
-	if err := s.db.Preload("Images").Preload("Category").Preload("Banners").Find(&services).Error; err != nil {
+
+	baseQuery := s.db.WithContext(ctx).Model(&productsdomain.Service{})
+
+	if fq.Search != "" {
+		baseQuery = baseQuery.Where("services.name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	if fq.Category != "" {
+		baseQuery = baseQuery.Joins("JOIN service_categories ON service_categories.category_id = services.category_id").
+			Where("service_categories.name ILIKE ?", "%"+fq.Category+"%")
+	}
+
+	query := baseQuery.
+		Preload("Images").
+		Preload("Category").
+		Preload("Banners").
+		Limit(fq.Limit).
+		Offset(fq.Page*fq.Limit - fq.Limit).
+		Order("services.created_at " + fq.Sort)
+
+	if err := query.Find(&services).Error; err != nil {
 		return nil, err
 	}
+
 	return services, nil
 
 }
+
+func (s *ProductsStore) GetTotalCount(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	var count int64
+	baseQuery := s.db.WithContext(ctx).Model(&productsdomain.Service{})
+
+	if fq.Search != "" {
+		baseQuery = baseQuery.Where("services.name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	if fq.Category != "" {
+		baseQuery = baseQuery.Joins("JOIN service_categories ON service_categories.category_id = services.category_id").
+			Where("service_categories.name ILIKE ?", "%"+fq.Category+"%")
+	}
+
+	query := baseQuery.
+		Preload("Images").
+		Preload("Category").
+		Preload("Banners").
+		Limit(fq.Limit).
+		Offset(fq.Page*fq.Limit - fq.Limit).
+		Order("services.created_at " + fq.Sort)
+
+	if err := query.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (s *ProductsStore) DeleteService(ctx context.Context, serviceID uuid.UUID) error {
 
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {

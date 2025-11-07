@@ -4340,18 +4340,51 @@ paths:
       - Services
   /services/all:
     get:
-      description: Retrieves a list of all available services.
+      description: Retrieves a paginated list of all available services, with optional
+        filtering and searching.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for service name
+        in: query
+        name: search
+        type: string
+      - description: Filter by service category name
+        in: query
+        name: category
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: List of services
+          description: A paginated list of services
           schema:
             properties:
               data:
                 items:
                   $ref: '#/definitions/productshandler.ServiceResponse'
                 type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
             type: object
         "500":
           description: Internal server error
