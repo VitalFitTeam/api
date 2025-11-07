@@ -456,6 +456,8 @@ func (s *SeedStruct) SeedBranches(store store.Storage, db *gorm.DB, ctx context.
 				Address:     b.Address,
 				MaxCapacity: b.MaxCapacity,
 				Name:        b.Name,
+				Latitude:    b.Latitude,
+				Longitude:   b.Longitude,
 				Phone:       b.Phone,
 				Status:      branchdomain.BranchStatusEnum(b.Status),
 				TaxID:       b.TaxID,
