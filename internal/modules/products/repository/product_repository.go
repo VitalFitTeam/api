@@ -179,6 +179,46 @@ func (s *ProductsStore) GetTotalCount(ctx context.Context, fq pagination.Paginat
 	return count, nil
 }
 
+func (s *ProductsStore) GetServiceSummary(ctx context.Context) (*productsdomain.ServicesSummary, error) {
+	var totalCount int64
+	var activeCount int64
+	var featuredCount int64
+	var err error
+
+	err = s.db.WithContext(ctx).
+		Model(&productsdomain.Service{}).
+		Count(&totalCount).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.db.WithContext(ctx).
+		Model(&productsdomain.Service{}).
+		Count(&activeCount).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.db.WithContext(ctx).
+		Model(&productsdomain.Service{}).
+		Where("is_featured = ?", true).
+		Count(&featuredCount).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	summary := &productsdomain.ServicesSummary{
+		Total:    totalCount,
+		Actives:  activeCount,
+		Featured: featuredCount,
+	}
+
+	return summary, nil
+}
+
 func (s *ProductsStore) DeleteService(ctx context.Context, serviceID uuid.UUID) error {
 
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {

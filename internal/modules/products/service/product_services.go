@@ -34,6 +34,10 @@ func (s *ProductsService) GetTotalCount(ctx context.Context, fq pagination.Pagin
 	return s.store.Products.GetTotalCount(ctx, fq)
 }
 
+func (s *ProductsService) GetServiceSummary(ctx context.Context) (*productsdomain.ServicesSummary, error) {
+	return s.store.Products.GetServiceSummary(ctx)
+}
+
 func (s *ProductsService) DeleteService(ctx context.Context, serviceID uuid.UUID) error {
 	return s.store.Products.DeleteService(ctx, serviceID)
 }

@@ -12,6 +12,7 @@ type ProductsHandlerInterface interface {
 	ListServiceCategoriesHandler(c *gin.Context)
 	CreateServiceHandler(c *gin.Context)
 	GetServicesHandler(c *gin.Context)
+	GetSummaryServicesHandler(c *gin.Context)
 	DeleteServiceHandler(c *gin.Context)
 	GetServiceByIDHandler(c *gin.Context)
 	UpdateServiceHandler(c *gin.Context)
@@ -37,6 +38,7 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 		ProductGroup.Use(m.AuthJwtTokenMiddleware())
 		ProductGroup.GET("/categories", m.RBACPermission("services:list"), r.ListServiceCategoriesHandler)
 		ProductGroup.GET("/all", m.RBACPermission("services:list"), r.GetServicesHandler)
+		ProductGroup.GET("/summary", m.RBACPermission("services:list"), r.GetSummaryServicesHandler)
 
 		ProductGroup.POST("", m.RBACPermission("services:create"), r.CreateServiceHandler)
 		ProductGroup.GET("/:id", m.RBACPermission("services:get"), r.GetServiceByIDHandler)

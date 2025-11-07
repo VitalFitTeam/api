@@ -180,6 +180,24 @@ func (h *ProductsHandler) GetServicesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// @Summary		Get a summary of services
+// @Description	Retrieves a count of total, active, and featured services.
+// @Tags			Services
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=productsdomain.ServicesSummary}	"Summary of services"
+// @Failure		500	{object}	map[string]interface{}						"Internal Server Error"
+// @Router			/services/summary [get]
+func (h *ProductsHandler) GetSummaryServicesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	summary, err := h.services.ProductsServices.GetServiceSummary(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": summary})
+}
+
 // @Summary		Delete a service
 // @Description	Deletes a specific service by its UUID.
 // @Tags			Services

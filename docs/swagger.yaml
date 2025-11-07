@@ -1124,6 +1124,15 @@ definitions:
       serviceID:
         type: string
     type: object
+  productsdomain.ServicesSummary:
+    properties:
+      actives:
+        type: integer
+      featured:
+        type: integer
+      total:
+        type: integer
+    type: object
   productshandler.AssignBranchServicePayload:
     properties:
       services:
@@ -4421,6 +4430,29 @@ paths:
       summary: List service categories
       tags:
       - Services Categories
+  /services/summary:
+    get:
+      description: Retrieves a count of total, active, and featured services.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Summary of services
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/productsdomain.ServicesSummary'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a summary of services
+      tags:
+      - Services
   /user/branch-admins:
     get:
       consumes:

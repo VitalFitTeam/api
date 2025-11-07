@@ -12,6 +12,7 @@ type ProductsServiceInterface interface {
 	CreateService(ctx context.Context, service *Service, bannerID uuid.UUID) error
 	GetServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]Service, error)
 	GetTotalCount(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
+	GetServiceSummary(ctx context.Context) (*ServicesSummary, error)
 	DeleteService(ctx context.Context, serviceID uuid.UUID) error
 	GetServiceByID(ctx context.Context, serviceID uuid.UUID) (*Service, error)
 	UpdateService(ctx context.Context, service *Service, bannerID uuid.UUID) error

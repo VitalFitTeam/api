@@ -4641,6 +4641,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/services/summary": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a count of total, active, and featured services.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Get a summary of services",
+                "responses": {
+                    "200": {
+                        "description": "Summary of services",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/productsdomain.ServicesSummary"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/services/{id}": {
             "get": {
                 "security": [
@@ -6714,6 +6751,20 @@ const docTemplate = `{
                 },
                 "serviceID": {
                     "type": "string"
+                }
+            }
+        },
+        "productsdomain.ServicesSummary": {
+            "type": "object",
+            "properties": {
+                "actives": {
+                    "type": "integer"
+                },
+                "featured": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
