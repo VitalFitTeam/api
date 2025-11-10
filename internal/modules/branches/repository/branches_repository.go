@@ -81,7 +81,7 @@ func (s *BranchesStore) GetBranches(ctx context.Context, fq pagination.Paginated
 		Order("created_at " + fq.Sort)
 
 	if fq.Status != "" {
-		query = query.Where("status = ?", fq.Status)
+		query = query.Where("branch.status = ?", fq.Status)
 	}
 
 	if err := query.Find(&branches).Error; err != nil {
