@@ -51,23 +51,23 @@ jobs:
 
       - name: 3. Create .env file for Docker Compose
         run: |
-          echo "ECR_REPOSITORY_URI=${{ secrets.ECR_REPOSITORY_URI }}" > .env
-          echo "DB_ADDR=${{ secrets.DB_ADDR }}" >> .env
-          echo "ADDR=${{ secrets.ADDR }}" >> .env
-          echo "EXTERNAL_LINK=${{ secrets.EXTERNAL_LINK }}" >> .env
-          echo "DB_MAX_OPEN_CONNS=${{ secrets.DB_MAX_OPEN_CONNS }}" >> .env
-          echo "DB_MAX_IDLE_CONNS=${{ secrets.DB_MAX_IDLE_CONNS }}" >> .env
-          echo "DB_MAX_IDLE_TIME=${{ secrets.DB_MAX_IDLE_TIME }}" >> .env
-          echo "ENV=${{ secrets.ENV }}" >> .env
-          echo "WHITE_LIST=${{ secrets.WHITE_LIST }}" >> .env
-          echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}" >> .env
-          echo "FROM_RESEND_EMAIL=${{ secrets.FROM_RESEND_EMAIL }}" >> .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-          echo "JWT_ISS=${{ secrets.JWT_ISS }}" >> .env
-          echo "JWT_AUD=${{ secrets.JWT_AUD }}" >> .env
-          echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> .env
-          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
-          echo "FRONT_URL=${{ secrets.FRONT_URL }}" >> .env
+          echo "ECR_REPOSITORY_URI=\"${{ secrets.ECR_REPOSITORY_URI }}\"" > .env
+          echo "DB_ADDR=\"${{ secrets.DB_ADDR }}\"" >> .env
+          echo "ADDR=\"${{ secrets.ADDR }}\"" >> .env
+          echo "EXTERNAL_LINK=\"${{ secrets.EXTERNAL_LINK }}\"" >> .env
+          echo "DB_MAX_OPEN_CONNS=\"${{ secrets.DB_MAX_OPEN_CONNS }}\"" >> .env
+          echo "DB_MAX_IDLE_CONNS=\"${{ secrets.DB_MAX_IDLE_CONNS }}\"" >> .env
+          echo "DB_MAX_IDLE_TIME=\"${{ secrets.DB_MAX_IDLE_TIME }}\"" >> .env
+          echo "ENV=\"${{ secrets.ENV }}\"" >> .env
+          echo "WHITE_LIST=\"${{ secrets.WHITE_LIST }}\"" >> .env
+          echo "RESEND_API_KEY=\"${{ secrets.RESEND_API_KEY }}\"" >> .env
+          echo "FROM_RESEND_EMAIL=\"${{ secrets.FROM_RESEND_EMAIL }}\"" >> .env
+          echo "JWT_SECRET=\"${{ secrets.JWT_SECRET }}\"" >> .env
+          echo "JWT_ISS=\"${{ secrets.JWT_ISS }}\"" >> .env
+          echo "JWT_AUD=\"${{ secrets.JWT_AUD }}\"" >> .env
+          echo "ADMIN_EMAIL=\"${{ secrets.ADMIN_EMAIL }}\"" >> .env
+          echo "ADMIN_PASSWORD=\"${{ secrets.ADMIN_PASSWORD }}\"" >> .env
+          echo "FRONT_URL=\"${{ secrets.FRONT_URL }}\"" >> .env
 
       - name: 4. Pull the new image
         run: |
