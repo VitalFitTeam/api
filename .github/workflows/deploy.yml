@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
+        with: 
+          clean: true
 
       - name: 2. Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -68,6 +70,14 @@ jobs:
           echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> .env
           echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
           echo "FRONT_URL=${{ secrets.FRONT_URL }}" >> .env
+
+      - name: 3.5. DEBUG - List files in working directory
+        run: |
+          echo "--- showing actual dir (pwd) ---"
+          pwd
+          echo "--- Listing all files  (ls -la) ---"
+          ls -la
+          echo "--- End of list ---"
 
       - name: 4. Pull the new image
         run: |
