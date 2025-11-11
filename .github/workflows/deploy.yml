@@ -69,15 +69,18 @@ jobs:
           echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
           echo "FRONT_URL=${{ secrets.FRONT_URL }}" >> .env
 
-      - name: 4. (Optional) Run Migrations
+      - name: 4. Pull the new image
         run: |
-          docker-compose -f docker-compose.dev.yml run --rm api-dev ./migrate -path ./migrations -database "$DB_ADDR" up
+          docker compose -f docker-compose.dev.yml pull api-dev
 
-      - name: 5. Pull the new image
-        run: docker-compose -f docker-compose.dev.yml pull api-dev
+      - name: 5. Run Migrations
+        run: |
+          docker compose -f docker-compose.dev.yml run --rm api-dev ./migrate -path ./migrations -database "$DB_ADDR" up
+      
 
       - name: 6. Restart the container
-        run: docker-compose -f docker-compose.dev.yml up -d --remove-orphans api-dev
+        run: |
+          docker compose -f docker-compose.dev.yml up -d --remove-orphans api-dev
 
       - name: 7. Clean up old images
         run: docker image prune -f
