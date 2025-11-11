@@ -75,6 +75,7 @@ jobs:
 
       - name: 5. Run Migrations
         run: |
+          source .env
           docker compose -f ${{ github.workspace }}/docker-compose.dev.yml run --rm api-dev ./migrate -path ./migrations -database "$DB_ADDR" up
       
       - name: 6. Restart the container

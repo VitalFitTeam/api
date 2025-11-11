@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api-dev:
     image: ${ECR_REPOSITORY_URI}:dev
