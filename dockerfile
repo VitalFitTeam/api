@@ -49,7 +49,7 @@ COPY --from=builder /app/main .
 
 COPY --from=builder /go/bin/migrate .
 
-COPY ./migrations ./migrations
+COPY ./internal/migrate/migrations ./migrations
 
 COPY --from=builder /app/docs ./docs
 
