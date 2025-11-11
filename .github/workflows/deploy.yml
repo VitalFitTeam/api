@@ -21,7 +21,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_FOR_PUSH }}
-          aws-region: 'us-east-1'
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: 3. Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
@@ -47,7 +47,7 @@ jobs:
 
       - name: 2. Log in to Amazon ECR
         run: |
-          aws ecr get-login-password --region 'us-east-1' | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
 
       - name: 3. Create .env file for Docker Compose
         run: |
@@ -69,7 +69,7 @@ jobs:
           echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
           echo "FRONT_URL=${{ secrets.FRONT_URL }}" >> .env
 
-      - name: 4. Run Migrations
+      - name: 4. (Optional) Run Migrations
         run: |
           docker-compose -f docker-compose.dev.yml run --rm api-dev ./migrate -path ./migrations -database "$DB_ADDR" up
 
