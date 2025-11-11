@@ -33,7 +33,7 @@ COPY . .
 RUN go install github.com/swaggo/swag/cmd/swag@latest
 RUN swag init -g ./api/main.go -d cmd,internal && swag fmt
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/main .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/main ./cmd/api
 
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
