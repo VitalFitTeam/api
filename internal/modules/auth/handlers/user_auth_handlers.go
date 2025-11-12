@@ -590,6 +590,8 @@ func (h *AuthHandlers) GetUserByIDHandler(c *gin.Context) {
 		Gender:            string(user.Gender),
 		Phone:             user.Phone,
 		ProfilePictureURL: user.ProfilePictureURL,
+		RoleID:            user.RoleID,
+		RoleName:          user.Role.Name,
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"data": resp,
