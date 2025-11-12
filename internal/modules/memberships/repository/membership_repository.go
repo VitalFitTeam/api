@@ -57,30 +57,32 @@ func (s *MembershipStore) CreateMembershipTypeTX(ctx context.Context, tx *gorm.D
 func (s *MembershipStore) UpdateMembershipType(ctx context.Context, membership *membershipsdomain.MembershipType) error {
 	err := s.db.WithContext(ctx).Save(membership).Error
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" { // unique_violation
+				return shared_errors.ErrConflict
+			}
+		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return shared_errors.ErrNotFound
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *MembershipStore) DeleteMembershipType(ctx context.Context, id uuid.UUID) error {
+	err := s.db.WithContext(ctx).
+		Model(&membershipsdomain.MembershipType{}).
+		Where("membership_type_id = ?", id).
+		Update("deleted_at", time.Now()).Error
+	if err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:
 			return shared_errors.ErrNotFound
 		default:
 			return err
 		}
-	}
-	return nil
-}
-
-// DeleteMembershipType realiza una eliminación lógica del tipo de membresía (soft delete).
-func (s *MembershipStore) DeleteMembershipType(ctx context.Context, id uuid.UUID) error {
-	var membership membershipsdomain.MembershipType
-	result := s.db.WithContext(ctx).First(&membership, "membership_type_id = ?", id)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return shared_errors.ErrNotFound
-	}
-
-	now := time.Now()
-	membership.IsActive = false
-	membership.DeletedAt = &now
-
-	if err := s.db.WithContext(ctx).Save(&membership).Error; err != nil {
-		return err
 	}
 	return nil
 }
