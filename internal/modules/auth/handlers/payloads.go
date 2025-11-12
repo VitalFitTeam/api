@@ -21,8 +21,35 @@ type CreateUserClientPayload struct {
 }
 
 type CreateUserStaffPayload struct {
-	*CreateUserClientPayload
-	RoleName string `json:"role_name" binding:"omitempty"`
+	FirstName         string `json:"first_name" binding:"required"`
+	LastName          string `json:"last_name" binding:"required"`
+	Email             string `json:"email" binding:"required,email"`
+	Phone             string `json:"phone" binding:"required"`
+	IdentityDocument  string `json:"identity_document" binding:"required"`
+	BirthDate         string `json:"birth_date" binding:"required"`
+	Gender            string `json:"gender" binding:"required"`
+	ProfilePictureURL string `json:"profile_picture_url"`
+	RoleName          string `json:"role_name" binding:"omitempty"`
+}
+
+func (c *CreateUserStaffPayload) CreateUser() (*authdomain.Users, error) {
+	birthdate, err := time.Parse("2006-01-02", c.BirthDate)
+	if err != nil {
+		birthdate, err = time.Parse(time.RFC3339, c.BirthDate)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &authdomain.Users{
+		FirstName:         c.FirstName,
+		LastName:          c.LastName,
+		Email:             c.Email,
+		Phone:             c.Phone,
+		IdentityDocument:  c.IdentityDocument,
+		BirthDate:         birthdate,
+		Gender:            authdomain.GenderEnum(strings.ToLower(c.Gender)),
+		ProfilePictureURL: c.ProfilePictureURL,
+	}, nil
 }
 
 func (c *CreateUserClientPayload) CreateUser() (*authdomain.Users, error) {

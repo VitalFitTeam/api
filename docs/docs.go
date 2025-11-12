@@ -5369,7 +5369,6 @@ const docTemplate = `{
                 "gender",
                 "identity_document",
                 "last_name",
-                "password",
                 "phone"
             ],
             "properties": {
@@ -5390,10 +5389,6 @@ const docTemplate = `{
                 },
                 "last_name": {
                     "type": "string"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
                 },
                 "phone": {
                     "type": "string"

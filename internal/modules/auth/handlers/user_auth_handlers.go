@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/mailer"
@@ -99,26 +100,17 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := payload.CreateUserClientPayload.CreateUser()
+	user, err := payload.CreateUser()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
 
-	if err := user.PasswordHash.Set(payload.Password); err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
-		return
-	}
+	plainToken := uuid.New().String()
 
-	//store the user
-	key, err := otp.GenerateCode(6)
-	if err != nil {
-		h.services.InternalServerError(c, err)
-		return
-	}
-	hash := sha256.Sum256([]byte(key))
-	hashedKey := hex.EncodeToString(hash[:])
-	if err := h.services.AuthServices.RegisterUserStaff(ctx, user, hashedKey, payload.RoleName); err != nil {
+	hash := sha256.Sum256([]byte(plainToken))
+	hashToken := hex.EncodeToString(hash[:])
+	if err := h.services.AuthServices.RegisterUserStaff(ctx, user, hashToken, payload.RoleName); err != nil {
 		switch err {
 		case shared_errors.ErrNotFound:
 			h.services.LogErrors.BadRequestResponse(c, err)
@@ -130,9 +122,14 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		return
 	}
 
-	//send main
-	status, err := h.registerEmail(ctx, user, key)
+	//send mail
+	status, err := h.services.AuthServices.MailSenderStaff(ctx, user, plainToken, mailer.UserStaffActivate)
 	if err != nil {
+		h.services.Logger.Errorw("error sending activation url to email", "error", err)
+		if err := h.services.AuthServices.DeleteResetToken(ctx, user.UserID); err != nil {
+			h.services.Logger.Errorw("error deleting user activation token ", "error", err)
+			return
+		}
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
@@ -140,7 +137,7 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "user created",
 		"status":  status,
-		"code":    key,
+		"code":    plainToken,
 	})
 }
 
