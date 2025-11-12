@@ -85,8 +85,8 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
 		// Nuevas rutas para obtener y actualizar usuarios
 		userGroup.GET("/:id", m.RBACPermission("users:get"), r.GetUserByIDHandler)
-		userGroup.PUT("/:id/staff", m.RBACPermission("users:update"), r.UpdateUserStaffHandler)
-		userGroup.PUT("/:id/client", m.RBACPermission("users:update"), r.UpdateUserClientHandler)
+		userGroup.PUT("/:id/staff", r.UpdateUserStaffHandler)
+		userGroup.PUT("/:id/client", r.UpdateUserClientHandler)
 
 	}
 }

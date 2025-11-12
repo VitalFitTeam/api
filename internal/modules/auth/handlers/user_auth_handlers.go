@@ -609,12 +609,29 @@ func (h *AuthHandlers) GetUserByIDHandler(c *gin.Context) {
 // @Failure		500		{object}	object{error=string}	"Error: Internal server error"
 // @Router			/user/{id}/staff [put]
 func (h *AuthHandlers) UpdateUserStaffHandler(c *gin.Context) {
+	// Obtener el usuario autenticado desde el contexto (inyectado por el middleware JWT)
+	authenticatedUser := h.services.UserServices.GetUserFromContext(c)
+
 	ctx := c.Request.Context()
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+
+	isOwner := authenticatedUser.UserID == id
+	if !isOwner {
+		allowed, err := h.services.UserServices.RoleHasPermission(ctx, authenticatedUser.RoleID, "users:update")
+		if err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+		if !allowed {
+			h.services.LogErrors.ForbiddenResponse(c)
+			return
+		}
+	}
+
 	var payload UpdateUserStaffPayload
 	if err = c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
@@ -646,12 +663,28 @@ func (h *AuthHandlers) UpdateUserStaffHandler(c *gin.Context) {
 // @Failure		500		{object}	object{error=string}	"Error: Internal server error"
 // @Router			/user/{id}/client [put]
 func (h *AuthHandlers) UpdateUserClientHandler(c *gin.Context) {
+	authenticatedUser := h.services.UserServices.GetUserFromContext(c)
+
 	ctx := c.Request.Context()
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+
+	isOwner := authenticatedUser.UserID == id
+	if !isOwner {
+		allowed, err := h.services.UserServices.RoleHasPermission(ctx, authenticatedUser.RoleID, "users:update")
+		if err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+		if !allowed {
+			h.services.LogErrors.ForbiddenResponse(c)
+			return
+		}
+	}
+
 	var payload UpdateUserClientPayload
 	if err = c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
