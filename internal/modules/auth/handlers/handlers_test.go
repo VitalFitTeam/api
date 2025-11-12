@@ -264,6 +264,30 @@ func TestActivateUserHandler(t *testing.T) {
 	})
 }
 
+func TestActivateStaffHanlder(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	testApp := app.NewTestApplication(t, config.LoadConfig())
+	mux := testApp.Mount()
+	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
+
+	t.Run("should activate staff user with a valid token and password", func(t *testing.T) {
+		activationToken := "valid-staff-token"
+		password := "NewPassword123!"
+		userStoreMock.On("ActivateUserStaff", mock.Anything, activationToken, password).Return(nil).Once()
+
+		payload := map[string]string{"password": password, "confirm_password": password}
+		body, _ := json.Marshal(payload)
+
+		req, _ := http.NewRequest(http.MethodPut, "/v1/auth/activate/"+activationToken, bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		rr := app.ExecuteRequest(req, mux)
+
+		app.CheckResponseCode(t, http.StatusNoContent, rr.Code)
+		userStoreMock.AssertExpectations(t)
+	})
+}
+
 func TestRegisterUserStaffHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -284,7 +308,7 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 	authorizedUser := &authdomain.Users{
 		UserID: uuid.New(),
 		Email:  "authorized@example.com",
-		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "staff_manager"},
+		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "branch_admin"},
 	}
 	authorizedToken, _ := testApp.Services.AuthServices.GenerateToken(authorizedUser)
 
@@ -586,6 +610,155 @@ func TestAdminRoleRoutes(t *testing.T) {
 		roleStoreMock.AssertExpectations(t)
 	})
 
+}
+
+func TestUserListHandlers(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	testApp := app.NewTestApplication(t, config.LoadConfig())
+	mux := testApp.Mount()
+
+	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
+	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
+
+	adminUser := &authdomain.Users{
+		UserID: uuid.New(),
+		Email:  "listadmin@example.com",
+		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "admin"},
+	}
+	adminToken, _ := testApp.Services.AuthServices.GenerateToken(adminUser)
+
+	setupMiddleware := func() {
+		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "users:list").Return(true, nil).Once()
+	}
+
+	mockUsers := []*authdomain.Users{
+		{UserID: uuid.New(), FirstName: "User", LastName: "One", Email: "user1@example.com", Role: authdomain.Roles{Name: "instructor"}},
+	}
+
+	t.Run("GetUsersHandler", func(t *testing.T) {
+		setupMiddleware()
+		userStoreMock.On("GetUsers", mock.Anything, mock.AnythingOfType("pagination.PaginatedFeedQuery")).Return(mockUsers, nil).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/v1/user/users", nil)
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("GetClientsHandler", func(t *testing.T) {
+		setupMiddleware()
+		userStoreMock.On("GetClients", mock.Anything, mock.AnythingOfType("pagination.PaginatedFeedQuery")).Return(mockUsers, nil).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/v1/user/clients", nil)
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("GetBranchAdminsHandler", func(t *testing.T) {
+		setupMiddleware()
+		userStoreMock.On("GetBranchAdmins", mock.Anything, mock.AnythingOfType("pagination.PaginatedFeedQuery")).Return(mockUsers, nil).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/v1/user/branch-admins", nil)
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
+}
+
+func TestUserDetailAndUpdateHandlers(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	testApp := app.NewTestApplication(t, config.LoadConfig())
+	mux := testApp.Mount()
+
+	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
+	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
+
+	adminUser := &authdomain.Users{
+		UserID: uuid.New(),
+		Email:  "detailadmin@example.com",
+		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "admin"},
+	}
+	adminToken, _ := testApp.Services.AuthServices.GenerateToken(adminUser)
+
+	targetUserID := uuid.New()
+	mockUser := &authdomain.Users{UserID: targetUserID, FirstName: "Target", LastName: "User", Email: "target@example.com"}
+
+	t.Run("GetUserByIDHandler", func(t *testing.T) {
+		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "users:get").Return(true, nil).Once()
+		userStoreMock.On("GetByID", mock.Anything, targetUserID).Return(mockUser, nil).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/v1/user/"+targetUserID.String(), nil)
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("UpdateUserStaffHandler", func(t *testing.T) {
+		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "users:update").Return(true, nil).Once()
+
+		roleName := "instructor"
+		mockRole := &authdomain.Roles{RoleID: uuid.New(), Name: roleName}
+		roleStoreMock.On("GetByName", mock.Anything, roleName).Return(mockRole, nil).Once()
+
+		userStoreMock.On("UpdateUserStaff", mock.Anything, mock.MatchedBy(func(u *authdomain.Users) bool {
+			return u.UserID == targetUserID && u.RoleID == mockRole.RoleID
+		})).Return(nil).Once()
+
+		payload := map[string]interface{}{
+			"first_name": "Updated", "last_name": "Staff", "email": "updated.staff@example.com",
+			"phone": "123", "identity_document": "123", "birth_date": "1990-01-01", "gender": "male",
+			"role_name": roleName,
+		}
+		body, _ := json.Marshal(payload)
+
+		req, _ := http.NewRequest(http.MethodPut, "/v1/user/"+targetUserID.String()+"/staff", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusNoContent, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("UpdateUserClientHandler", func(t *testing.T) {
+		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "users:update").Return(true, nil).Once()
+		userStoreMock.On("UpdateUserClient", mock.Anything, mock.MatchedBy(func(u *authdomain.Users) bool {
+			return u.UserID == targetUserID
+		})).Return(nil).Once()
+
+		payload := map[string]interface{}{
+			"first_name": "Updated", "last_name": "Client", "email": "updated.client@example.com",
+			"phone": "456", "identity_document": "456", "birth_date": "1991-01-01", "gender": "male",
+		}
+		body, _ := json.Marshal(payload)
+
+		req, _ := http.NewRequest(http.MethodPut, "/v1/user/"+targetUserID.String()+"/client", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusNoContent, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
 }
 
 func TestResetPasswordHandler(t *testing.T) {

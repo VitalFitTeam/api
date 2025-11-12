@@ -373,3 +373,30 @@ func (s *UserStore) getUserResetToken(ctx context.Context, tx *gorm.DB, key stri
 
 	return &resetToken.Users, nil
 }
+
+func (s *UserStore) UpdateUserClient(ctx context.Context, user *authdomain.Users) error {
+	return s.db.WithContext(ctx).Model(&authdomain.Users{UserID: user.UserID}).Select(
+		"FirstName",
+		"LastName",
+		"Email",
+		"Phone",
+		"IdentityDocument",
+		"BirthDate",
+		"Gender",
+		"ProfilePictureURL",
+	).Updates(user).Error
+}
+
+func (s *UserStore) UpdateUserStaff(ctx context.Context, user *authdomain.Users) error {
+	return s.db.WithContext(ctx).Model(&authdomain.Users{UserID: user.UserID}).Select(
+		"FirstName",
+		"LastName",
+		"Email",
+		"Phone",
+		"IdentityDocument",
+		"BirthDate",
+		"Gender",
+		"ProfilePictureURL",
+		"RoleID",
+	).Updates(user).Error
+}

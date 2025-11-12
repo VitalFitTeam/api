@@ -347,6 +347,39 @@ func TestUserService(t *testing.T) {
 		})
 	})
 
+	t.Run("UpdateClient", func(t *testing.T) {
+		userToUpdate := &authdomain.Users{UserID: mockUser.UserID, FirstName: "Updated Client"}
+		userStoreMock.On("UpdateUserClient", mock.Anything, userToUpdate).Return(nil).Once()
+
+		err := userService.UpdateClient(context.Background(), userToUpdate)
+		assert.NoError(t, err)
+		userStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("UpdateStaff", func(t *testing.T) {
+		userToUpdate := &authdomain.Users{UserID: mockUser.UserID, FirstName: "Updated Staff"}
+		roleName := "instructor"
+		mockRole := &authdomain.Roles{RoleID: uuid.New(), Name: roleName}
+
+		t.Run("success", func(t *testing.T) {
+			roleStoreMock.On("GetByName", mock.Anything, roleName).Return(mockRole, nil).Once()
+			userStoreMock.On("UpdateUserStaff", mock.Anything, mock.MatchedBy(func(u *authdomain.Users) bool {
+				return u.UserID == userToUpdate.UserID && u.RoleID == mockRole.RoleID
+			})).Return(nil).Once()
+
+			err := userService.UpdateStaff(context.Background(), userToUpdate, roleName)
+			assert.NoError(t, err)
+			roleStoreMock.AssertExpectations(t)
+			userStoreMock.AssertExpectations(t)
+		})
+
+		t.Run("role not found", func(t *testing.T) {
+			roleStoreMock.On("GetByName", mock.Anything, "nonexistent").Return(nil, shared_errors.ErrNotFound).Once()
+			err := userService.UpdateStaff(context.Background(), userToUpdate, "nonexistent")
+			assert.ErrorIs(t, err, shared_errors.ErrNotFound)
+			roleStoreMock.AssertExpectations(t)
+		})
+	})
 }
 
 func TestJWTAuthenticator(t *testing.T) {

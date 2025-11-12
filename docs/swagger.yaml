@@ -147,6 +147,31 @@ definitions:
     required:
     - email
     type: object
+  authhandlers.GetUserResponse:
+    properties:
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity_document:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
+        type: string
+      role_id:
+        type: string
+      role_name:
+        type: string
+      user_id:
+        type: string
+    type: object
   authhandlers.PermissionsPayload:
     properties:
       permissions:
@@ -180,6 +205,62 @@ definitions:
     required:
     - confirm_password
     - password
+    type: object
+  authhandlers.UpdateUserClientPayload:
+    properties:
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity_document:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
+        type: string
+    required:
+    - birth_date
+    - email
+    - first_name
+    - gender
+    - identity_document
+    - last_name
+    - phone
+    type: object
+  authhandlers.UpdateUserStaffPayload:
+    properties:
+      birth_date:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      identity_document:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
+        type: string
+      role_name:
+        type: string
+    required:
+    - birth_date
+    - email
+    - first_name
+    - gender
+    - identity_document
+    - last_name
+    - phone
     type: object
   authhandlers.UserResponse:
     properties:
@@ -4538,6 +4619,133 @@ paths:
       summary: Get a summary of services
       tags:
       - Services
+  /user/{id}:
+    get:
+      description: Retrieves the details of a specific user by their ID.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details response
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/authhandlers.GetUserResponse'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Not Found: User not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user by ID
+      tags:
+      - User
+  /user/{id}/client:
+    put:
+      consumes:
+      - application/json
+      description: Updates the details of a client user.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.UpdateUserClientPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a client user
+      tags:
+      - User
+  /user/{id}/staff:
+    put:
+      consumes:
+      - application/json
+      description: Updates the details of a non-client (staff) user.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.UpdateUserStaffPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a staff user
+      tags:
+      - User
   /user/branch-admins:
     get:
       consumes:

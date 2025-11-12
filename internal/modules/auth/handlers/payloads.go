@@ -141,6 +141,69 @@ type UpdateStaffPasswordPayload struct {
 	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"`
 }
 
+type UpdateUserClientPayload struct {
+	FirstName         string `json:"first_name" binding:"required"`
+	LastName          string `json:"last_name" binding:"required"`
+	Email             string `json:"email" binding:"required,email"`
+	Phone             string `json:"phone" binding:"required"`
+	IdentityDocument  string `json:"identity_document" binding:"required"`
+	BirthDate         string `json:"birth_date" binding:"required"`
+	Gender            string `json:"gender" binding:"required"`
+	ProfilePictureURL string `json:"profile_picture_url"`
+}
+
+func (c *UpdateUserClientPayload) CreateUser() (*authdomain.Users, error) {
+	birthdate, err := time.Parse("2006-01-02", c.BirthDate)
+	if err != nil {
+		birthdate, err = time.Parse(time.RFC3339, c.BirthDate)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &authdomain.Users{
+		FirstName:         c.FirstName,
+		LastName:          c.LastName,
+		Email:             c.Email,
+		Phone:             c.Phone,
+		BirthDate:         birthdate,
+		Gender:            authdomain.GenderEnum(strings.ToLower(c.Gender)),
+		IdentityDocument:  c.IdentityDocument,
+		ProfilePictureURL: c.ProfilePictureURL,
+	}, nil
+}
+
+type UpdateUserStaffPayload struct {
+	FirstName         string `json:"first_name" binding:"required"`
+	LastName          string `json:"last_name" binding:"required"`
+	Email             string `json:"email" binding:"required,email"`
+	Phone             string `json:"phone" binding:"required"`
+	IdentityDocument  string `json:"identity_document" binding:"required"`
+	BirthDate         string `json:"birth_date" binding:"required"`
+	Gender            string `json:"gender" binding:"required"`
+	ProfilePictureURL string `json:"profile_picture_url"`
+	RoleName          string `json:"role_name" binding:"omitempty"`
+}
+
+func (c *UpdateUserStaffPayload) CreateUser() (*authdomain.Users, error) {
+	birthdate, err := time.Parse("2006-01-02", c.BirthDate)
+	if err != nil {
+		birthdate, err = time.Parse(time.RFC3339, c.BirthDate)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &authdomain.Users{
+		FirstName:         c.FirstName,
+		LastName:          c.LastName,
+		Email:             c.Email,
+		Phone:             c.Phone,
+		BirthDate:         birthdate,
+		Gender:            authdomain.GenderEnum(strings.ToLower(c.Gender)),
+		IdentityDocument:  c.IdentityDocument,
+		ProfilePictureURL: c.ProfilePictureURL,
+	}, nil
+}
+
 // response
 type BranchAdminResponse struct {
 	UserID    uuid.UUID `json:"user_id"`
@@ -159,4 +222,18 @@ type UserResponse struct {
 	Email            string    `json:"email"`
 	IdentityDocument string    `json:"identity_document"`
 	IsValidated      bool      `json:"is_validated"`
+}
+
+type GetUserResponse struct {
+	UserID            uuid.UUID `json:"user_id"`
+	FirstName         string    `json:"first_name"`
+	LastName          string    `json:"last_name"`
+	RoleID            uuid.UUID `json:"role_id"`
+	RoleName          string    `json:"role_name"`
+	Email             string    `json:"email"`
+	IdentityDocument  string    `json:"identity_document"`
+	BirthDate         string    `json:"birth_date"`
+	Gender            string    `json:"gender"`
+	Phone             string    `json:"phone"`
+	ProfilePictureURL string    `json:"profile_picture_url"`
 }

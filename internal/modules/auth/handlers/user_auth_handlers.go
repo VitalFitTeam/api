@@ -551,3 +551,121 @@ func (h *AuthHandlers) GetClientsHandler(c *gin.Context) {
 		"data": responseList,
 	})
 }
+
+// @Summary		Get user by ID
+// @Description	Retrieves the details of a specific user by their ID.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id	path		string							true	"User ID (UUID)"
+// @Success		200	{object}	object{data=GetUserResponse}	"User details response"
+// @Failure		400	{object}	object{error=string}			"Bad Request: Invalid UUID format"
+// @Failure		404	{object}	object{error=string}			"Not Found: User not found"
+// @Failure		500	{object}	object{error=string}			"Error: Internal server error"
+// @Router			/user/{id} [get]
+func (h *AuthHandlers) GetUserByIDHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user, err := h.services.UserServices.GetByID(ctx, id)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	resp := GetUserResponse{
+		UserID:            user.UserID,
+		FirstName:         user.FirstName,
+		LastName:          user.LastName,
+		Email:             user.Email,
+		IdentityDocument:  user.IdentityDocument,
+		BirthDate:         user.BirthDate.Format("2006-01-02"),
+		Gender:            string(user.Gender),
+		Phone:             user.Phone,
+		ProfilePictureURL: user.ProfilePictureURL,
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"data": resp,
+	})
+}
+
+// @Summary		Update a staff user
+// @Description	Updates the details of a non-client (staff) user.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string					true	"User ID (UUID)"
+// @Param			payload	body		UpdateUserStaffPayload	true	"User update payload"
+// @Success		200		{object}	nil						"User updated successfully"
+// @Failure		400		{object}	object{error=string}	"Bad Request: Invalid UUID or payload"
+// @Failure		500		{object}	object{error=string}	"Error: Internal server error"
+// @Router			/user/{id}/staff [put]
+func (h *AuthHandlers) UpdateUserStaffHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	var payload UpdateUserStaffPayload
+	if err = c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user, err := payload.CreateUser()
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user.UserID = id
+	if err = h.services.UserServices.UpdateStaff(ctx, user, payload.RoleName); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Update a client user
+// @Description	Updates the details of a client user.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string					true	"User ID (UUID)"
+// @Param			payload	body		UpdateUserClientPayload	true	"User update payload"
+// @Success		200		{object}	nil						"User updated successfully"
+// @Failure		400		{object}	object{error=string}	"Bad Request: Invalid UUID or payload"
+// @Failure		500		{object}	object{error=string}	"Error: Internal server error"
+// @Router			/user/{id}/client [put]
+func (h *AuthHandlers) UpdateUserClientHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	var payload UpdateUserClientPayload
+	if err = c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user, err := payload.CreateUser()
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user.UserID = id
+	if err = h.services.UserServices.UpdateClient(ctx, user); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
