@@ -196,6 +196,14 @@ func (s *InstructorStore) Update(ctx context.Context, instructor *instructordoma
 			userUpdates["profile_picture_url"] = instructor.User.ProfilePictureURL
 		}
 
+		if len(userUpdates) > 0 {
+			userID := existingInstructor.UserID
+
+			if err := tx.WithContext(ctx).Model(&authdomain.Users{}).Where("user_id = ?", userID).Updates(userUpdates).Error; err != nil {
+				return err
+			}
+		}
+
 		if err := tx.WithContext(ctx).Model(instructor).Omit("User").Updates(instructor).Error; err != nil {
 			return err
 		}
