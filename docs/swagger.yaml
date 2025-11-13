@@ -1429,6 +1429,23 @@ paths:
       consumes:
       - application/json
       description: List all roles in the system
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term for role name
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
@@ -1437,9 +1454,14 @@ paths:
           schema:
             properties:
               data:
-                items:
-                  $ref: '#/definitions/authdomain.Roles'
-                type: array
+                $ref: '#/definitions/authdomain.Roles'
+            type: object
+        "400":
+          description: 'Error: Bad Request'
+          schema:
+            properties:
+              error:
+                type: string
             type: object
         "500":
           description: 'Error: Internal server error'

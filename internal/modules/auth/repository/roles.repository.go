@@ -93,13 +93,13 @@ func (s *RoleStore) Create(ctx context.Context, role *authdomain.Roles) error {
 
 func (s *RoleStore) GetRolesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
 	var count int64
-	query := s.db.WithContext(ctx)
+	query := s.db.WithContext(ctx).Model(&authdomain.Roles{})
 
 	if fq.Search != "" {
 		searchQuery := "%" + fq.Search + "%"
 		query = query.Where("name ILIKE ?", searchQuery)
 	}
-	err := query.Limit(fq.Limit).Count(&count).Error
+	err := query.Count(&count).Error
 
 	if err != nil {
 		return 0, err

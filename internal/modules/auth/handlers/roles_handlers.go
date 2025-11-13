@@ -17,8 +17,13 @@ import (
 // @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
-// @Success		200	{object}	object{data=[]authdomain.Roles}	"Success response"
-// @Failure		500	{object}	object{error=string}			"Error: Internal server error"
+// @Param			limit	query		int		false	"Number of results per page"
+// @Param			page	query		int		false	"Page number"
+// @Param			sort	query		string	false	"Sort order (asc/desc)"
+// @Param			search	query		string	false	"Search term for role name"
+// @Success		200		{object}	object{data=authdomain.Roles}"Success response"
+// @Failure		400		{object}	object{error=string}	"Error: Bad Request"
+// @Failure		500		{object}	object{error=string}	"Error: Internal server error"
 // @Router			/admin/roles [get]
 func (r *AuthHandlers) GetRolesHandler(c *gin.Context) {
 	fq := pagination.PaginatedFeedQuery{

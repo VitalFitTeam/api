@@ -86,6 +86,32 @@ const docTemplate = `{
                     "RBAC (Admin)"
                 ],
                 "summary": "List all roles",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for role name",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success response",
@@ -93,10 +119,18 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/authdomain.Roles"
-                                    }
+                                    "$ref": "#/definitions/authdomain.Roles"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
                                 }
                             }
                         }
