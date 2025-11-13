@@ -17,6 +17,7 @@ import (
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	mailermocks "github.com/vitalfit/api/pkg/mailer/mocks"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 func setup(t *testing.T) (*authservices.AuthService, *authservices.UserService, *authmocks.UserStoreMock, *authmocks.RoleStoreMock, *mailermocks.MockMailer) {
@@ -281,6 +282,20 @@ func TestUserService(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, mockRole, role)
 		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("GetRoles", func(t *testing.T) {
+		t.Run("success", func(t *testing.T) {
+			mockRoles := []*authdomain.Roles{{Name: "admin"}, {Name: "client"}}
+			fq := pagination.PaginatedFeedQuery{Limit: 10, Page: 1}
+			roleStoreMock.On("GetRoles", mock.Anything, fq).Return(mockRoles, nil).Once()
+
+			roles, err := userService.GetRoles(context.Background(), fq)
+
+			assert.NoError(t, err)
+			assert.Equal(t, mockRoles, roles)
+			roleStoreMock.AssertExpectations(t)
+		})
 	})
 
 	t.Run("UpdateRole", func(t *testing.T) {

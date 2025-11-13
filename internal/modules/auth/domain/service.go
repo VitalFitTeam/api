@@ -42,7 +42,8 @@ type UserServicesInterface interface {
 	//roles
 	GetRoleByName(ctx context.Context, name string) (*Roles, error)
 	RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error)
-	GetRoles(ctx context.Context) ([]*Roles, error)
+	GetRoles(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Roles, error)
+	GetRolesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
 	CreateRole(ctx context.Context, role *Roles) error
 	GetRoleByID(ctx context.Context, roleID uuid.UUID) (*Roles, error)
 	UpdateRole(ctx context.Context, role *Roles) error

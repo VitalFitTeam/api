@@ -88,8 +88,8 @@ func (h *UserService) RoleHasPermission(ctx context.Context, roleID uuid.UUID, p
 	return h.store.Roles.RoleHasPermission(ctx, roleID, permission)
 }
 
-func (h *UserService) GetRoles(ctx context.Context) ([]*authdomain.Roles, error) {
-	return h.store.Roles.GetRoles(ctx)
+func (h *UserService) GetRoles(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Roles, error) {
+	return h.store.Roles.GetRoles(ctx, fq)
 }
 
 func (h *UserService) CreateRole(ctx context.Context, role *authdomain.Roles) error {
@@ -129,4 +129,8 @@ func (h *UserService) UpdateStaff(ctx context.Context, user *authdomain.Users, r
 	}
 	user.RoleID = role.RoleID
 	return h.store.Users.UpdateUserStaff(ctx, user)
+}
+
+func (h *UserService) GetRolesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	return h.store.Roles.GetRolesFTotal(ctx, fq)
 }
