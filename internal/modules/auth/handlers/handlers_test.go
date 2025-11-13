@@ -684,10 +684,12 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
 	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
 
+	adminRoleID := uuid.New()
 	adminUser := &authdomain.Users{
 		UserID: uuid.New(),
 		Email:  "detailadmin@example.com",
-		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "admin"},
+		RoleID: adminRoleID,
+		Role:   authdomain.Roles{RoleID: adminRoleID, Name: "admin"},
 	}
 	adminToken, _ := testApp.Services.AuthServices.GenerateToken(adminUser)
 
@@ -696,7 +698,7 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 
 	t.Run("GetUserByIDHandler", func(t *testing.T) {
 		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
-		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "users:get").Return(true, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminRoleID, "users:get").Return(true, nil).Once()
 		userStoreMock.On("GetByID", mock.Anything, targetUserID).Return(mockUser, nil).Once()
 
 		req, _ := http.NewRequest(http.MethodGet, "/v1/user/"+targetUserID.String(), nil)
@@ -710,7 +712,7 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 
 	t.Run("UpdateUserStaffHandler", func(t *testing.T) {
 		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
-		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "users:update").Return(true, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminRoleID, "users:update").Return(true, nil).Once()
 
 		roleName := "instructor"
 		mockRole := &authdomain.Roles{RoleID: uuid.New(), Name: roleName}
@@ -739,7 +741,7 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 
 	t.Run("UpdateUserClientHandler", func(t *testing.T) {
 		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
-		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "users:update").Return(true, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminRoleID, "users:update").Return(true, nil).Once()
 		userStoreMock.On("UpdateUserClient", mock.Anything, mock.MatchedBy(func(u *authdomain.Users) bool {
 			return u.UserID == targetUserID
 		})).Return(nil).Once()
