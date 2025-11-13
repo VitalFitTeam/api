@@ -305,9 +305,13 @@ definitions:
     - PaymentMethodOther
   billingdomain.PaymentMethods:
     properties:
+      configuration:
+        type: object
       created_at:
         type: string
       description:
+        type: string
+      display_name:
         type: string
       global_status:
         type: boolean
@@ -317,29 +321,12 @@ definitions:
         type: string
       processing_type:
         $ref: '#/definitions/billingdomain.PaymentProcessingTypeEnum'
-      type:
-        $ref: '#/definitions/billingdomain.PaymentMethodTypeEnum'
-      updated_at:
-        type: string
-    type: object
-  billingdomain.PaymentMethodsBranch:
-    properties:
-      branch_id:
-        type: string
-      configuration:
-        type: object
-      created_at:
-        type: string
-      display_name:
-        type: string
-      is_active:
-        type: boolean
-      method_id:
-        type: string
       surcharge_fixed:
         type: integer
       surcharge_percentage:
         type: number
+      type:
+        $ref: '#/definitions/billingdomain.PaymentMethodTypeEnum'
       updated_at:
         type: string
       visibility:
@@ -357,31 +344,40 @@ definitions:
     properties:
       branch_id:
         type: string
-      configuration:
-        type: object
-      display_name:
-        type: string
+      is_active:
+        type: boolean
       method_id:
         type: string
-      surcharge_fixed:
-        type: integer
-      surcharge_percentage:
-        type: number
-      visibility:
+      name:
+        type: string
+      type:
         type: string
     required:
     - branch_id
+    - is_active
     - method_id
+    - name
+    - type
     type: object
   billinghandlers.CreatePaymentMethodPayload:
     properties:
+      configuration:
+        type: object
       description:
+        type: string
+      display_name:
         type: string
       name:
         type: string
       processing_type:
         type: string
+      surcharge_fixed:
+        type: integer
+      surcharge_percentage:
+        type: number
       type:
+        type: string
+      visibility:
         type: string
     required:
     - name
@@ -390,51 +386,37 @@ definitions:
     type: object
   billinghandlers.MethodBranchConfigPayload:
     properties:
-      configuration:
-        type: object
-      display_name:
-        type: string
       method_id:
-        type: string
-      surcharge_fixed:
-        type: integer
-      surcharge_percentage:
-        type: number
-      visibility:
-        type: string
+        items:
+          type: string
+        type: array
     required:
     - method_id
     type: object
   billinghandlers.UpdateBranchConfigPayload:
     properties:
-      configuration:
-        type: object
-      display_name:
-        type: string
       is_active:
-        type: string
-      surcharge_fixed:
-        minimum: 0
-        type: integer
-      surcharge_percentage:
-        minimum: 0
-        type: number
-      visibility:
-        enum:
-        - Client
-        - Staff
-        - All
         type: string
     type: object
   billinghandlers.UpdatePaymentMethodPayload:
     properties:
+      configuration:
+        type: object
       description:
+        type: string
+      display_name:
         type: string
       name:
         type: string
       processing_type:
         type: string
+      surcharge_fixed:
+        type: integer
+      surcharge_percentage:
+        type: number
       type:
+        type: string
+      visibility:
         type: string
     required:
     - processing_type
@@ -2851,7 +2833,7 @@ paths:
             properties:
               data:
                 items:
-                  $ref: '#/definitions/billingdomain.PaymentMethodsBranch'
+                  $ref: '#/definitions/billinghandlers.BranchPaymentMethodResponse'
                 type: array
             type: object
         "400":
@@ -2889,9 +2871,7 @@ paths:
         name: payload
         required: true
         schema:
-          items:
-            $ref: '#/definitions/billinghandlers.MethodBranchConfigPayload'
-          type: array
+          $ref: '#/definitions/billinghandlers.MethodBranchConfigPayload'
       produces:
       - application/json
       responses:

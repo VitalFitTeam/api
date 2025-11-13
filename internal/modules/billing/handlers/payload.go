@@ -9,26 +9,40 @@ import (
 )
 
 type CreatePaymentMethodPayload struct {
-	Name           string `json:"name" binding:"required"`
-	Type           string `json:"type" binding:"required"`
-	Description    string `json:"description"`
-	ProcessingType string `json:"processing_type" binding:"required"`
+	Name                string          `json:"name" binding:"required"`
+	Type                string          `json:"type" binding:"required"`
+	Description         string          `json:"description"`
+	ProcessingType      string          `json:"processing_type" binding:"required"`
+	DisplayName         string          `json:"display_name"`
+	Configuration       json.RawMessage `json:"configuration,omitempty" swaggertype:"object"`
+	Visibility          string          `json:"visibility"`
+	SurchargeFixed      int64           `json:"surcharge_fixed"`
+	SurchargePercentage float64         `json:"surcharge_percentage"`
 }
 
 func (p *CreatePaymentMethodPayload) toPaymentMethod() *billingdomain.PaymentMethods {
 	return &billingdomain.PaymentMethods{
-		Name:           p.Name,
-		Type:           billingdomain.PaymentMethodTypeEnum(p.Type),
-		Description:    p.Description,
-		ProcessingType: billingdomain.PaymentProcessingTypeEnum(p.ProcessingType),
+		Name:                p.Name,
+		Type:                billingdomain.PaymentMethodTypeEnum(p.Type),
+		Description:         p.Description,
+		ProcessingType:      billingdomain.PaymentProcessingTypeEnum(p.ProcessingType),
+		DisplayName:         p.DisplayName,
+		Visibility:          billingdomain.BranchPaymentVisibilityEnum(p.Visibility),
+		SurchargeFixed:      p.SurchargeFixed,
+		SurchargePercentage: p.SurchargePercentage,
 	}
 }
 
 type UpdatePaymentMethodPayload struct {
-	Name           string `json:"name"`
-	Type           string `json:"type"`
-	Description    string `json:"description"`
-	ProcessingType string `json:"processing_type" binding:"required"`
+	Name                string          `json:"name"`
+	Type                string          `json:"type"`
+	Description         string          `json:"description"`
+	ProcessingType      string          `json:"processing_type" binding:"required"`
+	DisplayName         string          `json:"display_name"`
+	Configuration       json.RawMessage `json:"configuration,omitempty" swaggertype:"object"`
+	Visibility          string          `json:"visibility"`
+	SurchargeFixed      int64           `json:"surcharge_fixed"`
+	SurchargePercentage float64         `json:"surcharge_percentage"`
 }
 
 func (p *UpdatePaymentMethodPayload) toPaymentMethod() *billingdomain.PaymentMethods {
@@ -41,12 +55,7 @@ func (p *UpdatePaymentMethodPayload) toPaymentMethod() *billingdomain.PaymentMet
 }
 
 type MethodBranchConfigPayload struct {
-	MethodID            string          `json:"method_id" binding:"required"`
-	DisplayName         string          `json:"display_name"`
-	Configuration       json.RawMessage `json:"configuration,omitempty" swaggertype:"object"`
-	Visibility          string          `json:"visibility"`
-	SurchargeFixed      int64           `json:"surcharge_fixed"`
-	SurchargePercentage float64         `json:"surcharge_percentage"`
+	MethodID []string `json:"method_id" binding:"required"`
 }
 
 type ZelleConfig struct {
@@ -64,22 +73,15 @@ type PagoMovilConfig struct {
 }
 
 type UpdateBranchConfigPayload struct {
-	IsActive            string          `json:"is_active,omitempty"`
-	DisplayName         string          `json:"display_name,omitempty"`
-	Configuration       json.RawMessage `json:"configuration,omitempty" swaggertype:"object"`
-	Visibility          string          `json:"visibility,omitempty" binding:"omitempty,oneof=Client Staff All"`
-	SurchargeFixed      int64           `json:"surcharge_fixed,omitempty" binding:"omitempty,min=0"`
-	SurchargePercentage float64         `json:"surcharge_percentage,omitempty" binding:"omitempty,min=0"`
+	IsActive string `json:"is_active,omitempty"`
 }
 
 type BranchPaymentMethodResponse struct {
-	BranchID            uuid.UUID       `json:"branch_id" binding:"required"`
-	MethodID            uuid.UUID       `json:"method_id" binding:"required"`
-	DisplayName         string          `json:"display_name"`
-	Configuration       json.RawMessage `json:"configuration,omitempty" swaggertype:"object"`
-	Visibility          string          `json:"visibility"`
-	SurchargeFixed      int64           `json:"surcharge_fixed"`
-	SurchargePercentage float64         `json:"surcharge_percentage"`
+	BranchID uuid.UUID `json:"branch_id" binding:"required"`
+	MethodID uuid.UUID `json:"method_id" binding:"required"`
+	Name     string    `json:"name" binding:"required"`
+	Type     string    `json:"type" binding:"required"`
+	IsActive bool      `json:"is_active" binding:"required"`
 }
 
 func (h *BillingHandlers) validateBranchConfig(payloadConfig json.RawMessage, method *billingdomain.PaymentMethods) error {
