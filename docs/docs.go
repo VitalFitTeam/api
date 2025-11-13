@@ -86,6 +86,32 @@ const docTemplate = `{
                     "RBAC (Admin)"
                 ],
                 "summary": "List all roles",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for role name",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success response",
@@ -93,10 +119,18 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/authdomain.Roles"
-                                    }
+                                    "$ref": "#/definitions/authdomain.Roles"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error: Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
                                 }
                             }
                         }
@@ -2281,7 +2315,7 @@ const docTemplate = `{
                                 "data": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/definitions/billingdomain.PaymentMethodsBranch"
+                                        "$ref": "#/definitions/billinghandlers.BranchPaymentMethodResponse"
                                     }
                                 }
                             }
@@ -2342,10 +2376,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/billinghandlers.MethodBranchConfigPayload"
-                            }
+                            "$ref": "#/definitions/billinghandlers.MethodBranchConfigPayload"
                         }
                     }
                 ],
@@ -5863,10 +5894,16 @@ const docTemplate = `{
         "billingdomain.PaymentMethods": {
             "type": "object",
             "properties": {
+                "configuration": {
+                    "type": "object"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "display_name": {
                     "type": "string"
                 },
                 "global_status": {
@@ -5881,40 +5918,14 @@ const docTemplate = `{
                 "processing_type": {
                     "$ref": "#/definitions/billingdomain.PaymentProcessingTypeEnum"
                 },
-                "type": {
-                    "$ref": "#/definitions/billingdomain.PaymentMethodTypeEnum"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "billingdomain.PaymentMethodsBranch": {
-            "type": "object",
-            "properties": {
-                "branch_id": {
-                    "type": "string"
-                },
-                "configuration": {
-                    "type": "object"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "display_name": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "method_id": {
-                    "type": "string"
-                },
                 "surcharge_fixed": {
                     "type": "integer"
                 },
                 "surcharge_percentage": {
                     "type": "number"
+                },
+                "type": {
+                    "$ref": "#/definitions/billingdomain.PaymentMethodTypeEnum"
                 },
                 "updated_at": {
                     "type": "string"
@@ -5939,28 +5950,25 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "branch_id",
-                "method_id"
+                "is_active",
+                "method_id",
+                "name",
+                "type"
             ],
             "properties": {
                 "branch_id": {
                     "type": "string"
                 },
-                "configuration": {
-                    "type": "object"
-                },
-                "display_name": {
-                    "type": "string"
+                "is_active": {
+                    "type": "boolean"
                 },
                 "method_id": {
                     "type": "string"
                 },
-                "surcharge_fixed": {
-                    "type": "integer"
+                "name": {
+                    "type": "string"
                 },
-                "surcharge_percentage": {
-                    "type": "number"
-                },
-                "visibility": {
+                "type": {
                     "type": "string"
                 }
             }
@@ -5973,7 +5981,13 @@ const docTemplate = `{
                 "type"
             ],
             "properties": {
+                "configuration": {
+                    "type": "object"
+                },
                 "description": {
+                    "type": "string"
+                },
+                "display_name": {
                     "type": "string"
                 },
                 "name": {
@@ -5982,7 +5996,16 @@ const docTemplate = `{
                 "processing_type": {
                     "type": "string"
                 },
+                "surcharge_fixed": {
+                    "type": "integer"
+                },
+                "surcharge_percentage": {
+                    "type": "number"
+                },
                 "type": {
+                    "type": "string"
+                },
+                "visibility": {
                     "type": "string"
                 }
             }
@@ -5993,53 +6016,19 @@ const docTemplate = `{
                 "method_id"
             ],
             "properties": {
-                "configuration": {
-                    "type": "object"
-                },
-                "display_name": {
-                    "type": "string"
-                },
                 "method_id": {
-                    "type": "string"
-                },
-                "surcharge_fixed": {
-                    "type": "integer"
-                },
-                "surcharge_percentage": {
-                    "type": "number"
-                },
-                "visibility": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
         "billinghandlers.UpdateBranchConfigPayload": {
             "type": "object",
             "properties": {
-                "configuration": {
-                    "type": "object"
-                },
-                "display_name": {
-                    "type": "string"
-                },
                 "is_active": {
                     "type": "string"
-                },
-                "surcharge_fixed": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "surcharge_percentage": {
-                    "type": "number",
-                    "minimum": 0
-                },
-                "visibility": {
-                    "type": "string",
-                    "enum": [
-                        "Client",
-                        "Staff",
-                        "All"
-                    ]
                 }
             }
         },
@@ -6049,7 +6038,13 @@ const docTemplate = `{
                 "processing_type"
             ],
             "properties": {
+                "configuration": {
+                    "type": "object"
+                },
                 "description": {
+                    "type": "string"
+                },
+                "display_name": {
                     "type": "string"
                 },
                 "name": {
@@ -6058,7 +6053,16 @@ const docTemplate = `{
                 "processing_type": {
                     "type": "string"
                 },
+                "surcharge_fixed": {
+                    "type": "integer"
+                },
+                "surcharge_percentage": {
+                    "type": "number"
+                },
                 "type": {
+                    "type": "string"
+                },
+                "visibility": {
                     "type": "string"
                 }
             }

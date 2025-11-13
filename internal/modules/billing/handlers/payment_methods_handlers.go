@@ -51,10 +51,23 @@ func (h *BillingHandlers) CreatePaymentMethodHandler(c *gin.Context) {
 		return
 	}
 	paymentMethod := payload.toPaymentMethod()
-	if err := h.services.BillingServices.CreatePaymentMethod(ctx, paymentMethod); err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
+
+	if err := h.validateBranchConfig(payload.Configuration, paymentMethod); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+	paymentMethod.Configuration = payload.Configuration
+	if err := h.services.BillingServices.CreatePaymentMethod(ctx, paymentMethod); err != nil {
+		switch err {
+		case shared_errors.ErrConflict:
+			h.services.LogErrors.ConflictResponse(c, err)
+			return
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "payment method created",
 	})
@@ -174,7 +187,7 @@ func (h *BillingHandlers) GetPaymentMethodByIDHandler(c *gin.Context) {
 // @Accept			json
 // @Produce		json
 // @Param			id		path		string						true	"Branch UUID"
-// @Param			payload	body		[]MethodBranchConfigPayload	true	"An array of payment method configurations to add to the branch"
+// @Param			payload	body		MethodBranchConfigPayload	true	"An array of payment method configurations to add to the branch"
 // @Success		201		{object}	object{message=string}		"Payment methods added to branch"
 // @Failure		400		{object}	object{error=string}		"Bad Request (e.g., invalid UUID, invalid payload)"
 // @Failure		404		{object}	object{error=string}		"Not Found (e.g., branch or payment method not found)"
@@ -188,47 +201,31 @@ func (h *BillingHandlers) AddPaymentMethodsToBranchHandler(c *gin.Context) {
 		return
 	}
 
-	var payloads []MethodBranchConfigPayload
-	if err := c.ShouldBindJSON(&payloads); err != nil {
+	var payload MethodBranchConfigPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
 
-	if len(payloads) == 0 {
+	if len(payload.MethodID) == 0 {
 		h.services.LogErrors.BadRequestResponse(c, errors.New("payload array cannot be empty"))
 		return
 	}
 
-	branchMethods := make([]*billingdomain.PaymentMethodsBranch, 0, len(payloads))
+	branchMethods := make([]*billingdomain.PaymentMethodsBranch, 0, len(payload.MethodID))
 
-	for _, payload := range payloads {
-		methodID, err := uuid.Parse(payload.MethodID)
+	for _, methodIDStr := range payload.MethodID {
+		methodID, err := uuid.Parse(methodIDStr)
 		if err != nil {
-			h.services.LogErrors.BadRequestResponse(c, err)
-			return
-		}
-
-		paymentMethod, err := h.services.BillingServices.GetPaymentMethodByID(ctx, methodID)
-		if err != nil {
-			h.services.LogErrors.NotFoundResponse(c)
-			return
-		}
-
-		if err := h.validateBranchConfig(payload.Configuration, paymentMethod); err != nil {
-			h.services.LogErrors.BadRequestResponse(c, err)
+			h.services.LogErrors.BadRequestResponse(c, errors.New("invalid method id: "+methodIDStr))
 			return
 		}
 
 		branchMethod := &billingdomain.PaymentMethodsBranch{
-			BranchID:            branchID,
-			MethodID:            paymentMethod.MethodID,
-			DisplayName:         payload.DisplayName,
-			Configuration:       payload.Configuration,
-			Visibility:          billingdomain.BranchPaymentVisibilityEnum(payload.Visibility),
-			SurchargeFixed:      payload.SurchargeFixed,
-			SurchargePercentage: payload.SurchargePercentage,
+			BranchID: branchID,
+			MethodID: methodID,
+			IsActive: true,
 		}
-
 		branchMethods = append(branchMethods, branchMethod)
 	}
 
@@ -279,7 +276,7 @@ func (h *BillingHandlers) DeletePaymentMethodsFromBranchHandler(c *gin.Context) 
 // @Security		ApiKeyAuth
 // @Produce		json
 // @Param			id	path		string	true	"Branch UUID"
-// @Success		200	{object}	object{data=[]billingdomain.PaymentMethodsBranch}
+// @Success		200	{object}	object{data=[]BranchPaymentMethodResponse}
 // @Failure		400	{object}	object{error=string}	"Bad Request (e.g., invalid UUID)"
 // @Failure		500	{object}	object{error=string}	"Internal Server Error"
 // @Router			/branches/{id}/payment-methods [get]
@@ -296,7 +293,17 @@ func (h *BillingHandlers) GetPaymentMethodsFromBranchHandler(c *gin.Context) {
 		return
 
 	}
-	c.JSON(http.StatusOK, gin.H{"data": Branchmethods})
+	resp := make([]BranchPaymentMethodResponse, len(Branchmethods))
+	for i, method := range Branchmethods {
+		resp[i] = BranchPaymentMethodResponse{
+			BranchID: method.BranchID,
+			MethodID: method.MethodID,
+			Name:     method.Method.Name,
+			Type:     string(method.Method.Type),
+			IsActive: method.IsActive,
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"data": resp})
 
 }
 
@@ -333,16 +340,6 @@ func (h *BillingHandlers) UpdatePaymentMethodFromBranchHandler(c *gin.Context) {
 		return
 	}
 
-	paymentMethod, err := h.services.BillingServices.GetPaymentMethodByID(ctx, methodID)
-	if err != nil {
-		h.services.LogErrors.NotFoundResponse(c)
-		return
-	}
-
-	if err := h.validateBranchConfig(payload.Configuration, paymentMethod); err != nil {
-		h.services.LogErrors.BadRequestResponse(c, err)
-		return
-	}
 	if payload.IsActive != "" {
 		isActive, err := strconv.ParseBool(payload.IsActive)
 		if err != nil {
@@ -358,14 +355,9 @@ func (h *BillingHandlers) UpdatePaymentMethodFromBranchHandler(c *gin.Context) {
 	}
 
 	branchMethod := &billingdomain.PaymentMethodsBranch{
-		BranchID:            branchID,
-		MethodID:            methodID,
-		IsActive:            methodStatus,
-		DisplayName:         payload.DisplayName,
-		Configuration:       payload.Configuration,
-		Visibility:          billingdomain.BranchPaymentVisibilityEnum(payload.Visibility),
-		SurchargeFixed:      payload.SurchargeFixed,
-		SurchargePercentage: payload.SurchargePercentage,
+		BranchID: branchID,
+		MethodID: methodID,
+		IsActive: methodStatus,
 	}
 
 	err = h.services.BillingServices.UpsertBranchPaymentConfig(ctx, branchMethod)
@@ -413,13 +405,11 @@ func (h *BillingHandlers) GetBranchPaymentMethodByIDHandler(c *gin.Context) {
 	}
 
 	resp := BranchPaymentMethodResponse{
-		BranchID:            branchMethod.BranchID,
-		MethodID:            branchMethod.MethodID,
-		DisplayName:         branchMethod.DisplayName,
-		Configuration:       branchMethod.Configuration,
-		Visibility:          string(branchMethod.Visibility),
-		SurchargeFixed:      branchMethod.SurchargeFixed,
-		SurchargePercentage: branchMethod.SurchargePercentage,
+		BranchID: branchMethod.BranchID,
+		MethodID: branchMethod.MethodID,
+		Name:     branchMethod.Method.Name,
+		Type:     string(branchMethod.Method.Type),
+		IsActive: branchMethod.IsActive,
 	}
 	c.JSON(http.StatusOK, gin.H{"data": resp})
 }
