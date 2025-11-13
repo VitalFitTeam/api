@@ -58,8 +58,14 @@ func (h *BillingHandlers) CreatePaymentMethodHandler(c *gin.Context) {
 	}
 	paymentMethod.Configuration = payload.Configuration
 	if err := h.services.BillingServices.CreatePaymentMethod(ctx, paymentMethod); err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
-		return
+		switch err {
+		case shared_errors.ErrConflict:
+			h.services.LogErrors.ConflictResponse(c, err)
+			return
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
