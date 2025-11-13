@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/mailer"
@@ -99,26 +100,17 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := payload.CreateUserClientPayload.CreateUser()
+	user, err := payload.CreateUser()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
 
-	if err := user.PasswordHash.Set(payload.Password); err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
-		return
-	}
+	plainToken := uuid.New().String()
 
-	//store the user
-	key, err := otp.GenerateCode(6)
-	if err != nil {
-		h.services.InternalServerError(c, err)
-		return
-	}
-	hash := sha256.Sum256([]byte(key))
-	hashedKey := hex.EncodeToString(hash[:])
-	if err := h.services.AuthServices.RegisterUserStaff(ctx, user, hashedKey, payload.RoleName); err != nil {
+	hash := sha256.Sum256([]byte(plainToken))
+	hashToken := hex.EncodeToString(hash[:])
+	if err := h.services.AuthServices.RegisterUserStaff(ctx, user, hashToken, payload.RoleName); err != nil {
 		switch err {
 		case shared_errors.ErrNotFound:
 			h.services.LogErrors.BadRequestResponse(c, err)
@@ -130,9 +122,14 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		return
 	}
 
-	//send main
-	status, err := h.registerEmail(ctx, user, key)
+	//send mail
+	status, err := h.services.AuthServices.MailSenderStaff(ctx, user, plainToken, mailer.UserStaffActivate)
 	if err != nil {
+		h.services.Logger.Errorw("error sending activation url to email", "error", err)
+		if err := h.services.AuthServices.DeleteResetToken(ctx, user.UserID); err != nil {
+			h.services.Logger.Errorw("error deleting user activation token ", "error", err)
+			return
+		}
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
@@ -140,7 +137,7 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "user created",
 		"status":  status,
-		"code":    key,
+		"code":    plainToken,
 	})
 }
 
@@ -553,4 +550,158 @@ func (h *AuthHandlers) GetClientsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": responseList,
 	})
+}
+
+// @Summary		Get user by ID
+// @Description	Retrieves the details of a specific user by their ID.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id	path		string							true	"User ID (UUID)"
+// @Success		200	{object}	object{data=GetUserResponse}	"User details response"
+// @Failure		400	{object}	object{error=string}			"Bad Request: Invalid UUID format"
+// @Failure		404	{object}	object{error=string}			"Not Found: User not found"
+// @Failure		500	{object}	object{error=string}			"Error: Internal server error"
+// @Router			/user/{id} [get]
+func (h *AuthHandlers) GetUserByIDHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user, err := h.services.UserServices.GetByID(ctx, id)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	resp := GetUserResponse{
+		UserID:            user.UserID,
+		FirstName:         user.FirstName,
+		LastName:          user.LastName,
+		Email:             user.Email,
+		IdentityDocument:  user.IdentityDocument,
+		BirthDate:         user.BirthDate.Format("2006-01-02"),
+		Gender:            string(user.Gender),
+		Phone:             user.Phone,
+		ProfilePictureURL: user.ProfilePictureURL,
+		RoleID:            user.RoleID,
+		RoleName:          user.Role.Name,
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"data": resp,
+	})
+}
+
+// @Summary		Update a staff user
+// @Description	Updates the details of a non-client (staff) user.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string					true	"User ID (UUID)"
+// @Param			payload	body		UpdateUserStaffPayload	true	"User update payload"
+// @Success		200		{object}	nil						"User updated successfully"
+// @Failure		400		{object}	object{error=string}	"Bad Request: Invalid UUID or payload"
+// @Failure		500		{object}	object{error=string}	"Error: Internal server error"
+// @Router			/user/{id}/staff [put]
+func (h *AuthHandlers) UpdateUserStaffHandler(c *gin.Context) {
+	authenticatedUser := h.services.UserServices.GetUserFromContext(c)
+
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	isOwner := authenticatedUser.UserID == id
+	if authenticatedUser.Role.Name == "super_admin" {
+	} else if !isOwner {
+		allowed, err := h.services.UserServices.RoleHasPermission(ctx, authenticatedUser.RoleID, "users:update")
+		if err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+		if !allowed {
+			h.services.LogErrors.ForbiddenResponse(c)
+			return
+		}
+	}
+
+	var payload UpdateUserStaffPayload
+	if err = c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user, err := payload.CreateUser()
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user.UserID = id
+	if err = h.services.UserServices.UpdateStaff(ctx, user, payload.RoleName); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Update a client user
+// @Description	Updates the details of a client user.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string					true	"User ID (UUID)"
+// @Param			payload	body		UpdateUserClientPayload	true	"User update payload"
+// @Success		200		{object}	nil						"User updated successfully"
+// @Failure		400		{object}	object{error=string}	"Bad Request: Invalid UUID or payload"
+// @Failure		500		{object}	object{error=string}	"Error: Internal server error"
+// @Router			/user/{id}/client [put]
+func (h *AuthHandlers) UpdateUserClientHandler(c *gin.Context) {
+	authenticatedUser := h.services.UserServices.GetUserFromContext(c)
+
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	isOwner := authenticatedUser.UserID == id
+	if authenticatedUser.Role.Name == "super_admin" {
+	} else if !isOwner {
+		allowed, err := h.services.UserServices.RoleHasPermission(ctx, authenticatedUser.RoleID, "users:update")
+		if err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+		if !allowed {
+			h.services.LogErrors.ForbiddenResponse(c)
+			return
+		}
+	}
+
+	var payload UpdateUserClientPayload
+	if err = c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user, err := payload.CreateUser()
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	user.UserID = id
+	if err = h.services.UserServices.UpdateClient(ctx, user); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
 }

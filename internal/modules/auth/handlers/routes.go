@@ -22,6 +22,9 @@ type AuthHandlersInterface interface {
 	GetBranchAdminsHandler(c *gin.Context)
 	GetUsersHandler(c *gin.Context)
 	GetClientsHandler(c *gin.Context)
+	GetUserByIDHandler(c *gin.Context)
+	UpdateUserStaffHandler(c *gin.Context)
+	UpdateUserClientHandler(c *gin.Context)
 	//Roles
 	GetRolesHandler(c *gin.Context)
 	CreateRoleHandler(c *gin.Context)
@@ -79,6 +82,11 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
 		userGroup.GET("/users", m.RBACPermission("users:list"), r.GetUsersHandler)
 		userGroup.GET("/clients", m.RBACPermission("users:list"), r.GetClientsHandler)
+
+		// Nuevas rutas para obtener y actualizar usuarios
+		userGroup.GET("/:id", m.RBACPermission("users:get"), r.GetUserByIDHandler)
+		userGroup.PUT("/:id/staff", r.UpdateUserStaffHandler)
+		userGroup.PUT("/:id/client", r.UpdateUserClientHandler)
 
 	}
 }

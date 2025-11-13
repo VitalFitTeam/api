@@ -117,3 +117,16 @@ func (h *UserService) AssignRolePermission(ctx context.Context, roleID uuid.UUID
 func (g *UserService) DeleteRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error {
 	return g.store.Roles.DeleteRolePermission(ctx, roleID, permissionID)
 }
+
+func (h *UserService) UpdateClient(ctx context.Context, user *authdomain.Users) error {
+	return h.store.Users.UpdateUserClient(ctx, user)
+}
+
+func (h *UserService) UpdateStaff(ctx context.Context, user *authdomain.Users, roleName string) error {
+	role, err := h.store.Roles.GetByName(ctx, roleName)
+	if err != nil {
+		return err
+	}
+	user.RoleID = role.RoleID
+	return h.store.Users.UpdateUserStaff(ctx, user)
+}

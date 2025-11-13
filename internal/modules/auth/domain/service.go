@@ -37,6 +37,8 @@ type UserServicesInterface interface {
 	GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 	GetUsers(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 	GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
+	UpdateClient(ctx context.Context, user *Users) error
+	UpdateStaff(ctx context.Context, user *Users, roleName string) error
 	//roles
 	GetRoleByName(ctx context.Context, name string) (*Roles, error)
 	RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error)

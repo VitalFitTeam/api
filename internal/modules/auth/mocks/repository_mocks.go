@@ -113,6 +113,16 @@ func (m *UserStoreMock) GetClients(ctx context.Context, fq pagination.PaginatedF
 	return args.Get(0).([]*authdomain.Users), args.Error(1)
 }
 
+func (m *UserStoreMock) UpdateUserStaff(ctx context.Context, user *authdomain.Users) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
+func (m *UserStoreMock) UpdateUserClient(ctx context.Context, user *authdomain.Users) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
 // ROLE MOCK FUNCTIONS
 func (m *RoleStoreMock) GetByName(ctx context.Context, name string) (*authdomain.Roles, error) {
 	args := m.Called(ctx, name)

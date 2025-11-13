@@ -24,6 +24,8 @@ type UserRepository interface {
 	GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 	GetUsers(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 	GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
+	UpdateUserClient(ctx context.Context, user *Users) error
+	UpdateUserStaff(ctx context.Context, user *Users) error
 }
 
 type RolesRepository interface {
