@@ -78,6 +78,9 @@ func (app *application) Mount() http.Handler {
 		//billing routes
 		app.Handlers.BillingHandlers.BillingRoutes(v1, m)
 
+		//schedule routes
+		app.Handlers.ScheduleHandlers.ScheduleRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}

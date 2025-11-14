@@ -18,6 +18,9 @@ import (
 	membershipsservice "github.com/vitalfit/api/internal/modules/memberships/service"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	productsservice "github.com/vitalfit/api/internal/modules/products/service"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
+	scheduleservice "github.com/vitalfit/api/internal/modules/schedule/service"
+
 	logs "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
@@ -36,6 +39,7 @@ type Services struct {
 	MarketingServices  marketingdomain.MarketingServiceInterface
 	MembershipServices membershipsdomain.MembershipsServiceInterface
 	BillingServices    billingdomain.BillingServiceInterface
+	ScheduleServices   scheduledomain.ScheduleServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
@@ -53,6 +57,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		MarketingServices:  marketingservice.NewMarketingService(store),
 		MembershipServices: membershipsservice.NewMembershipService(store),
 		BillingServices:    billingservice.NewBillingService(store),
+		ScheduleServices:   scheduleservice.NewScheduleService(store),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,
 	}

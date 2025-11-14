@@ -1,0 +1,76 @@
+package scheduleservice
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/google/uuid"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
+	"github.com/vitalfit/api/internal/store"
+)
+
+type ScheduleService struct {
+	store store.Storage
+}
+
+func NewScheduleService(store store.Storage) *ScheduleService {
+	return &ScheduleService{store: store}
+}
+
+// ----------------------------------------
+// CreateClass
+// ----------------------------------------
+
+func (s *ScheduleService) CreateClass(ctx context.Context, class *scheduledomain.Class) error {
+
+	// Validación básica: start < end
+	if !class.StartsAt.Before(class.EndsAt) {
+		return errors.New("the class start time must be before the end time")
+	}
+
+	return s.store.Schedule.CreateClass(ctx, class)
+}
+
+// ----------------------------------------
+// GetClassesByBranch
+// ----------------------------------------
+
+func (s *ScheduleService) GetClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]scheduledomain.Class, error) {
+	return s.store.Schedule.GetClassesByBranch(ctx, branchID)
+}
+
+// ----------------------------------------
+// GetClassByID
+// ----------------------------------------
+
+func (s *ScheduleService) GetClassByID(ctx context.Context, classID uuid.UUID) (*scheduledomain.Class, error) {
+	return s.store.Schedule.GetClassByID(ctx, classID)
+}
+
+// ----------------------------------------
+// UpdateClass
+// ----------------------------------------
+
+func (s *ScheduleService) UpdateClass(ctx context.Context, class *scheduledomain.Class) error {
+
+	// Validar que si vienen fechas opcionales, estas tengan sentido
+	if !class.StartsAt.IsZero() && !class.EndsAt.IsZero() {
+		if !class.StartsAt.Before(class.EndsAt) {
+			return errors.New("the class start time must be before the end time")
+		}
+	}
+
+	// Stamp updated time
+	class.UpdatedAt = time.Now()
+
+	return s.store.Schedule.UpdateClass(ctx, class)
+}
+
+// ----------------------------------------
+// DeleteClass
+// ----------------------------------------
+
+func (s *ScheduleService) DeleteClass(ctx context.Context, classID uuid.UUID) error {
+	return s.store.Schedule.DeleteClass(ctx, classID)
+}
