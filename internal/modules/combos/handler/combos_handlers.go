@@ -47,13 +47,13 @@ func (h *CombosHandler) CreatePackageHandler(c *gin.Context) {
 // @Tags			Packages
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			limit	query		int										false	"Number of results per page"	default(10)
-// @Param			page	query		int										false	"Page number for pagination"	default(1)
-// @Param			sort	query		string									false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
-// @Param			search	query		string									false	"Search term for package name"
-// @Success		200		{object}	pagination.PaginatedResponseTotal[PackageResponse]	"A paginated list of packages"
-// @Failure		400		{object}	map[string]interface{}					"Bad Request: Invalid query parameters"
-// @Failure		500		{object}	map[string]interface{}					"Internal server error"
+// @Param			limit	query		int								false	"Number of results per page"	default(10)
+// @Param			page	query		int								false	"Page number for pagination"	default(1)
+// @Param			sort	query		string							false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search	query		string							false	"Search term for package name"
+// @Success		200		{object}	object{data=PackageResponse[]}	"A paginated list of packages"
+// @Failure		400		{object}	map[string]interface{}			"Bad Request: Invalid query parameters"
+// @Failure		500		{object}	map[string]interface{}			"Internal server error"
 // @Router			/packages [get]
 func (h *CombosHandler) GetPackageHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -116,11 +116,11 @@ func (h *CombosHandler) GetPackageHandler(c *gin.Context) {
 // @Tags			Packages
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			id	path		string					true	"Package UUID"
+// @Param			id	path		string								true	"Package UUID"
 // @Success		200	{object}	object{data=PackageResponseByID}	"Package details"
-// @Failure		400	{object}	map[string]interface{}	"Bad Request: Invalid UUID format"
-// @Failure		404	{object}	map[string]interface{}	"Not Found: Package not found"
-// @Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+// @Failure		400	{object}	map[string]interface{}				"Bad Request: Invalid UUID format"
+// @Failure		404	{object}	map[string]interface{}				"Not Found: Package not found"
+// @Failure		500	{object}	map[string]interface{}				"Internal Server Error"
 // @Router			/packages/{id} [get]
 func (h *CombosHandler) GetPackageByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -145,6 +145,7 @@ func (h *CombosHandler) GetPackageByIDHandler(c *gin.Context) {
 	for i, item := range pkg.PackageItems {
 		packageItems[i] = PackageItemResponse{
 			ServiceID:        item.ServiceID,
+			Name:             item.Service.Name,
 			SessionsIncluded: item.SessionsIncluded,
 		}
 	}

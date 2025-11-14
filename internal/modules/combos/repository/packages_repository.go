@@ -55,7 +55,7 @@ func (s *CombosStore) GetPackagesTotal(ctx context.Context, fq pagination.Pagina
 
 func (s *CombosStore) GetPackageByID(ctx context.Context, packageID uuid.UUID) (*combosdomain.Package, error) {
 	var pkg combosdomain.Package
-	err := s.db.WithContext(ctx).Preload("PackageItems").First(&pkg, "package_id = ?", packageID).Error
+	err := s.db.WithContext(ctx).Preload("PackageItems.Service").Preload("PackageItems").First(&pkg, "package_id = ?", packageID).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, shared_errors.ErrNotFound

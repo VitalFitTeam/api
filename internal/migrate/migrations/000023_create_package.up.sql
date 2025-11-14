@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS packages (
-    package_id UUID PRIMARY KEY,
+    package_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,

@@ -46,7 +46,7 @@ func (r *CreatePackageRequest) ToPackage() (*combosdomain.Package, error) {
 		pkg.EndAt = &endAt
 	}
 
-	pkg.PackageItems = make([]combosdomain.PackageItem, 0, len(r.PackageItems))
+	pkg.PackageItems = make([]combosdomain.PackageItem, len(r.PackageItems))
 	for i, item := range r.PackageItems {
 		serviceID, err := uuid.Parse(item.ServiceID)
 		if err != nil {
@@ -83,5 +83,6 @@ type PackageResponseByID struct {
 
 type PackageItemResponse struct {
 	ServiceID        uuid.UUID `json:"serviceId"`
+	Name             string    `json:"name"`
 	SessionsIncluded int       `json:"sessionsIncluded"`
 }
