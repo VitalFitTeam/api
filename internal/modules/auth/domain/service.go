@@ -27,6 +27,7 @@ type AuthServicesInterface interface {
 	CreatePasswordResetToken(ctx context.Context, email string, key string) error
 	DeleteResetToken(context.Context, uuid.UUID) error
 	ResetPassword(ctx context.Context, key string, user *Users) error
+	ValidateResetToken(ctx context.Context, key string) error
 }
 
 type UserServicesInterface interface {

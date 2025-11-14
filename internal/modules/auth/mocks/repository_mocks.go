@@ -123,6 +123,11 @@ func (m *UserStoreMock) UpdateUserClient(ctx context.Context, user *authdomain.U
 	return args.Error(0)
 }
 
+func (m *UserStoreMock) ValidateResetToken(ctx context.Context, key string) error {
+	args := m.Called(ctx, key)
+	return args.Error(0)
+}
+
 // ROLE MOCK FUNCTIONS
 func (m *RoleStoreMock) GetByName(ctx context.Context, name string) (*authdomain.Roles, error) {
 	args := m.Called(ctx, name)

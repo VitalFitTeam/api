@@ -181,3 +181,10 @@ func (h *AuthService) ResetPassword(ctx context.Context, key string, user *authd
 	}
 	return nil
 }
+
+func (h *AuthService) ValidateResetToken(ctx context.Context, key string) error {
+	if err := h.store.Users.ValidateResetToken(ctx, key); err != nil {
+		return err
+	}
+	return nil
+}

@@ -818,6 +818,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/password/validate/{token}": {
+            "get": {
+                "description": "Checks if a password reset token is valid and has not expired.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Validate Password Reset Token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Password Reset Token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Token is valid."
+                    },
+                    "404": {
+                        "description": "Token is invalid or has expired.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error.",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "Register a new user in the system with client role",

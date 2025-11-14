@@ -21,6 +21,7 @@ type UserRepository interface {
 	CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, key string, tokenExp time.Duration) error
 	DeleteResetToken(ctx context.Context, userID uuid.UUID) error
 	ResetUserPassword(ctx context.Context, key string, user *Users) error
+	ValidateResetToken(ctx context.Context, key string) error
 	GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 	GetUsers(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 	GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
