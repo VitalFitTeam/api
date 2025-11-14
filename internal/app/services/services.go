@@ -8,6 +8,8 @@ import (
 	billingservice "github.com/vitalfit/api/internal/modules/billing/service"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchservices "github.com/vitalfit/api/internal/modules/branches/services"
+	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
+	combosservices "github.com/vitalfit/api/internal/modules/combos/services"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	instructorservices "github.com/vitalfit/api/internal/modules/instructor/services"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
@@ -40,6 +42,7 @@ type Services struct {
 	MembershipServices membershipsdomain.MembershipsServiceInterface
 	BillingServices    billingdomain.BillingServiceInterface
 	ScheduleServices   scheduledomain.ScheduleServiceInterface
+	CombosServices     combosdomain.CombosServicesInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
@@ -58,6 +61,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		MembershipServices: membershipsservice.NewMembershipService(store),
 		BillingServices:    billingservice.NewBillingService(store),
 		ScheduleServices:   scheduleservice.NewScheduleService(store),
+		CombosServices:     combosservices.NewCombosServices(store),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,
 	}
