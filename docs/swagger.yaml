@@ -2364,81 +2364,6 @@ paths:
       summary: create a new branch
       tags:
       - Branches
-  /branches/{branchId}/schedule:
-    get:
-      description: Returns the scheduled classes for the branch
-      parameters:
-      - description: Branch UUID
-        in: path
-        name: branchId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/schedulehandlers.ClassResponse'
-                type: array
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: List classes for a branch
-      tags:
-      - Schedule
-    post:
-      consumes:
-      - application/json
-      description: Creates a class in the branch schedule
-      parameters:
-      - description: Branch UUID
-        in: path
-        name: branchId
-        required: true
-        type: string
-      - description: Class payload
-        in: body
-        name: class
-        required: true
-        schema:
-          $ref: '#/definitions/schedulehandlers.CreateClassPayload'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Class created
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Invalid input
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Server error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Create a scheduled class
-      tags:
-      - Schedule
   /branches/{id}:
     delete:
       consumes:
@@ -3212,6 +3137,81 @@ paths:
       summary: Update a branch payment method configuration
       tags:
       - Branch Payment Methods
+  /branches/{id}/schedule:
+    get:
+      description: Returns the scheduled classes for the branch
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/schedulehandlers.ClassResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List classes for a branch
+      tags:
+      - Schedule
+    post:
+      consumes:
+      - application/json
+      description: Creates a class in the branch schedule
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Class payload
+        in: body
+        name: class
+        required: true
+        schema:
+          $ref: '#/definitions/schedulehandlers.CreateClassPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Class created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a scheduled class
+      tags:
+      - Schedule
   /branches/{id}/services:
     get:
       description: Retrieves a list of all services assigned to a specific branch.
