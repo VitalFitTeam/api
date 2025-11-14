@@ -500,7 +500,8 @@ func TestAdminRoleRoutes(t *testing.T) {
 	t.Run("GetRoles", func(t *testing.T) {
 		setupAdminMiddleware()
 		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "roles:list").Return(true, nil).Once()
-		roleStoreMock.On("GetRoles", mock.Anything).Return([]*authdomain.Roles{}, nil).Once()
+		roleStoreMock.On("GetRoles", mock.Anything, mock.AnythingOfType("pagination.PaginatedFeedQuery")).Return([]*authdomain.Roles{}, nil).Once()
+		roleStoreMock.On("GetRolesFTotal", mock.Anything, mock.AnythingOfType("pagination.PaginatedFeedQuery")).Return(0, nil).Once()
 
 		req, _ := http.NewRequest(http.MethodGet, "/v1/admin/roles", nil)
 		req.Header.Set("Authorization", "Bearer "+adminToken)

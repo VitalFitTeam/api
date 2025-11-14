@@ -140,12 +140,17 @@ func (m *RoleStoreMock) GetRoleByID(ctx context.Context, roleID uuid.UUID) (*aut
 	return args.Get(0).(*authdomain.Roles), args.Error(1)
 }
 
-func (m *RoleStoreMock) GetRoles(ctx context.Context) ([]*authdomain.Roles, error) {
-	args := m.Called(ctx)
+func (m *RoleStoreMock) GetRoles(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Roles, error) {
+	args := m.Called(ctx, fq)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*authdomain.Roles), args.Error(1)
+}
+
+func (m *RoleStoreMock) GetRolesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	args := m.Called(ctx, fq)
+	return int64(args.Int(0)), args.Error(1)
 }
 
 func (m *RoleStoreMock) Create(ctx context.Context, role *authdomain.Roles) error {

@@ -31,7 +31,8 @@ type UserRepository interface {
 type RolesRepository interface {
 	GetByName(ctx context.Context, name string) (*Roles, error)
 	GetRoleByID(ctx context.Context, roleID uuid.UUID) (*Roles, error)
-	GetRoles(ctx context.Context) ([]*Roles, error)
+	GetRoles(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Roles, error)
+	GetRolesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
 	Create(ctx context.Context, role *Roles) error
 	Update(ctx context.Context, role *Roles) error
 	Delete(ctx context.Context, roleID uuid.UUID) error

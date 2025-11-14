@@ -10,6 +10,7 @@ import (
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -55,13 +56,27 @@ func (s *RoleStore) GetRoleByID(ctx context.Context, roleID uuid.UUID) (*authdom
 	return &role, nil
 }
 
-func (s *RoleStore) GetRoles(ctx context.Context) ([]*authdomain.Roles, error) {
+func (s *RoleStore) GetRoles(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Roles, error) {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
 	var roles []*authdomain.Roles
 
-	err := s.db.WithContext(ctx).Find(&roles).Error
+	query := s.db.WithContext(ctx)
+
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		query = query.Where("name ILIKE ?", searchQuery)
+	}
+	err := query.Limit(fq.Limit).
+		Offset(fq.Page*fq.Limit - fq.Limit).
+		Order("created_at " + fq.Sort).
+		Find(&roles).Error
+
 	if err != nil {
 		return nil, err
 	}
+
 	return roles, nil
 }
 
@@ -74,6 +89,22 @@ func (s *RoleStore) Create(ctx context.Context, role *authdomain.Roles) error {
 		return err
 	}
 	return nil
+}
+
+func (s *RoleStore) GetRolesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
+	var count int64
+	query := s.db.WithContext(ctx).Model(&authdomain.Roles{})
+
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		query = query.Where("name ILIKE ?", searchQuery)
+	}
+	err := query.Count(&count).Error
+
+	if err != nil {
+		return 0, err
+	}
+	return count, err
 }
 
 func (s *RoleStore) Update(ctx context.Context, role *authdomain.Roles) error {

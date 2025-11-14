@@ -1,11 +1,14 @@
 package authhandlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 // @Summary		List all roles
@@ -14,18 +17,52 @@ import (
 // @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
-// @Success		200	{object}	object{data=[]authdomain.Roles}	"Success response"
-// @Failure		500	{object}	object{error=string}			"Error: Internal server error"
+// @Param			limit	query		int		false	"Number of results per page"
+// @Param			page	query		int		false	"Page number"
+// @Param			sort	query		string	false	"Sort order (asc/desc)"
+// @Param			search	query		string	false	"Search term for role name"
+// @Success		200		{object}	object{data=authdomain.Roles}"Success response"
+// @Failure		400		{object}	object{error=string}	"Error: Bad Request"
+// @Failure		500		{object}	object{error=string}	"Error: Internal server error"
 // @Router			/admin/roles [get]
 func (r *AuthHandlers) GetRolesHandler(c *gin.Context) {
-	roles, err := r.services.UserServices.GetRoles(c)
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Search: "",
+	}
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		r.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/admin/roles?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/admin/roles?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+
+	roles, err := r.services.UserServices.GetRoles(c, fq)
 	if err != nil {
 		r.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	c.JSON(200, gin.H{
-		"data": roles,
-	})
+
+	total, err := r.services.UserServices.GetRolesFTotal(c, fq)
+	if err != nil {
+		r.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	resp := pagination.PaginatedResponseTotal[*authdomain.Roles]{
+		Data:     roles,
+		Count:    int64(len(roles)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+	c.JSON(200, resp)
 }
 
 // @Summary		Create a new custom role

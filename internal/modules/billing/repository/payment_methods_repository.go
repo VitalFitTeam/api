@@ -106,7 +106,7 @@ func (s *PaymentMethodsStore) DeletePaymentMethodsFromBranch(ctx context.Context
 
 func (s *PaymentMethodsStore) GetPaymentMethodsFromBranch(ctx context.Context, branchID uuid.UUID) ([]*billingdomain.PaymentMethodsBranch, error) {
 	var Branchmethods []*billingdomain.PaymentMethodsBranch
-	err := s.db.WithContext(ctx).Where("branch_id = ?", branchID).Find(&Branchmethods).Error
+	err := s.db.WithContext(ctx).Preload("Method").Where("branch_id = ?", branchID).Find(&Branchmethods).Error
 	if err != nil {
 		return nil, err
 	}
@@ -122,11 +122,6 @@ func (s *PaymentMethodsStore) UpsertBranchPaymentConfig(ctx context.Context, bra
 
 		DoUpdates: clause.AssignmentColumns([]string{
 			"is_active",
-			"display_name",
-			"configuration",
-			"visibility",
-			"surcharge_fixed",
-			"surcharge_percentage",
 			"updated_at",
 		}),
 	}).Create(branchMethod)
@@ -136,7 +131,7 @@ func (s *PaymentMethodsStore) UpsertBranchPaymentConfig(ctx context.Context, bra
 
 func (s *PaymentMethodsStore) GetBranchPaymentMethodByID(ctx context.Context, branchID uuid.UUID, methodID uuid.UUID) (*billingdomain.PaymentMethodsBranch, error) {
 	var branchMethod billingdomain.PaymentMethodsBranch
-	err := s.db.WithContext(ctx).Model(&billingdomain.PaymentMethodsBranch{}).Where("branch_id = ? AND method_id = ?", branchID, methodID).First(&branchMethod).Error
+	err := s.db.WithContext(ctx).Preload("Method").Model(&billingdomain.PaymentMethodsBranch{}).Where("branch_id = ? AND method_id = ?", branchID, methodID).First(&branchMethod).Error
 	if err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:
