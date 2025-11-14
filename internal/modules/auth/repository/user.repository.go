@@ -400,3 +400,25 @@ func (s *UserStore) UpdateUserStaff(ctx context.Context, user *authdomain.Users)
 		"RoleID",
 	).Updates(user).Error
 }
+
+func (s *UserStore) ValidateResetToken(ctx context.Context, key string) error {
+	var resetToken authdomain.PasswordResetToken
+	hash := sha256.Sum256([]byte(key))
+	hashCode := hex.EncodeToString(hash[:])
+
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
+	result := s.db.WithContext(ctx).
+		Where("token = ? AND expiry > ?", hashCode, time.Now()).
+		First(&resetToken)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return shared_errors.ErrNotFound
+		}
+		return result.Error
+	}
+
+	return nil
+}

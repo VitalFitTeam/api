@@ -705,3 +705,35 @@ func (h *AuthHandlers) UpdateUserClientHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusNoContent, nil)
 }
+
+// @Summary		Validate Password Reset Token
+// @Description	Checks if a password reset token is valid and has not expired.
+// @Tags			Auth
+// @Produce		json
+// @Param			token	path		string					true	"Password Reset Token"
+// @Success		204		{object}	nil						"Token is valid."
+// @Failure		404		{object}	object{error=string}	"Token is invalid or has expired."
+// @Failure		500		{object}	object{error=string}	"Internal server error."
+// @Router			/auth/password/validate/{token} [get]
+func (h *AuthHandlers) ValidateResetTokenHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	token := c.Param("token")
+
+	err := h.services.AuthServices.ValidateResetToken(ctx, token)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Reset token is invalid or has expired.",
+			})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "An internal server error occurred.",
+			})
+			return
+		}
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}

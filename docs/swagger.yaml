@@ -1988,6 +1988,37 @@ paths:
       summary: Execute Password Reset
       tags:
       - Auth
+  /auth/password/validate/{token}:
+    get:
+      description: Checks if a password reset token is valid and has not expired.
+      parameters:
+      - description: Password Reset Token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Token is valid.
+        "404":
+          description: Token is invalid or has expired.
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal server error.
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Validate Password Reset Token
+      tags:
+      - Auth
   /auth/register:
     post:
       consumes:

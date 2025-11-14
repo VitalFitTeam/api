@@ -19,6 +19,7 @@ type AuthHandlersInterface interface {
 	WhoAmI(c *gin.Context)
 	ForgotPasswordHandler(c *gin.Context)
 	ResetPasswordHandler(c *gin.Context)
+	ValidateResetTokenHandler(c *gin.Context)
 	GetBranchAdminsHandler(c *gin.Context)
 	GetUsersHandler(c *gin.Context)
 	GetClientsHandler(c *gin.Context)
@@ -57,6 +58,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		{
 			passwordGroup.POST("/forgot", r.ForgotPasswordHandler)
 			passwordGroup.POST("/reset", r.ResetPasswordHandler)
+			passwordGroup.GET("/validate/:token", r.ValidateResetTokenHandler)
 		}
 
 		protectedGroup := authGroup.Group("/").Use(
