@@ -8,7 +8,7 @@ import (
 )
 
 // ------------------------------
-// POST /branches/:branchId/schedule
+// POST /branches/:id/schedule
 // ------------------------------
 
 // @Summary		Create a scheduled class
@@ -17,12 +17,12 @@ import (
 // @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
-// @Param			branchId	path		string					true	"Branch UUID"
-// @Param			class		body		CreateClassPayload		true	"Class payload"
-// @Success		201			{object}	map[string]interface{}	"Class created"
-// @Failure		400			{object}	map[string]interface{}	"Invalid input"
-// @Failure		500			{object}	map[string]interface{}	"Server error"
-// @Router			/branches/{branchId}/schedule [post]
+// @Param			id		path		string					true	"Branch UUID"
+// @Param			class	body		CreateClassPayload		true	"Class payload"
+// @Success		201		{object}	map[string]interface{}	"Class created"
+// @Failure		400		{object}	map[string]interface{}	"Invalid input"
+// @Failure		500		{object}	map[string]interface{}	"Server error"
+// @Router			/branches/{id}/schedule [post]
 func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -56,7 +56,7 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 }
 
 // ------------------------------
-// GET /branches/:branchId/schedule
+// GET /branches/:id/schedule
 // ------------------------------
 
 // @Summary		List classes for a branch
@@ -64,11 +64,11 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 // @Tags			Schedule
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			branchId	path		string	true	"Branch UUID"
-// @Success		200			{object}	object{data=[]ClassResponse}
-// @Failure		400			{object}	map[string]interface{}
-// @Failure		500			{object}	map[string]interface{}
-// @Router			/branches/{branchId}/schedule [get]
+// @Param			id	path		string	true	"Branch UUID"
+// @Success		200	{object}	object{data=[]ClassResponse}
+// @Failure		400	{object}	map[string]interface{}
+// @Failure		500	{object}	map[string]interface{}
+// @Router			/branches/{id}/schedule [get]
 func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
