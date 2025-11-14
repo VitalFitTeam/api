@@ -10,6 +10,7 @@ import (
 	marketinghandlers "github.com/vitalfit/api/internal/modules/marketing/handlers"
 	membershipshandlers "github.com/vitalfit/api/internal/modules/memberships/handlers"
 	productshandler "github.com/vitalfit/api/internal/modules/products/handler"
+	schedulehandlers "github.com/vitalfit/api/internal/modules/schedule/handlers"
 )
 
 type Handlers struct {
@@ -21,6 +22,7 @@ type Handlers struct {
 	MarketingHandlers  marketinghandlers.MarketingHandlerInterface
 	MembershipHandlers membershipshandlers.MembershipsHandlerInterface
 	BillingHandlers    billinghandlers.BillingHandlersInterface
+	ScheduleHandlers   schedulehandlers.ScheduleHandlersInterface
 }
 
 func NewAppHandlers(services appservices.Services) Handlers {
@@ -33,5 +35,6 @@ func NewAppHandlers(services appservices.Services) Handlers {
 		MarketingHandlers:  marketinghandlers.NewMarketingHandler(services),
 		MembershipHandlers: membershipshandlers.NewMembershipHandler(services),
 		BillingHandlers:    billinghandlers.NewBillingHandlers(services),
+		ScheduleHandlers:   schedulehandlers.NewScheduleHandlers(services),
 	}
 }

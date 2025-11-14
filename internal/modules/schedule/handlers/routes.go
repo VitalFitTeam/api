@@ -1,0 +1,45 @@
+package schedulehandlers
+
+import (
+	"github.com/gin-gonic/gin"
+	appservices "github.com/vitalfit/api/internal/app/services"
+	"github.com/vitalfit/api/internal/shared/middleware/auth"
+)
+
+type ScheduleHandlersInterface interface {
+	ScheduleRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+
+	CreateClassHandler(c *gin.Context)
+	GetClassesByBranchHandler(c *gin.Context)
+	UpdateClassHandler(c *gin.Context)
+	DeleteClassHandler(c *gin.Context)
+	GetClassByIDHandler(c *gin.Context)
+}
+
+type ScheduleHandlers struct {
+	services appservices.Services
+}
+
+func NewScheduleHandlers(services appservices.Services) *ScheduleHandlers {
+	return &ScheduleHandlers{services: services}
+}
+
+func (h *ScheduleHandlers) ScheduleRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+
+	branchSchedule := rg.Group("/branches/:id/schedule")
+	{
+		branchSchedule.Use(m.AuthJwtTokenMiddleware())
+
+		branchSchedule.POST("", m.RBACPermission("schedule:create"), h.CreateClassHandler)
+		branchSchedule.GET("", m.RBACPermission("schedule:list"), h.GetClassesByBranchHandler)
+	}
+
+	classRoutes := rg.Group("/schedule")
+	{
+		classRoutes.Use(m.AuthJwtTokenMiddleware())
+
+		classRoutes.GET("/:classId", m.RBACPermission("schedule:get"), h.GetClassByIDHandler)
+		classRoutes.PUT("/:classId", m.RBACPermission("schedule:update"), h.UpdateClassHandler)
+		classRoutes.DELETE("/:classId", m.RBACPermission("schedule:delete"), h.DeleteClassHandler)
+	}
+}

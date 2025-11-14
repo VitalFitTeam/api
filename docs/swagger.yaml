@@ -1402,6 +1402,68 @@ definitions:
     - name
     - priority
     type: object
+  schedulehandlers.ClassResponse:
+    properties:
+      branch_id:
+        type: string
+      class_id:
+        type: string
+      ends_at:
+        type: string
+      instructor_id:
+        type: string
+      is_visible:
+        type: boolean
+      max_capacity:
+        type: integer
+      notes:
+        type: string
+      service_id:
+        type: string
+      starts_at:
+        type: string
+    type: object
+  schedulehandlers.CreateClassPayload:
+    properties:
+      ends_at:
+        type: string
+      instructor_id:
+        type: string
+      is_visible:
+        type: boolean
+      max_capacity:
+        minimum: 1
+        type: integer
+      notes:
+        type: string
+      service_id:
+        type: string
+      starts_at:
+        type: string
+    required:
+    - ends_at
+    - instructor_id
+    - max_capacity
+    - service_id
+    - starts_at
+    type: object
+  schedulehandlers.UpdateClassPayload:
+    properties:
+      ends_at:
+        type: string
+      instructor_id:
+        type: string
+      is_visible:
+        type: boolean
+      max_capacity:
+        type: integer
+      notes:
+        type: string
+      service_id:
+        type: string
+      starts_at:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -2302,6 +2364,81 @@ paths:
       summary: create a new branch
       tags:
       - Branches
+  /branches/{branchId}/schedule:
+    get:
+      description: Returns the scheduled classes for the branch
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: branchId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/schedulehandlers.ClassResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List classes for a branch
+      tags:
+      - Schedule
+    post:
+      consumes:
+      - application/json
+      description: Creates a class in the branch schedule
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: branchId
+        required: true
+        type: string
+      - description: Class payload
+        in: body
+        name: class
+        required: true
+        schema:
+          $ref: '#/definitions/schedulehandlers.CreateClassPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Class created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a scheduled class
+      tags:
+      - Schedule
   /branches/{id}:
     delete:
       consumes:
@@ -4359,6 +4496,104 @@ paths:
       summary: Get public branches for map
       tags:
       - Public
+  /schedule/{classId}:
+    delete:
+      description: Deletes or cancels a class from the calendar
+      parameters:
+      - description: Class UUID
+        in: path
+        name: classId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete scheduled class
+      tags:
+      - Schedule
+    get:
+      description: Returns details of a scheduled class
+      parameters:
+      - description: Class UUID
+        in: path
+        name: classId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/schedulehandlers.ClassResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get class by ID
+      tags:
+      - Schedule
+    put:
+      consumes:
+      - application/json
+      description: Updates a class in the calendar
+      parameters:
+      - description: Class UUID
+        in: path
+        name: classId
+        required: true
+        type: string
+      - description: Class update payload
+        in: body
+        name: class
+        required: true
+        schema:
+          $ref: '#/definitions/schedulehandlers.UpdateClassPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update scheduled class
+      tags:
+      - Schedule
   /services:
     post:
       consumes:
