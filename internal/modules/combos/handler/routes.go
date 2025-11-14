@@ -8,6 +8,11 @@ import (
 
 type CombosHandlerInterface interface {
 	CombosRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	CreatePackageHandler(c *gin.Context)
+	GetPackageHandler(c *gin.Context)
+	GetPackageByIDHandler(c *gin.Context)
+	UpdatePackageHandler(c *gin.Context)
+	DeletePackageHandler(c *gin.Context)
 }
 
 type CombosHandler struct {
@@ -19,5 +24,13 @@ func NewCombosHandler(services appservices.Services) *CombosHandler {
 }
 
 func (r *CombosHandler) CombosRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
-
+	packagesGroup := rg.Group("/packages")
+	{
+		packagesGroup.Use(m.AuthJwtTokenMiddleware())
+		packagesGroup.POST("", m.RBACPermission("packages:create"), r.CreatePackageHandler)
+		packagesGroup.GET("", m.RBACPermission("packages:list"), r.GetPackageHandler)
+		packagesGroup.GET("/:id", m.RBACPermission("packages:get"), r.GetPackageByIDHandler)
+		packagesGroup.PUT("/:id", m.RBACPermission("packages:update"), r.UpdatePackageHandler)
+		packagesGroup.DELETE("/:id", m.RBACPermission("packages:delete"), r.DeletePackageHandler)
+	}
 }
