@@ -39,6 +39,7 @@ type Storage struct {
 	Billing         billingdomain.BillingRepository
 	Schedule        scheduledomain.ScheduleRepository
 	Combos          combosdomain.CombosRepository
+	FiscalDocuments billingdomain.FiscalDocumentRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -57,5 +58,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Billing:         billingrepository.NewBillingStore(db),
 		Schedule:        schedulerepository.NewScheduleStore(db),
 		Combos:          combosrepository.NewCombosStore(db),
+		FiscalDocuments: billingrepository.NewFiscalDocumentStore(db),
 	}
 }
