@@ -3,6 +3,7 @@ package billinghandlers
 import (
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
@@ -142,4 +143,50 @@ func (h *BillingHandlers) validateBranchConfig(payloadConfig json.RawMessage, me
 	}
 
 	return nil
+}
+
+// CreateFiscalDocumentTypePayload defines the payload for creating a new fiscal document type.
+type CreateFiscalDocumentTypePayload struct {
+	Name   string `json:"name" binding:"required"`
+	Prefix string `json:"prefix" binding:"required"`
+}
+
+// ToFiscalDocumentType converts the payload to a domain model.
+func (p *CreateFiscalDocumentTypePayload) ToFiscalDocumentType() *billingdomain.FiscalDocumentType {
+	return &billingdomain.FiscalDocumentType{
+		Name:   p.Name,
+		Prefix: p.Prefix,
+	}
+}
+
+// UpdateFiscalDocumentTypePayload defines the payload for updating a fiscal document type.
+type UpdateFiscalDocumentTypePayload struct {
+	Name   string `json:"name,omitempty"`
+	Prefix string `json:"prefix,omitempty"`
+}
+
+// ToFiscalDocumentType converts the payload to a domain model.
+func (p *UpdateFiscalDocumentTypePayload) ToFiscalDocumentType() *billingdomain.FiscalDocumentType {
+	return &billingdomain.FiscalDocumentType{
+		Name:   p.Name,
+		Prefix: p.Prefix,
+	}
+}
+
+// FiscalDocumentTypeResponse defines the response for a fiscal document type.
+type FiscalDocumentTypeResponse struct {
+	DocumentTypeID uuid.UUID `json:"document_type_id"`
+	Name           string    `json:"name"`
+	Prefix         string    `json:"prefix"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+// NewFiscalDocumentTypeResponse creates a new response from the domain model.
+func NewFiscalDocumentTypeResponse(docType *billingdomain.FiscalDocumentType) *FiscalDocumentTypeResponse {
+	return &FiscalDocumentTypeResponse{
+		DocumentTypeID: docType.DocumentTypeID,
+		Name:           docType.Name,
+		Prefix:         docType.Prefix,
+		CreatedAt:      docType.CreatedAt,
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type BillingRepository interface {
@@ -25,4 +26,10 @@ type PaymentMethodsRepository interface {
 }
 
 type FiscalDocumentRepository interface {
+	CreateFiscalDocumentType(ctx context.Context, docType *FiscalDocumentType) error
+	GetFiscalDocumentTypes(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*FiscalDocumentType, error)
+	GetFiscalDocumentTypesTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
+	GetFiscalDocumentTypeByID(ctx context.Context, docTypeID uuid.UUID) (*FiscalDocumentType, error)
+	UpdateFiscalDocumentType(ctx context.Context, docType *FiscalDocumentType) error
+	DeleteFiscalDocumentType(ctx context.Context, docTypeID uuid.UUID) error
 }

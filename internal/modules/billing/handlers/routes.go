@@ -23,6 +23,12 @@ type BillingHandlersInterface interface {
 	GetPaymentMethodsFromBranchHandler(c *gin.Context)
 	UpdatePaymentMethodFromBranchHandler(c *gin.Context)
 	GetBranchPaymentMethodByIDHandler(c *gin.Context)
+
+	CreateFiscalDocumentTypeHandler(c *gin.Context)
+	GetFiscalDocumentTypesHandler(c *gin.Context)
+	GetFiscalDocumentTypeByIDHandler(c *gin.Context)
+	UpdateFiscalDocumentTypeHandler(c *gin.Context)
+	DeleteFiscalDocumentTypeHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -55,6 +61,15 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 		branchPaymentMethodsGroup.GET("/:method_id", m.RBACPermission("billing:get"), r.GetBranchPaymentMethodByIDHandler)
 		branchPaymentMethodsGroup.PUT("/:method_id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodFromBranchHandler)
 		branchPaymentMethodsGroup.DELETE("/:method_id", m.RBACPermission("billing:delete"), r.DeletePaymentMethodsFromBranchHandler)
+	}
+
+	fiscalDocumentTypesGroup := billingGroup.Group("/fiscal-document-types")
+	{
+		fiscalDocumentTypesGroup.GET("", m.RBACPermission("billing:list"), r.GetFiscalDocumentTypesHandler)
+		fiscalDocumentTypesGroup.POST("", m.RBACPermission("billing:create"), r.CreateFiscalDocumentTypeHandler)
+		fiscalDocumentTypesGroup.GET("/:id", m.RBACPermission("billing:get"), r.GetFiscalDocumentTypeByIDHandler)
+		fiscalDocumentTypesGroup.PUT("/:id", m.RBACPermission("billing:update"), r.UpdateFiscalDocumentTypeHandler)
+		fiscalDocumentTypesGroup.DELETE("/:id", m.RBACPermission("billing:delete"), r.DeleteFiscalDocumentTypeHandler)
 	}
 
 }

@@ -359,6 +359,16 @@ definitions:
     - name
     - type
     type: object
+  billinghandlers.CreateFiscalDocumentTypePayload:
+    properties:
+      name:
+        type: string
+      prefix:
+        type: string
+    required:
+    - name
+    - prefix
+    type: object
   billinghandlers.CreatePaymentMethodPayload:
     properties:
       configuration:
@@ -384,6 +394,17 @@ definitions:
     - processing_type
     - type
     type: object
+  billinghandlers.FiscalDocumentTypeResponse:
+    properties:
+      created_at:
+        type: string
+      document_type_id:
+        type: string
+      name:
+        type: string
+      prefix:
+        type: string
+    type: object
   billinghandlers.MethodBranchConfigPayload:
     properties:
       method_id:
@@ -396,6 +417,13 @@ definitions:
   billinghandlers.UpdateBranchConfigPayload:
     properties:
       is_active:
+        type: string
+    type: object
+  billinghandlers.UpdateFiscalDocumentTypePayload:
+    properties:
+      name:
+        type: string
+      prefix:
         type: string
     type: object
   billinghandlers.UpdatePaymentMethodPayload:
@@ -2175,6 +2203,231 @@ paths:
       summary: Register New User Staff
       tags:
       - Auth
+  /billing/fiscal-document-types:
+    get:
+      description: Retrieves a list of all available fiscal document types in the
+        system.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for document name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/billinghandlers.FiscalDocumentTypeResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all fiscal document types
+      tags:
+      - Billing
+    post:
+      consumes:
+      - application/json
+      description: Adds a new fiscal document type to the system.
+      parameters:
+      - description: Fiscal document type creation payload
+        in: body
+        name: fiscalDocumentType
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.CreateFiscalDocumentTypePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Fiscal document type created successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new fiscal document type
+      tags:
+      - Billing
+  /billing/fiscal-document-types/{id}:
+    delete:
+      description: Deletes a fiscal document type from the system.
+      parameters:
+      - description: Fiscal Document Type UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a fiscal document type
+      tags:
+      - Billing
+    get:
+      description: Retrieves a single fiscal document type by its UUID.
+      parameters:
+      - description: Fiscal Document Type UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/billinghandlers.FiscalDocumentTypeResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get fiscal document type by ID
+      tags:
+      - Billing
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing fiscal document type's details.
+      parameters:
+      - description: Fiscal Document Type UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fiscal document type update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.UpdateFiscalDocumentTypePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Fiscal document type updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a fiscal document type
+      tags:
+      - Billing
   /billing/payment-methods:
     get:
       description: Retrieves a list of all available payment methods in the system.
