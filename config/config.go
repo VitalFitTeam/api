@@ -8,14 +8,28 @@ import (
 )
 
 type Config struct {
-	Addrs       string
-	ApiUrl      string
-	Db          dbConfig
-	Env         string
-	Mail        MailConfig
-	Auth        AuthConfig
-	RateLimiter ratelimiter.Config
-	FrontURL    string
+	Addrs        string
+	ApiUrl       string
+	Db           dbConfig
+	Env          string
+	Mail         MailConfig
+	Auth         AuthConfig
+	RateLimiter  ratelimiter.Config
+	FrontURL     string
+	RedisCfg     redisConfig
+	OpenExchange OpenExchangeConfig
+}
+
+type redisConfig struct {
+	Addr     string
+	Username string
+	Pw       string
+	Db       int
+	Enabled  bool
+}
+
+type OpenExchangeConfig struct {
+	AppID string
 }
 
 type dbConfig struct {
@@ -77,5 +91,15 @@ func LoadConfig() *Config {
 			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
 		FrontURL: env.GetString("FRONT_URL", ""),
+		RedisCfg: redisConfig{
+			Addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
+			Username: env.GetString("REDIS_USERNAME", ""),
+			Pw:       env.GetString("REDIS_PW", ""),
+			Db:       env.GetInt("REDIS_DB", 0),
+			Enabled:  env.GetBool("REDIS_ENABLED", false),
+		},
+		OpenExchange: OpenExchangeConfig{
+			AppID: env.GetString("OPEN_EXCHANGE_APP_ID", ""),
+		},
 	}
 }

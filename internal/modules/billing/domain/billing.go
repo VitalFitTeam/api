@@ -143,3 +143,20 @@ type Refund struct {
 func (Refund) TableName() string {
 	return "refunds"
 }
+
+//REDIS
+
+const (
+	LatestRatesKey        = "latest_rates"
+	RatePrefix            = "rate"
+	RateExpiration        = 3 * time.Minute // Expiración para tasas históricas específicas
+	LatestRatesExpiration = 12 * time.Hour  // Expiración para el hash de tasas más recientes
+)
+
+type ExchangeRates struct {
+	Disclaimer string             `json:"disclaimer"`
+	License    string             `json:"license"`
+	Timestamp  int64              `json:"timestamp"`
+	Base       string             `json:"base"`
+	Rates      map[string]float64 `json:"rates"`
+}

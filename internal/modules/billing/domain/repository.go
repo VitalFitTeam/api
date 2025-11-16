@@ -33,3 +33,11 @@ type FiscalDocumentRepository interface {
 	UpdateFiscalDocumentType(ctx context.Context, docType *FiscalDocumentType) error
 	DeleteFiscalDocumentType(ctx context.Context, docTypeID uuid.UUID) error
 }
+
+type BillingStoreCacheRepository interface {
+	SetRates(ctx context.Context, rates map[string]float64) error
+	GetRates(ctx context.Context) (map[string]float64, error)
+	DeleteRates(ctx context.Context) error
+	SetSpecificTimeRateForCurrency(ctx context.Context, date string, currency string, rate float64) error
+	GetSpecificTimeRateForCurrency(ctx context.Context, date string, currency string) (float64, error)
+}

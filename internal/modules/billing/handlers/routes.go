@@ -44,6 +44,10 @@ func NewBillingHandlers(services appservices.Services) *BillingHandlers {
 func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	billingGroup := rg.Group("/billing")
 	billingGroup.Use(m.AuthJwtTokenMiddleware())
+
+	billingGroup.GET("/rates", m.RBACPermission("billing:list"), r.GetRates)
+	billingGroup.GET("/rates/:currency", m.RBACPermission("billing:list"), r.GetSpecificCurrencyRates)
+	billingGroup.GET("/rates/historical/:date/:currency", m.RBACPermission("billing:list"), r.GetHistoricalSpecificCurrencyRateHandler)
 	paymentMethodsGroup := billingGroup.Group("/payment-methods")
 	{
 		paymentMethodsGroup.GET("", m.RBACPermission("billing:list"), r.GetPaymentMethodsHandler)

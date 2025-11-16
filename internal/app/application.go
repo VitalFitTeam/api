@@ -23,6 +23,7 @@ import (
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	ratelimiterm "github.com/vitalfit/api/internal/shared/middleware/ratelimiter"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/internal/store/cache"
 	"go.uber.org/zap"
 )
 
@@ -34,6 +35,7 @@ type application struct {
 	Config      *config.Config
 	Logger      *zap.SugaredLogger
 	Store       store.Storage
+	Cache       cache.Storage
 	Services    appservices.Services
 	Handlers    apphandlers.Handlers
 	ratelimiter ratelimiter.Limiter

@@ -1,10 +1,12 @@
 package app
 
 import (
+	"github.com/go-redis/redis/v8"
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	authservices "github.com/vitalfit/api/internal/modules/auth/services"
+	"github.com/vitalfit/api/internal/store/cache"
 
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
@@ -13,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func BuildApplication(cfg *config.Config, db *gorm.DB) *application {
+func BuildApplication(cfg *config.Config, db *gorm.DB, rdb *redis.Client) *application {
 	//logger
 	//initialize store
 
@@ -25,13 +27,17 @@ func BuildApplication(cfg *config.Config, db *gorm.DB) *application {
 	auth := authservices.NewJWTAuthenticator(cfg.Auth.Token.Secret, cfg.Auth.Token.Aud, cfg.Auth.Token.Iss)
 	rateLimiter := rate_mw.NewFixedWindowLimiter(cfg.RateLimiter.RequestsPerTimeFrame, cfg.RateLimiter.TimeFrame)
 	store := store.NewStorage(db)
-	services := appservices.NewServices(store, logger, *cfg, auth, mailer)
+
+	cache := cache.NewRedisStorage(rdb)
+	services := appservices.NewServices(store, logger, *cfg, auth, mailer, cache)
 	handlers := apphandlers.NewAppHandlers(services)
+
 	defer logger.Sync()
 	return &application{
 		Config:      cfg,
 		Logger:      logger,
 		Store:       store,
+		Cache:       cache,
 		Services:    services,
 		Handlers:    handlers,
 		ratelimiter: rateLimiter,

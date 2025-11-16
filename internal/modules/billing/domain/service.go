@@ -27,4 +27,8 @@ type BillingServiceInterface interface {
 	GetFiscalDocumentTypeByID(ctx context.Context, docTypeID uuid.UUID) (*FiscalDocumentType, error)
 	UpdateFiscalDocumentType(ctx context.Context, docType *FiscalDocumentType) error
 	DeleteFiscalDocumentType(ctx context.Context, docTypeID uuid.UUID) error
+
+	// Exchange Rates
+	GetLatestRates(ctx context.Context) (map[string]float64, error)
+	GetHistoricalRateForCurrency(ctx context.Context, date, currency string) (float64, error)
 }

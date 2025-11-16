@@ -2626,6 +2626,125 @@ paths:
       summary: Update a payment method
       tags:
       - Billing
+  /billing/rates:
+    get:
+      description: Retrieves the latest currency exchange rates from the configured
+        provider. It uses a cache to avoid hitting the API on every request.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A map of currency codes to their exchange rates against the
+            base currency (USD)
+          schema:
+            additionalProperties:
+              format: float64
+              type: number
+            type: object
+        "500":
+          description: Failed to retrieve exchange rates
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get latest exchange rates
+      tags:
+      - Billing
+  /billing/rates/{currency}:
+    get:
+      description: Retrieves the latest exchange rate for a specific currency code.
+      parameters:
+      - description: Currency Code (e.g., VES)
+        in: path
+        name: currency
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The exchange rate for the specified currency
+          schema:
+            properties:
+              currency:
+                format: float64
+                type: number
+            type: object
+        "404":
+          description: Currency not found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Failed to retrieve exchange rates
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get specific currency exchange rate
+      tags:
+      - Billing
+  /billing/rates/historical/{date}/{currency}:
+    get:
+      description: Retrieves the exchange rate for a specific currency on a specific
+        date.
+      parameters:
+      - description: Date in YYYY-MM-DD format
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: Currency Code (e.g., VES)
+        in: path
+        name: currency
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The historical exchange rate for the specified currency and
+            date
+          schema:
+            properties:
+              currency:
+                format: float64
+                type: number
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid date format)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Currency not found for the given date
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Failed to retrieve exchange rates
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get historical exchange rate for a currency
+      tags:
+      - Billing
   /branches:
     get:
       consumes:
