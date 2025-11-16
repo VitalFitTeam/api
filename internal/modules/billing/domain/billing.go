@@ -149,8 +149,8 @@ func (Refund) TableName() string {
 const (
 	LatestRatesKey        = "latest_rates"
 	RatePrefix            = "rate"
-	RateExpiration        = 3 * time.Minute // Expiración para tasas históricas específicas
-	LatestRatesExpiration = 12 * time.Hour  // Expiración para el hash de tasas más recientes
+	RateExpiration        = 3 * time.Minute
+	LatestRatesExpiration = 2 * time.Hour
 )
 
 type ExchangeRates struct {

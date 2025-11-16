@@ -31,4 +31,8 @@ type BillingServiceInterface interface {
 	// Exchange Rates
 	GetLatestRates(ctx context.Context) (map[string]float64, error)
 	GetHistoricalRateForCurrency(ctx context.Context, date, currency string) (float64, error)
+
+	//orders
+	Checkout(ctx context.Context, invoice *Invoice) error
+	CreatePayment(ctx context.Context, payment *Payment) error
 }
