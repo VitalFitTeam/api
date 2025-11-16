@@ -693,6 +693,94 @@ definitions:
     - state
     - tax_id
     type: object
+  comboshandler.CreatePackageItemRequest:
+    properties:
+      serviceId:
+        type: string
+      sessionsIncluded:
+        minimum: 1
+        type: integer
+    required:
+    - serviceId
+    - sessionsIncluded
+    type: object
+  comboshandler.CreatePackageRequest:
+    properties:
+      description:
+        type: string
+      endAt:
+        type: string
+      name:
+        type: string
+      packageItems:
+        items:
+          $ref: '#/definitions/comboshandler.CreatePackageItemRequest'
+        minItems: 1
+        type: array
+      price:
+        type: number
+      startAt:
+        type: string
+    required:
+    - name
+    - packageItems
+    - price
+    type: object
+  comboshandler.PackageItemResponse:
+    properties:
+      name:
+        type: string
+      serviceId:
+        type: string
+      sessionsIncluded:
+        type: integer
+    type: object
+  comboshandler.PackageResponse:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      endAt:
+        type: string
+      isActive:
+        type: boolean
+      name:
+        type: string
+      packageId:
+        type: string
+      price:
+        type: number
+      startAt:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  comboshandler.PackageResponseByID:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      endAt:
+        type: string
+      isActive:
+        type: boolean
+      name:
+        type: string
+      packageId:
+        type: string
+      packageItems:
+        items:
+          $ref: '#/definitions/comboshandler.PackageItemResponse'
+        type: array
+      price:
+        type: number
+      startAt:
+        type: string
+      updatedAt:
+        type: string
+    type: object
   instructordomain.InstructorSummary:
     properties:
       actives:
@@ -4576,6 +4664,206 @@ paths:
       summary: Get a summary of membership types
       tags:
       - Memberships
+  /packages:
+    get:
+      description: Retrieves a paginated list of all available packages, with optional
+        searching by name.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for package name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of packages
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/comboshandler.PackageResponse'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all packages
+      tags:
+      - Packages
+    post:
+      consumes:
+      - application/json
+      description: Adds a new package with its items to the system.
+      parameters:
+      - description: Package creation payload
+        in: body
+        name: package
+        required: true
+        schema:
+          $ref: '#/definitions/comboshandler.CreatePackageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Package created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'Bad Request: Invalid payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new package
+      tags:
+      - Packages
+  /packages/{id}:
+    delete:
+      description: Deletes a specific package by its UUID.
+      parameters:
+      - description: Package UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Package deleted successfully
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Package not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a package
+      tags:
+      - Packages
+    get:
+      description: Retrieves detailed information about a specific package by its
+        UUID, including its items.
+      parameters:
+      - description: Package UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Package details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/comboshandler.PackageResponseByID'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Package not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get package by ID
+      tags:
+      - Packages
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing package's information, including its items.
+      parameters:
+      - description: Package UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with fields to update
+        in: body
+        name: package
+        required: true
+        schema:
+          $ref: '#/definitions/comboshandler.CreatePackageRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Package updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Package not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a package
+      tags:
+      - Packages
   /public/branches-map:
     get:
       description: Retrieves a list of public branches with minimal information for

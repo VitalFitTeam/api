@@ -81,6 +81,9 @@ func (app *application) Mount() http.Handler {
 		//schedule routes
 		app.Handlers.ScheduleHandlers.ScheduleRoutes(v1, m)
 
+		//combos routes
+		app.Handlers.CombosHandlers.CombosRoutes(v1, m)
+
 		//booking
 		app.Handlers.BookingHandlers.BookingRoutes(v1, m)
 

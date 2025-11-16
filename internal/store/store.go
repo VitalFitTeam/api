@@ -9,6 +9,8 @@ import (
 	bookingrepository "github.com/vitalfit/api/internal/modules/booking/repository"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchrepository "github.com/vitalfit/api/internal/modules/branches/repository"
+	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
+	combosrepository "github.com/vitalfit/api/internal/modules/combos/repository"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	instructorrepository "github.com/vitalfit/api/internal/modules/instructor/repository"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
@@ -39,6 +41,7 @@ type Storage struct {
 	Membership      membershipsdomain.MembershipsRepository
 	Billing         billingdomain.BillingRepository
 	Schedule        scheduledomain.ScheduleRepository
+	Combos          combosdomain.CombosRepository
 	Booking         bookingdomain.BookingRepository
 }
 
@@ -57,6 +60,7 @@ func NewStorage(db *gorm.DB) Storage {
 		Membership:      membershipsrepository.NewMembershipStore(db),
 		Billing:         billingrepository.NewBillingStore(db),
 		Schedule:        schedulerepository.NewScheduleStore(db),
+		Combos:          combosrepository.NewCombosStore(db),
 		Booking:         bookingrepository.NewBookingStore(db),
 	}
 }
