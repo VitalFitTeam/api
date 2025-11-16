@@ -21,6 +21,16 @@ type Booking struct {
 	Class scheduledomain.Class `gorm:"foreignKey:ClassID" json:"-"`
 }
 
+type BookingWithClassInfo struct {
+	BookingID   uuid.UUID `json:"booking_id"`
+	ClassID     uuid.UUID `json:"class_id"`
+	StartsAt    time.Time `json:"starts_at"`
+	EndsAt      time.Time `json:"ends_at"`
+	ServiceName string    `json:"service_name"`
+	Instructor  string    `json:"instructor"`
+	BranchName  string    `json:"branch_name"`
+}
+
 func (Booking) TableName() string {
 	return "bookings"
 }

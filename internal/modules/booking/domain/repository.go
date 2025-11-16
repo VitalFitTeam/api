@@ -21,4 +21,7 @@ type BookingRepository interface {
 
 	// GetClientSchedule retorna las clases visibles al cliente.
 	GetClientSchedule(ctx context.Context, branchID uuid.UUID, userID uuid.UUID) ([]scheduledomain.Class, error)
+
+	// GetClientBookings retorna todas las reservas de un usuario
+	GetClientBookings(ctx context.Context, userID uuid.UUID) ([]BookingWithClassInfo, error)
 }

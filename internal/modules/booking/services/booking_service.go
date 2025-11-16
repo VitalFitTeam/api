@@ -81,3 +81,14 @@ func (s *BookingService) GetClientSchedule(
 
 	return s.store.Booking.GetClientSchedule(ctx, branchID, userID)
 }
+
+//
+// ------------------------------------------------------------
+// GetClientBookings
+// ------------------------------------------------------------
+//
+
+// GetClientBookings devuelve todas las reservas de un usuario específico.
+func (s *BookingService) GetClientBookings(ctx context.Context, userID uuid.UUID) ([]bookingdomain.BookingWithClassInfo, error) {
+	return s.store.Booking.GetClientBookings(ctx, userID)
+}

@@ -35,3 +35,14 @@ type BookingCreatedResponse struct {
 type BookingCancelledResponse struct {
 	Message string `json:"message"`
 }
+
+// BookingResponse representa una reserva con información detallada de la clase.
+type BookingResponse struct {
+	BookingID   uuid.UUID `json:"booking_id"`
+	ClassID     uuid.UUID `json:"class_id"`
+	StartsAt    time.Time `json:"starts_at"`
+	EndsAt      time.Time `json:"ends_at"`
+	ServiceName string    `json:"service_name"`
+	Instructor  string    `json:"instructor"`
+	BranchName  string    `json:"branch_name"`
+}

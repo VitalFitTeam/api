@@ -149,3 +149,37 @@ func (h *BookingHandlers) CancelBookingHandler(c *gin.Context) {
 		Message: "Booking cancelled successfully",
 	})
 }
+
+// ------------------------------
+// GET /v1/bookings/client/:userId
+// ------------------------------
+
+// @Summary		Get client bookings
+// @Description	Returns all bookings for a specific client
+// @Tags			Booking
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			userId	path		string	true	"User UUID"
+// @Success		200		{object}	object{data=[]BookingResponse}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/bookings/client/{userId} [get]
+func (h *BookingHandlers) GetClientBookingsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userID, err := uuid.Parse(c.Param("userId"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	bookings, err := h.services.BookingServices.GetClientBookings(ctx, userID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": bookings,
+	})
+}

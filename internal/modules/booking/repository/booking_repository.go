@@ -107,3 +107,39 @@ func (s *BookingStore) CountBookingsForClass(ctx context.Context, classID uuid.U
 
 	return count, nil
 }
+
+//
+// ------------------------------------------------------------
+// GetBookingsByUser
+// ------------------------------------------------------------
+//
+
+func (s *BookingStore) GetClientBookings(ctx context.Context, userID uuid.UUID) ([]bookingdomain.BookingWithClassInfo, error) {
+	var results []bookingdomain.BookingWithClassInfo
+
+	query := `
+        SELECT 
+            b.booking_id,
+            c.class_id,
+            c.starts_at,
+            c.ends_at,
+            s.name AS service_name,
+            CONCAT(u.first_name, ' ', u.last_name) AS instructor,
+            br.name AS branch_name
+        FROM bookings b
+        JOIN classes c ON b.class_id = c.class_id
+        JOIN services s ON c.service_id = s.service_id
+        JOIN instructors ins ON c.instructor_id = ins.instructor_id
+        JOIN users u ON ins.user_id = u.user_id
+        JOIN branch br ON c.branch_id = br.branch_id
+        WHERE b.user_id = ? AND b.deleted_at IS NULL
+        ORDER BY c.starts_at ASC
+    `
+
+	err := s.db.WithContext(ctx).Raw(query, userID).Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}

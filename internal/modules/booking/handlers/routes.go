@@ -34,6 +34,7 @@ func (h *BookingHandlers) BookingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	bookingRoutes := rg.Group("/bookings")
 	{
 		bookingRoutes.Use(m.AuthJwtTokenMiddleware())
+		bookingRoutes.GET("/client/:userId", m.RBACPermission("booking:list"), h.GetClientBookingsHandler)
 		bookingRoutes.DELETE("/:bookingId", m.RBACPermission("booking:cancel"), h.CancelBookingHandler)
 	}
 }
