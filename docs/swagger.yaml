@@ -421,6 +421,43 @@ definitions:
     required:
     - processing_type
     type: object
+  bookinghandlers.BookingCancelledResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  bookinghandlers.BookingCreatedResponse:
+    properties:
+      booking_id:
+        type: string
+      message:
+        type: string
+    type: object
+  bookinghandlers.ScheduleClassResponse:
+    properties:
+      branch_id:
+        type: string
+      class_id:
+        type: string
+      ends_at:
+        type: string
+      instructor_id:
+        type: string
+      instructor_name:
+        type: string
+      is_booked:
+        type: boolean
+      max_capacity:
+        type: integer
+      remaining_capacity:
+        type: integer
+      service_id:
+        type: string
+      service_name:
+        type: string
+      starts_at:
+        type: string
+    type: object
   branchdomain.BranchStatusCount:
     properties:
       active:
@@ -2285,6 +2322,42 @@ paths:
       summary: Update a payment method
       tags:
       - Billing
+  /bookings/{bookingId}:
+    delete:
+      description: Cancels an existing booking made by the client
+      parameters:
+      - description: Booking UUID
+        in: path
+        name: bookingId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/bookinghandlers.BookingCancelledResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Cancel booking
+      tags:
+      - Booking
   /branches:
     get:
       consumes:
@@ -4529,6 +4602,41 @@ paths:
       summary: Get public branches for map
       tags:
       - Public
+  /schedule:
+    get:
+      description: Returns the available classes for the authenticated client
+      parameters:
+      - description: Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/bookinghandlers.ScheduleClassResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client schedule
+      tags:
+      - Booking
   /schedule/{classId}:
     delete:
       description: Deletes or cancels a class from the calendar
@@ -4627,6 +4735,42 @@ paths:
       summary: Update scheduled class
       tags:
       - Schedule
+  /schedule/{classId}/book:
+    post:
+      description: Books a spot for the client in a class
+      parameters:
+      - description: Class UUID
+        in: path
+        name: classId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/bookinghandlers.BookingCreatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Book class
+      tags:
+      - Booking
   /services:
     post:
       consumes:

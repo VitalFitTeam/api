@@ -6,6 +6,8 @@ import (
 	authservices "github.com/vitalfit/api/internal/modules/auth/services"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	billingservice "github.com/vitalfit/api/internal/modules/billing/service"
+	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
+	bookingservice "github.com/vitalfit/api/internal/modules/booking/services"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchservices "github.com/vitalfit/api/internal/modules/branches/services"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
@@ -24,6 +26,7 @@ import (
 	logs "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
+
 	"go.uber.org/zap"
 )
 
@@ -40,6 +43,7 @@ type Services struct {
 	MembershipServices membershipsdomain.MembershipsServiceInterface
 	BillingServices    billingdomain.BillingServiceInterface
 	ScheduleServices   scheduledomain.ScheduleServiceInterface
+	BookingServices    bookingdomain.BookingServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
@@ -58,6 +62,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		MembershipServices: membershipsservice.NewMembershipService(store),
 		BillingServices:    billingservice.NewBillingService(store),
 		ScheduleServices:   scheduleservice.NewScheduleService(store),
+		BookingServices:    bookingservice.NewBookingService(store),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,
 	}
