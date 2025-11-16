@@ -35,7 +35,7 @@ func NewTestApplication(t *testing.T, cfg *config.Config) *application {
 
 	var rdb *redis.Client
 	if cfg.RedisCfg.Enabled {
-		rdb = cache.NewRedisClient(cfg.RedisCfg.Addr, cfg.RedisCfg.Pw, cfg.RedisCfg.Db)
+		rdb = cache.NewRedisClient(cfg.RedisCfg.Addr, cfg.RedisCfg.Username, cfg.RedisCfg.Pw, cfg.RedisCfg.Db)
 		logger.Info("redis cache connection established")
 
 		defer rdb.Close()

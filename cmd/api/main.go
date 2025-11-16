@@ -40,7 +40,7 @@ func main() {
 	}
 	var rdb *redis.Client
 	if config.RedisCfg.Enabled {
-		rdb = cache.NewRedisClient(config.RedisCfg.Addr, config.RedisCfg.Pw, config.RedisCfg.Db)
+		rdb = cache.NewRedisClient(config.RedisCfg.Addr, config.RedisCfg.Username, config.RedisCfg.Pw, config.RedisCfg.Db)
 		log.Print("redis cache connection established")
 
 		defer rdb.Close()
