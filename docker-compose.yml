@@ -13,7 +13,6 @@ services:
       - .env
     environment:
       - DB_HOST=db
-      - REDIS_ADDR=redis:6379
     volumes:
       - .:/app
     depends_on:
