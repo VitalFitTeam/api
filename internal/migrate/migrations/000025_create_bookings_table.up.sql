@@ -1,4 +1,4 @@
-CREATE TYPE booking_status_enum AS ENUM ('Confirmed', 'CancelledByUser', 'CancelledBySystem');
+CREATE TYPE IF NOT EXISTS booking_status_enum AS ENUM ('Confirmed', 'CancelledByUser', 'CancelledBySystem');
 
 CREATE TABLE IF NOT EXISTS bookings (
     booking_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
