@@ -1,7 +1,10 @@
--- +migrate Up
-CREATE TYPE payment_status AS ENUM ('Completed', 'Failed', 'Refunded', 'Pending');
-
-CREATE TABLE payments (
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status') THEN
+        CREATE TYPE payment_status AS ENUM ('Completed', 'Failed', 'Refunded', 'Pending');
+    END IF;
+END$$;
+CREATE TABLE IF NOT EXISTS payments (
     payment_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     invoice_id UUID NOT NULL REFERENCES invoices(invoice_id),
     payment_date TIMESTAMPTZ NOT NULL,    
@@ -19,5 +22,5 @@ CREATE TABLE payments (
     deleted_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_payments_invoice_id ON payments(invoice_id);
-CREATE INDEX idx_payments_status ON payments(status);
+CREATE INDEX IF NOT EXISTS idx_payments_invoice_id ON payments(invoice_id);
+CREATE INDEX IF NOT EXISTS  idx_payments_status ON payments(status);

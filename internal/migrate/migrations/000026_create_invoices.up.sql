@@ -1,6 +1,11 @@
-CREATE TYPE invoice_status AS ENUM ('Paid', 'Unpaid', 'Void', 'Overdue');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_status') THEN
+        CREATE TYPE invoice_status AS ENUM ('Paid', 'Unpaid', 'Void', 'Overdue');
+    END IF;
+END$$;
 
-CREATE TABLE invoices (
+CREATE TABLE IF NOT EXISTS invoices (
     invoice_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(user_id),
     document_type_id UUID NOT NULL REFERENCES fiscal_document_types(document_type_id),
@@ -15,5 +20,5 @@ CREATE TABLE invoices (
     deleted_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_invoices_user_id ON invoices(user_id);
-CREATE INDEX idx_invoices_status ON invoices(status);
+CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);
+CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
