@@ -84,6 +84,9 @@ func (app *application) Mount() http.Handler {
 		//combos routes
 		app.Handlers.CombosHandlers.CombosRoutes(v1, m)
 
+		//booking
+		app.Handlers.BookingHandlers.BookingRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}

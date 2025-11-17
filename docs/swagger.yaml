@@ -421,6 +421,40 @@ definitions:
     required:
     - processing_type
     type: object
+  bookinghandlers.BookUser:
+    properties:
+      user_id:
+        type: string
+    type: object
+  bookinghandlers.BookingCancelledResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  bookinghandlers.BookingCreatedResponse:
+    properties:
+      booking_id:
+        type: string
+      message:
+        type: string
+    type: object
+  bookinghandlers.BookingResponse:
+    properties:
+      booking_id:
+        type: string
+      branch_name:
+        type: string
+      class_id:
+        type: string
+      ends_at:
+        type: string
+      instructor:
+        type: string
+      service_name:
+        type: string
+      starts_at:
+        type: string
+    type: object
   branchdomain.BranchStatusCount:
     properties:
       active:
@@ -1472,6 +1506,31 @@ definitions:
     - name
     - priority
     type: object
+  scheduledomain.Class:
+    properties:
+      branch_id:
+        type: string
+      class_id:
+        type: string
+      created_at:
+        type: string
+      ends_at:
+        type: string
+      instructor_id:
+        type: string
+      is_visible:
+        type: boolean
+      max_capacity:
+        type: integer
+      notes:
+        type: string
+      service_id:
+        type: string
+      starts_at:
+        type: string
+      updated_at:
+        type: string
+    type: object
   schedulehandlers.ClassResponse:
     properties:
       branch_id:
@@ -2373,6 +2432,78 @@ paths:
       summary: Update a payment method
       tags:
       - Billing
+  /bookings/{bookingId}/cancel:
+    patch:
+      description: Cancels an existing booking made by the client
+      parameters:
+      - description: Booking UUID
+        in: path
+        name: bookingId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Booking cancelled
+          schema:
+            $ref: '#/definitions/bookinghandlers.BookingCancelledResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Cancel booking
+      tags:
+      - Booking
+  /bookings/client/{userId}:
+    get:
+      description: Returns all bookings for a specific client
+      parameters:
+      - description: User UUID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/bookinghandlers.BookingResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client bookings
+      tags:
+      - Booking
   /branches:
     get:
       consumes:
@@ -4915,6 +5046,92 @@ paths:
       summary: Update scheduled class
       tags:
       - Schedule
+  /schedule/{classId}/book:
+    post:
+      consumes:
+      - application/json
+      description: Books a spot for the client in a class
+      parameters:
+      - description: Class UUID
+        in: path
+        name: classId
+        required: true
+        type: string
+      - description: User ID payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/bookinghandlers.BookUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Booking created
+          schema:
+            $ref: '#/definitions/bookinghandlers.BookingCreatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Book class
+      tags:
+      - Booking
+  /schedule/branch/{branchId}/client/{userId}:
+    get:
+      description: Returns the available classes for a specific client in a specific
+        branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: branchId
+        required: true
+        type: string
+      - description: Client UUID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/scheduledomain.Class'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client schedule for a branch
+      tags:
+      - Booking
   /services:
     post:
       consumes:
