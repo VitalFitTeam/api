@@ -8364,6 +8364,9 @@ const docTemplate = `{
                 "last_maintenance_date": {
                     "type": "string"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "notes": {
                     "type": "string"
                 },

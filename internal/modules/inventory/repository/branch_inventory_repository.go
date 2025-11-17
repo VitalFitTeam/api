@@ -40,8 +40,8 @@ func (s *BranchInventoryStore) Create(ctx context.Context, item *inventorydomain
 	return item, nil
 }
 
-func (s *BranchInventoryStore) GetByBranch(ctx context.Context, branchID uuid.UUID) (*inventorydomain.BranchInventoryQueryResults, error) {
-	var inventory []*inventorydomain.BranchInventory
+func (s *BranchInventoryStore) GetByBranch(ctx context.Context, branchID uuid.UUID) ([]inventorydomain.BranchInventory, error) {
+	var inventory []inventorydomain.BranchInventory
 	err := s.db.WithContext(ctx).
 		Where("branch_id = ?", branchID).
 		Preload("Equipment").
@@ -50,7 +50,7 @@ func (s *BranchInventoryStore) GetByBranch(ctx context.Context, branchID uuid.UU
 	if err != nil {
 		return nil, err
 	}
-	return &inventorydomain.BranchInventoryQueryResults{Inventory: inventory}, nil
+	return inventory, nil
 }
 
 func (s *BranchInventoryStore) GetByID(ctx context.Context, inventoryID uuid.UUID) (*inventorydomain.BranchInventory, error) {

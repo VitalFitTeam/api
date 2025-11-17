@@ -185,10 +185,16 @@ func (h *InventoryHandlers) GetInventoryByID(c *gin.Context) {
 		lastMaintenanceDate = equipment.LastMaintenanceDate.Format("2006-01-02")
 	}
 
+	var equipmentName string
+	if equipment.Equipment != nil {
+		equipmentName = equipment.Equipment.Name
+	}
+
 	resp := BranchInventoryResponse{
 		InventoryID:         equipment.InventoryID,
 		EquipmentID:         equipment.EquipmentID,
 		SerialNumber:        equipment.SerialNumber,
+		Name:                equipmentName,
 		Status:              string(equipment.Status),
 		AcquisitionDate:     acquisitionDate,
 		LastMaintenanceDate: lastMaintenanceDate,
@@ -341,7 +347,34 @@ func (h *InventoryHandlers) ListBranchInventoryHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": inventory.Inventory})
+	resp := make([]BranchInventoryResponse, 0, len(inventory))
+	for _, item := range inventory {
+		var acquisitionDate, lastMaintenanceDate string
+		if item.AcquisitionDate != nil {
+			acquisitionDate = item.AcquisitionDate.Format("2006-01-02")
+		}
+		if item.LastMaintenanceDate != nil {
+			lastMaintenanceDate = item.LastMaintenanceDate.Format("2006-01-02")
+		}
+
+		var equipmentName string
+		if item.Equipment != nil {
+			equipmentName = item.Equipment.Name
+		}
+
+		resp = append(resp, BranchInventoryResponse{
+			InventoryID:         item.InventoryID,
+			EquipmentID:         item.EquipmentID,
+			Name:                equipmentName,
+			SerialNumber:        item.SerialNumber,
+			Status:              string(item.Status),
+			AcquisitionDate:     acquisitionDate,
+			LastMaintenanceDate: lastMaintenanceDate,
+			Notes:               item.Notes,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
 }
 
 // @Summary		Update branch inventory item

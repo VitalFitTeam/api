@@ -134,6 +134,7 @@ type EquipmentListResponse struct {
 type BranchInventoryResponse struct {
 	InventoryID         uuid.UUID `json:"inventory_id"`
 	EquipmentID         uuid.UUID `json:"equipment_id"`
+	Name                string    `json:"name"`
 	SerialNumber        string    `json:"serial_number"`
 	Status              string    `json:"status"`
 	AcquisitionDate     string    `json:"acquisition_date,omitempty"`

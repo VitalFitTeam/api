@@ -8,7 +8,7 @@ import (
 
 type BranchInventoryServicesInterface interface {
 	AddInventoryItem(ctx context.Context, item *BranchInventory) error
-	ListBranchInventory(ctx context.Context, branchID uuid.UUID) (*BranchInventoryQueryResults, error)
+	ListBranchInventory(ctx context.Context, branchID uuid.UUID) ([]BranchInventory, error)
 	UpdateInventoryItem(ctx context.Context, item *BranchInventory) error
 	DeleteInventoryItem(ctx context.Context, inventoryID uuid.UUID, branchID uuid.UUID) error
 	GetInventoryItemByID(ctx context.Context, inventoryID uuid.UUID) (*BranchInventory, error)
