@@ -288,11 +288,7 @@ func (h *MembershipHandler) PublicGetMembershipsTypeHandler(c *gin.Context) {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
-	currency_rate, ok := rates[currency]
-	if !ok {
-		h.services.LogErrors.BadRequestResponse(c, fmt.Errorf("currency '%s' is not supported", currency))
-		return
-	}
+	currency_rate := rates[currency]
 
 	fq := pagination.PaginatedFeedQuery{
 		Limit:  10,
