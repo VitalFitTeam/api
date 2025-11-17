@@ -68,6 +68,11 @@ jobs:
           echo "ADMIN_EMAIL=\"${{ secrets.ADMIN_EMAIL }}\"" >> .env
           echo "ADMIN_PASSWORD=\"${{ secrets.ADMIN_PASSWORD }}\"" >> .env
           echo "FRONT_URL=\"${{ secrets.FRONT_URL }}\"" >> .env
+          echo "REDIS_ADDR=\"${{ secrets.REDIS_ADDR }}\"" >> .env
+          echo "REDIS_PW=\"${{ secrets.REDIS_PW }}\"" >> .env
+          echo "REDIS_USERNAME=\"${{ secrets.REDIS_USERNAME }}\"" >> .env
+          echo "REDIS_ENABLED=\"${{ secrets.REDIS_ENABLED }}\"" >> .env
+          echo "OPEN_EXCHANGE_APP_ID=\"${{ secrets.OPEN_EXCHANGE_APP_ID }}\"" >> .env
 
       - name: 4. Pull the new image
         run: |
