@@ -8,39 +8,30 @@ import (
 	"github.com/google/uuid"
 )
 
-// ------------------------------
-// GET /v1/branches/{branchId}/schedule
-// ------------------------------
-
-// @Summary		Get client schedule
-// @Description	Returns the available classes for the authenticated client
+// @Summary		Get client schedule for a branch
+// @Description	Returns the available classes for a specific client in a specific branch.
 // @Tags			Booking
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			branch_id	query		string	false	"Branch UUID"
-// @Success		200	{object}	object{data=[]ScheduleClassResponse}
-// @Failure		400	{object}	map[string]interface{}
-// @Failure		500	{object}	map[string]interface{}
-// @Router			/schedule [get]
+// @Param			branchId	path		string	true	"Branch UUID"
+// @Param			userId		path		string	true	"Client UUID"
+// @Success		200			{object}	object{data=[]scheduledomain.Class}
+// @Failure		400			{object}	map[string]interface{}	"Bad Request"
+// @Failure		500			{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/schedule/branch/{branchId}/client/{userId} [get]
 func (h *BookingHandlers) GetClientScheduleHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	branchIDParam := c.Query("branch_id")
-	if branchIDParam == "" {
-		h.services.LogErrors.BadRequestResponse(c, errors.New("branch_id is required"))
-		return
-	}
-
-	branchID, err := uuid.Parse(branchIDParam)
+	branchID, err := uuid.Parse(c.Param("branchId"))
 	if err != nil {
-		h.services.LogErrors.BadRequestResponse(c, err)
+		h.services.LogErrors.BadRequestResponse(c, errors.New("invalid branchId format"))
 		return
 	}
 
-	userIDStr := c.GetString("userId")
+	userIDStr := c.Param("userId")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		h.services.LogErrors.BadRequestResponse(c, err)
+		h.services.LogErrors.BadRequestResponse(c, errors.New("invalid userId format"))
 		return
 	}
 
@@ -53,20 +44,18 @@ func (h *BookingHandlers) GetClientScheduleHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": classes})
 }
 
-// ------------------------------
-// POST /v1/schedule/:classId/book
-// ------------------------------
-
 // @Summary		Book class
 // @Description	Books a spot for the client in a class
 // @Tags			Booking
 // @Security		ApiKeyAuth
+// @Accept			json
 // @Produce		json
-// @Param			classId	path		string	true	"Class UUID"
-// @Success		201	{object}	BookingCreatedResponse
-// @Failure		400	{object}	map[string]interface{}
-// @Failure		409	{object}	map[string]interface{}
-// @Failure		500	{object}	map[string]interface{}
+// @Param			classId	path		string					true	"Class UUID"
+// @Param			payload	body		BookUser				true	"User ID payload"
+// @Success		201		{object}	BookingCreatedResponse	"Booking created"
+// @Failure		400		{object}	map[string]interface{}	"Bad Request"
+// @Failure		409		{object}	map[string]interface{}	"Conflict"
+// @Failure		500		{object}	map[string]interface{}	"Internal Server Error"
 // @Router			/schedule/{classId}/book [post]
 func (h *BookingHandlers) CreateBookingHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -77,20 +66,15 @@ func (h *BookingHandlers) CreateBookingHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+	var payload BookUser
 
-	// Obtener user_id desde el body de la solicitud
-	var requestBody struct {
-		UserID uuid.UUID `json:"user_id"`
-	}
-
-	if err := c.ShouldBindJSON(&requestBody); err != nil {
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
 
-	userID := requestBody.UserID
+	userID := payload.UserID
 
-	// Crear la reserva de clase — AHORA CAPTURANDO AMBOS VALORES
 	bookingID, err := h.services.BookingServices.CreateBooking(ctx, userID, classID)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
@@ -103,21 +87,17 @@ func (h *BookingHandlers) CreateBookingHandler(c *gin.Context) {
 	})
 }
 
-// ------------------------------
-// DELETE /v1/bookings/:bookingId
-// ------------------------------
-
 // @Summary		Cancel booking
 // @Description	Cancels an existing booking made by the client
 // @Tags			Booking
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			bookingId	path		string	true	"Booking UUID"
-// @Success		200	{object}	BookingCancelledResponse
-// @Failure		400	{object}	map[string]interface{}
-// @Failure		403	{object}	map[string]interface{}
-// @Failure		500	{object}	map[string]interface{}
-// @Router			/bookings/{bookingId} [delete]
+// @Param			bookingId	path		string						true	"Booking UUID"
+// @Success		200			{object}	BookingCancelledResponse	"Booking cancelled"
+// @Failure		400			{object}	map[string]interface{}		"Bad Request"
+// @Failure		403			{object}	map[string]interface{}		"Forbidden"
+// @Failure		500			{object}	map[string]interface{}		"Internal Server Error"
+// @Router			/bookings/{bookingId}/cancel [patch]
 func (h *BookingHandlers) CancelBookingHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -127,20 +107,7 @@ func (h *BookingHandlers) CancelBookingHandler(c *gin.Context) {
 		return
 	}
 
-	// Obtener user_id desde el body
-	var requestBody struct {
-		UserID uuid.UUID `json:"user_id"`
-	}
-
-	if err := c.ShouldBindJSON(&requestBody); err != nil {
-		h.services.LogErrors.BadRequestResponse(c, err)
-		return
-	}
-
-	userID := requestBody.UserID
-
-	// Cancelar la reserva
-	if err := h.services.BookingServices.CancelBooking(ctx, userID, bookingID); err != nil {
+	if err := h.services.BookingServices.CancelBooking(ctx, bookingID); err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
@@ -150,10 +117,6 @@ func (h *BookingHandlers) CancelBookingHandler(c *gin.Context) {
 	})
 }
 
-// ------------------------------
-// GET /v1/bookings/client/:userId
-// ------------------------------
-
 // @Summary		Get client bookings
 // @Description	Returns all bookings for a specific client
 // @Tags			Booking
@@ -161,8 +124,8 @@ func (h *BookingHandlers) CancelBookingHandler(c *gin.Context) {
 // @Produce		json
 // @Param			userId	path		string	true	"User UUID"
 // @Success		200		{object}	object{data=[]BookingResponse}
-// @Failure		400		{object}	map[string]interface{}
-// @Failure		500		{object}	map[string]interface{}
+// @Failure		400		{object}	map[string]interface{}	"Bad Request"
+// @Failure		500		{object}	map[string]interface{}	"Internal Server Error"
 // @Router			/bookings/client/{userId} [get]
 func (h *BookingHandlers) GetClientBookingsHandler(c *gin.Context) {
 	ctx := c.Request.Context()

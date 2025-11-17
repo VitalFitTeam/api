@@ -1285,8 +1285,64 @@ const docTemplate = `{
                 }
             }
         },
-        "/bookings/{bookingId}": {
-            "delete": {
+        "/bookings/client/{userId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns all bookings for a specific client",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Get client bookings",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User UUID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/bookinghandlers.BookingResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{bookingId}/cancel": {
+            "patch": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -1311,7 +1367,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Booking cancelled",
                         "schema": {
                             "$ref": "#/definitions/bookinghandlers.BookingCancelledResponse"
                         }
@@ -5115,27 +5171,35 @@ const docTemplate = `{
                 }
             }
         },
-        "/schedule": {
+        "/schedule/branch/{branchId}/client/{userId}": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns the available classes for the authenticated client",
+                "description": "Returns the available classes for a specific client in a specific branch.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Booking"
                 ],
-                "summary": "Get client schedule",
+                "summary": "Get client schedule for a branch",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Branch UUID",
-                        "name": "branch_id",
-                        "in": "query"
+                        "name": "branchId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client UUID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -5147,7 +5211,7 @@ const docTemplate = `{
                                 "data": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/definitions/bookinghandlers.ScheduleClassResponse"
+                                        "$ref": "#/definitions/scheduledomain.Class"
                                     }
                                 }
                             }
@@ -5329,6 +5393,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Books a spot for the client in a class",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -5343,11 +5410,20 @@ const docTemplate = `{
                         "name": "classId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "User ID payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/bookinghandlers.BookUser"
+                        }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Booking created",
                         "schema": {
                             "$ref": "#/definitions/bookinghandlers.BookingCreatedResponse"
                         }
@@ -6847,6 +6923,14 @@ const docTemplate = `{
                 }
             }
         },
+        "bookinghandlers.BookUser": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "bookinghandlers.BookingCancelledResponse": {
             "type": "object",
             "properties": {
@@ -6866,10 +6950,13 @@ const docTemplate = `{
                 }
             }
         },
-        "bookinghandlers.ScheduleClassResponse": {
+        "bookinghandlers.BookingResponse": {
             "type": "object",
             "properties": {
-                "branch_id": {
+                "booking_id": {
+                    "type": "string"
+                },
+                "branch_name": {
                     "type": "string"
                 },
                 "class_id": {
@@ -6878,22 +6965,7 @@ const docTemplate = `{
                 "ends_at": {
                     "type": "string"
                 },
-                "instructor_id": {
-                    "type": "string"
-                },
-                "instructor_name": {
-                    "type": "string"
-                },
-                "is_booked": {
-                    "type": "boolean"
-                },
-                "max_capacity": {
-                    "type": "integer"
-                },
-                "remaining_capacity": {
-                    "type": "integer"
-                },
-                "service_id": {
+                "instructor": {
                     "type": "string"
                 },
                 "service_name": {
@@ -8448,6 +8520,44 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/productshandler.ServiceImagesPayloads"
                     }
+                }
+            }
+        },
+        "scheduledomain.Class": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "class_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "ends_at": {
+                    "type": "string"
+                },
+                "instructor_id": {
+                    "type": "string"
+                },
+                "is_visible": {
+                    "type": "boolean"
+                },
+                "max_capacity": {
+                    "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "starts_at": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

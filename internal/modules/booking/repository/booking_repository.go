@@ -37,12 +37,12 @@ func (r *BookingStore) CreateBooking(ctx context.Context, booking *bookingdomain
 // ------------------------------------------------------------
 //
 
-func (s *BookingStore) CancelBooking(ctx context.Context, userID uuid.UUID, bookingID uuid.UUID) error {
+func (s *BookingStore) CancelBooking(ctx context.Context, bookingID uuid.UUID) error {
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
-
 		result := tx.WithContext(ctx).
-			Where("booking_id = ? AND user_id = ?", bookingID, userID).
-			Delete(&bookingdomain.Booking{})
+			Model(&bookingdomain.Booking{}).
+			Where("booking_id = ?", bookingID).
+			Update("status", bookingdomain.BookingStatusCancelledByUser)
 
 		if result.Error != nil {
 			return result.Error
@@ -67,22 +67,18 @@ func (s *BookingStore) GetClientSchedule(
 	branchID uuid.UUID,
 	userID uuid.UUID,
 ) ([]scheduledomain.Class, error) {
-
 	var classes []scheduledomain.Class
 
-	err := db.WithTX(s.db, func(tx *gorm.DB) error {
-
-		if err := tx.WithContext(ctx).
-			Preload("Service").
-			Preload("Instructor").
-			Preload("Branch").
-			Where("branch_id = ?", branchID).
-			Find(&classes).Error; err != nil {
-			return err
-		}
-
-		return nil
-	})
+	err := s.db.WithContext(ctx).Model(&scheduledomain.Class{}).
+		Joins("JOIN bookings ON bookings.class_id = classes.class_id").
+		Where("classes.branch_id = ?", branchID).
+		Where("bookings.user_id = ?", userID).
+		Where("bookings.status = ?", bookingdomain.BookingStatusConfirmed).
+		Where("bookings.deleted_at IS NULL").
+		Preload("Service").
+		Preload("Instructor.User").
+		Preload("Branch").
+		Find(&classes).Error
 
 	if err != nil {
 		return nil, err

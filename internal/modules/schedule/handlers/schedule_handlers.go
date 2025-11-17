@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // ------------------------------
@@ -80,8 +81,14 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 
 	classes, err := h.services.ScheduleServices.GetClassesByBranch(ctx, branchID)
 	if err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
-		return
+		switch err {
+		case gorm.ErrRecordNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
 	}
 
 	resp := make([]ClassResponse, 0, len(classes))
@@ -127,8 +134,17 @@ func (h *ScheduleHandlers) GetClassByIDHandler(c *gin.Context) {
 
 	class, err := h.services.ScheduleServices.GetClassByID(ctx, classID)
 	if err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
-		return
+		switch err {
+		case gorm.ErrRecordNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+	}
+	if class == nil {
+		h.services.LogErrors.NotFoundResponse(c)
 	}
 
 	resp := ClassResponse{

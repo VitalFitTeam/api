@@ -14,7 +14,7 @@ type BookingRepository interface {
 	CreateBooking(ctx context.Context, booking *Booking) (uuid.UUID, error)
 
 	// CancelBooking elimina una reserva del usuario (validación userID + bookingID).
-	CancelBooking(ctx context.Context, userID uuid.UUID, bookingID uuid.UUID) error
+	CancelBooking(ctx context.Context, bookingID uuid.UUID) error
 
 	// Contar reservas confirmadas de una clase
 	CountBookingsForClass(ctx context.Context, classID uuid.UUID) (int64, error)

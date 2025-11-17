@@ -80,7 +80,12 @@ func (s *ScheduleStore) GetClassByID(ctx context.Context, classID uuid.UUID) (*s
 	})
 
 	if err != nil {
-		return nil, err
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, gorm.ErrRecordNotFound
+		default:
+			return nil, err
+		}
 	}
 
 	return &class, nil

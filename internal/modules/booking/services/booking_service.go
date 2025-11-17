@@ -63,8 +63,8 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, cl
 // ------------------------------------------------------------
 //
 
-func (s *BookingService) CancelBooking(ctx context.Context, userID uuid.UUID, bookingID uuid.UUID) error {
-	return s.store.Booking.CancelBooking(ctx, userID, bookingID)
+func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID) error {
+	return s.store.Booking.CancelBooking(ctx, bookingID)
 }
 
 //

@@ -10,7 +10,10 @@ import (
 // RESPONSE PAYLOADS
 // ----------------------------------------
 
-// ScheduleClassResponse representa una clase disponible en el horario del cliente.
+type BookUser struct {
+	UserID uuid.UUID `json:"user_id"`
+}
+
 type ScheduleClassResponse struct {
 	ClassID           uuid.UUID `json:"class_id"`
 	BranchID          uuid.UUID `json:"branch_id"`
@@ -25,18 +28,15 @@ type ScheduleClassResponse struct {
 	IsBooked          bool      `json:"is_booked"`
 }
 
-// BookingCreatedResponse representa la respuesta luego de reservar un cupo.
 type BookingCreatedResponse struct {
 	BookingID uuid.UUID `json:"booking_id"`
 	Message   string    `json:"message"`
 }
 
-// BookingCancelledResponse representa la respuesta luego de cancelar una reserva.
 type BookingCancelledResponse struct {
 	Message string `json:"message"`
 }
 
-// BookingResponse representa una reserva con información detallada de la clase.
 type BookingResponse struct {
 	BookingID   uuid.UUID `json:"booking_id"`
 	ClassID     uuid.UUID `json:"class_id"`

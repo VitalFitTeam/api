@@ -8,12 +8,20 @@ import (
 	"gorm.io/gorm"
 )
 
+type BookingStatus string
+
+const (
+	BookingStatusConfirmed         BookingStatus = "Confirmed"
+	BookingStatusCancelledByUser   BookingStatus = "CancelledByUser"
+	BookingStatusCancelledBySystem BookingStatus = "CancelledBySystem"
+)
+
 type Booking struct {
-	BookingID uuid.UUID      `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"booking_id"`
-	UserID    uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
-	ClassID   uuid.UUID      `gorm:"type:uuid;not null" json:"class_id"`
-	Status    string         `gorm:"type:varchar(30);not null;default:'Confirmed'" json:"status"`
-	CreatedAt time.Time      `gorm:"default:now()" json:"created_at"`
+	BookingID uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"booking_id"`
+	UserID    uuid.UUID      `gorm:"type:uuid;not null;uniqueIndex:idx_user_class" json:"user_id"`
+	ClassID   uuid.UUID      `gorm:"type:uuid;not null;uniqueIndex:idx_user_class" json:"class_id"`
+	Status    BookingStatus  `gorm:"type:booking_status_enum;not null;default:'Confirmed'" json:"status"`
+	CreatedAt time.Time      `gorm:"type:timestamptz;not null;default:now()" json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
