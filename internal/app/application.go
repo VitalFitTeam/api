@@ -76,6 +76,7 @@ func (app *application) Mount() http.Handler {
 
 		//memberships routes
 		app.Handlers.MembershipHandlers.MembershipRoutes(v1, m)
+		app.Handlers.MembershipHandlers.PublicMembershipRoutes(v1)
 
 		//billing routes
 		app.Handlers.BillingHandlers.BillingRoutes(v1, m)

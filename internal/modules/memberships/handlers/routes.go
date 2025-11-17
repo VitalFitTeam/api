@@ -8,6 +8,7 @@ import (
 
 type MembershipsHandlerInterface interface {
 	MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	PublicMembershipRoutes(rg *gin.RouterGroup)
 }
 
 type MembershipHandler struct {
@@ -31,5 +32,12 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 		membershipPlansGroup.GET("/:id", m.RBACPermission("memberships:get"), r.GetMembershipByIDHandler)
 		membershipPlansGroup.PUT("/:id", m.RBACPermission("memberships:update"), r.UpdateMembershipHandler)
 		membershipPlansGroup.DELETE("/:id", m.RBACPermission("memberships:delete"), r.DeleteMembershipHandler)
+	}
+}
+
+func (r *MembershipHandler) PublicMembershipRoutes(rg *gin.RouterGroup) {
+	publicMembershipPlansGroup := rg.Group("/public")
+	{
+		publicMembershipPlansGroup.GET("/membership-plans", r.PublicGetMembershipsTypeHandler)
 	}
 }

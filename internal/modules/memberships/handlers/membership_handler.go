@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
 )
@@ -259,4 +260,89 @@ func (h *MembershipHandler) GetSummaryMembershipsHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": summary})
+}
+
+// @Summary		List all public membership types
+// @Description	Retrieves a paginated list of all public membership types, with prices converted to a specified currency.
+// @Tags			Public
+// @Produce		json
+// @Param			currency	query		string									false	"The currency to convert prices to (e.g., VES). Defaults to USD."
+// @Param			limit		query		int										false	"Number of results per page"	default(10)
+// @Param			page		query		int										false	"Page number for pagination"	default(1)
+// @Param			sort		query		string									false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search		query		string									false	"Search term for membership name"
+// @Success		200			{object}	object{data=[]MembershipPublicResponse}	"A paginated list of public membership types"
+// @Failure		400			{object}	map[string]interface{}					"Bad Request: Invalid query parameters"
+// @Failure		500			{object}	object{error=string}					"error: Internal Server Error"
+// @Router			/public/membership-plans [get]
+func (h *MembershipHandler) PublicGetMembershipsTypeHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	currency := c.Query("currency")
+	if currency == "" {
+		currency = "USD"
+	}
+
+	rates, err := h.services.BillingServices.GetLatestRates(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	currency_rate := rates[currency]
+
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Search: "",
+	}
+
+	fq, err = fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/membership-plans?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/membership-plans?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+
+	memberships, err := h.services.MembershipServices.GetMembershipTypes(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	data := make([]*MembershipPublicResponse, 0, len(memberships))
+	for _, m := range memberships {
+		data = append(data, &MembershipPublicResponse{
+			MembershipTypeID: m.MembershipTypeID,
+			Name:             m.Name,
+			Description:      m.Description,
+			DurationDays:     m.DurationDays,
+			Price:            m.Price,
+			Base_Currency:    "USD",
+			Ref_Price:        decimal.NewFromFloat(float64(m.Price)).Mul(decimal.NewFromFloat(currency_rate)).Round(2),
+			Ref_Currency:     currency,
+			IsActive:         m.IsActive,
+		})
+	}
+	total, err := h.services.MembershipServices.GetMembershipTypesFTotal(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	resp := pagination.PaginatedResponseTotal[*MembershipPublicResponse]{
+		Data:     data,
+		Count:    int64(len(memberships)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+
+	c.JSON(http.StatusOK, resp)
+
 }
