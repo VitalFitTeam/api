@@ -143,9 +143,6 @@ func (h *ScheduleHandlers) GetClassByIDHandler(c *gin.Context) {
 			return
 		}
 	}
-	if class == nil {
-		h.services.LogErrors.NotFoundResponse(c)
-	}
 
 	resp := ClassResponse{
 		ClassID:      class.ClassID,
