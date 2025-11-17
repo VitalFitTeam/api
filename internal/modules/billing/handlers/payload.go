@@ -3,6 +3,7 @@ package billinghandlers
 import (
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
@@ -143,3 +144,45 @@ func (h *BillingHandlers) validateBranchConfig(payloadConfig json.RawMessage, me
 
 	return nil
 }
+
+type CreateFiscalDocumentTypePayload struct {
+	Name   string `json:"name" binding:"required"`
+	Prefix string `json:"prefix" binding:"required"`
+}
+
+func (p *CreateFiscalDocumentTypePayload) ToFiscalDocumentType() *billingdomain.FiscalDocumentType {
+	return &billingdomain.FiscalDocumentType{
+		Name:   p.Name,
+		Prefix: p.Prefix,
+	}
+}
+
+type UpdateFiscalDocumentTypePayload struct {
+	Name   string `json:"name,omitempty"`
+	Prefix string `json:"prefix,omitempty"`
+}
+
+func (p *UpdateFiscalDocumentTypePayload) ToFiscalDocumentType() *billingdomain.FiscalDocumentType {
+	return &billingdomain.FiscalDocumentType{
+		Name:   p.Name,
+		Prefix: p.Prefix,
+	}
+}
+
+type FiscalDocumentTypeResponse struct {
+	DocumentTypeID uuid.UUID `json:"document_type_id"`
+	Name           string    `json:"name"`
+	Prefix         string    `json:"prefix"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+func NewFiscalDocumentTypeResponse(docType *billingdomain.FiscalDocumentType) *FiscalDocumentTypeResponse {
+	return &FiscalDocumentTypeResponse{
+		DocumentTypeID: docType.DocumentTypeID,
+		Name:           docType.Name,
+		Prefix:         docType.Prefix,
+		CreatedAt:      docType.CreatedAt,
+	}
+}
+
+//orders payload

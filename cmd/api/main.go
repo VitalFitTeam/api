@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/vitalfit/api/config"
 	"github.com/vitalfit/api/internal/app"
+	"github.com/vitalfit/api/internal/store/cache"
 	"github.com/vitalfit/api/pkg/db"
 
 	_ "github.com/lib/pq" // Importa el driver de PostgreSQL
@@ -36,10 +38,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	var rdb *redis.Client
+	if config.RedisCfg.Enabled {
+		rdb = cache.NewRedisClient(config.RedisCfg.Addr, config.RedisCfg.Username, config.RedisCfg.Pw, config.RedisCfg.Db)
+		log.Print("redis cache connection established")
 
+		defer rdb.Close()
+	}
 	//initialize application
 
-	app := app.BuildApplication(config, db)
+	app := app.BuildApplication(config, db, rdb)
 	mux := app.Mount()
 	if err := app.Run(mux); err != nil {
 		log.Fatal(err)

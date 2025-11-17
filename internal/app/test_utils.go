@@ -5,11 +5,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	authmocks "github.com/vitalfit/api/internal/modules/auth/mocks"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/internal/store/cache"
 	mailermocks "github.com/vitalfit/api/pkg/mailer/mocks"
 	"github.com/vitalfit/api/pkg/ratelimiter"
 	"go.uber.org/zap"
@@ -30,7 +32,18 @@ func NewTestApplication(t *testing.T, cfg *config.Config) *application {
 		cfg.RateLimiter.RequestsPerTimeFrame,
 		cfg.RateLimiter.TimeFrame,
 	)
-	mockServices := appservices.NewServices(mockStore, logger, *cfg, testAuth, mailer)
+
+	var rdb *redis.Client
+	if cfg.RedisCfg.Enabled {
+		rdb = cache.NewRedisClient(cfg.RedisCfg.Addr, cfg.RedisCfg.Username, cfg.RedisCfg.Pw, cfg.RedisCfg.Db)
+		logger.Info("redis cache connection established")
+
+		defer rdb.Close()
+	}
+
+	cache := cache.NewRedisStorage(rdb)
+
+	mockServices := appservices.NewServices(mockStore, logger, *cfg, testAuth, mailer, cache)
 	mockHandlers := apphandlers.NewAppHandlers(mockServices)
 
 	return &application{

@@ -147,6 +147,13 @@ definitions:
     required:
     - email
     type: object
+  authhandlers.GetUserByEmailPayload:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   authhandlers.GetUserResponse:
     properties:
       birth_date:
@@ -359,6 +366,16 @@ definitions:
     - name
     - type
     type: object
+  billinghandlers.CreateFiscalDocumentTypePayload:
+    properties:
+      name:
+        type: string
+      prefix:
+        type: string
+    required:
+    - name
+    - prefix
+    type: object
   billinghandlers.CreatePaymentMethodPayload:
     properties:
       configuration:
@@ -384,6 +401,17 @@ definitions:
     - processing_type
     - type
     type: object
+  billinghandlers.FiscalDocumentTypeResponse:
+    properties:
+      created_at:
+        type: string
+      document_type_id:
+        type: string
+      name:
+        type: string
+      prefix:
+        type: string
+    type: object
   billinghandlers.MethodBranchConfigPayload:
     properties:
       method_id:
@@ -396,6 +424,13 @@ definitions:
   billinghandlers.UpdateBranchConfigPayload:
     properties:
       is_active:
+        type: string
+    type: object
+  billinghandlers.UpdateFiscalDocumentTypePayload:
+    properties:
+      name:
+        type: string
+      prefix:
         type: string
     type: object
   billinghandlers.UpdatePaymentMethodPayload:
@@ -1212,6 +1247,27 @@ definitions:
     - duration_days
     - name
     - price
+    type: object
+  membershipshandlers.MembershipPublicResponse:
+    properties:
+      base_currency:
+        type: string
+      description:
+        type: string
+      duration_days:
+        type: integer
+      is_active:
+        type: boolean
+      membership_type_id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      ref_currency:
+        type: string
+      ref_price:
+        type: number
     type: object
   membershipshandlers.MembershipResponse:
     properties:
@@ -2236,6 +2292,231 @@ paths:
       summary: Register New User Staff
       tags:
       - Auth
+  /billing/fiscal-document-types:
+    get:
+      description: Retrieves a list of all available fiscal document types in the
+        system.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for document name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/billinghandlers.FiscalDocumentTypeResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all fiscal document types
+      tags:
+      - Billing
+    post:
+      consumes:
+      - application/json
+      description: Adds a new fiscal document type to the system.
+      parameters:
+      - description: Fiscal document type creation payload
+        in: body
+        name: fiscalDocumentType
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.CreateFiscalDocumentTypePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Fiscal document type created successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new fiscal document type
+      tags:
+      - Billing
+  /billing/fiscal-document-types/{id}:
+    delete:
+      description: Deletes a fiscal document type from the system.
+      parameters:
+      - description: Fiscal Document Type UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a fiscal document type
+      tags:
+      - Billing
+    get:
+      description: Retrieves a single fiscal document type by its UUID.
+      parameters:
+      - description: Fiscal Document Type UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/billinghandlers.FiscalDocumentTypeResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get fiscal document type by ID
+      tags:
+      - Billing
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing fiscal document type's details.
+      parameters:
+      - description: Fiscal Document Type UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fiscal document type update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.UpdateFiscalDocumentTypePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Fiscal document type updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a fiscal document type
+      tags:
+      - Billing
   /billing/payment-methods:
     get:
       description: Retrieves a list of all available payment methods in the system.
@@ -2432,6 +2713,125 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a payment method
+      tags:
+      - Billing
+  /billing/rates:
+    get:
+      description: Retrieves the latest currency exchange rates from the configured
+        provider. It uses a cache to avoid hitting the API on every request.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A map of currency codes to their exchange rates against the
+            base currency (USD)
+          schema:
+            additionalProperties:
+              format: float64
+              type: number
+            type: object
+        "500":
+          description: Failed to retrieve exchange rates
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get latest exchange rates
+      tags:
+      - Billing
+  /billing/rates/{currency}:
+    get:
+      description: Retrieves the latest exchange rate for a specific currency code.
+      parameters:
+      - description: Currency Code (e.g., VES)
+        in: path
+        name: currency
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The exchange rate for the specified currency
+          schema:
+            properties:
+              currency:
+                format: float64
+                type: number
+            type: object
+        "404":
+          description: Currency not found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Failed to retrieve exchange rates
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get specific currency exchange rate
+      tags:
+      - Billing
+  /billing/rates/historical/{date}/{currency}:
+    get:
+      description: Retrieves the exchange rate for a specific currency on a specific
+        date.
+      parameters:
+      - description: Date in YYYY-MM-DD format
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: Currency Code (e.g., VES)
+        in: path
+        name: currency
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: The historical exchange rate for the specified currency and
+            date
+          schema:
+            properties:
+              currency:
+                format: float64
+                type: number
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid date format)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Currency not found for the given date
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Failed to retrieve exchange rates
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get historical exchange rate for a currency
       tags:
       - Billing
   /bookings/{bookingId}/cancel:
@@ -4950,6 +5350,64 @@ paths:
       summary: Get public branches for map
       tags:
       - Public
+  /public/membership-plans:
+    get:
+      description: Retrieves a paginated list of all public membership types, with
+        prices converted to a specified currency.
+      parameters:
+      - description: The currency to convert prices to (e.g., VES). Defaults to USD.
+        in: query
+        name: currency
+        type: string
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for membership name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of public membership types
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/membershipshandlers.MembershipPublicResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: List all public membership types
+      tags:
+      - Public
   /schedule/{classId}:
     delete:
       description: Deletes or cancels a class from the calendar
@@ -5548,6 +6006,61 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get a user list that are branch admins
+      tags:
+      - User
+  /user/by-email:
+    post:
+      consumes:
+      - application/json
+      description: Retrieves the details of a specific user by their email address.
+      parameters:
+      - description: User email payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.GetUserByEmailPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details response
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/authhandlers.GetUserResponse'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: 'Forbidden: Insufficient permissions'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Not Found: User not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user by email
       tags:
       - User
   /user/clients:

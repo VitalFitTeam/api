@@ -2,6 +2,7 @@ package membershipshandlers
 
 import (
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 )
 
@@ -58,4 +59,17 @@ type MembershipResponse struct {
 	DurationDays     int       `json:"duration_days"`
 	Price            float64   `json:"price"`
 	IsActive         bool      `json:"is_active"`
+}
+
+// public membership response
+type MembershipPublicResponse struct {
+	MembershipTypeID uuid.UUID       `json:"membership_type_id"`
+	Name             string          `json:"name"`
+	Description      string          `json:"description"`
+	DurationDays     int             `json:"duration_days"`
+	Price            float64         `json:"price"`
+	Base_Currency    string          `json:"base_currency"`
+	Ref_Price        decimal.Decimal `json:"ref_price"`
+	Ref_Currency     string          `json:"ref_currency"`
+	IsActive         bool            `json:"is_active"`
 }

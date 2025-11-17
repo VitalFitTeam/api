@@ -204,6 +204,10 @@ func (c *UpdateUserStaffPayload) CreateUser() (*authdomain.Users, error) {
 	}, nil
 }
 
+type GetUserByEmailPayload struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
 // response
 type BranchAdminResponse struct {
 	UserID    uuid.UUID `json:"user_id"`

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type BillingRepository interface {
@@ -22,4 +23,21 @@ type PaymentMethodsRepository interface {
 	GetPaymentMethodsFromBranch(ctx context.Context, branchID uuid.UUID) ([]*PaymentMethodsBranch, error)
 	UpsertBranchPaymentConfig(ctx context.Context, branchMethod *PaymentMethodsBranch) error
 	GetBranchPaymentMethodByID(ctx context.Context, branchID uuid.UUID, methodID uuid.UUID) (*PaymentMethodsBranch, error)
+}
+
+type FiscalDocumentRepository interface {
+	CreateFiscalDocumentType(ctx context.Context, docType *FiscalDocumentType) error
+	GetFiscalDocumentTypes(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*FiscalDocumentType, error)
+	GetFiscalDocumentTypesTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
+	GetFiscalDocumentTypeByID(ctx context.Context, docTypeID uuid.UUID) (*FiscalDocumentType, error)
+	UpdateFiscalDocumentType(ctx context.Context, docType *FiscalDocumentType) error
+	DeleteFiscalDocumentType(ctx context.Context, docTypeID uuid.UUID) error
+}
+
+type BillingStoreCacheRepository interface {
+	SetRates(ctx context.Context, rates map[string]float64) error
+	GetRates(ctx context.Context) (map[string]float64, error)
+	DeleteRates(ctx context.Context) error
+	SetSpecificTimeRateForCurrency(ctx context.Context, date string, currency string, rate float64) error
+	GetSpecificTimeRateForCurrency(ctx context.Context, date string, currency string) (float64, error)
 }

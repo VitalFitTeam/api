@@ -67,7 +67,6 @@ func (s *CombosStore) GetPackageByID(ctx context.Context, packageID uuid.UUID) (
 
 func (s *CombosStore) UpdatePackage(ctx context.Context, pkg *combosdomain.Package) error {
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
-		// Primero, verifica si el paquete existe
 		var existingPackage combosdomain.Package
 		if err := tx.WithContext(ctx).First(&existingPackage, "package_id = ?", pkg.PackageID).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -76,17 +75,14 @@ func (s *CombosStore) UpdatePackage(ctx context.Context, pkg *combosdomain.Packa
 			return err
 		}
 
-		// Actualiza los campos del paquete principal
 		if err := tx.WithContext(ctx).Model(&existingPackage).Updates(pkg).Error; err != nil {
 			return err
 		}
 
-		// Elimina los items existentes para reemplazarlos
 		if err := tx.WithContext(ctx).Where("package_id = ?", pkg.PackageID).Delete(&combosdomain.PackageItem{}).Error; err != nil {
 			return err
 		}
 
-		// Si hay nuevos items, créalos
 		if len(pkg.PackageItems) > 0 {
 			for i := range pkg.PackageItems {
 				pkg.PackageItems[i].PackageID = pkg.PackageID
