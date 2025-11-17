@@ -147,6 +147,13 @@ definitions:
     required:
     - email
     type: object
+  authhandlers.GetUserByEmailPayload:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   authhandlers.GetUserResponse:
     properties:
       birth_date:
@@ -5920,6 +5927,61 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get a user list that are branch admins
+      tags:
+      - User
+  /user/by-email:
+    post:
+      consumes:
+      - application/json
+      description: Retrieves the details of a specific user by their email address.
+      parameters:
+      - description: User email payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.GetUserByEmailPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details response
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/authhandlers.GetUserResponse'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: 'Forbidden: Insufficient permissions'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'Not Found: User not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'Error: Internal server error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user by email
       tags:
       - User
   /user/clients:

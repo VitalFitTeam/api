@@ -737,3 +737,53 @@ func (h *AuthHandlers) ValidateResetTokenHandler(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 }
+
+// @Summary		Get user by email
+// @Description	Retrieves the details of a specific user by their email address.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		GetUserByEmailPayload			true	"User email payload"
+// @Success		200		{object}	object{data=GetUserResponse}	"User details response"
+// @Failure		400		{object}	object{error=string}			"Bad Request: Invalid payload"
+// @Failure		403		{object}	object{error=string}			"Forbidden: Insufficient permissions"
+// @Failure		404		{object}	object{error=string}			"Not Found: User not found"
+// @Failure		500		{object}	object{error=string}			"Error: Internal server error"
+// @Router			/user/by-email [post]
+func (h *AuthHandlers) GetUserByEmailHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var payload GetUserByEmailPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	email := payload.Email
+	user, err := h.services.UserServices.GetByEmail(ctx, email)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+	}
+	resp := GetUserResponse{
+		UserID:            user.UserID,
+		FirstName:         user.FirstName,
+		LastName:          user.LastName,
+		Email:             user.Email,
+		IdentityDocument:  user.IdentityDocument,
+		RoleID:            user.RoleID,
+		RoleName:          user.Role.Name,
+		BirthDate:         user.BirthDate.Format("2006-01-02"),
+		Gender:            string(user.Gender),
+		Phone:             user.Phone,
+		ProfilePictureURL: user.ProfilePictureURL,
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"data": resp,
+	})
+}
