@@ -4,6 +4,7 @@ import (
 	appservices "github.com/vitalfit/api/internal/app/services"
 	authhandlers "github.com/vitalfit/api/internal/modules/auth/handlers"
 	billinghandlers "github.com/vitalfit/api/internal/modules/billing/handlers"
+	bookinghandlers "github.com/vitalfit/api/internal/modules/booking/handlers"
 	branchhandlers "github.com/vitalfit/api/internal/modules/branches/handlers"
 	comboshandler "github.com/vitalfit/api/internal/modules/combos/handler"
 	instructorhandler "github.com/vitalfit/api/internal/modules/instructor/handler"
@@ -25,6 +26,7 @@ type Handlers struct {
 	BillingHandlers    billinghandlers.BillingHandlersInterface
 	ScheduleHandlers   schedulehandlers.ScheduleHandlersInterface
 	CombosHandlers     comboshandler.CombosHandlerInterface
+	BookingHandlers    bookinghandlers.BookingHandlersInterface
 }
 
 func NewAppHandlers(services appservices.Services) Handlers {
@@ -39,5 +41,6 @@ func NewAppHandlers(services appservices.Services) Handlers {
 		BillingHandlers:    billinghandlers.NewBillingHandlers(services),
 		ScheduleHandlers:   schedulehandlers.NewScheduleHandlers(services),
 		CombosHandlers:     comboshandler.NewCombosHandler(services),
+		BookingHandlers:    bookinghandlers.NewBookingHandlers(services),
 	}
 }

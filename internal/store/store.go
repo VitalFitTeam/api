@@ -5,6 +5,8 @@ import (
 	authrepository "github.com/vitalfit/api/internal/modules/auth/repository"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	billingrepository "github.com/vitalfit/api/internal/modules/billing/repository"
+	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
+	bookingrepository "github.com/vitalfit/api/internal/modules/booking/repository"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchrepository "github.com/vitalfit/api/internal/modules/branches/repository"
 	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
@@ -21,6 +23,7 @@ import (
 	productsrepository "github.com/vitalfit/api/internal/modules/products/repository"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	schedulerepository "github.com/vitalfit/api/internal/modules/schedule/repository"
+
 	"gorm.io/gorm"
 )
 
@@ -40,6 +43,7 @@ type Storage struct {
 	Schedule        scheduledomain.ScheduleRepository
 	Combos          combosdomain.CombosRepository
 	FiscalDocuments billingdomain.FiscalDocumentRepository
+	Booking         bookingdomain.BookingRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -59,5 +63,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Schedule:        schedulerepository.NewScheduleStore(db),
 		Combos:          combosrepository.NewCombosStore(db),
 		FiscalDocuments: billingrepository.NewFiscalDocumentStore(db),
+		Booking:         bookingrepository.NewBookingStore(db),
 	}
 }
