@@ -20,7 +20,7 @@ type BranchInventory struct {
 	BranchID            uuid.UUID           `gorm:"type:uuid;not null" json:"branch_id"`
 	EquipmentID         uuid.UUID           `gorm:"type:uuid;not null" json:"equipment_id"`
 	SerialNumber        string              `gorm:"type:varchar(255);uniqueIndex" json:"serial_number"`
-	Status              EquipmentStatusEnum `gorm:"type:equipment_status_enum;not null;default:'Available'" json:"status"`
+	Status              EquipmentStatusEnum `gorm:"type:inventory_status;not null;default:'Available'" json:"status"`
 	AcquisitionDate     *time.Time          `gorm:"type:date" json:"acquisition_date,omitempty"`
 	LastMaintenanceDate *time.Time          `gorm:"type:date" json:"last_maintenance_date,omitempty"`
 	Notes               string              `gorm:"type:text" json:"notes"`

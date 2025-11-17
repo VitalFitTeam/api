@@ -29,7 +29,7 @@ func (s *BranchInventoryServices) AddInventoryItem(ctx context.Context, item *in
 	return nil
 }
 
-func (s *BranchInventoryServices) ListBranchInventory(ctx context.Context, branchID uuid.UUID) (*inventorydomain.BranchInventoryQueryResults, error) {
+func (s *BranchInventoryServices) ListBranchInventory(ctx context.Context, branchID uuid.UUID) ([]inventorydomain.BranchInventory, error) {
 	inventory, err := s.store.BranchInventory.GetByBranch(ctx, branchID)
 	if err != nil {
 		return nil, err
