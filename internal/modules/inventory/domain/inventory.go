@@ -27,9 +27,5 @@ type BranchInventory struct {
 	CreatedAt           time.Time           `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt           time.Time           `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt           gorm.DeletedAt      `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
-	Equipment           *Equipment          `gorm:"foreignKey:EquipmentID" json:"equipment,omitempty"`
-}
-
-type BranchInventoryQueryResults struct {
-	Inventory []*BranchInventory
+	Equipment           *Equipment          `gorm:"foreignKey:EquipmentID;references:EquipmentID" json:"equipment,omitempty"`
 }

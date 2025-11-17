@@ -365,9 +365,9 @@ func (h *InventoryHandlers) ListBranchInventoryHandler(c *gin.Context) {
 		resp = append(resp, BranchInventoryResponse{
 			InventoryID:         item.InventoryID,
 			EquipmentID:         item.EquipmentID,
+			Name:                equipmentName,
 			SerialNumber:        item.SerialNumber,
 			Status:              string(item.Status),
-			Name:                equipmentName,
 			AcquisitionDate:     acquisitionDate,
 			LastMaintenanceDate: lastMaintenanceDate,
 			Notes:               item.Notes,
