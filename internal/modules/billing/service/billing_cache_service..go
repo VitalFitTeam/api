@@ -5,10 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/go-redis/redis/v8"
+	"golang.org/x/net/html"
 )
 
 type OpenExchangeResponse struct {
@@ -34,6 +38,13 @@ func (bs *BillingService) GetLatestRates(ctx context.Context) (map[string]float6
 	apiRates, err := bs.fetchLatestRatesFromAPI(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch from API: %w", err)
+	}
+
+	bcvRate, err := bs.fetchBCVRate(ctx)
+	if err != nil {
+		log.Printf("Could not fetch BCV rate, will use the one from provider. Error: %v", err)
+	} else {
+		apiRates["VES"] = bcvRate
 	}
 
 	go func() {
@@ -106,6 +117,69 @@ func (bs *BillingService) fetchLatestRatesFromAPI(ctx context.Context) (map[stri
 	}
 
 	return apiResponse.Rates, nil
+}
+
+func (bs *BillingService) fetchBCVRate(ctx context.Context) (float64, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://www.bcv.org.ve/", nil)
+	if err != nil {
+		return 0, fmt.Errorf("error creating request to BCV: %w", err)
+	}
+
+	resp, err := bs.http.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("error performing request to BCV: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("BCV website returned a non-OK status: %s", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, fmt.Errorf("error reading BCV response body: %w", err)
+	}
+
+	doc, err := html.Parse(strings.NewReader(string(body)))
+	if err != nil {
+		return 0, fmt.Errorf("error parsing BCV HTML: %w", err)
+	}
+
+	var findDolarValue func(*html.Node) (string, bool)
+	findDolarValue = func(n *html.Node) (string, bool) {
+		if n.Type == html.ElementNode && n.Data == "div" {
+			for _, a := range n.Attr {
+				if a.Key == "id" && a.Val == "dolar" {
+					var findStrong func(*html.Node) (string, bool)
+					findStrong = func(node *html.Node) (string, bool) {
+						if node.Type == html.ElementNode && node.Data == "strong" {
+							return node.FirstChild.Data, true
+						}
+						for c := node.FirstChild; c != nil; c = c.NextSibling {
+							if val, ok := findStrong(c); ok {
+								return val, true
+							}
+						}
+						return "", false
+					}
+					return findStrong(n)
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			if val, ok := findDolarValue(c); ok {
+				return val, true
+			}
+		}
+		return "", false
+	}
+
+	if value, ok := findDolarValue(doc); ok {
+		cleanedValue := strings.Replace(strings.TrimSpace(value), ",", ".", 1)
+		return strconv.ParseFloat(cleanedValue, 64)
+	}
+
+	return 0, errors.New("could not find 'dolar' div in BCV HTML")
 }
 
 func (bs *BillingService) fetchHistoricalRateFromAPI(ctx context.Context, date, currency string) (float64, error) {

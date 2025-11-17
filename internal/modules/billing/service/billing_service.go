@@ -1,6 +1,7 @@
 package billingservice
 
 import (
+	"crypto/tls"
 	"net/http"
 	"time"
 
@@ -17,10 +18,19 @@ type BillingService struct {
 }
 
 func NewBillingService(store store.Storage, cache cache.Storage, cfg config.Config) *BillingService {
+	customTransport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	httpClient := &http.Client{
+		Transport: customTransport,
+		Timeout:   10 * time.Second,
+	}
+
 	return &BillingService{
 		store: store,
 		cache: cache,
 		cfg:   cfg,
-		http:  &http.Client{Timeout: 10 * time.Second},
+		http:  httpClient,
 	}
 }
