@@ -8,6 +8,7 @@ import (
 
 type ProductsHandlerInterface interface {
 	ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	PublicProductsRoutes(rg *gin.RouterGroup)
 
 	ListServiceCategoriesHandler(c *gin.Context)
 	CreateServiceHandler(c *gin.Context)
@@ -22,6 +23,9 @@ type ProductsHandlerInterface interface {
 	UpdateBranchServiceHandler(c *gin.Context)
 	DeleteBranchServiceHandler(c *gin.Context)
 	GetBranchServiceByIDHandler(c *gin.Context)
+
+	PublicGetServicesHandler(c *gin.Context)
+	//PublicGetBranchServicesHadler(c *gin.Context)
 }
 
 type ProductsHandler struct {
@@ -54,5 +58,12 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 		BranchServicesGroup.GET("/:service_id", m.RBACPermission("services:get"), r.GetBranchServiceByIDHandler)
 		BranchServicesGroup.PUT("/:service_id", m.RBACPermission("services:update"), r.UpdateBranchServiceHandler)
 		BranchServicesGroup.DELETE("/:service_id", m.RBACPermission("services:delete"), r.DeleteBranchServiceHandler)
+	}
+}
+
+func (r *ProductsHandler) PublicProductsRoutes(rg *gin.RouterGroup) {
+	publicServicesGroup := rg.Group("/public")
+	{
+		publicServicesGroup.GET("/services", r.PublicGetServicesHandler)
 	}
 }

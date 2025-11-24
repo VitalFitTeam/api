@@ -49,3 +49,7 @@ func (s *ProductsService) GetServiceByID(ctx context.Context, serviceID uuid.UUI
 func (s *ProductsService) UpdateService(ctx context.Context, service *productsdomain.Service, bannerID uuid.UUID) error {
 	return s.store.Products.UpdateService(ctx, service, bannerID)
 }
+
+func (s *ProductsService) GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]productsdomain.ServiceWithPrice, int64, error) {
+	return s.store.Products.GetPublicServices(ctx, fq)
+}

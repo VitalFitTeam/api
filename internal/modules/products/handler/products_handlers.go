@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/shopspring/decimal"
 	marketinghandlers "github.com/vitalfit/api/internal/modules/marketing/handlers"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
@@ -345,4 +346,95 @@ func (h *ProductsHandler) UpdateServiceHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		List all public services
+// @Description	Retrieves a paginated list of all public services with optional filtering, sorting, and currency conversion.
+// @Tags			Public
+// @Produce		json
+// @Param			limit		query		int										false	"Number of results per page"	default(10)
+// @Param			page		query		int										false	"Page number for pagination"	default(1)
+// @Param			sort		query		string									false	"Sort direction (asc/desc)"		enums(asc, desc)	default(desc)
+// @Param			sortby		query		string									false	"Sort by field (e.g., price)"	enums(price)
+// @Param			search		query		string									false	"Search term for service name"
+// @Param			category	query		string									false	"Filter by service category UUID"
+// @Param			price		query		int										false	"Filter by maximum price"
+// @Param			currency	query		string									false	"Currency for price conversion (e.g., VES)"	default(USD)
+// @Success		200			{object}	object{data=[]PublicServiceResponse}	"A paginated list of public services"
+// @Failure		400			{object}	map[string]interface{}					"Bad Request: Invalid query parameters"
+// @Failure		500			{object}	map[string]interface{}					"Internal Server Error"
+// @Router			/public/services [get]
+func (h *ProductsHandler) PublicGetServicesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	currency := c.Query("currency")
+	if currency == "" {
+		currency = "USD"
+	}
+
+	fq := pagination.PaginatedFeedQuery{
+		Limit:    10,
+		Page:     1,
+		Sort:     "desc",
+		Search:   "",
+		Category: "",
+		Sortby:   "",
+		Price:    0,
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	rates, err := h.services.BillingServices.GetLatestRates(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	currency_rate := rates[currency]
+
+	services, total, err := h.services.ProductsServices.GetPublicServices(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	data := make([]PublicServiceResponse, 0, len(services))
+	for _, service := range services {
+		data = append(data, PublicServiceResponse{
+			ServiceID:       service.Service.ServiceID,
+			CategoryID:      service.Service.CategoryID,
+			Name:            service.Service.Name,
+			Description:     service.Service.Description,
+			DurationMinutes: service.Service.DurationMinutes,
+			PriorityScore:   service.Service.PriorityScore,
+			IsFeatured:      service.Service.IsFeatured,
+			CreatedAt:       service.Service.CreatedAt,
+			UpdatedAt:       service.Service.UpdatedAt,
+			ServiceCategory: ServiceCategoryResponse{
+				CategoryID: service.Service.Category.CategoryID,
+				Name:       service.Service.Category.Name,
+			},
+			Images:                  make([]ImagesRensponse, 0, len(service.Service.Images)),
+			Banners:                 make([]marketinghandlers.BannerResponse, 0, len(service.Service.Banners)),
+			LowestPriceMember:       service.LowestPriceMember,
+			LowestPriceNoMember:     service.LowestPriceNonMember,
+			BaseCurrency:            "USD",
+			Ref_LowestPriceMember:   decimal.NewFromFloat(service.LowestPriceMember).Mul(decimal.NewFromFloat(currency_rate)).Round(2),
+			Ref_LowestPriceNoMember: decimal.NewFromFloat(service.LowestPriceNonMember).Mul(decimal.NewFromFloat(currency_rate)).Round(2),
+			Ref_BaseCurrency:        currency,
+		})
+	}
+
+	resp := pagination.PaginatedResponseTotal[PublicServiceResponse]{
+		Data:     data,
+		Count:    int64(len(services)),
+		Next:     "",
+		Previous: "",
+		Total:    total,
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

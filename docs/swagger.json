@@ -5784,6 +5784,109 @@
                 }
             }
         },
+        "/public/services": {
+            "get": {
+                "description": "Retrieves a paginated list of all public services with optional filtering, sorting, and currency conversion.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "List all public services",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort direction (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "price"
+                        ],
+                        "type": "string",
+                        "description": "Sort by field (e.g., price)",
+                        "name": "sortby",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for service name",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by service category UUID",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by maximum price",
+                        "name": "price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "USD",
+                        "description": "Currency for price conversion (e.g., VES)",
+                        "name": "currency",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A paginated list of public services",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/productshandler.PublicServiceResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/schedule/branch/{branchId}/client/{userId}": {
             "get": {
                 "security": [
@@ -9171,6 +9274,71 @@
                 },
                 "is_primary": {
                     "type": "boolean"
+                }
+            }
+        },
+        "productshandler.PublicServiceResponse": {
+            "type": "object",
+            "properties": {
+                "banners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/marketinghandlers.BannerResponse"
+                    }
+                },
+                "base_currency": {
+                    "type": "string"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration_minutes": {
+                    "type": "integer"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/productshandler.ImagesRensponse"
+                    }
+                },
+                "is_featured": {
+                    "type": "boolean"
+                },
+                "lowest_price_member": {
+                    "type": "number"
+                },
+                "lowest_price_no_member": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority_score": {
+                    "type": "integer"
+                },
+                "ref_base_currency": {
+                    "type": "string"
+                },
+                "ref_lowest_price_member": {
+                    "type": "number"
+                },
+                "ref_lowest_price_no_member": {
+                    "type": "number"
+                },
+                "service_category": {
+                    "$ref": "#/definitions/productshandler.ServiceCategoryResponse"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },

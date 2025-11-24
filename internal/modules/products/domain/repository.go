@@ -27,4 +27,6 @@ type ProductsRepository interface {
 	UpdateBranchService(ctx context.Context, branchService *ServiceBranchDetail) error
 	DeleteBranchService(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) error
 	GetBranchServiceByID(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) (*ServiceBranchDetail, error)
+
+	GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
 }

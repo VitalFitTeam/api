@@ -1470,6 +1470,49 @@ definitions:
       is_primary:
         type: boolean
     type: object
+  productshandler.PublicServiceResponse:
+    properties:
+      banners:
+        items:
+          $ref: '#/definitions/marketinghandlers.BannerResponse'
+        type: array
+      base_currency:
+        type: string
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/productshandler.ImagesRensponse'
+        type: array
+      is_featured:
+        type: boolean
+      lowest_price_member:
+        type: number
+      lowest_price_no_member:
+        type: number
+      name:
+        type: string
+      priority_score:
+        type: integer
+      ref_base_currency:
+        type: string
+      ref_lowest_price_member:
+        type: number
+      ref_lowest_price_no_member:
+        type: number
+      service_category:
+        $ref: '#/definitions/productshandler.ServiceCategoryResponse'
+      service_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   productshandler.ServiceCategoryResponse:
     properties:
       category_id:
@@ -5406,6 +5449,77 @@ paths:
                 type: string
             type: object
       summary: List all public membership types
+      tags:
+      - Public
+  /public/services:
+    get:
+      description: Retrieves a paginated list of all public services with optional
+        filtering, sorting, and currency conversion.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort direction (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Sort by field (e.g., price)
+        enum:
+        - price
+        in: query
+        name: sortby
+        type: string
+      - description: Search term for service name
+        in: query
+        name: search
+        type: string
+      - description: Filter by service category UUID
+        in: query
+        name: category
+        type: string
+      - description: Filter by maximum price
+        in: query
+        name: price
+        type: integer
+      - default: USD
+        description: Currency for price conversion (e.g., VES)
+        in: query
+        name: currency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of public services
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productshandler.PublicServiceResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all public services
       tags:
       - Public
   /schedule/{classId}:

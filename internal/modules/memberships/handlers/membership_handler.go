@@ -303,12 +303,12 @@ func (h *MembershipHandler) PublicGetMembershipsTypeHandler(c *gin.Context) {
 		return
 	}
 
-	nextURL := fmt.Sprintf("/membership-plans?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	nextURL := fmt.Sprintf("/public/membership-plans?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
 	previousPage := fq.Page - 1
 	if previousPage <= 0 {
 		previousPage = 1
 	}
-	previousURL := fmt.Sprintf("/membership-plans?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+	previousURL := fmt.Sprintf("/public/membership-plans?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
 
 	memberships, err := h.services.MembershipServices.GetMembershipTypes(ctx, fq)
 	if err != nil {
