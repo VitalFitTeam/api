@@ -53,3 +53,7 @@ func (s *ProductsService) UpdateService(ctx context.Context, service *productsdo
 func (s *ProductsService) GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]productsdomain.ServiceWithPrice, int64, error) {
 	return s.store.Products.GetPublicServices(ctx, fq)
 }
+
+func (s *ProductsService) GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]productsdomain.ServiceWithPrice, int64, error) {
+	return s.store.Products.GetPublicBranchServices(ctx, branchID, fq)
+}

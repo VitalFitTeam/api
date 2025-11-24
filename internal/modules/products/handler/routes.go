@@ -25,7 +25,7 @@ type ProductsHandlerInterface interface {
 	GetBranchServiceByIDHandler(c *gin.Context)
 
 	PublicGetServicesHandler(c *gin.Context)
-	//PublicGetBranchServicesHadler(c *gin.Context)
+	PublicGetBranchServicesHandler(c *gin.Context)
 }
 
 type ProductsHandler struct {
@@ -65,5 +65,6 @@ func (r *ProductsHandler) PublicProductsRoutes(rg *gin.RouterGroup) {
 	publicServicesGroup := rg.Group("/public")
 	{
 		publicServicesGroup.GET("/services", r.PublicGetServicesHandler)
+		publicServicesGroup.GET("/branches/:id/services", r.PublicGetBranchServicesHandler)
 	}
 }

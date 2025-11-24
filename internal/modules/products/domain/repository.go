@@ -29,4 +29,5 @@ type ProductsRepository interface {
 	GetBranchServiceByID(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) (*ServiceBranchDetail, error)
 
 	GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
+	GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
 }

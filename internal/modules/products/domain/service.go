@@ -26,4 +26,5 @@ type ProductsServiceInterface interface {
 
 	//public
 	GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
+	GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
 }

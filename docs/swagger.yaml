@@ -5393,6 +5393,82 @@ paths:
       summary: Get public branches for map
       tags:
       - Public
+  /public/branches/{id}/services:
+    get:
+      description: Retrieves a paginated list of all public services for a specific
+        branch with optional filtering, sorting, and currency conversion.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort direction (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Sort by field (e.g., price)
+        enum:
+        - price
+        in: query
+        name: sortby
+        type: string
+      - description: Search term for service name
+        in: query
+        name: search
+        type: string
+      - description: Filter by service category UUID
+        in: query
+        name: category
+        type: string
+      - description: Filter by maximum price
+        in: query
+        name: price
+        type: integer
+      - default: USD
+        description: Currency for price conversion (e.g., VES)
+        in: query
+        name: currency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of public services for the branch
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productshandler.PublicServiceResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID or query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all public services for a branch
+      tags:
+      - Public
   /public/membership-plans:
     get:
       description: Retrieves a paginated list of all public membership types, with
