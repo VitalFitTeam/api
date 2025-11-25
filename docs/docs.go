@@ -5902,6 +5902,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/public/packages": {
+            "get": {
+                "description": "Retrieves a paginated list of all available public packages, with optional searching and currency conversion.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "List all public packages",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for package name",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "USD",
+                        "description": "Currency for price conversion (e.g., VES)",
+                        "name": "currency",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A paginated list of public packages",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/comboshandler.PublicPackageResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/public/services": {
             "get": {
                 "description": "Retrieves a paginated list of all public services with optional filtering, sorting, and currency conversion.",
@@ -8412,6 +8494,41 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "comboshandler.PublicPackageResponse": {
+            "type": "object",
+            "properties": {
+                "base_currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "endAt": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "packageId": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "ref_currency": {
+                    "type": "string"
+                },
+                "ref_price": {
+                    "type": "number"
+                },
+                "startAt": {
                     "type": "string"
                 }
             }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
 )
@@ -243,4 +244,77 @@ func (h *CombosHandler) DeletePackageHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		List all public packages
+// @Description	Retrieves a paginated list of all available public packages, with optional searching and currency conversion.
+// @Tags			Public
+// @Produce		json
+// @Param			limit		query		int										false	"Number of results per page"	default(10)
+// @Param			page		query		int										false	"Page number for pagination"	default(1)
+// @Param			sort		query		string									false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search		query		string									false	"Search term for package name"
+// @Param			currency	query		string									false	"Currency for price conversion (e.g., VES)"	default(USD)
+// @Success		200			{object}	object{data=[]PublicPackageResponse}	"A paginated list of public packages"
+// @Failure		400			{object}	map[string]interface{}					"Bad Request: Invalid query parameters"
+// @Failure		500			{object}	map[string]interface{}					"Internal server error"
+// @Router			/public/packages [get]
+func (h *CombosHandler) PublicGetPackagesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	currency := c.Query("currency")
+
+	if currency == "" {
+		currency = "USD"
+	}
+
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Search: "",
+	}
+	fq, err := fq.Parse(c.Request)
+
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	rates, err := h.services.BillingServices.GetLatestRates(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	currencyRate := rates[currency]
+	packages, total, err := h.services.CombosServices.GetPublicPackages(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	data := make([]PublicPackageResponse, 0, len(packages))
+	for _, pkg := range packages {
+		data = append(data, PublicPackageResponse{
+			PackageID:    pkg.PackageID,
+			Name:         pkg.Name,
+			Description:  pkg.Description,
+			IsActive:     pkg.IsActive,
+			StartAt:      pkg.StartAt,
+			EndAt:        pkg.EndAt,
+			Price:        pkg.Price,
+			BaseCurrency: "USD",
+			RefPrice:     decimal.NewFromFloat(pkg.Price).Mul(decimal.NewFromFloat(currencyRate)).Round(2),
+			RefCurrency:  currency,
+		})
+	}
+
+	resp := pagination.PaginatedResponseTotal[PublicPackageResponse]{
+		Data:     data,
+		Count:    int64(len(packages)),
+		Next:     "",
+		Previous: "",
+		Total:    total,
+	}
+	c.JSON(http.StatusOK, resp)
 }

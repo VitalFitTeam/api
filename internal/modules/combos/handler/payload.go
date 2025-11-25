@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
 )
 
@@ -85,4 +86,17 @@ type PackageItemResponse struct {
 	ServiceID        uuid.UUID `json:"serviceId"`
 	Name             string    `json:"name"`
 	SessionsIncluded int       `json:"sessionsIncluded"`
+}
+
+type PublicPackageResponse struct {
+	PackageID    uuid.UUID       `json:"packageId"`
+	Name         string          `json:"name"`
+	Description  string          `json:"description"`
+	IsActive     bool            `json:"isActive"`
+	StartAt      *time.Time      `json:"startAt"`
+	EndAt        *time.Time      `json:"endAt"`
+	Price        float64         `json:"price"`
+	BaseCurrency string          `json:"base_currency"`
+	RefPrice     decimal.Decimal `json:"ref_price"`
+	RefCurrency  string          `json:"ref_currency"`
 }

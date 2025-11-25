@@ -813,6 +813,29 @@ definitions:
       updatedAt:
         type: string
     type: object
+  comboshandler.PublicPackageResponse:
+    properties:
+      base_currency:
+        type: string
+      description:
+        type: string
+      endAt:
+        type: string
+      isActive:
+        type: boolean
+      name:
+        type: string
+      packageId:
+        type: string
+      price:
+        type: number
+      ref_currency:
+        type: string
+      ref_price:
+        type: number
+      startAt:
+        type: string
+    type: object
   instructordomain.InstructorSummary:
     properties:
       actives:
@@ -5525,6 +5548,63 @@ paths:
                 type: string
             type: object
       summary: List all public membership types
+      tags:
+      - Public
+  /public/packages:
+    get:
+      description: Retrieves a paginated list of all available public packages, with
+        optional searching and currency conversion.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for package name
+        in: query
+        name: search
+        type: string
+      - default: USD
+        description: Currency for price conversion (e.g., VES)
+        in: query
+        name: currency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of public packages
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/comboshandler.PublicPackageResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all public packages
       tags:
       - Public
   /public/services:

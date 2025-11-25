@@ -14,4 +14,6 @@ type CombosServicesInterface interface {
 	GetPackageByID(ctx context.Context, packageID uuid.UUID) (*Package, error)
 	UpdatePackage(ctx context.Context, pkg *Package) error
 	DeletePackage(ctx context.Context, packageID uuid.UUID) error
+
+	GetPublicPackages(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Package, int64, error)
 }
