@@ -159,6 +159,18 @@ func (s *BillingService) AddPaymentToInvoice(ctx context.Context, payment *billi
 		return err
 	}
 
+	if payment.Status == billingdomain.PaymentStatusCompleted {
+		updatedInvoice, err := s.store.Billing.GetInvoiceByID(ctx, payment.InvoiceID)
+		if err != nil {
+			return errors.New("error getting invoice after payment update")
+		}
+
+		if updatedInvoice.GetRemainingDebt().LessThanOrEqual(decimal.Zero) {
+			updatedInvoice.Status = billingdomain.InvoiceStatusPaid
+			return s.UpdateInvoiceStatus(ctx, updatedInvoice)
+		}
+	}
+
 	return nil
 }
 

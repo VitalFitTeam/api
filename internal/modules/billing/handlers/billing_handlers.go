@@ -149,6 +149,13 @@ func (h *BillingHandlers) AddPaymentToInvoiceHandler(c *gin.Context) {
 		return
 	}
 	payment := payload.ToPayment()
+
+	if user.Role.Name == "client" {
+		payment.Status = billingdomain.PaymentStatusPending
+	} else {
+		payment.Status = billingdomain.PaymentStatusCompleted
+	}
+
 	if payload.CurrencyPaid != "USD" {
 		rates, err := h.services.BillingServices.GetLatestRates(ctx)
 		if err != nil {
