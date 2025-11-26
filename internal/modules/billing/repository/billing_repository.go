@@ -65,3 +65,9 @@ func (bs *Billingstore) UpdatePaymentStatus(ctx context.Context, payment *billin
 		return tx.WithContext(ctx).Model(payment).Update("status", payment.Status).Error
 	})
 }
+
+func (bs *Billingstore) UpdateInvoiceStatus(ctx context.Context, invoice *billingdomain.Invoice) error {
+	return db.WithTX(bs.db, func(tx *gorm.DB) error {
+		return tx.WithContext(ctx).Model(invoice).Update("status", invoice.Status).Error
+	})
+}

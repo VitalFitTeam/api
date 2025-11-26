@@ -181,11 +181,37 @@ func (s *BillingService) GetPaymentByID(ctx context.Context, paymentID uuid.UUID
 }
 
 func (s *BillingService) UpdatePaymentStatus(ctx context.Context, payment *billingdomain.Payment) error {
-	err := s.store.Billing.UpdatePaymentStatus(ctx, payment)
+	if err := s.store.Billing.UpdatePaymentStatus(ctx, payment); err != nil {
+		return err
+	}
+
+	if payment.Status != billingdomain.PaymentStatusCompleted {
+		return nil
+	}
+
+	invoice, err := s.store.Billing.GetInvoiceByID(ctx, payment.InvoiceID)
 	if err != nil {
+		return fmt.Errorf("error getting invoice after payment update: %w", err)
+	}
+
+	if invoice.Status == billingdomain.InvoiceStatusPaid || invoice.Status == billingdomain.InvoiceStatusVoid {
+		return nil
+	}
+
+	if invoice.GetRemainingDebt().LessThanOrEqual(decimal.Zero) {
+		invoice.Status = billingdomain.InvoiceStatusPaid
+		if err := s.UpdateInvoiceStatus(ctx, invoice); err != nil {
+			return fmt.Errorf("failed to update invoice status to paid: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *BillingService) UpdateInvoiceStatus(ctx context.Context, invoice *billingdomain.Invoice) error {
+	if err := s.store.Billing.UpdateInvoiceStatus(ctx, invoice); err != nil {
 		return err
 	}
 
 	return nil
-
 }

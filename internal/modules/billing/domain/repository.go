@@ -11,6 +11,7 @@ type BillingRepository interface {
 	CreateInvoice(ctx context.Context, invoice *Invoice) error
 	GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*Invoice, error)
 
+	UpdateInvoiceStatus(ctx context.Context, invoice *Invoice) error
 	AddPaymentToInvoice(ctx context.Context, payment *Payment) error
 	GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*Payment, error)
 	UpdatePaymentStatus(ctx context.Context, payment *Payment) error

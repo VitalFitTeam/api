@@ -104,6 +104,21 @@ func (i *Invoice) CalculateTotals() {
 	i.TotalAmount = i.SubTotal.Add(i.Tax)
 }
 
+func (i *Invoice) CalculateTotalPaid() decimal.Decimal {
+	total := decimal.NewFromInt(0)
+	for _, p := range i.Payments {
+		if p.Status == PaymentStatusCompleted {
+			total = total.Add(p.AmountBase)
+		}
+	}
+	return total
+}
+
+func (i *Invoice) GetRemainingDebt() decimal.Decimal {
+	paid := i.CalculateTotalPaid()
+	return i.TotalAmount.Sub(paid)
+}
+
 type InvoiceItem struct {
 	InvoiceItemID uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"invoice_item_id"`
 	InvoiceID     uuid.UUID `gorm:"type:uuid;not null;index" json:"invoice_id"`
