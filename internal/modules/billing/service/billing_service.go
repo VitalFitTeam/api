@@ -138,15 +138,15 @@ func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdom
 			}
 
 			templateData := map[string]interface{}{
-				"ClientName":    user.FirstName,
-				"InvoiceNumber": invoice.InvoiceNumber,
-				"IssueDate":     invoice.IssueDate.Format("02-01-2006"),
-				"Items":         templateItems,
-				"SubTotal":      invoice.SubTotal.StringFixed(2),
-				"Tax":           invoice.Tax.StringFixed(2),
-				"Total":         invoice.TotalAmount.StringFixed(2),
+				"ClientFullName": user.FirstName + " " + user.LastName,
+				"InvoiceNumber":  invoice.InvoiceNumber,
+				"IssueDate":      invoice.IssueDate.Format("02-01-2006"),
+				"Items":          templateItems,
+				"SubTotal":       invoice.SubTotal.StringFixed(2),
+				"Tax":            invoice.Tax.StringFixed(2),
+				"Total":          invoice.TotalAmount.StringFixed(2),
 			}
-			if _, err := bs.Mailer.Send(mailer.InvoiceTemplate, user.FirstName, user.Email, templateData, bs.cfg.Env == "production"); err != nil {
+			if _, err := bs.Mailer.Send(mailer.InvoiceCreationTemplate, user.FirstName, user.Email, templateData, bs.cfg.Env == "production"); err != nil {
 				fmt.Printf("failed to send invoice email: %v", err)
 			}
 		}()
@@ -226,7 +226,10 @@ func (s *BillingService) AddPaymentToInvoice(ctx context.Context, payment *billi
 
 		if updatedInvoice.GetRemainingDebt().LessThanOrEqual(decimal.Zero) {
 			updatedInvoice.Status = billingdomain.InvoiceStatusPaid
-			return s.UpdateInvoiceStatus(ctx, updatedInvoice)
+			if err := s.UpdateInvoiceStatus(ctx, updatedInvoice); err != nil {
+				return err
+			}
+			s.sendPaidInvoiceEmail(updatedInvoice)
 		}
 	}
 
@@ -271,9 +274,13 @@ func (s *BillingService) UpdatePaymentStatus(ctx context.Context, payment *billi
 
 	if invoice.GetRemainingDebt().LessThanOrEqual(decimal.Zero) {
 		invoice.Status = billingdomain.InvoiceStatusPaid
-		if err := s.UpdateInvoiceStatus(ctx, invoice); err != nil {
+		err := s.UpdateInvoiceStatus(ctx, invoice)
+		if err != nil {
 			return fmt.Errorf("failed to update invoice status to paid: %w", err)
 		}
+		// Enviar correo de factura pagada en una goroutine
+		s.sendPaidInvoiceEmail(invoice)
+
 	}
 
 	return nil
@@ -285,4 +292,70 @@ func (s *BillingService) UpdateInvoiceStatus(ctx context.Context, invoice *billi
 	}
 
 	return nil
+}
+
+func (bs *BillingService) sendPaidInvoiceEmail(invoice *billingdomain.Invoice) {
+	go func() {
+		ctx := context.Background()
+		user, err := bs.store.Users.GetByID(ctx, invoice.UserID)
+		if err != nil {
+			fmt.Printf("could not get user for paid invoice email sending: %v", err)
+			return
+		}
+
+		type templateItem struct {
+			Name      string
+			Quantity  int
+			UnitPrice string
+			TotalLine string
+		}
+
+		templateItems := make([]templateItem, len(invoice.InvoiceItems))
+		for i, item := range invoice.InvoiceItems {
+			var itemName string
+			if item.MembershipTypeID.Valid {
+				if membership, err := bs.store.Membership.GetMembershipTypeByID(ctx, item.MembershipTypeID.UUID); err == nil {
+					itemName = membership.Name
+				}
+			} else if item.PackageID.Valid {
+				if pkg, err := bs.store.Combos.GetPackageByID(ctx, item.PackageID.UUID); err == nil {
+					itemName = pkg.Name
+				}
+			} else if item.ServiceID.Valid {
+				if service, err := bs.store.Products.GetServiceByID(ctx, item.ServiceID.UUID); err == nil {
+					itemName = service.Name
+				}
+			}
+			if itemName == "" {
+				itemName = "Producto"
+			}
+			templateItems[i] = templateItem{Name: itemName, Quantity: item.Quantity, UnitPrice: item.UnitPrice.StringFixed(2), TotalLine: item.TotalLine.StringFixed(2)}
+		}
+
+		type templatePayment struct {
+			Date   string
+			Method string
+			Amount string
+		}
+		templatePayments := make([]templatePayment, len(invoice.Payments))
+		for i, p := range invoice.Payments {
+			pm, _ := bs.store.PaymentMethods.GetPaymentMethodByID(ctx, p.PaymentMethodID)
+			templatePayments[i] = templatePayment{Date: p.PaymentDate.Format("02-01-2006"), Method: pm.DisplayName, Amount: p.AmountPaid.StringFixed(2) + " " + p.CurrencyPaid}
+		}
+
+		templateData := map[string]interface{}{
+			"ClientFullName": user.FirstName + " " + user.LastName,
+			"InvoiceNumber":  invoice.InvoiceNumber,
+			"IssueDate":      invoice.IssueDate.Format("02-01-2006"),
+			"Items":          templateItems,
+			"Payments":       templatePayments,
+			"SubTotal":       invoice.SubTotal.StringFixed(2),
+			"Tax":            invoice.Tax.StringFixed(2),
+			"Total":          invoice.TotalAmount.StringFixed(2),
+		}
+
+		if _, err := bs.Mailer.Send(mailer.InvoicePaidTemplate, user.FirstName, user.Email, templateData, bs.cfg.Env == "production"); err != nil {
+			fmt.Printf("failed to send paid invoice email: %v", err)
+		}
+	}()
 }
