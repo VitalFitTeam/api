@@ -127,11 +127,16 @@ func (s *BillingService) AddPaymentToInvoice(ctx context.Context, payment *billi
 
 	invoice, err := s.store.Billing.GetInvoiceByID(ctx, payment.InvoiceID)
 	if err != nil {
-		return fmt.Errorf("error obteniendo la factura: %w", err)
+		return fmt.Errorf("error getting invoice: %w", err)
 	}
 
 	if invoice.Status == billingdomain.InvoiceStatusVoid {
-		return errors.New("no se pueden registrar pagos en una factura anulada")
+		return errors.New("cannot register payment for a voided invoice")
+	}
+
+	if invoice.Status == billingdomain.InvoiceStatusPaid {
+		return errors.New("cannot register payment for a paid invoice")
+
 	}
 
 	systemBaseCurrency := "USD"
@@ -142,7 +147,7 @@ func (s *BillingService) AddPaymentToInvoice(ctx context.Context, payment *billi
 		payment.CurrencyBase = systemBaseCurrency
 	} else {
 		if payment.ExchangeRate.IsZero() {
-			return errors.New("la tasa de cambio no puede ser cero")
+			return errors.New("the exchange rate cannot be zero")
 		}
 		payment.AmountBase = payment.AmountPaid.Div(payment.ExchangeRate)
 		payment.CurrencyBase = systemBaseCurrency
