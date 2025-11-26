@@ -161,3 +161,31 @@ func (s *BillingService) AddPaymentToInvoice(ctx context.Context, payment *billi
 
 	return nil
 }
+
+func (s *BillingService) GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*billingdomain.Invoice, error) {
+	invoice, err := s.store.Billing.GetInvoiceByID(ctx, invoiceID)
+	if err != nil {
+		return nil, err
+	}
+
+	return invoice, nil
+}
+
+func (s *BillingService) GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*billingdomain.Payment, error) {
+	payment, err := s.store.Billing.GetPaymentByID(ctx, paymentID)
+	if err != nil {
+		return nil, err
+	}
+
+	return payment, nil
+}
+
+func (s *BillingService) UpdatePaymentStatus(ctx context.Context, payment *billingdomain.Payment) error {
+	err := s.store.Billing.UpdatePaymentStatus(ctx, payment)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}

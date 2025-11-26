@@ -254,3 +254,118 @@ func (p *CreatePaymentPayload) ToPayment() *billingdomain.Payment {
 		Status:          billingdomain.PaymentStatusPending,
 	}
 }
+
+type UpdatePaymentStatus struct {
+	Status string `json:"status" binding:"required,oneof=Completed Failed Refunded Pending"`
+}
+
+// InvoiceResponse define la estructura de la respuesta para una factura.
+type InvoiceResponse struct {
+	InvoiceID     uuid.UUID             `json:"invoice_id"`
+	UserID        uuid.UUID             `json:"user_id"`
+	BranchID      uuid.UUID             `json:"branch_id"`
+	InvoiceNumber string                `json:"invoice_number"`
+	IssueDate     time.Time             `json:"issue_date"`
+	DueDate       time.Time             `json:"due_date"`
+	SubTotal      decimal.Decimal       `json:"sub_total"`
+	Tax           decimal.Decimal       `json:"tax"`
+	TotalAmount   decimal.Decimal       `json:"total_amount"`
+	Status        string                `json:"status"`
+	CreatedAt     time.Time             `json:"created_at"`
+	InvoiceItems  []InvoiceItemResponse `json:"invoice_items,omitempty"`
+	Payments      []PaymentResponse     `json:"payments,omitempty"`
+}
+
+// InvoiceItemResponse define la estructura de la respuesta para un item de la factura.
+type InvoiceItemResponse struct {
+	InvoiceItemID    uuid.UUID       `json:"invoice_item_id"`
+	Quantity         int             `json:"quantity"`
+	UnitPrice        decimal.Decimal `json:"unit_price"`
+	DiscountApplied  decimal.Decimal `json:"discount_applied"`
+	TaxRate          decimal.Decimal `json:"tax_rate"`
+	TaxAmount        decimal.Decimal `json:"tax_amount"`
+	Subtotal         decimal.Decimal `json:"subtotal"`
+	TotalLine        decimal.Decimal `json:"total_line"`
+	MembershipTypeID *uuid.UUID      `json:"membership_type_id,omitempty"`
+	ServiceID        *uuid.UUID      `json:"service_id,omitempty"`
+	PackageID        *uuid.UUID      `json:"package_id,omitempty"`
+}
+
+// PaymentResponse define la estructura de la respuesta para un pago.
+type PaymentResponse struct {
+	PaymentID       uuid.UUID       `json:"payment_id"`
+	PaymentDate     time.Time       `json:"payment_date"`
+	AmountPaid      decimal.Decimal `json:"amount_paid"`
+	CurrencyPaid    string          `json:"currency_paid"`
+	AmountBase      decimal.Decimal `json:"amount_base"`
+	ExchangeRate    decimal.Decimal `json:"exchange_rate"`
+	PaymentMethodID uuid.UUID       `json:"payment_method_id"`
+	TransactionID   string          `json:"transaction_id,omitempty"`
+	Status          string          `json:"status"`
+}
+
+// NewInvoiceResponse crea una nueva respuesta de factura a partir del modelo de dominio.
+func NewInvoiceResponse(invoice *billingdomain.Invoice) *InvoiceResponse {
+	items := make([]InvoiceItemResponse, len(invoice.InvoiceItems))
+	for i, item := range invoice.InvoiceItems {
+		items[i] = InvoiceItemResponse{
+			InvoiceItemID:   item.InvoiceItemID,
+			Quantity:        item.Quantity,
+			UnitPrice:       item.UnitPrice,
+			DiscountApplied: item.DiscountApplied,
+			TaxRate:         item.TaxRate,
+			TaxAmount:       item.TaxAmount,
+			Subtotal:        item.Subtotal,
+			TotalLine:       item.TotalLine,
+			MembershipTypeID: func() *uuid.UUID {
+				if item.MembershipTypeID.Valid {
+					return &item.MembershipTypeID.UUID
+				}
+				return nil
+			}(),
+			ServiceID: func() *uuid.UUID {
+				if item.ServiceID.Valid {
+					return &item.ServiceID.UUID
+				}
+				return nil
+			}(),
+			PackageID: func() *uuid.UUID {
+				if item.PackageID.Valid {
+					return &item.PackageID.UUID
+				}
+				return nil
+			}(),
+		}
+	}
+
+	payments := make([]PaymentResponse, len(invoice.Payments))
+	for i, p := range invoice.Payments {
+		payments[i] = PaymentResponse{
+			PaymentID:       p.PaymentID,
+			PaymentDate:     p.PaymentDate,
+			AmountPaid:      p.AmountPaid,
+			CurrencyPaid:    p.CurrencyPaid,
+			AmountBase:      p.AmountBase,
+			ExchangeRate:    p.ExchangeRate,
+			PaymentMethodID: p.PaymentMethodID,
+			TransactionID:   p.TransactionID.String,
+			Status:          string(p.Status),
+		}
+	}
+
+	return &InvoiceResponse{
+		InvoiceID:     invoice.InvoiceID,
+		UserID:        invoice.UserID,
+		BranchID:      invoice.BranchID,
+		InvoiceNumber: invoice.InvoiceNumber,
+		IssueDate:     invoice.IssueDate,
+		DueDate:       invoice.DueDate,
+		SubTotal:      invoice.SubTotal,
+		Tax:           invoice.Tax,
+		TotalAmount:   invoice.TotalAmount,
+		Status:        string(invoice.Status),
+		CreatedAt:     invoice.CreatedAt,
+		InvoiceItems:  items,
+		Payments:      payments,
+	}
+}

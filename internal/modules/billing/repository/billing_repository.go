@@ -45,3 +45,23 @@ func (bs *Billingstore) AddPaymentToInvoice(ctx context.Context, payment *billin
 	})
 
 }
+
+func (bs *Billingstore) GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*billingdomain.Payment, error) {
+	var payment billingdomain.Payment
+	err := bs.db.WithContext(ctx).First(&payment, "payment_id = ?", paymentID).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &payment, nil
+}
+
+func (bs *Billingstore) UpdatePaymentStatus(ctx context.Context, payment *billingdomain.Payment) error {
+	return db.WithTX(bs.db, func(tx *gorm.DB) error {
+		return tx.WithContext(ctx).Model(payment).Update("status", payment.Status).Error
+	})
+}

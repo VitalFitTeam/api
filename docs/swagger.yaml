@@ -447,6 +447,64 @@ definitions:
       prefix:
         type: string
     type: object
+  billinghandlers.InvoiceItemResponse:
+    properties:
+      discount_applied:
+        type: number
+      invoice_item_id:
+        type: string
+      membership_type_id:
+        type: string
+      package_id:
+        type: string
+      quantity:
+        type: integer
+      service_id:
+        type: string
+      subtotal:
+        type: number
+      tax_amount:
+        type: number
+      tax_rate:
+        type: number
+      total_line:
+        type: number
+      unit_price:
+        type: number
+    type: object
+  billinghandlers.InvoiceResponse:
+    properties:
+      branch_id:
+        type: string
+      created_at:
+        type: string
+      due_date:
+        type: string
+      invoice_id:
+        type: string
+      invoice_items:
+        items:
+          $ref: '#/definitions/billinghandlers.InvoiceItemResponse'
+        type: array
+      invoice_number:
+        type: string
+      issue_date:
+        type: string
+      payments:
+        items:
+          $ref: '#/definitions/billinghandlers.PaymentResponse'
+        type: array
+      status:
+        type: string
+      sub_total:
+        type: number
+      tax:
+        type: number
+      total_amount:
+        type: number
+      user_id:
+        type: string
+    type: object
   billinghandlers.ItemDTO:
     properties:
       item_id:
@@ -473,6 +531,27 @@ definitions:
         type: array
     required:
     - method_id
+    type: object
+  billinghandlers.PaymentResponse:
+    properties:
+      amount_base:
+        type: number
+      amount_paid:
+        type: number
+      currency_paid:
+        type: string
+      exchange_rate:
+        type: number
+      payment_date:
+        type: string
+      payment_id:
+        type: string
+      payment_method_id:
+        type: string
+      status:
+        type: string
+      transaction_id:
+        type: string
     type: object
   billinghandlers.UpdateBranchConfigPayload:
     properties:
@@ -508,6 +587,18 @@ definitions:
         type: string
     required:
     - processing_type
+    type: object
+  billinghandlers.UpdatePaymentStatus:
+    properties:
+      status:
+        enum:
+        - Completed
+        - Failed
+        - Refunded
+        - Pending
+        type: string
+    required:
+    - status
     type: object
   bookinghandlers.BookUser:
     properties:
@@ -2690,6 +2781,60 @@ paths:
       summary: Create a new invoice
       tags:
       - Billing
+  /billing/invoices/{invoice_id}:
+    get:
+      description: Retrieves the details of a specific invoice by its UUID. The user
+        must have access to the invoice (either be the owner, a super_admin, or have
+        'billing:get' permission).
+      parameters:
+      - description: Invoice UUID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/billinghandlers.InvoiceResponse'
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have access to this invoice)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found (invoice not found)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get an invoice by ID
+      tags:
+      - Billing
   /billing/invoices/payment:
     post:
       consumes:
@@ -2946,6 +3091,53 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a payment method
+      tags:
+      - Billing
+  /billing/payments/{payment_id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Updates the status of a specific payment. This is restricted to
+        users with 'billing:process_payment' permission or super admins.
+      parameters:
+      - description: Payment UUID
+        in: path
+        name: payment_id
+        required: true
+        type: string
+      - description: New payment status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.UpdatePaymentStatus'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment status updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID or status)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a payment's status
       tags:
       - Billing
   /billing/rates:

@@ -32,6 +32,7 @@ type BillingHandlersInterface interface {
 
 	CreateInvoiceHandler(c *gin.Context)
 	AddPaymentToInvoiceHandler(c *gin.Context)
+	UpdatePaymentStatusHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -81,6 +82,12 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 
 	invoicesGroup := billingGroup.Group("/invoices")
 	invoicesGroup.POST("", r.CreateInvoiceHandler)
+	invoicesGroup.GET("/:invoice_id", r.GetInvoiceByIDHandler)
 	invoicesGroup.POST("/payment", r.AddPaymentToInvoiceHandler)
 
+	paymentsGroup := billingGroup.Group("/payments")
+	paymentsGroup.Use(m.RBACPermission("billing:process_payment"))
+	{
+		paymentsGroup.PUT("/:payment_id/status", r.UpdatePaymentStatusHandler)
+	}
 }
