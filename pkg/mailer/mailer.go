@@ -8,6 +8,7 @@ const (
 	UserWelcomeTemplate  = "user_invitation.tmpl"
 	UserResetPwsTemplate = "user_reset.tmpl"
 	UserStaffActivate    = "user_staff_activate.tmpl"
+	InvoiceTemplate      = "invoice.tmpl"
 )
 
 //go:embed "templates"

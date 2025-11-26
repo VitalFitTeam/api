@@ -16,16 +16,18 @@ import (
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
+	"github.com/vitalfit/api/pkg/mailer"
 )
 
 type BillingService struct {
-	store store.Storage
-	cache cache.Storage
-	cfg   config.Config
-	http  *http.Client
+	store  store.Storage
+	cache  cache.Storage
+	cfg    config.Config
+	http   *http.Client
+	Mailer mailer.Client
 }
 
-func NewBillingService(store store.Storage, cache cache.Storage, cfg config.Config) *BillingService {
+func NewBillingService(store store.Storage, cache cache.Storage, cfg config.Config, mailer mailer.Client) *BillingService {
 	customTransport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -36,10 +38,11 @@ func NewBillingService(store store.Storage, cache cache.Storage, cfg config.Conf
 	}
 
 	return &BillingService{
-		store: store,
-		cache: cache,
-		cfg:   cfg,
-		http:  httpClient,
+		store:  store,
+		cache:  cache,
+		cfg:    cfg,
+		http:   httpClient,
+		Mailer: mailer,
 	}
 }
 func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdomain.Invoice, items []billingdomain.InvoiceItem) error {
@@ -91,6 +94,62 @@ func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdom
 	err = bs.store.Billing.CreateInvoice(ctx, invoice)
 	if err != nil {
 		return err
+	}
+
+	user, err := bs.store.Users.GetByID(ctx, invoice.UserID)
+	if err != nil {
+		fmt.Printf("could not get user for email sending: %v", err)
+	} else {
+		go func() {
+			type templateItem struct {
+				Name      string
+				Quantity  int
+				UnitPrice string
+				TotalLine string
+			}
+
+			templateItems := make([]templateItem, len(invoice.InvoiceItems))
+			for i, item := range invoice.InvoiceItems {
+				var itemName string
+				if item.MembershipTypeID.Valid {
+					if membership, err := bs.store.Membership.GetMembershipTypeByID(context.Background(), item.MembershipTypeID.UUID); err == nil {
+						itemName = membership.Name
+					}
+				} else if item.PackageID.Valid {
+					if pkg, err := bs.store.Combos.GetPackageByID(context.Background(), item.PackageID.UUID); err == nil {
+						itemName = pkg.Name
+					}
+				} else if item.ServiceID.Valid {
+					if service, err := bs.store.Products.GetServiceByID(context.Background(), item.ServiceID.UUID); err == nil {
+						itemName = service.Name
+					}
+				}
+
+				if itemName == "" {
+					itemName = "Product"
+				}
+
+				templateItems[i] = templateItem{
+					Name:      itemName,
+					Quantity:  item.Quantity,
+					UnitPrice: item.UnitPrice.StringFixed(2),
+					TotalLine: item.TotalLine.StringFixed(2),
+				}
+			}
+
+			templateData := map[string]interface{}{
+				"ClientName":    user.FirstName,
+				"InvoiceNumber": invoice.InvoiceNumber,
+				"IssueDate":     invoice.IssueDate.Format("02-01-2006"),
+				"Items":         templateItems,
+				"SubTotal":      invoice.SubTotal.StringFixed(2),
+				"Tax":           invoice.Tax.StringFixed(2),
+				"Total":         invoice.TotalAmount.StringFixed(2),
+			}
+			if _, err := bs.Mailer.Send(mailer.InvoiceTemplate, user.FirstName, user.Email, templateData, bs.cfg.Env == "production"); err != nil {
+				fmt.Printf("failed to send invoice email: %v", err)
+			}
+		}()
 	}
 
 	return nil
