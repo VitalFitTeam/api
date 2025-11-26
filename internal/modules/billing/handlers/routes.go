@@ -31,6 +31,7 @@ type BillingHandlersInterface interface {
 	DeleteFiscalDocumentTypeHandler(c *gin.Context)
 
 	CreateInvoiceHandler(c *gin.Context)
+	AddPaymentToInvoiceHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -80,5 +81,6 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 
 	invoicesGroup := billingGroup.Group("/invoices")
 	invoicesGroup.POST("", r.CreateInvoiceHandler)
+	invoicesGroup.POST("/payment", r.AddPaymentToInvoiceHandler)
 
 }

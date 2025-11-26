@@ -416,6 +416,26 @@ definitions:
     - processing_type
     - type
     type: object
+  billinghandlers.CreatePaymentPayload:
+    properties:
+      amount_paid:
+        type: number
+      currency_paid:
+        type: string
+      invoice_id:
+        type: string
+      payment_method_id:
+        type: string
+      receipt_url:
+        type: string
+      transaction_id:
+        type: string
+    required:
+    - amount_paid
+    - currency_paid
+    - invoice_id
+    - payment_method_id
+    type: object
   billinghandlers.FiscalDocumentTypeResponse:
     properties:
       created_at:
@@ -2639,6 +2659,8 @@ paths:
           description: Invoice created successfully
           schema:
             properties:
+              invoice_id:
+                type: string
               message:
                 type: string
             type: object
@@ -2666,6 +2688,66 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create a new invoice
+      tags:
+      - Billing
+  /billing/invoices/payment:
+    post:
+      consumes:
+      - application/json
+      description: Adds a payment to an existing invoice. Clients can only pay their
+        own invoices. Staff with 'billing:process_payment' permission or super admins
+        can add payments to any invoice.
+      parameters:
+      - description: Payment creation payload
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.CreatePaymentPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Payment added successfully
+          schema:
+            properties:
+              message:
+                type: string
+              payment_id:
+                type: string
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid payload, currency not supported)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have permission or is trying to pay
+            another user's invoice)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found (invoice not found)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a payment to an invoice
       tags:
       - Billing
   /billing/payment-methods:

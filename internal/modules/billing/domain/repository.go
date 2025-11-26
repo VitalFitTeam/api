@@ -9,6 +9,9 @@ import (
 
 type BillingRepository interface {
 	CreateInvoice(ctx context.Context, invoice *Invoice) error
+	GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*Invoice, error)
+
+	AddPaymentToInvoice(ctx context.Context, payment *Payment) error
 }
 
 type PaymentMethodsRepository interface {

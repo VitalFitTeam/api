@@ -1350,6 +1350,9 @@
                         "schema": {
                             "type": "object",
                             "properties": {
+                                "invoice_id": {
+                                    "type": "string"
+                                },
                                 "message": {
                                     "type": "string"
                                 }
@@ -1369,6 +1372,97 @@
                     },
                     "403": {
                         "description": "Forbidden (user does not have permission)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/billing/invoices/payment": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Adds a payment to an existing invoice. Clients can only pay their own invoices. Staff with 'billing:process_payment' permission or super admins can add payments to any invoice.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Add a payment to an invoice",
+                "parameters": [
+                    {
+                        "description": "Payment creation payload",
+                        "name": "payment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/billinghandlers.CreatePaymentPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Payment added successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "payment_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., invalid payload, currency not supported)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user does not have permission or is trying to pay another user's invoice)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found (invoice not found)",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -7983,6 +8077,35 @@
                     "type": "string"
                 },
                 "visibility": {
+                    "type": "string"
+                }
+            }
+        },
+        "billinghandlers.CreatePaymentPayload": {
+            "type": "object",
+            "required": [
+                "amount_paid",
+                "currency_paid",
+                "invoice_id",
+                "payment_method_id"
+            ],
+            "properties": {
+                "amount_paid": {
+                    "type": "number"
+                },
+                "currency_paid": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "string"
+                },
+                "payment_method_id": {
+                    "type": "string"
+                },
+                "receipt_url": {
+                    "type": "string"
+                },
+                "transaction_id": {
                     "type": "string"
                 }
             }

@@ -1,6 +1,7 @@
 package billinghandlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"time"
@@ -231,4 +232,25 @@ func (i *CreateInvoicePayload) ToInvoiceItems() []billingdomain.InvoiceItem {
 		invoiceItems[idx] = invoiceItem
 	}
 	return invoiceItems
+}
+
+type CreatePaymentPayload struct {
+	InvoiceID       uuid.UUID       `json:"invoice_id" binding:"required"`
+	PaymentMethodID uuid.UUID       `json:"payment_method_id" binding:"required"`
+	AmountPaid      decimal.Decimal `json:"amount_paid" binding:"required"`
+	CurrencyPaid    string          `json:"currency_paid" binding:"required,len=3"`
+	TransactionID   string          `json:"transaction_id"`
+	ReceiptURL      string          `json:"receipt_url"`
+}
+
+func (p *CreatePaymentPayload) ToPayment() *billingdomain.Payment {
+	return &billingdomain.Payment{
+		InvoiceID:       p.InvoiceID,
+		PaymentMethodID: p.PaymentMethodID,
+		AmountPaid:      p.AmountPaid,
+		CurrencyPaid:    p.CurrencyPaid,
+		TransactionID:   sql.NullString{String: p.TransactionID, Valid: p.TransactionID != ""},
+		ReceiptURL:      sql.NullString{String: p.ReceiptURL, Valid: p.ReceiptURL != ""},
+		Status:          billingdomain.PaymentStatusPending,
+	}
 }

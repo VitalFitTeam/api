@@ -155,7 +155,7 @@ type Payment struct {
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 
 	Invoice       Invoice        `gorm:"foreignKey:InvoiceID"`
-	PaymentMethod PaymentMethods `gorm:"foreignKey:MethodID"`
+	PaymentMethod PaymentMethods `gorm:"foreignKey:PaymentMethodID"`
 
 	Refunds []Refund `gorm:"foreignKey:PaymentID" json:"refunds,omitempty"`
 }

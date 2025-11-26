@@ -3,13 +3,17 @@ package billingservice
 import (
 	"context"
 	"crypto/tls"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/vitalfit/api/config"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
 )
@@ -86,6 +90,67 @@ func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdom
 
 	err = bs.store.Billing.CreateInvoice(ctx, invoice)
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (bs *BillingService) CheckInvoiceAccess(ctx context.Context, user *authdomain.Users, invoiceID uuid.UUID) error {
+	invoice, err := bs.store.Billing.GetInvoiceByID(ctx, invoiceID)
+	if err != nil {
+		return err
+	}
+
+	if user.Role.Name == "client" {
+		if invoice.UserID != user.UserID {
+			return shared_errors.ErrForbidden
+		}
+		return nil
+	}
+
+	if user.Role.Name == "super_admin" {
+		return nil
+	}
+
+	hasPermission, err := bs.store.Roles.RoleHasPermission(ctx, user.RoleID, "billing:process_payment")
+	if err != nil {
+		return err
+	}
+	if !hasPermission {
+		return shared_errors.ErrForbidden
+	}
+	return nil
+}
+
+func (s *BillingService) AddPaymentToInvoice(ctx context.Context, payment *billingdomain.Payment) error {
+
+	invoice, err := s.store.Billing.GetInvoiceByID(ctx, payment.InvoiceID)
+	if err != nil {
+		return fmt.Errorf("error obteniendo la factura: %w", err)
+	}
+
+	if invoice.Status == billingdomain.InvoiceStatusVoid {
+		return errors.New("no se pueden registrar pagos en una factura anulada")
+	}
+
+	systemBaseCurrency := "USD"
+
+	if payment.CurrencyPaid == systemBaseCurrency {
+		payment.AmountBase = payment.AmountPaid
+		payment.ExchangeRate = decimal.NewFromInt(1)
+		payment.CurrencyBase = systemBaseCurrency
+	} else {
+		if payment.ExchangeRate.IsZero() {
+			return errors.New("la tasa de cambio no puede ser cero")
+		}
+		payment.AmountBase = payment.AmountPaid.Div(payment.ExchangeRate)
+		payment.CurrencyBase = systemBaseCurrency
+	}
+
+	payment.PaymentDate = time.Now()
+
+	if err := s.store.Billing.AddPaymentToInvoice(ctx, payment); err != nil {
 		return err
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"github.com/vitalfit/api/pkg/pagination"
 )
 
@@ -34,4 +35,6 @@ type BillingServiceInterface interface {
 
 	//orders
 	CreateInvoice(ctx context.Context, invoice *Invoice, items []InvoiceItem) error
+	AddPaymentToInvoice(ctx context.Context, payment *Payment) error
+	CheckInvoiceAccess(ctx context.Context, user *authdomain.Users, invoiceID uuid.UUID) error
 }
