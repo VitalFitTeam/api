@@ -190,7 +190,7 @@ func (h *BillingHandlers) AddPaymentToInvoiceHandler(c *gin.Context) {
 // @Success		200			{object}	object{message=string}	"Payment status updated successfully"
 // @Failure		400			{object}	object{error=string}	"Bad Request (e.g., invalid UUID or status)"
 // @Failure		500			{object}	object{error=string}	"Internal Server Error"
-// @Router			/billing/payments/{payment_id}/status [put]
+// @Router			/billing/payments/{payment_id}/status [patch]
 func (h *BillingHandlers) UpdatePaymentStatusHandler(c *gin.Context) {
 	var payload UpdatePaymentStatus
 	ctx := c.Request.Context()
@@ -218,4 +218,49 @@ func (h *BillingHandlers) UpdatePaymentStatusHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Payment status updated successfully",
 	})
+}
+
+// @Summary		Get a payment by ID
+// @Description	Retrieves the details of a specific payment by its UUID. The user must have access to the associated invoice.
+// @Tags			Billing
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			payment_id	path		string							true	"Payment UUID"
+// @Success		200			{object}	object{data=PaymentResponse}	"Payment details"
+// @Failure		400			{object}	object{error=string}			"Bad Request (e.g., invalid UUID)"
+// @Failure		403			{object}	object{error=string}			"Forbidden (user does not have access to this payment's invoice)"
+// @Failure		404			{object}	object{error=string}			"Not Found (payment not found)"
+// @Failure		500			{object}	object{error=string}			"Internal Server Error"
+// @Router			/billing/payments/{payment_id} [get]
+func (h *BillingHandlers) GetPaymentByIDHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	paymentID, err := uuid.Parse(c.Param("payment_id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	payment, err := h.services.BillingServices.GetPaymentByID(ctx, paymentID)
+	if err != nil {
+		if errors.Is(err, shared_errors.ErrNotFound) {
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	user := h.services.UserServices.GetUserFromContext(c)
+	if err := h.services.BillingServices.CheckInvoiceAccess(ctx, user, payment.InvoiceID); err != nil {
+		switch {
+		case errors.Is(err, shared_errors.ErrForbidden):
+			h.services.LogErrors.ForbiddenResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	response := NewPaymentResponseFromPayment(payment)
+	c.JSON(200, gin.H{"data": response})
 }

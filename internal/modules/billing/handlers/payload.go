@@ -302,6 +302,7 @@ type PaymentResponse struct {
 	PaymentMethodID uuid.UUID       `json:"payment_method_id"`
 	TransactionID   string          `json:"transaction_id,omitempty"`
 	Status          string          `json:"status"`
+	ReceiptURL      string          `json:"receipt_url,omitempty"`
 }
 
 // NewInvoiceResponse crea una nueva respuesta de factura a partir del modelo de dominio.
@@ -350,6 +351,7 @@ func NewInvoiceResponse(invoice *billingdomain.Invoice) *InvoiceResponse {
 			PaymentMethodID: p.PaymentMethodID,
 			TransactionID:   p.TransactionID.String,
 			Status:          string(p.Status),
+			ReceiptURL:      p.ReceiptURL.String,
 		}
 	}
 
@@ -367,5 +369,21 @@ func NewInvoiceResponse(invoice *billingdomain.Invoice) *InvoiceResponse {
 		CreatedAt:     invoice.CreatedAt,
 		InvoiceItems:  items,
 		Payments:      payments,
+	}
+}
+
+// NewPaymentResponseFromPayment crea una nueva respuesta de pago a partir del modelo de dominio de un solo pago.
+func NewPaymentResponseFromPayment(p *billingdomain.Payment) *PaymentResponse {
+	return &PaymentResponse{
+		PaymentID:       p.PaymentID,
+		PaymentDate:     p.PaymentDate,
+		AmountPaid:      p.AmountPaid,
+		CurrencyPaid:    p.CurrencyPaid,
+		AmountBase:      p.AmountBase,
+		ExchangeRate:    p.ExchangeRate,
+		PaymentMethodID: p.PaymentMethodID,
+		TransactionID:   p.TransactionID.String,
+		Status:          string(p.Status),
+		ReceiptURL:      p.ReceiptURL.String,
 	}
 }

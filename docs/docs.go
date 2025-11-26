@@ -1893,8 +1893,91 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/payments/{payment_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the details of a specific payment by its UUID. The user must have access to the associated invoice.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Get a payment by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Payment UUID",
+                        "name": "payment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment details",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/billinghandlers.PaymentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., invalid UUID)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user does not have access to this payment's invoice)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found (payment not found)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/billing/payments/{payment_id}/status": {
-            "put": {
+            "patch": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -8440,6 +8523,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "payment_method_id": {
+                    "type": "string"
+                },
+                "receipt_url": {
                     "type": "string"
                 },
                 "status": {
