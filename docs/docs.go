@@ -1323,6 +1323,83 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/invoices": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new invoice for a specific user and branch, containing a list of items. If the user making the request is a client, the invoice is created for them. If the user is staff (with 'billing:create_invoice' permission), the 'user_id' in the payload is required to specify for whom the invoice is being created.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Create a new invoice",
+                "parameters": [
+                    {
+                        "description": "Invoice creation payload",
+                        "name": "invoice",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/billinghandlers.CreateInvoicePayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Invoice created successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., invalid payload, missing user_id for staff)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user does not have permission)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/billing/payment-methods": {
             "get": {
                 "security": [
@@ -7859,6 +7936,28 @@ const docTemplate = `{
                 }
             }
         },
+        "billinghandlers.CreateInvoicePayload": {
+            "type": "object",
+            "required": [
+                "branch_id",
+                "items"
+            ],
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/billinghandlers.ItemDTO"
+                    }
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "billinghandlers.CreatePaymentMethodPayload": {
             "type": "object",
             "required": [
@@ -7910,6 +8009,31 @@ const docTemplate = `{
                 },
                 "prefix": {
                     "type": "string"
+                }
+            }
+        },
+        "billinghandlers.ItemDTO": {
+            "type": "object",
+            "required": [
+                "item_id",
+                "item_type",
+                "quantity"
+            ],
+            "properties": {
+                "item_id": {
+                    "type": "string"
+                },
+                "item_type": {
+                    "type": "string",
+                    "enum": [
+                        "membership",
+                        "package",
+                        "service"
+                    ]
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1
                 }
             }
         },

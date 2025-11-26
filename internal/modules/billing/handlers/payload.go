@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 )
 
@@ -186,3 +187,48 @@ func NewFiscalDocumentTypeResponse(docType *billingdomain.FiscalDocumentType) *F
 }
 
 //orders payload
+
+type CreateInvoicePayload struct {
+	UserID   *uuid.UUID `json:"user_id"`
+	BranchID *uuid.UUID `json:"branch_id" binding:"required"`
+
+	Items []ItemDTO `json:"items" binding:"required,min=1,dive"`
+}
+
+type ItemDTO struct {
+	ItemID   uuid.UUID `json:"item_id" binding:"required"`
+	ItemType string    `json:"item_type" binding:"required,oneof=membership package service"`
+	Quantity int       `json:"quantity" binding:"required,min=1"`
+}
+
+func (i *CreateInvoicePayload) ToInvoice() *billingdomain.Invoice {
+	invoice := &billingdomain.Invoice{
+		BranchID:       *i.BranchID,
+		IssueDate:      time.Now(),
+		DueDate:        time.Now().AddDate(0, 0, 30),
+		TotalAmount:    decimal.Zero,
+		Tax:            decimal.Zero,
+		Status:         billingdomain.InvoiceStatusUnpaid,
+		DocumentTypeID: uuid.Nil,
+	}
+	return invoice
+}
+
+func (i *CreateInvoicePayload) ToInvoiceItems() []billingdomain.InvoiceItem {
+	invoiceItems := make([]billingdomain.InvoiceItem, len(i.Items))
+	for idx, item := range i.Items {
+		invoiceItem := billingdomain.InvoiceItem{
+			Quantity: item.Quantity,
+		}
+		switch item.ItemType {
+		case "membership":
+			invoiceItem.MembershipTypeID = uuid.NullUUID{UUID: item.ItemID, Valid: true}
+		case "package":
+			invoiceItem.PackageID = uuid.NullUUID{UUID: item.ItemID, Valid: true}
+		case "service":
+			invoiceItem.ServiceID = uuid.NullUUID{UUID: item.ItemID, Valid: true}
+		}
+		invoiceItems[idx] = invoiceItem
+	}
+	return invoiceItems
+}

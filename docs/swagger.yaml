@@ -376,6 +376,21 @@ definitions:
     - name
     - prefix
     type: object
+  billinghandlers.CreateInvoicePayload:
+    properties:
+      branch_id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/billinghandlers.ItemDTO'
+        minItems: 1
+        type: array
+      user_id:
+        type: string
+    required:
+    - branch_id
+    - items
+    type: object
   billinghandlers.CreatePaymentMethodPayload:
     properties:
       configuration:
@@ -411,6 +426,24 @@ definitions:
         type: string
       prefix:
         type: string
+    type: object
+  billinghandlers.ItemDTO:
+    properties:
+      item_id:
+        type: string
+      item_type:
+        enum:
+        - membership
+        - package
+        - service
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - item_id
+    - item_type
+    - quantity
     type: object
   billinghandlers.MethodBranchConfigPayload:
     properties:
@@ -2581,6 +2614,58 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a fiscal document type
+      tags:
+      - Billing
+  /billing/invoices:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new invoice for a specific user and branch, containing
+        a list of items. If the user making the request is a client, the invoice is
+        created for them. If the user is staff (with 'billing:create_invoice' permission),
+        the 'user_id' in the payload is required to specify for whom the invoice is
+        being created.
+      parameters:
+      - description: Invoice creation payload
+        in: body
+        name: invoice
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.CreateInvoicePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice created successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid payload, missing user_id for staff)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have permission)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new invoice
       tags:
       - Billing
   /billing/payment-methods:

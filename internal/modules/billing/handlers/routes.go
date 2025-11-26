@@ -29,6 +29,8 @@ type BillingHandlersInterface interface {
 	GetFiscalDocumentTypeByIDHandler(c *gin.Context)
 	UpdateFiscalDocumentTypeHandler(c *gin.Context)
 	DeleteFiscalDocumentTypeHandler(c *gin.Context)
+
+	CreateInvoiceHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -75,5 +77,8 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 		fiscalDocumentTypesGroup.PUT("/:id", m.RBACPermission("billing:update"), r.UpdateFiscalDocumentTypeHandler)
 		fiscalDocumentTypesGroup.DELETE("/:id", m.RBACPermission("billing:delete"), r.DeleteFiscalDocumentTypeHandler)
 	}
+
+	invoicesGroup := billingGroup.Group("/invoices")
+	invoicesGroup.POST("", r.CreateInvoiceHandler)
 
 }

@@ -33,5 +33,5 @@ type BillingServiceInterface interface {
 	GetHistoricalRateForCurrency(ctx context.Context, date, currency string) (float64, error)
 
 	//orders
-
+	CreateInvoice(ctx context.Context, invoice *Invoice, items []InvoiceItem) error
 }
