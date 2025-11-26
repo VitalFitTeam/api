@@ -7,13 +7,21 @@ EXCEPTION
 END $$;
 
 CREATE TABLE IF NOT EXISTS cancellation_reasons (
-    reason_id UUID PRIMARY KEY,
+    reason_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     description VARCHAR(255) NOT NULL UNIQUE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+INSERT INTO cancellation_reasons (description) VALUES 
+    ('Client moved'),
+    ('Dissatisfied with service'),
+    ('Medical reasons'),
+    ('Financial reasons'),
+    ('Switching to competitor'),
+    ('Other');
+
 CREATE TABLE IF NOT EXISTS client_memberships (
-    client_membership_id UUID PRIMARY KEY,
+    client_membership_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     membership_type_id UUID NOT NULL,
     start_date DATE NOT NULL,
@@ -35,5 +43,6 @@ CREATE TABLE IF NOT EXISTS client_memberships (
     CONSTRAINT fk_client_memberships_reason 
         FOREIGN KEY (cancellation_reason_id) REFERENCES cancellation_reasons(reason_id) ON DELETE SET NULL
 );
+
 
 COMMIT;
