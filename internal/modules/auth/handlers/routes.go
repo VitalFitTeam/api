@@ -27,6 +27,7 @@ type AuthHandlersInterface interface {
 	UpdateUserStaffHandler(c *gin.Context)
 	UpdateUserClientHandler(c *gin.Context)
 	GetUserByEmailHandler(c *gin.Context)
+	DeleteUserHandler(c *gin.Context)
 	//Roles
 	GetRolesHandler(c *gin.Context)
 	CreateRoleHandler(c *gin.Context)
@@ -91,6 +92,7 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		userGroup.PUT("/:id/staff", r.UpdateUserStaffHandler)
 		userGroup.PUT("/:id/client", r.UpdateUserClientHandler)
 		userGroup.POST("/by-email", m.RBACPermission("users:get"), r.GetUserByEmailHandler)
+		userGroup.DELETE("/:id", m.RBACPermission("users:delete"), r.DeleteUserHandler)
 
 	}
 }

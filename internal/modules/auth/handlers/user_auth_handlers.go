@@ -787,3 +787,39 @@ func (h *AuthHandlers) GetUserByEmailHandler(c *gin.Context) {
 		"data": resp,
 	})
 }
+
+// @Summary		Delete a user
+// @Description	Deletes a user from the system. Requires appropriate permissions.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id	path		string					true	"User ID (UUID)"
+// @Success		204	{object}	nil						"User deleted successfully"
+// @Failure		400	{object}	object{error=string}	"Bad Request: Invalid UUID format"
+// @Failure		403	{object}	object{error=string}	"Forbidden: Insufficient permissions"
+// @Failure		404	{object}	object{error=string}	"Not Found: User not found"
+// @Failure		500	{object}	object{error=string}	"Error: Internal server error"
+// @Router			/user/{id} [delete]
+func (h *AuthHandlers) DeleteUserHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	_, err = h.services.UserServices.GetByID(ctx, id)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	if err := h.services.UserServices.Delete(ctx, id); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}

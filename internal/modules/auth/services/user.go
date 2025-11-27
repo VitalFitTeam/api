@@ -82,6 +82,13 @@ func (h *UserService) GetClients(ctx context.Context, fq pagination.PaginatedFee
 	return users, nil
 }
 
+func (h *UserService) Delete(ctx context.Context, userID uuid.UUID) error {
+	if err := h.store.Users.Delete(ctx, userID); err != nil {
+		return err
+	}
+	return nil
+}
+
 //roles
 
 func (h *UserService) RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error) {
