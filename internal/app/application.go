@@ -72,7 +72,10 @@ func (app *application) Mount() http.Handler {
 
 		//marketing routes
 		app.Handlers.MarketingHandlers.MarketingRoutes(v1, m)
+
+		//products routes
 		app.Handlers.ProductsHandlers.ProductsRoutes(v1, m)
+		app.Handlers.ProductsHandlers.PublicProductsRoutes(v1)
 
 		//memberships routes
 		app.Handlers.MembershipHandlers.MembershipRoutes(v1, m)
@@ -86,6 +89,7 @@ func (app *application) Mount() http.Handler {
 
 		//combos routes
 		app.Handlers.CombosHandlers.CombosRoutes(v1, m)
+		app.Handlers.CombosHandlers.PublicCombosRoutes(v1)
 
 		//booking
 		app.Handlers.BookingHandlers.BookingRoutes(v1, m)

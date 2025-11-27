@@ -29,6 +29,12 @@ type BillingHandlersInterface interface {
 	GetFiscalDocumentTypeByIDHandler(c *gin.Context)
 	UpdateFiscalDocumentTypeHandler(c *gin.Context)
 	DeleteFiscalDocumentTypeHandler(c *gin.Context)
+
+	CreateInvoiceHandler(c *gin.Context)
+	AddPaymentToInvoiceHandler(c *gin.Context)
+	UpdatePaymentStatusHandler(c *gin.Context)
+	GetPaymentByIDHandler(c *gin.Context)
+	GetInvoiceByIDHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -76,4 +82,14 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 		fiscalDocumentTypesGroup.DELETE("/:id", m.RBACPermission("billing:delete"), r.DeleteFiscalDocumentTypeHandler)
 	}
 
+	invoicesGroup := billingGroup.Group("/invoices")
+	invoicesGroup.POST("", r.CreateInvoiceHandler)
+	invoicesGroup.GET("/:invoice_id", r.GetInvoiceByIDHandler)
+	invoicesGroup.POST("/payment", r.AddPaymentToInvoiceHandler)
+
+	paymentsGroup := billingGroup.Group("/payments")
+	{
+		paymentsGroup.GET("/:payment_id", r.GetPaymentByIDHandler)
+		paymentsGroup.PATCH("/:payment_id/status", m.RBACPermission("billing:process_payment"), r.UpdatePaymentStatusHandler)
+	}
 }

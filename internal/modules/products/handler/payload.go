@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	marketinghandlers "github.com/vitalfit/api/internal/modules/marketing/handlers"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 )
@@ -151,4 +152,25 @@ type BranchServiceResponse struct {
 	MaxCapacity       int       `json:"max_capacity"`
 	PriceForMember    float64   `json:"price_for_member"`
 	PriceForNonMember float64   `json:"price_for_non_member"`
+}
+
+type PublicServiceResponse struct {
+	ServiceID               uuid.UUID                          `json:"service_id"`
+	CategoryID              uuid.UUID                          `json:"category_id"`
+	Name                    string                             `json:"name"`
+	Description             string                             `json:"description"`
+	DurationMinutes         int64                              `json:"duration_minutes"`
+	PriorityScore           int64                              `json:"priority_score"`
+	IsFeatured              bool                               `json:"is_featured"`
+	CreatedAt               time.Time                          `json:"created_at"`
+	UpdatedAt               time.Time                          `json:"updated_at"`
+	ServiceCategory         ServiceCategoryResponse            `json:"service_category"`
+	Images                  []ImagesRensponse                  `json:"images"`
+	Banners                 []marketinghandlers.BannerResponse `json:"banners"`
+	LowestPriceMember       float64                            `json:"lowest_price_member"`
+	LowestPriceNoMember     float64                            `json:"lowest_price_no_member"`
+	BaseCurrency            string                             `json:"base_currency"`
+	Ref_LowestPriceMember   decimal.Decimal                    `json:"ref_lowest_price_member"`
+	Ref_LowestPriceNoMember decimal.Decimal                    `json:"ref_lowest_price_no_member"`
+	Ref_BaseCurrency        string                             `json:"ref_base_currency"`
 }

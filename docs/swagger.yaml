@@ -376,6 +376,21 @@ definitions:
     - name
     - prefix
     type: object
+  billinghandlers.CreateInvoicePayload:
+    properties:
+      branch_id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/billinghandlers.ItemDTO'
+        minItems: 1
+        type: array
+      user_id:
+        type: string
+    required:
+    - branch_id
+    - items
+    type: object
   billinghandlers.CreatePaymentMethodPayload:
     properties:
       configuration:
@@ -401,6 +416,26 @@ definitions:
     - processing_type
     - type
     type: object
+  billinghandlers.CreatePaymentPayload:
+    properties:
+      amount_paid:
+        type: number
+      currency_paid:
+        type: string
+      invoice_id:
+        type: string
+      payment_method_id:
+        type: string
+      receipt_url:
+        type: string
+      transaction_id:
+        type: string
+    required:
+    - amount_paid
+    - currency_paid
+    - invoice_id
+    - payment_method_id
+    type: object
   billinghandlers.FiscalDocumentTypeResponse:
     properties:
       created_at:
@@ -412,6 +447,82 @@ definitions:
       prefix:
         type: string
     type: object
+  billinghandlers.InvoiceItemResponse:
+    properties:
+      discount_applied:
+        type: number
+      invoice_item_id:
+        type: string
+      membership_type_id:
+        type: string
+      package_id:
+        type: string
+      quantity:
+        type: integer
+      service_id:
+        type: string
+      subtotal:
+        type: number
+      tax_amount:
+        type: number
+      tax_rate:
+        type: number
+      total_line:
+        type: number
+      unit_price:
+        type: number
+    type: object
+  billinghandlers.InvoiceResponse:
+    properties:
+      branch_id:
+        type: string
+      created_at:
+        type: string
+      due_date:
+        type: string
+      invoice_id:
+        type: string
+      invoice_items:
+        items:
+          $ref: '#/definitions/billinghandlers.InvoiceItemResponse'
+        type: array
+      invoice_number:
+        type: string
+      issue_date:
+        type: string
+      payments:
+        items:
+          $ref: '#/definitions/billinghandlers.PaymentResponse'
+        type: array
+      status:
+        type: string
+      sub_total:
+        type: number
+      tax:
+        type: number
+      total_amount:
+        type: number
+      user_id:
+        type: string
+    type: object
+  billinghandlers.ItemDTO:
+    properties:
+      item_id:
+        type: string
+      item_type:
+        enum:
+        - membership
+        - package
+        - service
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - item_id
+    - item_type
+    - quantity
+    type: object
   billinghandlers.MethodBranchConfigPayload:
     properties:
       method_id:
@@ -420,6 +531,29 @@ definitions:
         type: array
     required:
     - method_id
+    type: object
+  billinghandlers.PaymentResponse:
+    properties:
+      amount_base:
+        type: number
+      amount_paid:
+        type: number
+      currency_paid:
+        type: string
+      exchange_rate:
+        type: number
+      payment_date:
+        type: string
+      payment_id:
+        type: string
+      payment_method_id:
+        type: string
+      receipt_url:
+        type: string
+      status:
+        type: string
+      transaction_id:
+        type: string
     type: object
   billinghandlers.UpdateBranchConfigPayload:
     properties:
@@ -455,6 +589,18 @@ definitions:
         type: string
     required:
     - processing_type
+    type: object
+  billinghandlers.UpdatePaymentStatus:
+    properties:
+      status:
+        enum:
+        - Completed
+        - Failed
+        - Refunded
+        - Pending
+        type: string
+    required:
+    - status
     type: object
   bookinghandlers.BookUser:
     properties:
@@ -811,6 +957,29 @@ definitions:
       startAt:
         type: string
       updatedAt:
+        type: string
+    type: object
+  comboshandler.PublicPackageResponse:
+    properties:
+      base_currency:
+        type: string
+      description:
+        type: string
+      endAt:
+        type: string
+      isActive:
+        type: boolean
+      name:
+        type: string
+      packageId:
+        type: string
+      price:
+        type: number
+      ref_currency:
+        type: string
+      ref_price:
+        type: number
+      startAt:
         type: string
     type: object
   instructordomain.InstructorSummary:
@@ -1469,6 +1638,49 @@ definitions:
         type: string
       is_primary:
         type: boolean
+    type: object
+  productshandler.PublicServiceResponse:
+    properties:
+      banners:
+        items:
+          $ref: '#/definitions/marketinghandlers.BannerResponse'
+        type: array
+      base_currency:
+        type: string
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/productshandler.ImagesRensponse'
+        type: array
+      is_featured:
+        type: boolean
+      lowest_price_member:
+        type: number
+      lowest_price_no_member:
+        type: number
+      name:
+        type: string
+      priority_score:
+        type: integer
+      ref_base_currency:
+        type: string
+      ref_lowest_price_member:
+        type: number
+      ref_lowest_price_no_member:
+        type: number
+      service_category:
+        $ref: '#/definitions/productshandler.ServiceCategoryResponse'
+      service_id:
+        type: string
+      updated_at:
+        type: string
     type: object
   productshandler.ServiceCategoryResponse:
     properties:
@@ -2517,6 +2729,174 @@ paths:
       summary: Update a fiscal document type
       tags:
       - Billing
+  /billing/invoices:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new invoice for a specific user and branch, containing
+        a list of items. If the user making the request is a client, the invoice is
+        created for them. If the user is staff (with 'billing:create_invoice' permission),
+        the 'user_id' in the payload is required to specify for whom the invoice is
+        being created.
+      parameters:
+      - description: Invoice creation payload
+        in: body
+        name: invoice
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.CreateInvoicePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Invoice created successfully
+          schema:
+            properties:
+              invoice_id:
+                type: string
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid payload, missing user_id for staff)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have permission)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new invoice
+      tags:
+      - Billing
+  /billing/invoices/{invoice_id}:
+    get:
+      description: Retrieves the details of a specific invoice by its UUID. The user
+        must have access to the invoice (either be the owner, a super_admin, or have
+        'billing:get' permission).
+      parameters:
+      - description: Invoice UUID
+        in: path
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Invoice details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/billinghandlers.InvoiceResponse'
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have access to this invoice)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found (invoice not found)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get an invoice by ID
+      tags:
+      - Billing
+  /billing/invoices/payment:
+    post:
+      consumes:
+      - application/json
+      description: Adds a payment to an existing invoice. Clients can only pay their
+        own invoices. Staff with 'billing:process_payment' permission or super admins
+        can add payments to any invoice.
+      parameters:
+      - description: Payment creation payload
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.CreatePaymentPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Payment added successfully
+          schema:
+            properties:
+              message:
+                type: string
+              payment_id:
+                type: string
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid payload, currency not supported)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have permission or is trying to pay
+            another user's invoice)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found (invoice not found)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add a payment to an invoice
+      tags:
+      - Billing
   /billing/payment-methods:
     get:
       description: Retrieves a list of all available payment methods in the system.
@@ -2713,6 +3093,106 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a payment method
+      tags:
+      - Billing
+  /billing/payments/{payment_id}:
+    get:
+      description: Retrieves the details of a specific payment by its UUID. The user
+        must have access to the associated invoice.
+      parameters:
+      - description: Payment UUID
+        in: path
+        name: payment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/billinghandlers.PaymentResponse'
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have access to this payment's invoice)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found (payment not found)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a payment by ID
+      tags:
+      - Billing
+  /billing/payments/{payment_id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Updates the status of a specific payment. This is restricted to
+        users with 'billing:process_payment' permission or super admins.
+      parameters:
+      - description: Payment UUID
+        in: path
+        name: payment_id
+        required: true
+        type: string
+      - description: New payment status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.UpdatePaymentStatus'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Payment status updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID or status)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a payment's status
       tags:
       - Billing
   /billing/rates:
@@ -5350,6 +5830,82 @@ paths:
       summary: Get public branches for map
       tags:
       - Public
+  /public/branches/{id}/services:
+    get:
+      description: Retrieves a paginated list of all public services for a specific
+        branch with optional filtering, sorting, and currency conversion.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort direction (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Sort by field (e.g., price)
+        enum:
+        - price
+        in: query
+        name: sortby
+        type: string
+      - description: Search term for service name
+        in: query
+        name: search
+        type: string
+      - description: Filter by service category UUID
+        in: query
+        name: category
+        type: string
+      - description: Filter by maximum price
+        in: query
+        name: price
+        type: integer
+      - default: USD
+        description: Currency for price conversion (e.g., VES)
+        in: query
+        name: currency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of public services for the branch
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productshandler.PublicServiceResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID or query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all public services for a branch
+      tags:
+      - Public
   /public/membership-plans:
     get:
       description: Retrieves a paginated list of all public membership types, with
@@ -5406,6 +5962,134 @@ paths:
                 type: string
             type: object
       summary: List all public membership types
+      tags:
+      - Public
+  /public/packages:
+    get:
+      description: Retrieves a paginated list of all available public packages, with
+        optional searching and currency conversion.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for package name
+        in: query
+        name: search
+        type: string
+      - default: USD
+        description: Currency for price conversion (e.g., VES)
+        in: query
+        name: currency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of public packages
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/comboshandler.PublicPackageResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all public packages
+      tags:
+      - Public
+  /public/services:
+    get:
+      description: Retrieves a paginated list of all public services with optional
+        filtering, sorting, and currency conversion.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort direction (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Sort by field (e.g., price)
+        enum:
+        - price
+        in: query
+        name: sortby
+        type: string
+      - description: Search term for service name
+        in: query
+        name: search
+        type: string
+      - description: Filter by service category UUID
+        in: query
+        name: category
+        type: string
+      - description: Filter by maximum price
+        in: query
+        name: price
+        type: integer
+      - default: USD
+        description: Currency for price conversion (e.g., VES)
+        in: query
+        name: currency
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of public services
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productshandler.PublicServiceResponse'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all public services
       tags:
       - Public
   /schedule/{classId}:

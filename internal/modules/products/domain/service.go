@@ -23,4 +23,8 @@ type ProductsServiceInterface interface {
 	UpdateBranchService(ctx context.Context, branchService *ServiceBranchDetail) error
 	DeleteBranchService(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) error
 	GetBranchServiceByID(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) (*ServiceBranchDetail, error)
+
+	//public
+	GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
+	GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
 }

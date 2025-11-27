@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"github.com/vitalfit/api/pkg/pagination"
 )
 
@@ -33,5 +34,12 @@ type BillingServiceInterface interface {
 	GetHistoricalRateForCurrency(ctx context.Context, date, currency string) (float64, error)
 
 	//orders
+	CreateInvoice(ctx context.Context, invoice *Invoice, items []InvoiceItem) error
+	AddPaymentToInvoice(ctx context.Context, payment *Payment) error
+	CheckInvoiceAccess(ctx context.Context, user *authdomain.Users, invoiceID uuid.UUID) error
 
+	GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*Invoice, error)
+	GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*Payment, error)
+	UpdatePaymentStatus(ctx context.Context, payment *Payment) error
+	UpdateInvoiceStatus(ctx context.Context, invoice *Invoice) error
 }

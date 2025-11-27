@@ -279,3 +279,160 @@ func (s *ProductsStore) UpdateService(ctx context.Context, service *productsdoma
 		return nil
 	})
 }
+
+func (s *ProductsStore) GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]productsdomain.ServiceWithPrice, int64, error) {
+	var services []productsdomain.ServiceWithPrice
+	var count int64
+
+	minMemberSQL := `
+        COALESCE(
+            (SELECT MIN(sbd.price_for_member)
+             FROM service_branch_details sbd
+             WHERE sbd.service_id = services.service_id
+               AND sbd.deleted_at IS NULL
+               AND sbd.is_visible = true
+            ), 
+        0)`
+
+	minNonMemberSQL := `
+        COALESCE(
+            (SELECT MIN(sbd.price_for_non_member)
+             FROM service_branch_details sbd
+             WHERE sbd.service_id = services.service_id
+               AND sbd.deleted_at IS NULL
+               AND sbd.is_visible = true
+            ), 
+        0)`
+
+	minAbsoluteSQL := `
+        COALESCE(
+            (SELECT MIN(LEAST(sbd.price_for_member, sbd.price_for_non_member))
+             FROM service_branch_details sbd
+             WHERE sbd.service_id = services.service_id
+               AND sbd.deleted_at IS NULL
+               AND sbd.is_visible = true
+            ), 
+        0)`
+
+	tx := s.db.WithContext(ctx).
+		Table("services").
+		Select("services.*, (" + minMemberSQL + ") as lowest_price_member, (" + minNonMemberSQL + ") as lowest_price_non_member, 'USD' as base_currency").
+		Where("services.deleted_at IS NULL")
+
+	tx = tx.Where(`EXISTS (
+        SELECT 1 FROM service_branch_details sbd 
+        WHERE sbd.service_id = services.service_id 
+          AND sbd.deleted_at IS NULL 
+          AND sbd.is_visible = true
+    )`)
+
+	if fq.Search != "" {
+		tx = tx.Where("services.name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	if fq.Category != "" {
+		tx = tx.Where("services.category_id = ?", fq.Category)
+	}
+
+	if fq.Price > 0 {
+		tx = tx.Where("("+minAbsoluteSQL+") <= ?", fq.Price)
+	}
+
+	if err := tx.Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	sortDirection := fq.Sort
+	if sortDirection == "" {
+		sortDirection = "DESC"
+	}
+
+	switch fq.Sortby {
+	case "price":
+		tx = tx.Order("(" + minAbsoluteSQL + ") " + sortDirection)
+	default:
+		tx = tx.Order("services.is_featured DESC, services.priority_score DESC, services.created_at " + sortDirection)
+	}
+
+	page := fq.Page
+	if page < 1 {
+		page = 1
+	}
+
+	err := tx.
+		Preload("Category").
+		Preload("Images", func(db *gorm.DB) *gorm.DB {
+			return db.Order("display_order ASC")
+		}).
+		Limit(fq.Limit).
+		Offset((page - 1) * fq.Limit).
+		Find(&services).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return services, count, nil
+}
+
+func (s *ProductsStore) GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]productsdomain.ServiceWithPrice, int64, error) {
+	var services []productsdomain.ServiceWithPrice
+	var count int64
+
+	tx := s.db.WithContext(ctx).
+		Table("services").
+		Select("services.*, sbd.price_for_member as lowest_price_member, sbd.price_for_non_member as lowest_price_non_member").
+		Joins("JOIN service_branch_details sbd ON sbd.service_id = services.service_id").
+		Where("services.deleted_at IS NULL").
+		Where("sbd.branch_id = ?", branchID).
+		Where("sbd.deleted_at IS NULL").
+		Where("sbd.is_visible = true")
+
+	if fq.Search != "" {
+		tx = tx.Where("services.name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	if fq.Category != "" {
+		tx = tx.Where("services.category_id = ?", fq.Category)
+	}
+
+	if fq.Price > 0 {
+		tx = tx.Where("LEAST(sbd.price_for_member, sbd.price_for_non_member) <= ?", fq.Price)
+	}
+
+	if err := tx.Model(&productsdomain.Service{}).Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	sortDirection := fq.Sort
+	if sortDirection == "" {
+		sortDirection = "DESC"
+	}
+
+	switch fq.Sortby {
+	case "price":
+		tx = tx.Order("LEAST(sbd.price_for_member, sbd.price_for_non_member) " + sortDirection)
+	default:
+		tx = tx.Order("services.is_featured DESC, services.priority_score DESC, services.created_at " + sortDirection)
+	}
+
+	page := fq.Page
+	if page < 1 {
+		page = 1
+	}
+
+	err := tx.
+		Preload("Category").
+		Preload("Images", func(db *gorm.DB) *gorm.DB {
+			return db.Order("display_order ASC")
+		}).
+		Limit(fq.Limit).
+		Offset((page - 1) * fq.Limit).
+		Find(&services).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return services, count, nil
+}

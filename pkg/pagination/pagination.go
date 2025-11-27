@@ -10,7 +10,7 @@ import (
 type PaginatedFeedQuery struct {
 	Limit        int    `json:"limit" validate:"gte=1,lte=20"`
 	Page         int    `json:"page" validate:"gte=1"`
-	Sort         string `json:"sort" validate:"oneof=asc desc"`
+	Sort         string `json:"sort" validate:"oneof=asc desc price"`
 	Search       string `json:"search" validate:"max=100"`
 	Status       string `json:"status" validate:"oneof=Active Inactive Maintenance ''"`
 	Since        string `json:"since"`
@@ -19,6 +19,8 @@ type PaginatedFeedQuery struct {
 	Role         string `json:"role"`
 	Category     string `json:"category"`
 	Identity_doc string `json:"identity_doc"`
+	Price        int    `json:"price"`
+	Sortby       string `json:"sortby"`
 }
 
 func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) {
@@ -78,6 +80,15 @@ func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) 
 		fq.Identity_doc = identity_doc
 	}
 
+	price := qs.Get("price")
+	if price != "" {
+		price, err := strconv.Atoi(price)
+		if err != nil {
+			return fq, fmt.Errorf("invalid 'price' parameter: %w", err)
+		}
+		fq.Price = price
+	}
+
 	status := qs.Get("status")
 	if status != "" {
 		fq.Status = status
@@ -91,6 +102,10 @@ func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) 
 	until := qs.Get("until")
 	if until != "" {
 		fq.Until = parseTime(until)
+	}
+	sortby := qs.Get("sortby")
+	if sortby != "" {
+		fq.Sortby = sortby
 	}
 
 	return fq, nil

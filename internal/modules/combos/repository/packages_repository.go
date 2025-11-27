@@ -3,6 +3,7 @@ package combosrepository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
@@ -105,4 +106,26 @@ func (s *CombosStore) DeletePackage(ctx context.Context, packageID uuid.UUID) er
 		return shared_errors.ErrNotFound
 	}
 	return nil
+}
+
+func (s *CombosStore) GetPublicPackages(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*combosdomain.Package, int64, error) {
+	var packages []*combosdomain.Package
+	var count int64
+
+	query := s.db.WithContext(ctx).Model(&combosdomain.Package{}).
+		Where("is_active = ?", true).
+		Where("deleted_at IS NULL").
+		Where("(start_at IS NULL OR start_at <= ?) AND (end_at IS NULL OR end_at >= ?)", time.Now(), time.Now())
+
+	if fq.Search != "" {
+		query = query.Where("name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	if err := query.Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (fq.Page - 1) * fq.Limit
+	err := query.Limit(fq.Limit).Offset(offset).Order("created_at " + fq.Sort).Find(&packages).Error
+	return packages, count, err
 }

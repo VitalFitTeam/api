@@ -40,3 +40,7 @@ func (s *CombosServices) UpdatePackage(ctx context.Context, pkg *combosdomain.Pa
 func (s *CombosServices) DeletePackage(ctx context.Context, packageID uuid.UUID) error {
 	return s.store.Combos.DeletePackage(ctx, packageID)
 }
+
+func (s *CombosServices) GetPublicPackages(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*combosdomain.Package, int64, error) {
+	return s.store.Combos.GetPublicPackages(ctx, fq)
+}

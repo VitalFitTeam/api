@@ -100,3 +100,17 @@ func (s *FiscalDocumentStore) DeleteFiscalDocumentType(ctx context.Context, docT
 		return nil
 	})
 }
+
+func (s *FiscalDocumentStore) GetFiscalDocumentTypeByName(ctx context.Context, name string) (*billingdomain.FiscalDocumentType, error) {
+	var docType billingdomain.FiscalDocumentType
+	err := s.db.WithContext(ctx).Where("name = ?", name).First(&docType).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &docType, nil
+}

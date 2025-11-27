@@ -83,3 +83,8 @@ type ServicesSummary struct {
 	Actives  int64 `json:"actives"`
 	Featured int64 `json:"featured"`
 }
+type ServiceWithPrice struct {
+	Service              `gorm:"embedded"`
+	LowestPriceMember    float64 `gorm:"column:lowest_price_member" json:"lowest_price_member"`
+	LowestPriceNonMember float64 `gorm:"column:lowest_price_non_member" json:"lowest_price_non_member"`
+}

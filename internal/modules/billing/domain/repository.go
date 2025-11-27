@@ -8,6 +8,13 @@ import (
 )
 
 type BillingRepository interface {
+	CreateInvoice(ctx context.Context, invoice *Invoice) error
+	GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*Invoice, error)
+
+	UpdateInvoiceStatus(ctx context.Context, invoice *Invoice) error
+	AddPaymentToInvoice(ctx context.Context, payment *Payment) error
+	GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*Payment, error)
+	UpdatePaymentStatus(ctx context.Context, payment *Payment) error
 }
 
 type PaymentMethodsRepository interface {
@@ -32,6 +39,7 @@ type FiscalDocumentRepository interface {
 	GetFiscalDocumentTypeByID(ctx context.Context, docTypeID uuid.UUID) (*FiscalDocumentType, error)
 	UpdateFiscalDocumentType(ctx context.Context, docType *FiscalDocumentType) error
 	DeleteFiscalDocumentType(ctx context.Context, docTypeID uuid.UUID) error
+	GetFiscalDocumentTypeByName(ctx context.Context, name string) (*FiscalDocumentType, error)
 }
 
 type BillingStoreCacheRepository interface {

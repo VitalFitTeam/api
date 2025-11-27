@@ -64,7 +64,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		ProductsServices:   productsservice.NewProductsService(store),
 		MarketingServices:  marketingservice.NewMarketingService(store),
 		MembershipServices: membershipsservice.NewMembershipService(store),
-		BillingServices:    billingservice.NewBillingService(store, cache, cfg),
+		BillingServices:    billingservice.NewBillingService(store, cache, cfg, mailer),
 		ScheduleServices:   scheduleservice.NewScheduleService(store),
 		CombosServices:     combosservices.NewCombosServices(store),
 		BookingServices:    bookingservice.NewBookingService(store),
