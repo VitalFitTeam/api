@@ -83,7 +83,7 @@ func (h *UserService) GetClients(ctx context.Context, fq pagination.PaginatedFee
 }
 
 func (h *UserService) Delete(ctx context.Context, userID uuid.UUID) error {
-	if err := h.store.Users.Delete(ctx, userID); err != nil {
+	if err := h.store.Users.SoftDelete(ctx, userID); err != nil {
 		return err
 	}
 	return nil

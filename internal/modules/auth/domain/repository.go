@@ -27,6 +27,7 @@ type UserRepository interface {
 	GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 	UpdateUserClient(ctx context.Context, user *Users) error
 	UpdateUserStaff(ctx context.Context, user *Users) error
+	SoftDelete(ctx context.Context, userID uuid.UUID) error
 }
 
 type RolesRepository interface {

@@ -51,6 +51,10 @@ func (m *UserStoreMock) Delete(ctx context.Context, userID uuid.UUID) error {
 	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
+func (m *UserStoreMock) SoftDelete(ctx context.Context, userID uuid.UUID) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
 
 func (m *UserStoreMock) Activate(ctx context.Context, code string) error {
 	args := m.Called(ctx, code)

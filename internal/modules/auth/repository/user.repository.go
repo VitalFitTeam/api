@@ -225,17 +225,16 @@ func (s *UserStore) delete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) e
 	return nil
 }
 
-// func (s *UserStore) softDelete(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
-// 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
-// 	defer cancel()
+func (s *UserStore) SoftDelete(ctx context.Context, userID uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
 
-// 	result := tx.WithContext(ctx).Delete(&authdomain.Users{}, userID)
-
-// 	if result.Error != nil {
-// 		return result.Error
-// 	}
-// 	return nil
-// }
+	result := s.db.WithContext(ctx).Delete(&authdomain.Users{}, userID)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
 
 // Elimina las invitaciones asociadas a ese usuario.
 func (s *UserStore) deleteUserInvitations(ctx context.Context, tx *gorm.DB, userID uuid.UUID) error {
