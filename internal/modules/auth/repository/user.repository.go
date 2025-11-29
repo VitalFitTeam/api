@@ -62,6 +62,8 @@ func (s *UserStore) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.
 
 	result := s.db.WithContext(ctx).
 		Preload("Role").
+		Preload("ClientProfile").
+		Preload("ClientMembership").
 		Where("user_id = ?", userID).
 		First(&user)
 

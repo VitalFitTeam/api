@@ -187,3 +187,36 @@ func (s *MembershipStore) UpdateClientMembership(ctx context.Context, membership
 	}
 	return nil
 }
+
+func (s *MembershipStore) ClientHasActiveMembership(ctx context.Context, clientID uuid.UUID) (bool, error) {
+	var count int64
+	err := s.db.WithContext(ctx).
+		Model(&membershipsdomain.ClientMembership{}).
+		Where("user_id = ?", clientID).
+		Where("status = ?", membershipsdomain.StatusActive).
+		Where("end_date >= ?", time.Now()).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (s *MembershipStore) GetClientMembership(ctx context.Context, clientID uuid.UUID) (*membershipsdomain.ClientMembership, error) {
+	var clientMembership membershipsdomain.ClientMembership
+	err := s.db.WithContext(ctx).
+		Preload("MembershipType").
+		Where("user_id = ?", clientID).
+		First(&clientMembership).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+
+	return &clientMembership, nil
+}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -89,6 +90,8 @@ type Users struct {
 	ProfilePictureURL  string         `gorm:"type:varchar(255)" json:"profile_picture_url"`
 	IsValidated        bool           `gorm:"default:false" json:"is_validated"`
 	ClientProfile      ClientProfiles `gorm:"foreignKey:UserID;references:UserID"`
+
+	ClientMembership *membershipsdomain.ClientMembership `gorm:"foreignKey:UserID" json:"client_membership,omitempty"`
 
 	RoleID uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
 	Role   Roles     `gorm:"foreignKey:RoleID;references:RoleID" json:"role"`

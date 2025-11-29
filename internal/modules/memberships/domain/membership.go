@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"gorm.io/gorm"
 )
 
@@ -59,7 +58,7 @@ type ClientMembership struct {
 	CancellationReasonID *uuid.UUID `gorm:"type:uuid;default:null" json:"cancellation_reason_id,omitempty"`
 	CancellationNotes    string     `gorm:"type:text" json:"cancellation_notes,omitempty"`
 
-	User *authdomain.Users `gorm:"foreignKey:UserID;references:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
+	//User *authdomain.Users `gorm:"foreignKey:UserID;references:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
 
 	MembershipType *MembershipType `gorm:"foreignKey:MembershipTypeID;references:MembershipTypeID;constraint:OnDelete:RESTRICT" json:"membership_type,omitempty"`
 

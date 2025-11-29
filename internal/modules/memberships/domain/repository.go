@@ -19,4 +19,6 @@ type MembershipsRepository interface {
 	GetSummary(ctx context.Context) (*MembershipSummary, error)
 
 	UpdateClientMembership(ctx context.Context, membership *ClientMembership) error
+	ClientHasActiveMembership(ctx context.Context, clientID uuid.UUID) (bool, error)
+	GetClientMembership(ctx context.Context, clientID uuid.UUID) (*ClientMembership, error)
 }
