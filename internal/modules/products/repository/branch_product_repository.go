@@ -93,3 +93,26 @@ func (s *ProductsStore) GetBranchServiceByID(ctx context.Context, branchID uuid.
 	}
 	return &branchService, nil
 }
+
+func (s *ProductsStore) GetBranchServicesByIDs(ctx context.Context, branchID uuid.UUID, serviceIDs []uuid.UUID) (map[uuid.UUID]*productsdomain.ServiceBranchDetail, error) {
+	if len(serviceIDs) == 0 {
+		return make(map[uuid.UUID]*productsdomain.ServiceBranchDetail), nil
+	}
+
+	var branchServices []*productsdomain.ServiceBranchDetail
+	err := s.db.WithContext(ctx).
+		Where("branch_id = ?", branchID).
+		Where("service_id IN ?", serviceIDs).
+		Find(&branchServices).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	branchServicesMap := make(map[uuid.UUID]*productsdomain.ServiceBranchDetail, len(branchServices))
+	for _, bs := range branchServices {
+		branchServicesMap[bs.ServiceID] = bs
+	}
+
+	return branchServicesMap, nil
+}

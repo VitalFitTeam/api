@@ -19,6 +19,7 @@ type ProductsRepository interface {
 	GetTotalCount(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
 	GetServiceSummary(ctx context.Context) (*ServicesSummary, error)
 	DeleteService(ctx context.Context, serviceID uuid.UUID) error
+	GetServicesByIDs(ctx context.Context, serviceIDs []uuid.UUID) (map[uuid.UUID]*Service, error)
 	GetServiceByID(ctx context.Context, serviceID uuid.UUID) (*Service, error)
 	UpdateService(ctx context.Context, service *Service, bannerID uuid.UUID) error
 
@@ -26,6 +27,7 @@ type ProductsRepository interface {
 	GetBranchService(ctx context.Context, branchID uuid.UUID) ([]*ServiceBranchDetail, error)
 	UpdateBranchService(ctx context.Context, branchService *ServiceBranchDetail) error
 	DeleteBranchService(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) error
+	GetBranchServicesByIDs(ctx context.Context, branchID uuid.UUID, serviceIDs []uuid.UUID) (map[uuid.UUID]*ServiceBranchDetail, error)
 	GetBranchServiceByID(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) (*ServiceBranchDetail, error)
 
 	GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)

@@ -105,6 +105,25 @@ func (s *MembershipStore) GetMembershipTypeByID(ctx context.Context, id uuid.UUI
 	return membership, nil
 }
 
+// GetMembershipTypesByIDs obtiene múltiples tipos de membresía por sus UUIDs y los devuelve en un mapa.
+func (s *MembershipStore) GetMembershipTypesByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]*membershipsdomain.MembershipType, error) {
+	if len(ids) == 0 {
+		return make(map[uuid.UUID]*membershipsdomain.MembershipType), nil
+	}
+
+	var memberships []*membershipsdomain.MembershipType
+	if err := s.db.WithContext(ctx).Where("membership_type_id IN ?", ids).Find(&memberships).Error; err != nil {
+		return nil, err
+	}
+
+	membershipsMap := make(map[uuid.UUID]*membershipsdomain.MembershipType, len(memberships))
+	for _, m := range memberships {
+		membershipsMap[m.MembershipTypeID] = m
+	}
+
+	return membershipsMap, nil
+}
+
 // GetMembershipTypes devuelve todos los tipos de membresía activos.
 func (s *MembershipStore) GetMembershipTypes(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.MembershipType, error) {
 	var memberships []*membershipsdomain.MembershipType

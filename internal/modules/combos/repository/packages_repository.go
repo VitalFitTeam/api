@@ -129,3 +129,21 @@ func (s *CombosStore) GetPublicPackages(ctx context.Context, fq pagination.Pagin
 	err := query.Limit(fq.Limit).Offset(offset).Order("created_at " + fq.Sort).Find(&packages).Error
 	return packages, count, err
 }
+
+func (s *CombosStore) GetPackagesByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]*combosdomain.Package, error) {
+	if len(ids) == 0 {
+		return make(map[uuid.UUID]*combosdomain.Package), nil
+	}
+
+	var packages []*combosdomain.Package
+	if err := s.db.WithContext(ctx).Where("package_id IN ?", ids).Find(&packages).Error; err != nil {
+		return nil, err
+	}
+
+	packagesMap := make(map[uuid.UUID]*combosdomain.Package, len(packages))
+	for _, p := range packages {
+		packagesMap[p.PackageID] = p
+	}
+
+	return packagesMap, nil
+}

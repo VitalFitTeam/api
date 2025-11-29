@@ -249,6 +249,25 @@ func (s *ProductsStore) GetServiceByID(ctx context.Context, serviceID uuid.UUID)
 	return service, nil
 
 }
+
+func (s *ProductsStore) GetServicesByIDs(ctx context.Context, serviceIDs []uuid.UUID) (map[uuid.UUID]*productsdomain.Service, error) {
+	if len(serviceIDs) == 0 {
+		return make(map[uuid.UUID]*productsdomain.Service), nil
+	}
+
+	var services []*productsdomain.Service
+	if err := s.db.WithContext(ctx).Where("service_id IN ?", serviceIDs).Find(&services).Error; err != nil {
+		return nil, err
+	}
+
+	servicesMap := make(map[uuid.UUID]*productsdomain.Service, len(services))
+	for _, s := range services {
+		servicesMap[s.ServiceID] = s
+	}
+
+	return servicesMap, nil
+}
+
 func (s *ProductsStore) UpdateService(ctx context.Context, service *productsdomain.Service, bannerID uuid.UUID) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("service_id = ?", service.ServiceID).Delete(&productsdomain.ServiceImage{}).Error; err != nil {
