@@ -124,3 +124,11 @@ type PasswordResetToken struct {
 	Users  Users     `gorm:"foreignKey:UserID" json:"user"`
 	Expiry time.Time `gorm:"expiry"`
 }
+
+func (u *Users) HasActiveMembership() bool {
+	if u.ClientMembership == nil {
+		return false
+	}
+	return u.ClientMembership.Status == membershipsdomain.StatusActive
+
+}
