@@ -17,4 +17,6 @@ type MembershipsRepository interface {
 	GetMembershipTypes(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*MembershipType, error)
 	GetMembershipTypesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
 	GetSummary(ctx context.Context) (*MembershipSummary, error)
+
+	UpdateClientMembership(ctx context.Context, membership *ClientMembership) error
 }

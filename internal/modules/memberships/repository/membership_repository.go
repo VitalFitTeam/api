@@ -11,6 +11,7 @@ import (
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type MembershipStore struct {
@@ -159,4 +160,30 @@ func (s *MembershipStore) GetSummary(ctx context.Context) (*membershipsdomain.Me
 	}
 
 	return &summary, nil
+}
+
+func (s *MembershipStore) UpdateClientMembership(ctx context.Context, membership *membershipsdomain.ClientMembership) error {
+	err := s.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "user_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"membership_type_id",
+			"start_date",
+			"end_date",
+			"status",
+			"invoice_id",
+			"cancellation_reason_id",
+			"cancellation_notes",
+		}),
+	}).Create(membership).Error
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23503" {
+				return shared_errors.ErrNotFound
+			}
+		}
+		return err
+	}
+	return nil
 }
