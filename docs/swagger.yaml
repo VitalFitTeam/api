@@ -3352,12 +3352,13 @@ paths:
       - Booking
   /bookings/client/{userId}:
     get:
-      description: Returns all bookings for a specific client
+      description: Returns all bookings for a specific client. If the user is a client,
+        it returns their own bookings. If staff, the user ID must be provided in the
+        path.
       parameters:
-      - description: User UUID
+      - description: User UUID (required for staff)
         in: path
         name: userId
-        required: true
         type: string
       produces:
       - application/json
@@ -3372,7 +3373,7 @@ paths:
                 type: array
             type: object
         "400":
-          description: Bad Request
+          description: Bad Request (e.g., invalid UUID, missing userId for staff)
           schema:
             additionalProperties: true
             type: object
@@ -6194,14 +6195,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: Books a spot for the client in a class
+      description: Books a spot for a client in a class. If the user is a client,
+        they book for themselves. If staff, the 'user_id' in the payload is required.
       parameters:
       - description: Class UUID
         in: path
         name: classId
         required: true
         type: string
-      - description: User ID payload
+      - description: User ID payload (only required for staff)
         in: body
         name: payload
         required: true
@@ -6237,17 +6239,17 @@ paths:
   /schedule/branch/{branchId}/client/{userId}:
     get:
       description: Returns the available classes for a specific client in a specific
-        branch.
+        branch. If the user is a client, it returns their own schedule. If staff,
+        the user ID must be provided in the path.
       parameters:
       - description: Branch UUID
         in: path
         name: branchId
         required: true
         type: string
-      - description: Client UUID
+      - description: Client UUID (required for non-client users)
         in: path
         name: userId
-        required: true
         type: string
       produces:
       - application/json
@@ -6262,7 +6264,7 @@ paths:
                 type: array
             type: object
         "400":
-          description: Bad Request
+          description: Bad Request (e.g., invalid UUID, missing userId for staff)
           schema:
             additionalProperties: true
             type: object

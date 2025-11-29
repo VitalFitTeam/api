@@ -2238,7 +2238,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns all bookings for a specific client",
+                "description": "Returns all bookings for a specific client. If the user is a client, it returns their own bookings. If staff, the user ID must be provided in the path.",
                 "produces": [
                     "application/json"
                 ],
@@ -2249,10 +2249,9 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User UUID",
+                        "description": "User UUID (required for staff)",
                         "name": "userId",
-                        "in": "path",
-                        "required": true
+                        "in": "path"
                     }
                 ],
                 "responses": {
@@ -2271,7 +2270,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Bad Request (e.g., invalid UUID, missing userId for staff)",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -6504,7 +6503,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns the available classes for a specific client in a specific branch.",
+                "description": "Returns the available classes for a specific client in a specific branch. If the user is a client, it returns their own schedule. If staff, the user ID must be provided in the path.",
                 "produces": [
                     "application/json"
                 ],
@@ -6522,10 +6521,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Client UUID",
+                        "description": "Client UUID (required for non-client users)",
                         "name": "userId",
-                        "in": "path",
-                        "required": true
+                        "in": "path"
                     }
                 ],
                 "responses": {
@@ -6544,7 +6542,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Bad Request (e.g., invalid UUID, missing userId for staff)",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -6718,7 +6716,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Books a spot for the client in a class",
+                "description": "Books a spot for a client in a class. If the user is a client, they book for themselves. If staff, the 'user_id' in the payload is required.",
                 "consumes": [
                     "application/json"
                 ],
@@ -6738,7 +6736,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "User ID payload",
+                        "description": "User ID payload (only required for staff)",
                         "name": "payload",
                         "in": "body",
                         "required": true,

@@ -94,6 +94,8 @@ func (s *BookingStore) CountBookingsForClass(ctx context.Context, classID uuid.U
 		return tx.WithContext(ctx).
 			Model(&bookingdomain.Booking{}).
 			Where("class_id = ?", classID).
+			Where("status = ?", bookingdomain.BookingStatusConfirmed).
+			Where("deleted_at IS NULL").
 			Count(&count).Error
 	})
 
