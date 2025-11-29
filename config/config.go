@@ -61,7 +61,7 @@ type TokenConfig struct {
 
 func LoadConfig() *Config {
 	return &Config{
-		Addrs: env.GetString("ADDRS", ":8080"),
+		Addrs: env.GetString("ADDRS", ":8081"),
 		Db: dbConfig{
 			Dsn:          env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/vitalfit?sslmode=disable"),
 			MaxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),

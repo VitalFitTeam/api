@@ -262,6 +262,50 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 
 }
 
+// @Summary		Login with OAuth provider (Google, etc.)
+// @Description	Logs in a user using their email verified by an OAuth provider (Google).
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body	OAuthLoginPayload	true	"OAuth login payload (email only)"
+// @Success		200		{object}	object{token=string}	"Successfully authenticated and token generated"
+// @Failure		400		{object}	object{error=string}	"Invalid payload"
+// @Failure		404		{object}	object{error=string}	"User not found"
+// @Failure		500		{object}	object{error=string}	"Internal server error"
+// @Router			/auth/oauth-login [post]
+func (h *AuthHandlers) OAuthLoginHandler(c *gin.Context) {
+	var payload OAuthLoginPayload
+	ctx := c.Request.Context()
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	// Buscar usuario por email
+	user, err := h.services.UserServices.GetByEmail(ctx, payload.Email)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	// Generar token sin validar contraseña
+	token, err := h.services.AuthServices.GenerateToken(user)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+	})
+}
+
 // @Summary		Get current user profile
 // @Description	Retrieves the profile of the user authenticated via the JWT token in the request header.
 // @Tags			User

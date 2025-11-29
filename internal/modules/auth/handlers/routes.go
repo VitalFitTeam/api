@@ -55,6 +55,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		authGroup.PUT("/activate", r.ActivateUserHandler)
 		authGroup.PUT("/activate/:token", r.ActivateStaffHanlder)
 		authGroup.POST("/login", r.LoginHandler)
+		authGroup.POST("/oauth-login", r.OAuthLoginHandler)
 
 		passwordGroup := authGroup.Group("/password")
 		{
