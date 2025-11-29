@@ -13,6 +13,7 @@ import (
 	"github.com/vitalfit/api/config"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
+	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
@@ -229,6 +230,9 @@ func (s *BillingService) AddPaymentToInvoice(ctx context.Context, payment *billi
 			if err := s.UpdateInvoiceStatus(ctx, updatedInvoice); err != nil {
 				return err
 			}
+			if err := s.ActivateInvoiceItems(ctx, updatedInvoice); err != nil {
+				fmt.Printf("could not activate items for invoice %s: %v\n", updatedInvoice.InvoiceID, err)
+			}
 			s.sendPaidInvoiceEmail(updatedInvoice)
 		}
 	}
@@ -278,7 +282,9 @@ func (s *BillingService) UpdatePaymentStatus(ctx context.Context, payment *billi
 		if err != nil {
 			return fmt.Errorf("failed to update invoice status to paid: %w", err)
 		}
-		// Enviar correo de factura pagada en una goroutine
+		if err := s.ActivateInvoiceItems(ctx, invoice); err != nil {
+			fmt.Printf("could not activate items for invoice %s: %v\n", invoice.InvoiceID, err)
+		}
 		s.sendPaidInvoiceEmail(invoice)
 
 	}
@@ -327,7 +333,7 @@ func (bs *BillingService) sendPaidInvoiceEmail(invoice *billingdomain.Invoice) {
 				}
 			}
 			if itemName == "" {
-				itemName = "Producto"
+				itemName = "Product"
 			}
 			templateItems[i] = templateItem{Name: itemName, Quantity: item.Quantity, UnitPrice: item.UnitPrice.StringFixed(2), TotalLine: item.TotalLine.StringFixed(2)}
 		}
@@ -358,4 +364,30 @@ func (bs *BillingService) sendPaidInvoiceEmail(invoice *billingdomain.Invoice) {
 			fmt.Printf("failed to send paid invoice email: %v", err)
 		}
 	}()
+}
+
+func (bs *BillingService) ActivateInvoiceItems(ctx context.Context, invoice *billingdomain.Invoice) error {
+	for _, item := range invoice.InvoiceItems {
+		if item.MembershipTypeID.Valid {
+			membershipType, err := bs.store.Membership.GetMembershipTypeByID(ctx, item.MembershipTypeID.UUID)
+			if err != nil {
+				fmt.Printf("error getting membership type %s for invoice %s: %v\n", item.MembershipTypeID.UUID, invoice.InvoiceID, err)
+				continue
+			}
+
+			clientMembership := membershipsdomain.ClientMembership{
+				MembershipTypeID: item.MembershipTypeID.UUID,
+				InvoiceID:        invoice.InvoiceID,
+				UserID:           invoice.UserID,
+				StartDate:        time.Now(),
+				EndDate:          time.Now().AddDate(0, 0, membershipType.DurationDays),
+				Status:           membershipsdomain.StatusActive,
+			}
+
+			if err := bs.store.Membership.UpdateClientMembership(ctx, &clientMembership); err != nil {
+				return fmt.Errorf("failed to update client membership for user %s: %w", invoice.UserID, err)
+			}
+		}
+	}
+	return nil
 }

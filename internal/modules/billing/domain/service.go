@@ -42,4 +42,5 @@ type BillingServiceInterface interface {
 	GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*Payment, error)
 	UpdatePaymentStatus(ctx context.Context, payment *Payment) error
 	UpdateInvoiceStatus(ctx context.Context, invoice *Invoice) error
+	ActivateInvoiceItems(ctx context.Context, invoice *Invoice) error
 }

@@ -63,7 +63,9 @@ type ClientMembership struct {
 
 	MembershipType *MembershipType `gorm:"foreignKey:MembershipTypeID;references:MembershipTypeID;constraint:OnDelete:RESTRICT" json:"membership_type,omitempty"`
 
-	Invoice interface{} `gorm:"foreignKey:InvoiceID;references:InvoiceID;constraint:OnDelete:RESTRICT" json:"invoice,omitempty"`
-
 	CancellationReason *CancellationReason `gorm:"foreignKey:CancellationReasonID;references:ReasonID;constraint:OnDelete:SET NULL" json:"cancellation_reason,omitempty"`
+}
+
+func (ClientMembership) TableName() string {
+	return "client_memberships"
 }
