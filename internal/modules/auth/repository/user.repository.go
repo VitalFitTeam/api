@@ -206,6 +206,8 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*authdomain.U
 	defer cancel()
 	err := s.db.WithContext(ctx).
 		Preload("Role").
+		Preload("ClientProfile").
+		Preload("ClientMembership").
 		Where("email = ?", email).
 		Where("is_validated = ?", true).
 		First(&user).Error
