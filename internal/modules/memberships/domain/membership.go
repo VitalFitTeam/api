@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"gorm.io/gorm"
 )
 
@@ -27,4 +28,42 @@ type MembershipSummary struct {
 	Total     int64 `json:"total"`
 	Actives   int64 `json:"actives"`
 	Inactives int64 `json:"inactives"`
+}
+
+type MembershipStatus string
+
+const (
+	StatusActive    MembershipStatus = "Active"
+	StatusExpired   MembershipStatus = "Expired"
+	StatusCancelled MembershipStatus = "Cancelled"
+)
+
+type CancellationReason struct {
+	// Mapeo a cancellation_reasons
+	ReasonID    uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"reason_id"`
+	Description string    `gorm:"type:varchar(255);unique;not null" json:"description"`
+	IsActive    bool      `gorm:"type:boolean;not null;default:true" json:"is_active"`
+}
+
+type ClientMembership struct {
+	ClientMembershipID uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"client_membership_id"`
+	UserID             uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
+	MembershipTypeID   uuid.UUID `gorm:"type:uuid;not null" json:"membership_type_id"`
+
+	StartDate time.Time `gorm:"type:date;not null" json:"start_date"`
+	EndDate   time.Time `gorm:"type:date;not null" json:"end_date"`
+
+	Status    MembershipStatus `gorm:"type:membership_status;not null" json:"status"`
+	InvoiceID uuid.UUID        `gorm:"type:uuid;not null" json:"invoice_id"`
+
+	CancellationReasonID *uuid.UUID `gorm:"type:uuid;default:null" json:"cancellation_reason_id,omitempty"`
+	CancellationNotes    string     `gorm:"type:text" json:"cancellation_notes,omitempty"`
+
+	User *authdomain.Users `gorm:"foreignKey:UserID;references:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
+
+	MembershipType *MembershipType `gorm:"foreignKey:MembershipTypeID;references:MembershipTypeID;constraint:OnDelete:RESTRICT" json:"membership_type,omitempty"`
+
+	Invoice interface{} `gorm:"foreignKey:InvoiceID;references:InvoiceID;constraint:OnDelete:RESTRICT" json:"invoice,omitempty"`
+
+	CancellationReason *CancellationReason `gorm:"foreignKey:CancellationReasonID;references:ReasonID;constraint:OnDelete:SET NULL" json:"cancellation_reason,omitempty"`
 }
