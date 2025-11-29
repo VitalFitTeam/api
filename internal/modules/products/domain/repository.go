@@ -30,4 +30,6 @@ type ProductsRepository interface {
 
 	GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
 	GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
+
+	ClientServiceBalance(ctx context.Context, clientBalance *ClientServiceBalance) error
 }

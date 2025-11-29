@@ -14,6 +14,7 @@ import (
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
+	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
@@ -380,12 +381,42 @@ func (bs *BillingService) ActivateInvoiceItems(ctx context.Context, invoice *bil
 				InvoiceID:        invoice.InvoiceID,
 				UserID:           invoice.UserID,
 				StartDate:        time.Now(),
-				EndDate:          time.Now().AddDate(0, 0, membershipType.DurationDays),
+				EndDate:          time.Now().AddDate(0, 0, membershipType.DurationDays*item.Quantity),
 				Status:           membershipsdomain.StatusActive,
 			}
 
 			if err := bs.store.Membership.UpdateClientMembership(ctx, &clientMembership); err != nil {
 				return fmt.Errorf("failed to update client membership for user %s: %w", invoice.UserID, err)
+			}
+
+			if err := bs.store.Users.UpdateClientCategory(ctx, invoice.UserID, authdomain.ClientCategoryVIP); err != nil {
+				fmt.Printf("could not update client category to VIP for user %s: %v\n", invoice.UserID, err)
+			}
+		} else if item.PackageID.Valid {
+			pkg, err := bs.store.Combos.GetPackageByID(ctx, item.PackageID.UUID)
+			if err != nil {
+				fmt.Printf("error getting package %s for invoice %s: %v\n", item.PackageID.UUID, invoice.InvoiceID, err)
+				continue
+			}
+
+			for _, packageItem := range pkg.PackageItems {
+				clientServiceBalance := productsdomain.ClientServiceBalance{
+					UserID:    invoice.UserID,
+					ServiceID: packageItem.ServiceID,
+					Balance:   packageItem.SessionsIncluded * item.Quantity,
+				}
+				if err := bs.store.Products.ClientServiceBalance(ctx, &clientServiceBalance); err != nil {
+					fmt.Printf("error updating client service balance for user %s, service %s: %v\n", invoice.UserID, packageItem.ServiceID, err)
+				}
+			}
+		} else if item.ServiceID.Valid {
+			clientServiceBalance := productsdomain.ClientServiceBalance{
+				UserID:    invoice.UserID,
+				ServiceID: item.ServiceID.UUID,
+				Balance:   item.Quantity,
+			}
+			if err := bs.store.Products.ClientServiceBalance(ctx, &clientServiceBalance); err != nil {
+				fmt.Printf("error updating client service balance for user %s, service %s: %v\n", invoice.UserID, item.ServiceID.UUID, err)
 			}
 		}
 	}

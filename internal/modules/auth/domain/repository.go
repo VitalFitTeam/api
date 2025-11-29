@@ -28,6 +28,8 @@ type UserRepository interface {
 	UpdateUserClient(ctx context.Context, user *Users) error
 	UpdateUserStaff(ctx context.Context, user *Users) error
 	SoftDelete(ctx context.Context, userID uuid.UUID) error
+	UpdateClientStatus(ctx context.Context, userID uuid.UUID, status UserStatusEnum) error
+	UpdateClientCategory(ctx context.Context, userID uuid.UUID, category ClientCategoryEnum) error
 }
 
 type RolesRepository interface {
