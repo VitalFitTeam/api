@@ -73,3 +73,9 @@ type MembershipPublicResponse struct {
 	Ref_Currency     string          `json:"ref_currency"`
 	IsActive         bool            `json:"is_active"`
 }
+
+type UpdateClientMembershipPayload struct {
+	Status         string `json:"status" binding:"required,oneof=Active Expired Cancelled"`
+	CancelReasonID string `json:"cancel_reason_id"`
+	CancelNotes    string `json:"cancel_notes"`
+}

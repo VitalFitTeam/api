@@ -1410,6 +1410,53 @@ definitions:
       name:
         type: string
     type: object
+  membershipsdomain.CancellationReason:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      reason_id:
+        description: Mapeo a cancellation_reasons
+        type: string
+    type: object
+  membershipsdomain.ClientMembership:
+    properties:
+      cancellation_notes:
+        type: string
+      cancellation_reason:
+        $ref: '#/definitions/membershipsdomain.CancellationReason'
+      cancellation_reason_id:
+        type: string
+      client_membership_id:
+        type: string
+      end_date:
+        type: string
+      invoice_id:
+        type: string
+      membership_type:
+        $ref: '#/definitions/membershipsdomain.MembershipType'
+      membership_type_id:
+        type: string
+      start_date:
+        type: string
+      status:
+        $ref: '#/definitions/membershipsdomain.MembershipStatus'
+      user:
+        $ref: '#/definitions/membershipsdomain.User'
+      user_id:
+        type: string
+    type: object
+  membershipsdomain.MembershipStatus:
+    enum:
+    - Active
+    - Expired
+    - Cancelled
+    type: string
+    x-enum-varnames:
+    - StatusActive
+    - StatusExpired
+    - StatusCancelled
   membershipsdomain.MembershipSummary:
     properties:
       actives:
@@ -1436,6 +1483,17 @@ definitions:
       price:
         type: number
       updated_at:
+        type: string
+    type: object
+  membershipsdomain.User:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      user_id:
         type: string
     type: object
   membershipshandlers.CreateMembershipPayload:
@@ -1490,6 +1548,21 @@ definitions:
         type: string
       price:
         type: number
+    type: object
+  membershipshandlers.UpdateClientMembershipPayload:
+    properties:
+      cancel_notes:
+        type: string
+      cancel_reason_id:
+        type: string
+      status:
+        enum:
+        - Active
+        - Expired
+        - Cancelled
+        type: string
+    required:
+    - status
     type: object
   membershipshandlers.UpdateMembershipPayload:
     properties:
@@ -4860,6 +4933,153 @@ paths:
       summary: Get a count data for each status branch
       tags:
       - Branches
+  /client-memberships:
+    get:
+      description: Retrieves a paginated list of all client memberships, with optional
+        searching and filtering.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for user name, membership name, or status
+        in: query
+        name: search
+        type: string
+      - description: Filter by status
+        enum:
+        - Active
+        - Expired
+        - Cancelled
+        in: query
+        name: category
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of client memberships
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/membershipsdomain.ClientMembership'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List client memberships
+      tags:
+      - Memberships
+  /client-memberships/{clientMembershipId}:
+    get:
+      description: Retrieves a single client membership by its UUID.
+      parameters:
+      - description: Client Membership UUID
+        in: path
+        name: clientMembershipId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client membership details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/membershipsdomain.ClientMembership'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid ID'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Client membership not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client membership by ID
+      tags:
+      - Memberships
+    put:
+      consumes:
+      - application/json
+      description: Updates a client membership's status and cancellation details.
+      parameters:
+      - description: Client Membership UUID
+        in: path
+        name: clientMembershipId
+        required: true
+        type: string
+      - description: Client membership update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/membershipshandlers.UpdateClientMembershipPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client membership updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: 'Bad Request: Invalid ID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Client membership not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a client membership
+      tags:
+      - Memberships
   /equipment-types:
     get:
       description: Lists all available equipment types in the global catalog with

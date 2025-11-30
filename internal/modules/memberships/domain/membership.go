@@ -44,6 +44,21 @@ type CancellationReason struct {
 	IsActive    bool      `gorm:"type:boolean;not null;default:true" json:"is_active"`
 }
 
+func (CancellationReason) TableName() string {
+	return "cancellation_reasons"
+}
+
+type User struct {
+	UserID    uuid.UUID `gorm:"type:uuid;primaryKey" json:"user_id"`
+	FirstName string    `gorm:"type:varchar(100);not null" json:"first_name"`
+	LastName  string    `gorm:"type:varchar(100);not null" json:"last_name"`
+	Email     string    `gorm:"type:varchar(100);unique;not null" json:"email"`
+}
+
+func (User) TableName() string {
+	return "users"
+}
+
 type ClientMembership struct {
 	ClientMembershipID uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"client_membership_id"`
 	UserID             uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
@@ -58,7 +73,7 @@ type ClientMembership struct {
 	CancellationReasonID *uuid.UUID `gorm:"type:uuid;default:null" json:"cancellation_reason_id,omitempty"`
 	CancellationNotes    string     `gorm:"type:text" json:"cancellation_notes,omitempty"`
 
-	//User *authdomain.Users `gorm:"foreignKey:UserID;references:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
+	User *User `gorm:"foreignKey:UserID;references:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
 
 	MembershipType *MembershipType `gorm:"foreignKey:MembershipTypeID;references:MembershipTypeID;constraint:OnDelete:RESTRICT" json:"membership_type,omitempty"`
 

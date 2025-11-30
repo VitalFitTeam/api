@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
 )
@@ -345,4 +346,131 @@ func (h *MembershipHandler) PublicGetMembershipsTypeHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, resp)
 
+}
+
+// @Summary		List client memberships
+// @Description	Retrieves a paginated list of all client memberships, with optional searching and filtering.
+// @Tags			Memberships
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			limit		query		int													false	"Number of results per page"	default(10)
+// @Param			page		query		int													false	"Page number for pagination"	default(1)
+// @Param			sort		query		string												false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search		query		string												false	"Search term for user name, membership name, or status"
+// @Param			category	query		string												false	"Filter by status"	enums(Active, Expired, Cancelled)
+// @Success		200			{object}	object{data=[]membershipsdomain.ClientMembership}	"A paginated list of client memberships"
+// @Failure		400			{object}	map[string]interface{}								"Bad Request: Invalid query parameters"
+// @Failure		500			{object}	map[string]interface{}								"Internal Server Error"
+// @Router			/client-memberships [get]
+func (h *MembershipHandler) GetClientsMemberships(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit:    10,
+		Page:     1,
+		Sort:     "desc",
+		Search:   "",
+		Category: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	clientMemberships, total, err := h.services.MembershipServices.GetClientsMemberships(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	resp := pagination.PaginatedResponseTotal[*membershipsdomain.ClientMembership]{
+		Data:  clientMemberships,
+		Count: int64(len(clientMemberships)),
+		Total: total,
+	}
+	c.JSON(http.StatusOK, resp)
+
+}
+
+// @Summary		Get client membership by ID
+// @Description	Retrieves a single client membership by its UUID.
+// @Tags			Memberships
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			clientMembershipId	path		string											true	"Client Membership UUID"
+// @Success		200					{object}	object{data=membershipsdomain.ClientMembership}	"Client membership details"
+// @Failure		400					{object}	map[string]interface{}							"Bad Request: Invalid ID"
+// @Failure		404					{object}	map[string]interface{}							"Not Found: Client membership not found"
+// @Failure		500					{object}	map[string]interface{}							"Internal Server Error"
+// @Router			/client-memberships/{clientMembershipId} [get]
+func (h *MembershipHandler) GetClientMembershipByID(c *gin.Context) {
+	ctx := c.Request.Context()
+	clientMembershipID, err := uuid.Parse(c.Param("clientMembershipId"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	clientMembership, err := h.services.MembershipServices.GetClientMembershipByID(ctx, clientMembershipID)
+	if err != nil {
+		if err == shared_errors.ErrNotFound {
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": clientMembership})
+}
+
+// @Summary		Update a client membership
+// @Description	Updates a client membership's status and cancellation details.
+// @Tags			Memberships
+// @Accept			json
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			clientMembershipId	path		string							true	"Client Membership UUID"
+// @Param			payload				body		UpdateClientMembershipPayload	true	"Client membership update payload"
+// @Success		200					{object}	object{message=string}			"Client membership updated successfully"
+// @Failure		400					{object}	map[string]interface{}			"Bad Request: Invalid ID or payload"
+// @Failure		404					{object}	map[string]interface{}			"Not Found: Client membership not found"
+// @Failure		500					{object}	map[string]interface{}			"Internal Server Error"
+// @Router			/client-memberships/{clientMembershipId} [put]
+func (h *MembershipHandler) UpdateClientMembership(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var payload UpdateClientMembershipPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	clientMembershipID, err := uuid.Parse(c.Param("clientMembershipId"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	membership := &membershipsdomain.ClientMembership{
+		ClientMembershipID: clientMembershipID,
+		Status:             membershipsdomain.MembershipStatus(payload.Status),
+		CancellationNotes:  payload.CancelNotes,
+	}
+
+	if payload.CancelReasonID != "" {
+		reasonID, err := uuid.Parse(payload.CancelReasonID)
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, fmt.Errorf("invalid cancellation_reason_id: %w", err))
+			return
+		}
+		membership.CancellationReasonID = &reasonID
+	}
+
+	if err := h.services.MembershipServices.UpdateClientMembershipStatus(ctx, membership); err != nil {
+		if err == shared_errors.ErrNotFound {
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Client membership updated successfully"})
 }

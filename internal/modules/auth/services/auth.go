@@ -190,7 +190,6 @@ func (h *AuthService) ValidateResetToken(ctx context.Context, key string) error 
 }
 
 func (h *AuthService) GenerateQrJwtToken(ctx context.Context, user *authdomain.Users) (string, error) {
-	// generate the token
 	claims := jwt.MapClaims{
 		"sub": user.UserID,
 		"exp": time.Now().Add(30 * time.Second).Unix(),

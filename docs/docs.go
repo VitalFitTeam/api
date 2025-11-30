@@ -4542,6 +4542,227 @@ const docTemplate = `{
                 }
             }
         },
+        "/client-memberships": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of all client memberships, with optional searching and filtering.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "List client memberships",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for user name, membership name, or status",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Active",
+                            "Expired",
+                            "Cancelled"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "category",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A paginated list of client memberships",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/membershipsdomain.ClientMembership"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/client-memberships/{clientMembershipId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a single client membership by its UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Get client membership by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Membership UUID",
+                        "name": "clientMembershipId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client membership details",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/membershipsdomain.ClientMembership"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Client membership not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates a client membership's status and cancellation details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Update a client membership",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Membership UUID",
+                        "name": "clientMembershipId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Client membership update payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/membershipshandlers.UpdateClientMembershipPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client membership updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid ID or payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Client membership not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/equipment-types": {
             "get": {
                 "security": [
@@ -10278,6 +10499,75 @@ const docTemplate = `{
                 }
             }
         },
+        "membershipsdomain.CancellationReason": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "reason_id": {
+                    "description": "Mapeo a cancellation_reasons",
+                    "type": "string"
+                }
+            }
+        },
+        "membershipsdomain.ClientMembership": {
+            "type": "object",
+            "properties": {
+                "cancellation_notes": {
+                    "type": "string"
+                },
+                "cancellation_reason": {
+                    "$ref": "#/definitions/membershipsdomain.CancellationReason"
+                },
+                "cancellation_reason_id": {
+                    "type": "string"
+                },
+                "client_membership_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "string"
+                },
+                "membership_type": {
+                    "$ref": "#/definitions/membershipsdomain.MembershipType"
+                },
+                "membership_type_id": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/membershipsdomain.MembershipStatus"
+                },
+                "user": {
+                    "$ref": "#/definitions/membershipsdomain.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "membershipsdomain.MembershipStatus": {
+            "type": "string",
+            "enum": [
+                "Active",
+                "Expired",
+                "Cancelled"
+            ],
+            "x-enum-varnames": [
+                "StatusActive",
+                "StatusExpired",
+                "StatusCancelled"
+            ]
+        },
         "membershipsdomain.MembershipSummary": {
             "type": "object",
             "properties": {
@@ -10317,6 +10607,23 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "membershipsdomain.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -10398,6 +10705,28 @@ const docTemplate = `{
                 },
                 "price": {
                     "type": "number"
+                }
+            }
+        },
+        "membershipshandlers.UpdateClientMembershipPayload": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "cancel_notes": {
+                    "type": "string"
+                },
+                "cancel_reason_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Active",
+                        "Expired",
+                        "Cancelled"
+                    ]
                 }
             }
         },

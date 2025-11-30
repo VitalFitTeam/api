@@ -207,6 +207,25 @@ func (s *MembershipStore) UpdateClientMembership(ctx context.Context, membership
 	return nil
 }
 
+func (s *MembershipStore) UpdateClientMembershipStatus(ctx context.Context, membership *membershipsdomain.ClientMembership) error {
+	// Usamos Updates para actualizar solo los campos proporcionados en el struct `membership`.
+	// GORM es lo suficientemente inteligente como para generar un UPDATE solo con los campos no nulos.
+	result := s.db.WithContext(ctx).
+		Model(&membershipsdomain.ClientMembership{}).
+		Where("client_membership_id = ?", membership.ClientMembershipID).
+		Updates(membership)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return shared_errors.ErrNotFound // El ID no existe, no se actualizó ninguna fila.
+	}
+
+	return nil
+}
+
 func (s *MembershipStore) ClientHasActiveMembership(ctx context.Context, clientID uuid.UUID) (bool, error) {
 	var count int64
 	err := s.db.WithContext(ctx).
@@ -238,4 +257,76 @@ func (s *MembershipStore) GetClientMembership(ctx context.Context, clientID uuid
 	}
 
 	return &clientMembership, nil
+}
+
+func (s *MembershipStore) GetClientMembershipByID(ctx context.Context, clientMembershipID uuid.UUID) (*membershipsdomain.ClientMembership, error) {
+	var clientMembership membershipsdomain.ClientMembership
+	err := s.db.WithContext(ctx).
+		Preload("MembershipType").
+		Preload("User").
+		Preload("CancellationReason").
+		Where("client_membership_id = ?", clientMembershipID).
+		First(&clientMembership).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+
+	return &clientMembership, nil
+}
+
+func (s *MembershipStore) GetClientsMemberships(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.ClientMembership, int64, error) {
+	var clientMemberships []*membershipsdomain.ClientMembership
+	var total int64
+
+	query := s.db.WithContext(ctx).
+		Model(&membershipsdomain.ClientMembership{}).
+		Joins("JOIN users ON users.user_id = client_memberships.user_id").
+		Joins("JOIN membership_types ON membership_types.membership_type_id = client_memberships.membership_type_id")
+
+	if fq.Category != "" {
+		query = query.Where("client_memberships.status = ?", fq.Category)
+	}
+
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		searchFields := "users.first_name ILIKE ? OR users.last_name ILIKE ? OR membership_types.name ILIKE ?"
+		if fq.Category == "" {
+			searchFields += " OR client_memberships.status::text ILIKE ?"
+			query = query.Where(searchFields, searchQuery, searchQuery, searchQuery, searchQuery)
+		} else {
+			query = query.Where(searchFields, searchQuery, searchQuery, searchQuery)
+		}
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	sortDirection := fq.Sort
+	if sortDirection == "" {
+		sortDirection = "desc"
+	}
+
+	page := fq.Page
+	if page < 1 {
+		page = 1
+	}
+
+	err := query.
+		Preload("MembershipType").
+		Preload("User").
+		Order("client_memberships.start_date " + sortDirection).
+		Limit(fq.Limit).
+		Offset((page - 1) * fq.Limit).
+		Find(&clientMemberships).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return clientMemberships, total, nil
 }

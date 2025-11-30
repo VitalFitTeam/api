@@ -81,3 +81,23 @@ func (s *MembershipService) GetSummary(ctx context.Context) (*membershipsdomain.
 	}
 	return summary, nil
 }
+
+func (s *MembershipService) UpdateClientMembership(ctx context.Context, membership *membershipsdomain.ClientMembership) error {
+	return s.store.Membership.UpdateClientMembership(ctx, membership)
+}
+
+func (s *MembershipService) UpdateClientMembershipStatus(ctx context.Context, membership *membershipsdomain.ClientMembership) error {
+	return s.store.Membership.UpdateClientMembershipStatus(ctx, membership)
+}
+
+func (s *MembershipService) GetClientMembership(ctx context.Context, clientID uuid.UUID) (*membershipsdomain.ClientMembership, error) {
+	return s.store.Membership.GetClientMembership(ctx, clientID)
+}
+
+func (s *MembershipService) GetClientMembershipByID(ctx context.Context, clientMembershipID uuid.UUID) (*membershipsdomain.ClientMembership, error) {
+	return s.store.Membership.GetClientMembershipByID(ctx, clientMembershipID)
+}
+
+func (s *MembershipService) GetClientsMemberships(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.ClientMembership, int64, error) {
+	return s.store.Membership.GetClientsMemberships(ctx, fq)
+}
