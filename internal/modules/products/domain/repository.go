@@ -34,4 +34,7 @@ type ProductsRepository interface {
 	GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
 
 	ClientServiceBalance(ctx context.Context, clientBalance *ClientServiceBalance) error
+	GetClientBalance(ctx context.Context, userID uuid.UUID, serviceID uuid.UUID) (*ClientServiceBalance, error)
+	SpendClientBalance(ctx context.Context, userID, serviceID uuid.UUID) error
+	RefundClientBalanceTx(ctx context.Context, tx *gorm.DB, userID uuid.UUID, serviceID uuid.UUID) error
 }

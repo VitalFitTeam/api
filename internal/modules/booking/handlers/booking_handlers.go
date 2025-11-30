@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -123,7 +125,12 @@ func (h *BookingHandlers) CreateBookingHandler(c *gin.Context) {
 	}
 	bookingID, err := h.services.BookingServices.CreateBooking(ctx, targetUserID, classID)
 	if err != nil {
-		h.services.LogErrors.InternalServerError(c, err)
+		switch {
+		case errors.Is(err, shared_errors.ErrPayment):
+			h.services.LogErrors.PaymentRequiredResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
 		return
 	}
 

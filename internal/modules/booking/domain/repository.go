@@ -12,9 +12,13 @@ type BookingRepository interface {
 
 	// CreateBooking crea una nueva reserva.
 	CreateBooking(ctx context.Context, booking *Booking) (uuid.UUID, error)
+	GetBookingByID(ctx context.Context, bookingID uuid.UUID) (*Booking, error)
 
 	// CancelBooking elimina una reserva del usuario (validación userID + bookingID).
 	CancelBooking(ctx context.Context, bookingID uuid.UUID) error
+	CancelBookingAndUpdateBalance(ctx context.Context, booking *Booking, shouldRefundBalance bool) error
+
+	// GetBookingByID obtiene una reserva por su ID.
 
 	// Contar reservas confirmadas de una clase
 	CountBookingsForClass(ctx context.Context, classID uuid.UUID) (int64, error)

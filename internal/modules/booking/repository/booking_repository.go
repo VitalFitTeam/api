@@ -2,9 +2,11 @@ package bookingrepository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
+	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
@@ -14,21 +16,42 @@ type BookingStore struct {
 	db *gorm.DB
 }
 
-func NewBookingStore(db *gorm.DB) *BookingStore {
-	return &BookingStore{db: db}
-}
-
 //
 // ------------------------------------------------------------
 // CreateBooking
 // ------------------------------------------------------------
 //
 
+func NewBookingStore(db *gorm.DB) *BookingStore {
+	return &BookingStore{db: db}
+}
+
 func (r *BookingStore) CreateBooking(ctx context.Context, booking *bookingdomain.Booking) (uuid.UUID, error) {
 	if err := r.db.WithContext(ctx).Create(booking).Error; err != nil {
 		return uuid.Nil, err
 	}
 	return booking.BookingID, nil
+}
+
+//
+// ------------------------------------------------------------
+// GetBookingByID
+// ------------------------------------------------------------
+//
+
+func (r *BookingStore) GetBookingByID(ctx context.Context, bookingID uuid.UUID) (*bookingdomain.Booking, error) {
+	var booking bookingdomain.Booking
+	err := r.db.WithContext(ctx).
+		Joins("Class").
+		First(&booking, "booking_id = ?", bookingID).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, err
+	}
+	return &booking, nil
 }
 
 //
@@ -52,6 +75,33 @@ func (s *BookingStore) CancelBooking(ctx context.Context, bookingID uuid.UUID) e
 			return gorm.ErrRecordNotFound
 		}
 
+		return nil
+	})
+}
+
+//
+// ------------------------------------------------------------
+// CancelBookingAndUpdateBalance
+// ------------------------------------------------------------
+//
+
+func (s *BookingStore) CancelBookingAndUpdateBalance(ctx context.Context, booking *bookingdomain.Booking, shouldRefundBalance bool) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if shouldRefundBalance && booking.Class.ClassID != uuid.Nil {
+			result := tx.Model(&productsdomain.ClientServiceBalance{}).
+				Where("user_id = ? AND service_id = ?", booking.UserID, booking.Class.ServiceID).
+				Update("balance", gorm.Expr("balance + 1"))
+
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+
+		if err := tx.Model(&bookingdomain.Booking{}).
+			Where("booking_id = ?", booking.BookingID).
+			Update("status", bookingdomain.BookingStatusCancelledByUser).Error; err != nil {
+			return err
+		}
 		return nil
 	})
 }
