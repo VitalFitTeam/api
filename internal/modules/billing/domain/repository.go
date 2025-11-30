@@ -15,6 +15,7 @@ type BillingRepository interface {
 	AddPaymentToInvoice(ctx context.Context, payment *Payment) error
 	GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*Payment, error)
 	UpdatePaymentStatus(ctx context.Context, payment *Payment) error
+	GetClientIvoices(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*Invoice, int64, error)
 }
 
 type PaymentMethodsRepository interface {

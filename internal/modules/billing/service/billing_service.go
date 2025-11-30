@@ -19,6 +19,7 @@ import (
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
 	"github.com/vitalfit/api/pkg/mailer"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type BillingService struct {
@@ -484,4 +485,13 @@ func (bs *BillingService) ActivateInvoiceItems(ctx context.Context, invoice *bil
 		}
 	}
 	return nil
+}
+
+func (bs *BillingService) GetClientIvoices(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*billingdomain.Invoice, int64, error) {
+	invoices, total, err := bs.store.Billing.GetClientIvoices(ctx, userID, fq)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return invoices, total, nil
 }

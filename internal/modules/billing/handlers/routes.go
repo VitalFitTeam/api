@@ -35,6 +35,8 @@ type BillingHandlersInterface interface {
 	UpdatePaymentStatusHandler(c *gin.Context)
 	GetPaymentByIDHandler(c *gin.Context)
 	GetInvoiceByIDHandler(c *gin.Context)
+
+	GetClientInvoices(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -85,6 +87,8 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	invoicesGroup := billingGroup.Group("/invoices")
 	invoicesGroup.POST("", r.CreateInvoiceHandler)
 	invoicesGroup.GET("/:invoice_id", r.GetInvoiceByIDHandler)
+	invoicesGroup.GET("/client", r.GetClientInvoices)
+	invoicesGroup.GET("/client/:user_id", r.GetClientInvoices)
 	invoicesGroup.POST("/payment", r.AddPaymentToInvoiceHandler)
 
 	paymentsGroup := billingGroup.Group("/payments")

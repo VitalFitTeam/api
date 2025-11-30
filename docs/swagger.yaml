@@ -384,6 +384,19 @@ definitions:
     - name
     - type
     type: object
+  billinghandlers.ClientInvoiceResponse:
+    properties:
+      branch_id:
+        type: string
+      invoice_id:
+        type: string
+      issue_date:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
+    type: object
   billinghandlers.CreateFiscalDocumentTypePayload:
     properties:
       name:
@@ -2904,6 +2917,144 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get an invoice by ID
+      tags:
+      - Billing
+  /billing/invoices/client:
+    get:
+      description: Retrieves a paginated list of invoices for a specific client. If
+        the authenticated user is a client, it returns their own invoices. If the
+        user is staff with 'billing:list' permission, they can retrieve invoices for
+        any user by providing the user's UUID in the path.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for invoice number or status
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of client invoices
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/billinghandlers.ClientInvoiceResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID or query parameters)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have permission)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client invoices
+      tags:
+      - Billing
+  /billing/invoices/client/{user_id}:
+    get:
+      description: Retrieves a paginated list of invoices for a specific client. If
+        the authenticated user is a client, it returns their own invoices. If the
+        user is staff with 'billing:list' permission, they can retrieve invoices for
+        any user by providing the user's UUID in the path.
+      parameters:
+      - description: Client UUID (required for staff to view other's invoices)
+        in: path
+        name: user_id
+        type: string
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for invoice number or status
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of client invoices
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/billinghandlers.ClientInvoiceResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID or query parameters)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have permission)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client invoices
       tags:
       - Billing
   /billing/invoices/payment:
