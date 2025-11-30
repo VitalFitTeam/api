@@ -1,8 +1,13 @@
 package accesshandler
 
-import appservices "github.com/vitalfit/api/internal/app/services"
+import (
+	"github.com/gin-gonic/gin"
+	appservices "github.com/vitalfit/api/internal/app/services"
+	"github.com/vitalfit/api/internal/shared/middleware/auth"
+)
 
 type AccessHandlerInterface interface {
+	AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 }
 
 type AccessHandler struct {
@@ -13,4 +18,9 @@ func NewAccessHandler(services appservices.Services) *AccessHandler {
 	return &AccessHandler{
 		services: services,
 	}
+}
+
+func (r *AccessHandler) AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+	accessGroup := rg.Group("/access")
+	accessGroup.Use(m.AuthJwtTokenMiddleware())
 }
