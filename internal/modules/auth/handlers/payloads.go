@@ -243,5 +243,5 @@ type GetUserResponse struct {
 }
 
 type OAuthLoginPayload struct {
-	Email string `json:"email" binding:"required,email"`
+	SessionToken string `json:"session_token" binding:"required"`
 }
