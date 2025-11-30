@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/MicahParks/keyfunc/v2"
@@ -288,9 +287,6 @@ func (h *AuthHandlers) OAuthLoginHandler(c *gin.Context) {
 		return
 	}
 
-	// -----------------------------------
-	// Obtener JWKS URL desde la configuración global
-	// -----------------------------------
 	jwksURL := h.config.Clerk.JwksURL
 	if jwksURL == "" {
 		h.services.LogErrors.InternalServerError(c, errors.New("CLERK_JWKS_URL not set in config"))
@@ -315,27 +311,19 @@ func (h *AuthHandlers) OAuthLoginHandler(c *gin.Context) {
 		return
 	}
 
-	// DEBUG: Ver todos los claims disponibles
-	log.Printf("DEBUG - All token claims: %+v", claims)
-
-	// Email puede estar en diferentes lugares según el token de Clerk
 	var email string
 
-	// Intenta obtener email de diferentes claims posibles
 	if emailClaim, exists := claims["email"].(string); exists && emailClaim != "" {
 		email = emailClaim
 	} else if primaryEmail, exists := claims["primary_email_address"].(string); exists && primaryEmail != "" {
 		email = primaryEmail
 	} else if emailAddresses, exists := claims["email_addresses"].([]interface{}); exists && len(emailAddresses) > 0 {
-		// Si email_addresses es un array, toma el primero
 		if emailObj, ok := emailAddresses[0].(map[string]interface{}); ok {
 			if emailAddr, ok := emailObj["email_address"].(string); ok {
 				email = emailAddr
 			}
 		}
 	}
-
-	log.Printf("DEBUG - Extracted email: %s", email)
 
 	if email == "" {
 		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("email not found in token"))
