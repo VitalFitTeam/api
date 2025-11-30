@@ -8,6 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 // @Summary		Create a new invoice
@@ -270,4 +271,86 @@ func (h *BillingHandlers) GetPaymentByIDHandler(c *gin.Context) {
 
 	response := NewPaymentResponseFromPayment(payment)
 	c.JSON(200, gin.H{"data": response})
+}
+
+// @Summary		Get client invoices
+// @Description	Retrieves a paginated list of invoices for a specific client. If the authenticated user is a client, it returns their own invoices. If the user is staff with 'billing:list' permission, they can retrieve invoices for any user by providing the user's UUID in the path.
+// @Tags			Billing
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			user_id	path		string									false	"Client UUID (required for staff to view other's invoices)"
+// @Param			limit	query		int										false	"Number of results per page"	default(10)
+// @Param			page	query		int										false	"Page number for pagination"	default(1)
+// @Param			sort	query		string									false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search	query		string									false	"Search term for invoice number or status"
+// @Success		200		{object}	object{data=[]ClientInvoiceResponse}	"A paginated list of client invoices"
+// @Failure		400		{object}	object{error=string}					"Bad Request (e.g., invalid UUID or query parameters)"
+// @Failure		403		{object}	object{error=string}					"Forbidden (user does not have permission)"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Router			/billing/invoices/client [get]
+// @Router			/billing/invoices/client/{user_id} [get]
+func (h *BillingHandlers) GetClientInvoices(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Search: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	user := h.services.UserServices.GetUserFromContext(c)
+	var targetUserID uuid.UUID
+
+	if user.Role.Name == "client" {
+		targetUserID = user.UserID
+	} else {
+		permission := "billing:list"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+		userIDStr := c.Param("user_id")
+		if userIDStr == "" {
+			h.services.LogErrors.BadRequestResponse(c, errors.New("user_id is required for non-client users"))
+			return
+		}
+		targetUserID, err = uuid.Parse(userIDStr)
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, errors.New("invalid user_id format"))
+			return
+		}
+	}
+
+	clientInvoices, total, err := h.services.BillingServices.GetClientIvoices(ctx, targetUserID, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	invoices := NewClientInvoiceResponse(clientInvoices)
+
+	resp := pagination.PaginatedResponseTotal[ClientInvoiceResponse]{
+		Data:     invoices,
+		Count:    int64(len(invoices)),
+		Total:    total,
+		Next:     "",
+		Previous: "",
+	}
+
+	c.JSON(200, resp)
+
 }

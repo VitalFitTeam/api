@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	"gorm.io/gorm"
@@ -87,4 +88,19 @@ type ServiceWithPrice struct {
 	Service              `gorm:"embedded"`
 	LowestPriceMember    float64 `gorm:"column:lowest_price_member" json:"lowest_price_member"`
 	LowestPriceNonMember float64 `gorm:"column:lowest_price_non_member" json:"lowest_price_non_member"`
+}
+
+type ClientServiceBalance struct {
+	UserID    uuid.UUID `gorm:"type:uuid;primaryKey" json:"user_id"`
+	ServiceID uuid.UUID `gorm:"type:uuid;primaryKey" json:"service_id"`
+
+	Balance   int       `gorm:"not null;default:0;check:balance >= 0" json:"balance"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+
+	User    authdomain.Users `gorm:"foreignKey:UserID;references:UserID" json:"-"`
+	Service Service          `gorm:"foreignKey:ServiceID;references:ServiceID" json:"service,omitempty"`
+}
+
+func (ClientServiceBalance) TableName() string {
+	return "client_service_balances"
 }

@@ -2,10 +2,14 @@ package bookingrepository
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
+	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
 )
@@ -14,21 +18,42 @@ type BookingStore struct {
 	db *gorm.DB
 }
 
-func NewBookingStore(db *gorm.DB) *BookingStore {
-	return &BookingStore{db: db}
-}
-
 //
 // ------------------------------------------------------------
 // CreateBooking
 // ------------------------------------------------------------
 //
 
+func NewBookingStore(db *gorm.DB) *BookingStore {
+	return &BookingStore{db: db}
+}
+
 func (r *BookingStore) CreateBooking(ctx context.Context, booking *bookingdomain.Booking) (uuid.UUID, error) {
 	if err := r.db.WithContext(ctx).Create(booking).Error; err != nil {
 		return uuid.Nil, err
 	}
 	return booking.BookingID, nil
+}
+
+//
+// ------------------------------------------------------------
+// GetBookingByID
+// ------------------------------------------------------------
+//
+
+func (r *BookingStore) GetBookingByID(ctx context.Context, bookingID uuid.UUID) (*bookingdomain.Booking, error) {
+	var booking bookingdomain.Booking
+	err := r.db.WithContext(ctx).
+		Joins("Class").
+		First(&booking, "booking_id = ?", bookingID).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, err
+	}
+	return &booking, nil
 }
 
 //
@@ -52,6 +77,33 @@ func (s *BookingStore) CancelBooking(ctx context.Context, bookingID uuid.UUID) e
 			return gorm.ErrRecordNotFound
 		}
 
+		return nil
+	})
+}
+
+//
+// ------------------------------------------------------------
+// CancelBookingAndUpdateBalance
+// ------------------------------------------------------------
+//
+
+func (s *BookingStore) CancelBookingAndUpdateBalance(ctx context.Context, booking *bookingdomain.Booking, shouldRefundBalance bool) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if shouldRefundBalance && booking.Class.ClassID != uuid.Nil {
+			result := tx.Model(&productsdomain.ClientServiceBalance{}).
+				Where("user_id = ? AND service_id = ?", booking.UserID, booking.Class.ServiceID).
+				Update("balance", gorm.Expr("balance + 1"))
+
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+
+		if err := tx.Model(&bookingdomain.Booking{}).
+			Where("booking_id = ?", booking.BookingID).
+			Update("status", bookingdomain.BookingStatusCancelledByUser).Error; err != nil {
+			return err
+		}
 		return nil
 	})
 }
@@ -94,6 +146,8 @@ func (s *BookingStore) CountBookingsForClass(ctx context.Context, classID uuid.U
 		return tx.WithContext(ctx).
 			Model(&bookingdomain.Booking{}).
 			Where("class_id = ?", classID).
+			Where("status = ?", bookingdomain.BookingStatusConfirmed).
+			Where("deleted_at IS NULL").
 			Count(&count).Error
 	})
 
@@ -138,4 +192,31 @@ func (s *BookingStore) GetClientBookings(ctx context.Context, userID uuid.UUID) 
 	}
 
 	return results, nil
+}
+
+//
+// ------------------------------------------------------------
+// GetClientActualBook
+// ------------------------------------------------------------
+//
+
+func (s *BookingStore) GetClientActualBook(ctx context.Context, userID, branchID uuid.UUID, startsAt time.Time, endsAt time.Time) (*bookingdomain.Booking, error) {
+	var booking bookingdomain.Booking
+
+	err := s.db.WithContext(ctx).
+		Joins("JOIN classes ON bookings.class_id = classes.class_id").
+		Where("bookings.user_id = ?", userID).
+		Where("bookings.status = ?", bookingdomain.BookingStatusConfirmed).
+		Where("classes.branch_id = ?", branchID).
+		Where("classes.starts_at BETWEEN ? AND ?", startsAt, endsAt).
+		First(&booking).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+
+	return &booking, nil
 }

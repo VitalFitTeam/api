@@ -14,7 +14,15 @@ type MembershipsRepository interface {
 	UpdateMembershipType(ctx context.Context, membership *MembershipType) error
 	DeleteMembershipType(ctx context.Context, id uuid.UUID) error
 	GetMembershipTypeByID(ctx context.Context, id uuid.UUID) (*MembershipType, error)
+	GetMembershipTypesByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]*MembershipType, error)
 	GetMembershipTypes(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*MembershipType, error)
 	GetMembershipTypesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
 	GetSummary(ctx context.Context) (*MembershipSummary, error)
+
+	UpdateClientMembership(ctx context.Context, membership *ClientMembership) error
+	UpdateClientMembershipStatus(ctx context.Context, membership *ClientMembership) error
+	ClientHasActiveMembership(ctx context.Context, clientID uuid.UUID) (bool, error)
+	GetClientMembership(ctx context.Context, clientID uuid.UUID) (*ClientMembership, error)
+	GetClientsMemberships(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*ClientMembership, int64, error)
+	GetClientMembershipByID(ctx context.Context, clientMembershipID uuid.UUID) (*ClientMembership, error)
 }

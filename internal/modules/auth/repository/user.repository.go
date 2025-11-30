@@ -14,6 +14,7 @@ import (
 	"github.com/vitalfit/api/pkg/db"
 	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserStore struct {
@@ -40,6 +41,16 @@ func (s *UserStore) Create(ctx context.Context, tx *gorm.DB, user *authdomain.Us
 		}
 		return err
 	}
+	//for seed
+	if user.Role.Name == "client" && user.ClientProfile.UserID == uuid.Nil {
+		clientProfile := authdomain.ClientProfiles{
+			UserID:   user.UserID,
+			Category: authdomain.ClientCategoryNew,
+		}
+		if err := tx.WithContext(ctx).Create(&clientProfile).Error; err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -51,6 +62,8 @@ func (s *UserStore) GetByID(ctx context.Context, userID uuid.UUID) (*authdomain.
 
 	result := s.db.WithContext(ctx).
 		Preload("Role").
+		Preload("ClientProfile").
+		Preload("ClientMembership").
 		Where("user_id = ?", userID).
 		First(&user)
 
@@ -193,6 +206,8 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*authdomain.U
 	defer cancel()
 	err := s.db.WithContext(ctx).
 		Preload("Role").
+		Preload("ClientProfile").
+		Preload("ClientMembership").
 		Where("email = ?", email).
 		Where("is_validated = ?", true).
 		First(&user).Error
@@ -420,4 +435,21 @@ func (s *UserStore) ValidateResetToken(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+func (s *UserStore) UpdateClientStatus(ctx context.Context, userID uuid.UUID, status authdomain.UserStatusEnum) error {
+	return s.db.WithContext(ctx).
+		Model(&authdomain.Users{}).
+		Where("user_id = ?", userID).
+		Update("status", status).Error
+}
+
+func (s *UserStore) UpdateClientCategory(ctx context.Context, userID uuid.UUID, category authdomain.ClientCategoryEnum) error {
+	return s.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"category"}),
+	}).Create(&authdomain.ClientProfiles{
+		UserID:   userID,
+		Category: category,
+	}).Error
 }

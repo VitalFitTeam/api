@@ -28,3 +28,58 @@ type MembershipSummary struct {
 	Actives   int64 `json:"actives"`
 	Inactives int64 `json:"inactives"`
 }
+
+type MembershipStatus string
+
+const (
+	StatusActive    MembershipStatus = "Active"
+	StatusExpired   MembershipStatus = "Expired"
+	StatusCancelled MembershipStatus = "Cancelled"
+)
+
+type CancellationReason struct {
+	// Mapeo a cancellation_reasons
+	ReasonID    uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"reason_id"`
+	Description string    `gorm:"type:varchar(255);unique;not null" json:"description"`
+	IsActive    bool      `gorm:"type:boolean;not null;default:true" json:"is_active"`
+}
+
+func (CancellationReason) TableName() string {
+	return "cancellation_reasons"
+}
+
+type User struct {
+	UserID    uuid.UUID `gorm:"type:uuid;primaryKey" json:"user_id"`
+	FirstName string    `gorm:"type:varchar(100);not null" json:"first_name"`
+	LastName  string    `gorm:"type:varchar(100);not null" json:"last_name"`
+	Email     string    `gorm:"type:varchar(100);unique;not null" json:"email"`
+}
+
+func (User) TableName() string {
+	return "users"
+}
+
+type ClientMembership struct {
+	ClientMembershipID uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"client_membership_id"`
+	UserID             uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
+	MembershipTypeID   uuid.UUID `gorm:"type:uuid;not null" json:"membership_type_id"`
+
+	StartDate time.Time `gorm:"type:date;not null" json:"start_date"`
+	EndDate   time.Time `gorm:"type:date;not null" json:"end_date"`
+
+	Status    MembershipStatus `gorm:"type:membership_status;not null" json:"status"`
+	InvoiceID uuid.UUID        `gorm:"type:uuid;not null" json:"invoice_id"`
+
+	CancellationReasonID *uuid.UUID `gorm:"type:uuid;default:null" json:"cancellation_reason_id,omitempty"`
+	CancellationNotes    string     `gorm:"type:text" json:"cancellation_notes,omitempty"`
+
+	User *User `gorm:"foreignKey:UserID;references:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
+
+	MembershipType *MembershipType `gorm:"foreignKey:MembershipTypeID;references:MembershipTypeID;constraint:OnDelete:RESTRICT" json:"membership_type,omitempty"`
+
+	CancellationReason *CancellationReason `gorm:"foreignKey:CancellationReasonID;references:ReasonID;constraint:OnDelete:SET NULL" json:"cancellation_reason,omitempty"`
+}
+
+func (ClientMembership) TableName() string {
+	return "client_memberships"
+}

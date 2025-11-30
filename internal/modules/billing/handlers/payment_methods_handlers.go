@@ -162,6 +162,22 @@ func (h *BillingHandlers) DeletePaymentMethodHandler(c *gin.Context) {
 // @Router			/billing/payment-methods/{id} [get]
 func (h *BillingHandlers) GetPaymentMethodByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	if user.Role.Name != "client" {
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, "billing:get")
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
+
 	methodID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
@@ -282,6 +298,22 @@ func (h *BillingHandlers) DeletePaymentMethodsFromBranchHandler(c *gin.Context) 
 // @Router			/branches/{id}/payment-methods [get]
 func (h *BillingHandlers) GetPaymentMethodsFromBranchHandler(c *gin.Context) {
 	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	if user.Role.Name != "client" {
+		permission := "billing:list"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
 	branchID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
@@ -383,6 +415,22 @@ func (h *BillingHandlers) UpdatePaymentMethodFromBranchHandler(c *gin.Context) {
 // @Router			/branches/{id}/payment-methods/{method_id} [get]
 func (h *BillingHandlers) GetBranchPaymentMethodByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	if user.Role.Name != "client" {
+		permission := "billing:get"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
 	branchID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)

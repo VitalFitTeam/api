@@ -387,3 +387,29 @@ func NewPaymentResponseFromPayment(p *billingdomain.Payment) *PaymentResponse {
 		ReceiptURL:      p.ReceiptURL.String,
 	}
 }
+
+type ClientInvoiceResponse struct {
+	InvoiceID   uuid.UUID       `json:"invoice_id"`
+	BranchID    uuid.UUID       `json:"branch_id"`
+	IssueDate   time.Time       `json:"issue_date"`
+	TotalAmount decimal.Decimal `json:"total_amount"`
+	Status      string          `json:"status"`
+}
+
+func NewClientInvoiceResponse(invoices []*billingdomain.Invoice) []ClientInvoiceResponse {
+	if invoices == nil {
+		return []ClientInvoiceResponse{}
+	}
+
+	responses := make([]ClientInvoiceResponse, len(invoices))
+	for i, invoice := range invoices {
+		responses[i] = ClientInvoiceResponse{
+			InvoiceID:   invoice.InvoiceID,
+			BranchID:    invoice.BranchID,
+			IssueDate:   invoice.IssueDate,
+			TotalAmount: invoice.TotalAmount,
+			Status:      string(invoice.Status),
+		}
+	}
+	return responses
+}

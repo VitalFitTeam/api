@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -90,6 +91,8 @@ type Users struct {
 	IsValidated        bool           `gorm:"default:false" json:"is_validated"`
 	ClientProfile      ClientProfiles `gorm:"foreignKey:UserID;references:UserID"`
 
+	ClientMembership *membershipsdomain.ClientMembership `gorm:"foreignKey:UserID" json:"client_membership,omitempty"`
+
 	RoleID uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
 	Role   Roles     `gorm:"foreignKey:RoleID;references:RoleID" json:"role"`
 
@@ -120,4 +123,11 @@ type PasswordResetToken struct {
 	UserID uuid.UUID
 	Users  Users     `gorm:"foreignKey:UserID" json:"user"`
 	Expiry time.Time `gorm:"expiry"`
+}
+
+func (u *Users) HasActiveMembership() bool {
+	if u.ClientMembership == nil {
+		return false
+	}
+	return u.ClientMembership.Status == membershipsdomain.StatusActive
 }

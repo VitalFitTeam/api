@@ -9,6 +9,10 @@ import (
 type MembershipsHandlerInterface interface {
 	MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	PublicMembershipRoutes(rg *gin.RouterGroup)
+
+	GetClientsMemberships(c *gin.Context)
+	GetClientMembershipByID(c *gin.Context)
+	UpdateClientMembership(c *gin.Context)
 }
 
 type MembershipHandler struct {
@@ -32,6 +36,14 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 		membershipPlansGroup.GET("/:id", m.RBACPermission("memberships:get"), r.GetMembershipByIDHandler)
 		membershipPlansGroup.PUT("/:id", m.RBACPermission("memberships:update"), r.UpdateMembershipHandler)
 		membershipPlansGroup.DELETE("/:id", m.RBACPermission("memberships:delete"), r.DeleteMembershipHandler)
+	}
+
+	clientMembershipsGroup := rg.Group("/client-memberships")
+	{
+		clientMembershipsGroup.Use(m.AuthJwtTokenMiddleware())
+		clientMembershipsGroup.GET("", m.RBACPermission("members:list"), r.GetClientsMemberships)
+		clientMembershipsGroup.GET("/:clientMembershipId", m.RBACPermission("members:get"), r.GetClientMembershipByID)
+		clientMembershipsGroup.PUT("/:clientMembershipId", m.RBACPermission("members:update"), r.UpdateClientMembership)
 	}
 }
 

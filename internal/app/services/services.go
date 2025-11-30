@@ -2,6 +2,8 @@ package appservices
 
 import (
 	"github.com/vitalfit/api/config"
+	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
+	accessservice "github.com/vitalfit/api/internal/modules/access/service"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	authservices "github.com/vitalfit/api/internal/modules/auth/services"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
@@ -48,11 +50,13 @@ type Services struct {
 	ScheduleServices   scheduledomain.ScheduleServiceInterface
 	CombosServices     combosdomain.CombosServicesInterface
 	BookingServices    bookingdomain.BookingServiceInterface
+	AccessServices     accessdomain.AcessServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
 
 func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage) Services {
+	bookingService := bookingservice.NewBookingService(store)
 	return Services{
 		AuthServices:       authservices.NewAuthServices(store, cfg, auth, mailer),
 		UserServices:       authservices.NewUserService(store),
@@ -67,7 +71,8 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		BillingServices:    billingservice.NewBillingService(store, cache, cfg, mailer),
 		ScheduleServices:   scheduleservice.NewScheduleService(store),
 		CombosServices:     combosservices.NewCombosServices(store),
-		BookingServices:    bookingservice.NewBookingService(store),
+		BookingServices:    bookingService,
+		AccessServices:     accessservice.NewAccessServices(store, *bookingService),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,
 	}

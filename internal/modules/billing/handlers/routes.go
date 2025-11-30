@@ -35,6 +35,8 @@ type BillingHandlersInterface interface {
 	UpdatePaymentStatusHandler(c *gin.Context)
 	GetPaymentByIDHandler(c *gin.Context)
 	GetInvoiceByIDHandler(c *gin.Context)
+
+	GetClientInvoices(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -58,7 +60,7 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	{
 		paymentMethodsGroup.GET("", m.RBACPermission("billing:list"), r.GetPaymentMethodsHandler)
 		paymentMethodsGroup.POST("", m.RBACPermission("billing:create"), r.CreatePaymentMethodHandler)
-		paymentMethodsGroup.GET("/:id", m.RBACPermission("billing:get"), r.GetPaymentMethodByIDHandler)
+		paymentMethodsGroup.GET("/:id", r.GetPaymentMethodByIDHandler)
 		paymentMethodsGroup.PUT("/:id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodHandler)
 		paymentMethodsGroup.DELETE("/:id", m.RBACPermission("billing:delete"), r.DeletePaymentMethodHandler)
 	}
@@ -66,9 +68,9 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	branchPaymentMethodsGroup := rg.Group("/branches/:id/payment-methods")
 	branchPaymentMethodsGroup.Use(m.AuthJwtTokenMiddleware())
 	{
-		branchPaymentMethodsGroup.GET("", m.RBACPermission("billing:list"), r.GetPaymentMethodsFromBranchHandler)
+		branchPaymentMethodsGroup.GET("", r.GetPaymentMethodsFromBranchHandler)
 		branchPaymentMethodsGroup.POST("", m.RBACPermission("billing:create"), r.AddPaymentMethodsToBranchHandler)
-		branchPaymentMethodsGroup.GET("/:method_id", m.RBACPermission("billing:get"), r.GetBranchPaymentMethodByIDHandler)
+		branchPaymentMethodsGroup.GET("/:method_id", r.GetBranchPaymentMethodByIDHandler)
 		branchPaymentMethodsGroup.PUT("/:method_id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodFromBranchHandler)
 		branchPaymentMethodsGroup.DELETE("/:method_id", m.RBACPermission("billing:delete"), r.DeletePaymentMethodsFromBranchHandler)
 	}
@@ -85,6 +87,8 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	invoicesGroup := billingGroup.Group("/invoices")
 	invoicesGroup.POST("", r.CreateInvoiceHandler)
 	invoicesGroup.GET("/:invoice_id", r.GetInvoiceByIDHandler)
+	invoicesGroup.GET("/client", r.GetClientInvoices)
+	invoicesGroup.GET("/client/:user_id", r.GetClientInvoices)
 	invoicesGroup.POST("/payment", r.AddPaymentToInvoiceHandler)
 
 	paymentsGroup := billingGroup.Group("/payments")

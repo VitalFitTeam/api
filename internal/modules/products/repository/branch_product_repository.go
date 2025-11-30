@@ -3,8 +3,11 @@ package productsrepository
 import (
 	"context"
 
+	"errors"
+
 	"github.com/google/uuid"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -91,5 +94,48 @@ func (s *ProductsStore) GetBranchServiceByID(ctx context.Context, branchID uuid.
 	if err != nil {
 		return nil, err
 	}
+	return &branchService, nil
+}
+
+func (s *ProductsStore) GetBranchServicesByIDs(ctx context.Context, branchID uuid.UUID, serviceIDs []uuid.UUID) (map[uuid.UUID]*productsdomain.ServiceBranchDetail, error) {
+	if len(serviceIDs) == 0 {
+		return make(map[uuid.UUID]*productsdomain.ServiceBranchDetail), nil
+	}
+
+	var branchServices []*productsdomain.ServiceBranchDetail
+	err := s.db.WithContext(ctx).
+		Where("branch_id = ?", branchID).
+		Where("service_id IN ?", serviceIDs).
+		Find(&branchServices).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	branchServicesMap := make(map[uuid.UUID]*productsdomain.ServiceBranchDetail, len(branchServices))
+	for _, bs := range branchServices {
+		branchServicesMap[bs.ServiceID] = bs
+	}
+
+	return branchServicesMap, nil
+}
+
+func (s *ProductsStore) GetBranchServiceByName(ctx context.Context, branchID uuid.UUID, serviceName string) (*productsdomain.ServiceBranchDetail, error) {
+	var branchService productsdomain.ServiceBranchDetail
+
+	err := s.db.WithContext(ctx).
+		Joins("JOIN services ON services.service_id = service_branch_details.service_id").
+		Where("service_branch_details.branch_id = ?", branchID).
+		Where("services.name = ?", serviceName).
+		Where("service_branch_details.deleted_at IS NULL").
+		First(&branchService).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+
 	return &branchService, nil
 }

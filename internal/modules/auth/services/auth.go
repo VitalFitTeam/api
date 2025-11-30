@@ -188,3 +188,20 @@ func (h *AuthService) ValidateResetToken(ctx context.Context, key string) error 
 	}
 	return nil
 }
+
+func (h *AuthService) GenerateQrJwtToken(ctx context.Context, user *authdomain.Users) (string, error) {
+	claims := jwt.MapClaims{
+		"sub": user.UserID,
+		"exp": time.Now().Add(30 * time.Second).Unix(),
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
+		"iss": h.config.Auth.Token.Iss,
+		"aud": h.config.Auth.Token.Aud,
+	}
+	token, err := h.auth.GenerateToken(claims)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}

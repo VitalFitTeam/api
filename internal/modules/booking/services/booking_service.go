@@ -3,10 +3,12 @@ package bookingservice
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 )
 
@@ -25,7 +27,6 @@ func NewBookingService(store store.Storage) *BookingService {
 //
 
 func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, classID uuid.UUID) (uuid.UUID, error) {
-
 	class, err := s.store.Schedule.GetClassByID(ctx, classID)
 	if err != nil {
 		return uuid.Nil, err
@@ -36,25 +37,49 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, cl
 		if err != nil {
 			return uuid.Nil, err
 		}
-
 		if count >= int64(class.MaxCapacity) {
 			return uuid.Nil, errors.New("class is full")
 		}
 	}
 
-	booking := &bookingdomain.Booking{
-		BookingID: uuid.New(),
-		UserID:    userID,
-		ClassID:   classID,
-		Status:    "Confirmed",
-	}
-
-	id, err := s.store.Booking.CreateBooking(ctx, booking)
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID)
 	if err != nil {
 		return uuid.Nil, err
 	}
 
-	return id, nil
+	if isMember {
+		branchService, err := s.store.Products.GetBranchServiceByID(ctx, class.BranchID, class.ServiceID)
+		if err != nil {
+			return uuid.Nil, err
+		}
+
+		if branchService.PriceForMember == 0 {
+			booking := &bookingdomain.Booking{
+				UserID:  userID,
+				ClassID: classID,
+				Status:  bookingdomain.BookingStatusConfirmed,
+			}
+			return s.store.Booking.CreateBooking(ctx, booking)
+		}
+	}
+
+	clientBalance, err := s.store.Products.GetClientBalance(ctx, userID, class.ServiceID)
+	if err != nil {
+		if !errors.Is(err, shared_errors.ErrNotFound) {
+			return uuid.Nil, err
+		}
+	}
+
+	if clientBalance != nil && clientBalance.Balance > 0 {
+		err := s.store.Products.SpendClientBalance(ctx, userID, class.ServiceID)
+		if err != nil {
+			return uuid.Nil, err
+		}
+		booking := &bookingdomain.Booking{UserID: userID, ClassID: classID, Status: bookingdomain.BookingStatusConfirmed}
+		return s.store.Booking.CreateBooking(ctx, booking)
+	}
+
+	return uuid.Nil, shared_errors.ErrPayment
 }
 
 //
@@ -64,7 +89,37 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, cl
 //
 
 func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID) error {
-	return s.store.Booking.CancelBooking(ctx, bookingID)
+	// 1. Obtener los detalles de la reserva para la lógica de negocio.
+	booking, err := s.store.Booking.GetBookingByID(ctx, bookingID)
+	if err != nil {
+		if errors.Is(err, shared_errors.ErrNotFound) {
+			return shared_errors.ErrNotFound
+		}
+		return err
+	}
+	class, err := s.store.Schedule.GetClassByID(ctx, booking.ClassID)
+	if err != nil {
+		return err
+	}
+	booking.Class = *class
+
+	// 2. Determinar si se debe reponer el saldo del cliente.
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, booking.UserID)
+	if err != nil {
+		return err
+	}
+
+	branchService, err := s.store.Products.GetBranchServiceByID(ctx, class.BranchID, class.ServiceID)
+	if err != nil {
+		if errors.Is(err, shared_errors.ErrNotFound) {
+			return s.store.Booking.CancelBookingAndUpdateBalance(ctx, booking, false)
+		}
+		return err
+	}
+
+	shouldRefundBalance := !isMember || (isMember && branchService.PriceForMember > 0)
+
+	return s.store.Booking.CancelBookingAndUpdateBalance(ctx, booking, shouldRefundBalance)
 }
 
 //
@@ -82,13 +137,50 @@ func (s *BookingService) GetClientSchedule(
 	return s.store.Booking.GetClientSchedule(ctx, branchID, userID)
 }
 
+func (s *BookingService) GetClientBookings(ctx context.Context, userID uuid.UUID) ([]bookingdomain.BookingWithClassInfo, error) {
+	return s.store.Booking.GetClientBookings(ctx, userID)
+}
+
+func (s *BookingService) GetClientActualBook(ctx context.Context, userID, branchID uuid.UUID, startsAt time.Time, endsAt time.Time) (*bookingdomain.Booking, error) {
+	return s.store.Booking.GetClientActualBook(ctx, userID, branchID, startsAt, endsAt)
+}
+
 //
 // ------------------------------------------------------------
-// GetClientBookings
+// CanAccessService
 // ------------------------------------------------------------
 //
 
-// GetClientBookings devuelve todas las reservas de un usuario específico.
-func (s *BookingService) GetClientBookings(ctx context.Context, userID uuid.UUID) ([]bookingdomain.BookingWithClassInfo, error) {
-	return s.store.Booking.GetClientBookings(ctx, userID)
+func (s *BookingService) CanAccessService(ctx context.Context, userID, branchID, serviceID uuid.UUID) (bool, error) {
+	// 1. Verificar si el usuario tiene una membresía activa.
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+
+	if isMember {
+		// Si es miembro, verificar si el servicio es gratuito para miembros en esa sucursal.
+		branchService, err := s.store.Products.GetBranchServiceByID(ctx, branchID, serviceID)
+		if err != nil {
+			// Si no hay una configuración específica del servicio para la sucursal, no se puede determinar el acceso.
+			if errors.Is(err, shared_errors.ErrNotFound) {
+				return false, nil
+			}
+			return false, err
+		}
+
+		// Si el precio para miembros es 0, tiene acceso.
+		if branchService.PriceForMember == 0 {
+			return true, nil
+		}
+	}
+
+	// 2. Si no es miembro o el servicio tiene costo para miembros, verificar si tiene saldo/créditos.
+	clientBalance, err := s.store.Products.GetClientBalance(ctx, userID, serviceID)
+	if err != nil && !errors.Is(err, shared_errors.ErrNotFound) {
+		return false, err
+	}
+
+	// Si tiene un balance y es mayor a 0, tiene acceso.
+	return clientBalance != nil && clientBalance.Balance > 0, nil
 }

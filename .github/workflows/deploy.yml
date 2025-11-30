@@ -65,6 +65,7 @@ jobs:
           echo "JWT_SECRET=\"${{ secrets.JWT_SECRET }}\"" >> .env
           echo "JWT_ISS=\"${{ secrets.JWT_ISS }}\"" >> .env
           echo "JWT_AUD=\"${{ secrets.JWT_AUD }}\"" >> .env
+          echo "CLERK_JWKS_URL=\"${{ secrets.CLERK_JWKS_URL }}\"" >> .env
           echo "ADMIN_EMAIL=\"${{ secrets.ADMIN_EMAIL }}\"" >> .env
           echo "ADMIN_PASSWORD=\"${{ secrets.ADMIN_PASSWORD }}\"" >> .env
           echo "FRONT_URL=\"${{ secrets.FRONT_URL }}\"" >> .env

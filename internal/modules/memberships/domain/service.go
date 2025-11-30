@@ -15,4 +15,10 @@ type MembershipsServiceInterface interface {
 	GetMembershipTypes(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*MembershipType, error)
 	GetMembershipTypesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error)
 	GetSummary(ctx context.Context) (*MembershipSummary, error)
+
+	UpdateClientMembership(ctx context.Context, membership *ClientMembership) error
+	UpdateClientMembershipStatus(ctx context.Context, membership *ClientMembership) error
+	GetClientMembership(ctx context.Context, clientID uuid.UUID) (*ClientMembership, error)
+	GetClientsMemberships(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*ClientMembership, int64, error)
+	GetClientMembershipByID(ctx context.Context, clientMembershipID uuid.UUID) (*ClientMembership, error)
 }

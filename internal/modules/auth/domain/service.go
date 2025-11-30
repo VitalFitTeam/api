@@ -28,6 +28,7 @@ type AuthServicesInterface interface {
 	DeleteResetToken(context.Context, uuid.UUID) error
 	ResetPassword(ctx context.Context, key string, user *Users) error
 	ValidateResetToken(ctx context.Context, key string) error
+	GenerateQrJwtToken(ctx context.Context, user *Users) (string, error)
 }
 
 type UserServicesInterface interface {
@@ -41,6 +42,7 @@ type UserServicesInterface interface {
 	UpdateClient(ctx context.Context, user *Users) error
 	UpdateStaff(ctx context.Context, user *Users, roleName string) error
 	Delete(ctx context.Context, userID uuid.UUID) error
+
 	//roles
 	GetRoleByName(ctx context.Context, name string) (*Roles, error)
 	RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error)

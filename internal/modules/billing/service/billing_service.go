@@ -13,10 +13,13 @@ import (
 	"github.com/vitalfit/api/config"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
+	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
+	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
 	"github.com/vitalfit/api/pkg/mailer"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type BillingService struct {
@@ -62,29 +65,20 @@ func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdom
 
 	taxRate := billingdomain.GetTaxRateByLocation(branch.State.Country.Name)
 
+	hasActiveMembership, err := bs.store.Membership.ClientHasActiveMembership(ctx, invoice.UserID)
+	if err != nil {
+		return fmt.Errorf("could not check for active membership: %w", err)
+	}
+
+	isBuyingMembership := bs.isPurchasingMembership(items)
+
+	itemNames, err := bs.assignPricesAndGetNames(ctx, items, invoice.BranchID, hasActiveMembership || isBuyingMembership)
+	if err != nil {
+		return fmt.Errorf("error processing invoice items: %w", err)
+	}
+
 	for i := range items {
 		items[i].TaxRate = taxRate
-		item := &items[i]
-
-		if item.MembershipTypeID.Valid {
-			membershipType, err := bs.store.Membership.GetMembershipTypeByID(ctx, item.MembershipTypeID.UUID)
-			if err != nil {
-				return err
-			}
-			item.UnitPrice = decimal.NewFromFloat(membershipType.Price)
-		} else if item.PackageID.Valid {
-			pkg, err := bs.store.Combos.GetPackageByID(ctx, item.PackageID.UUID)
-			if err != nil {
-				return err
-			}
-			item.UnitPrice = decimal.NewFromFloat(pkg.Price)
-		} else if item.ServiceID.Valid {
-			serviceDetail, err := bs.store.Products.GetBranchServiceByID(ctx, invoice.BranchID, item.ServiceID.UUID)
-			if err != nil {
-				return err
-			}
-			item.UnitPrice = decimal.NewFromFloat(serviceDetail.PriceForNonMember)
-		}
 	}
 
 	invoice.InvoiceItems = items
@@ -110,25 +104,7 @@ func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdom
 
 			templateItems := make([]templateItem, len(invoice.InvoiceItems))
 			for i, item := range invoice.InvoiceItems {
-				var itemName string
-				if item.MembershipTypeID.Valid {
-					if membership, err := bs.store.Membership.GetMembershipTypeByID(context.Background(), item.MembershipTypeID.UUID); err == nil {
-						itemName = membership.Name
-					}
-				} else if item.PackageID.Valid {
-					if pkg, err := bs.store.Combos.GetPackageByID(context.Background(), item.PackageID.UUID); err == nil {
-						itemName = pkg.Name
-					}
-				} else if item.ServiceID.Valid {
-					if service, err := bs.store.Products.GetServiceByID(context.Background(), item.ServiceID.UUID); err == nil {
-						itemName = service.Name
-					}
-				}
-
-				if itemName == "" {
-					itemName = "Product"
-				}
-
+				itemName := itemNames[item.InvoiceItemID]
 				templateItems[i] = templateItem{
 					Name:      itemName,
 					Quantity:  item.Quantity,
@@ -182,6 +158,96 @@ func (bs *BillingService) CheckInvoiceAccess(ctx context.Context, user *authdoma
 	return nil
 }
 
+func (bs *BillingService) isPurchasingMembership(items []billingdomain.InvoiceItem) bool {
+	for _, item := range items {
+		if item.MembershipTypeID.Valid {
+			return true
+		}
+	}
+	return false
+}
+
+func (bs *BillingService) assignPricesAndGetNames(ctx context.Context, items []billingdomain.InvoiceItem, branchID uuid.UUID, applyMemberPrice bool) (map[uuid.UUID]string, error) {
+	membershipIDs := []uuid.UUID{}
+	packageIDs := []uuid.UUID{}
+	serviceIDs := []uuid.UUID{}
+
+	for _, item := range items {
+		if item.InvoiceItemID == uuid.Nil {
+			item.InvoiceItemID = uuid.New()
+		}
+
+		if item.MembershipTypeID.Valid {
+			membershipIDs = append(membershipIDs, item.MembershipTypeID.UUID)
+		} else if item.PackageID.Valid {
+			packageIDs = append(packageIDs, item.PackageID.UUID)
+		} else if item.ServiceID.Valid {
+			serviceIDs = append(serviceIDs, item.ServiceID.UUID)
+		}
+	}
+
+	membershipsMap, err := bs.store.Membership.GetMembershipTypesByIDs(ctx, membershipIDs)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching membership types: %w", err)
+	}
+
+	packagesMap, err := bs.store.Combos.GetPackagesByIDs(ctx, packageIDs)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching packages: %w", err)
+	}
+
+	branchServicesMap, err := bs.store.Products.GetBranchServicesByIDs(ctx, branchID, serviceIDs)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching branch services: %w", err)
+	}
+
+	servicesMap, err := bs.store.Products.GetServicesByIDs(ctx, serviceIDs)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching service details: %w", err)
+	}
+
+	itemNames := make(map[uuid.UUID]string)
+
+	for i := range items {
+		item := &items[i]
+
+		if item.MembershipTypeID.Valid {
+			membershipType, ok := membershipsMap[item.MembershipTypeID.UUID]
+			if !ok {
+				return nil, fmt.Errorf("membership type %s not found", item.MembershipTypeID.UUID)
+			}
+			item.UnitPrice = decimal.NewFromFloat(membershipType.Price)
+			itemNames[item.InvoiceItemID] = membershipType.Name
+		} else if item.PackageID.Valid {
+			pkg, ok := packagesMap[item.PackageID.UUID]
+			if !ok {
+				return nil, fmt.Errorf("package %s not found", item.PackageID.UUID)
+			}
+			item.UnitPrice = decimal.NewFromFloat(pkg.Price)
+			itemNames[item.InvoiceItemID] = pkg.Name
+		} else if item.ServiceID.Valid {
+			serviceDetail, ok := branchServicesMap[item.ServiceID.UUID]
+			if !ok {
+				return nil, fmt.Errorf("service %s not found in branch %s", item.ServiceID.UUID, branchID)
+			}
+
+			if applyMemberPrice {
+				item.UnitPrice = decimal.NewFromFloat(serviceDetail.PriceForMember)
+			} else {
+				item.UnitPrice = decimal.NewFromFloat(serviceDetail.PriceForNonMember)
+			}
+
+			serviceInfo, ok := servicesMap[item.ServiceID.UUID]
+			if !ok {
+				return nil, fmt.Errorf("service info for %s not found", item.ServiceID.UUID)
+			}
+			itemNames[item.InvoiceItemID] = serviceInfo.Name
+		}
+	}
+
+	return itemNames, nil
+}
+
 func (s *BillingService) AddPaymentToInvoice(ctx context.Context, payment *billingdomain.Payment) error {
 
 	invoice, err := s.store.Billing.GetInvoiceByID(ctx, payment.InvoiceID)
@@ -228,6 +294,9 @@ func (s *BillingService) AddPaymentToInvoice(ctx context.Context, payment *billi
 			updatedInvoice.Status = billingdomain.InvoiceStatusPaid
 			if err := s.UpdateInvoiceStatus(ctx, updatedInvoice); err != nil {
 				return err
+			}
+			if err := s.ActivateInvoiceItems(ctx, updatedInvoice); err != nil {
+				fmt.Printf("could not activate items for invoice %s: %v\n", updatedInvoice.InvoiceID, err)
 			}
 			s.sendPaidInvoiceEmail(updatedInvoice)
 		}
@@ -278,7 +347,9 @@ func (s *BillingService) UpdatePaymentStatus(ctx context.Context, payment *billi
 		if err != nil {
 			return fmt.Errorf("failed to update invoice status to paid: %w", err)
 		}
-		// Enviar correo de factura pagada en una goroutine
+		if err := s.ActivateInvoiceItems(ctx, invoice); err != nil {
+			fmt.Printf("could not activate items for invoice %s: %v\n", invoice.InvoiceID, err)
+		}
 		s.sendPaidInvoiceEmail(invoice)
 
 	}
@@ -327,7 +398,7 @@ func (bs *BillingService) sendPaidInvoiceEmail(invoice *billingdomain.Invoice) {
 				}
 			}
 			if itemName == "" {
-				itemName = "Producto"
+				itemName = "Product"
 			}
 			templateItems[i] = templateItem{Name: itemName, Quantity: item.Quantity, UnitPrice: item.UnitPrice.StringFixed(2), TotalLine: item.TotalLine.StringFixed(2)}
 		}
@@ -358,4 +429,69 @@ func (bs *BillingService) sendPaidInvoiceEmail(invoice *billingdomain.Invoice) {
 			fmt.Printf("failed to send paid invoice email: %v", err)
 		}
 	}()
+}
+
+func (bs *BillingService) ActivateInvoiceItems(ctx context.Context, invoice *billingdomain.Invoice) error {
+	for _, item := range invoice.InvoiceItems {
+		if item.MembershipTypeID.Valid {
+			membershipType, err := bs.store.Membership.GetMembershipTypeByID(ctx, item.MembershipTypeID.UUID)
+			if err != nil {
+				fmt.Printf("error getting membership type %s for invoice %s: %v\n", item.MembershipTypeID.UUID, invoice.InvoiceID, err)
+				continue
+			}
+
+			clientMembership := membershipsdomain.ClientMembership{
+				MembershipTypeID: item.MembershipTypeID.UUID,
+				InvoiceID:        invoice.InvoiceID,
+				UserID:           invoice.UserID,
+				StartDate:        time.Now(),
+				EndDate:          time.Now().AddDate(0, 0, membershipType.DurationDays*item.Quantity),
+				Status:           membershipsdomain.StatusActive,
+			}
+
+			if err := bs.store.Membership.UpdateClientMembership(ctx, &clientMembership); err != nil {
+				return fmt.Errorf("failed to update client membership for user %s: %w", invoice.UserID, err)
+			}
+
+			if err := bs.store.Users.UpdateClientCategory(ctx, invoice.UserID, authdomain.ClientCategoryVIP); err != nil {
+				fmt.Printf("could not update client category to VIP for user %s: %v\n", invoice.UserID, err)
+			}
+		} else if item.PackageID.Valid {
+			pkg, err := bs.store.Combos.GetPackageByID(ctx, item.PackageID.UUID)
+			if err != nil {
+				fmt.Printf("error getting package %s for invoice %s: %v\n", item.PackageID.UUID, invoice.InvoiceID, err)
+				continue
+			}
+
+			for _, packageItem := range pkg.PackageItems {
+				clientServiceBalance := productsdomain.ClientServiceBalance{
+					UserID:    invoice.UserID,
+					ServiceID: packageItem.ServiceID,
+					Balance:   packageItem.SessionsIncluded * item.Quantity,
+				}
+				if err := bs.store.Products.ClientServiceBalance(ctx, &clientServiceBalance); err != nil {
+					fmt.Printf("error updating client service balance for user %s, service %s: %v\n", invoice.UserID, packageItem.ServiceID, err)
+				}
+			}
+		} else if item.ServiceID.Valid {
+			clientServiceBalance := productsdomain.ClientServiceBalance{
+				UserID:    invoice.UserID,
+				ServiceID: item.ServiceID.UUID,
+				Balance:   item.Quantity,
+			}
+			if err := bs.store.Products.ClientServiceBalance(ctx, &clientServiceBalance); err != nil {
+				fmt.Printf("error updating client service balance for user %s, service %s: %v\n", invoice.UserID, item.ServiceID.UUID, err)
+			}
+		}
+	}
+	return nil
+}
+
+func (bs *BillingService) GetClientIvoices(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*billingdomain.Invoice, int64, error) {
+	invoices, total, err := bs.store.Billing.GetClientIvoices(ctx, userID, fq)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return invoices, total, nil
 }

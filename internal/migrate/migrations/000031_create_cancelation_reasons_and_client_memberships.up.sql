@@ -22,7 +22,7 @@ INSERT INTO cancellation_reasons (description) VALUES
 
 CREATE TABLE IF NOT EXISTS client_memberships (
     client_membership_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
+    user_id UUID NOT NULL UNIQUE,
     membership_type_id UUID NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,

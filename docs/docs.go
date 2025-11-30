@@ -24,6 +24,80 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/access/check-in": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Processes a user's check-in attempt via a QR code JWT and branch ID. It follows a three-level priority flow: Confirmed Booking, Class Walk-in, and Open Gym access.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access"
+                ],
+                "summary": "Process User Check-In",
+                "parameters": [
+                    {
+                        "description": "Check-In Payload with QR Token and Branch ID",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accesshandler.CheckInPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Access Granted",
+                        "schema": {
+                            "$ref": "#/definitions/accessdomain.CheckInResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "402": {
+                        "description": "Payment Required",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/admin/permissions": {
             "get": {
                 "security": [
@@ -1486,6 +1560,210 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/invoices/client": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of invoices for a specific client. If the authenticated user is a client, it returns their own invoices. If the user is staff with 'billing:list' permission, they can retrieve invoices for any user by providing the user's UUID in the path.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Get client invoices",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for invoice number or status",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A paginated list of client invoices",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/billinghandlers.ClientInvoiceResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., invalid UUID or query parameters)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user does not have permission)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/billing/invoices/client/{user_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of invoices for a specific client. If the authenticated user is a client, it returns their own invoices. If the user is staff with 'billing:list' permission, they can retrieve invoices for any user by providing the user's UUID in the path.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Get client invoices",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client UUID (required for staff to view other's invoices)",
+                        "name": "user_id",
+                        "in": "path"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for invoice number or status",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A paginated list of client invoices",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/billinghandlers.ClientInvoiceResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request (e.g., invalid UUID or query parameters)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user does not have permission)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/billing/invoices/payment": {
             "post": {
                 "security": [
@@ -2321,7 +2599,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns all bookings for a specific client",
+                "description": "Returns all bookings for a specific client. If the user is a client, it returns their own bookings. If staff, the user ID must be provided in the path.",
                 "produces": [
                     "application/json"
                 ],
@@ -2332,10 +2610,9 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User UUID",
+                        "description": "User UUID (required for staff)",
                         "name": "userId",
-                        "in": "path",
-                        "required": true
+                        "in": "path"
                     }
                 ],
                 "responses": {
@@ -2354,7 +2631,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Bad Request (e.g., invalid UUID, missing userId for staff)",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -4250,6 +4527,227 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found: Branch, service, or assignment not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/client-memberships": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of all client memberships, with optional searching and filtering.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "List client memberships",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term for user name, membership name, or status",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Active",
+                            "Expired",
+                            "Cancelled"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "category",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A paginated list of client memberships",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/membershipsdomain.ClientMembership"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid query parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/client-memberships/{clientMembershipId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a single client membership by its UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Get client membership by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Membership UUID",
+                        "name": "clientMembershipId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client membership details",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/membershipsdomain.ClientMembership"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Client membership not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates a client membership's status and cancellation details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Update a client membership",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client Membership UUID",
+                        "name": "clientMembershipId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Client membership update payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/membershipshandlers.UpdateClientMembershipPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Client membership updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid ID or payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Client membership not found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -6587,7 +7085,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns the available classes for a specific client in a specific branch.",
+                "description": "Returns the available classes for a specific client in a specific branch. If the user is a client, it returns their own schedule. If staff, the user ID must be provided in the path.",
                 "produces": [
                     "application/json"
                 ],
@@ -6605,10 +7103,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Client UUID",
+                        "description": "Client UUID (required for non-client users)",
                         "name": "userId",
-                        "in": "path",
-                        "required": true
+                        "in": "path"
                     }
                 ],
                 "responses": {
@@ -6627,7 +7124,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Bad Request (e.g., invalid UUID, missing userId for staff)",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -6801,7 +7298,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Books a spot for the client in a class",
+                "description": "Books a spot for a client in a class. If the user is a client, they book for themselves. If staff, the 'user_id' in the payload is required.",
                 "consumes": [
                     "application/json"
                 ],
@@ -6821,7 +7318,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "User ID payload",
+                        "description": "User ID payload (only required for staff)",
                         "name": "payload",
                         "in": "body",
                         "required": true,
@@ -7476,6 +7973,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/qr-token": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Generates a short-lived JWT token intended for use in a QR code for authentication purposes (e.g., gym access).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Generate QR JWT Token",
+                "responses": {
+                    "200": {
+                        "description": "Successfully generated QR token",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user/users": {
             "get": {
                 "security": [
@@ -7878,6 +8427,34 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "accessdomain.CheckInResponse": {
+            "type": "object",
+            "properties": {
+                "access_type": {
+                    "type": "string"
+                },
+                "check_in_time": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "service_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "accesshandler.CheckInPayload": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "qr_jwt": {
+                    "type": "string"
+                }
+            }
+        },
         "authdomain.Permission": {
             "type": "object",
             "properties": {
@@ -8418,6 +8995,26 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "billinghandlers.ClientInvoiceResponse": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "string"
+                },
+                "issue_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number"
                 }
             }
         },
@@ -9902,6 +10499,75 @@ const docTemplate = `{
                 }
             }
         },
+        "membershipsdomain.CancellationReason": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "reason_id": {
+                    "description": "Mapeo a cancellation_reasons",
+                    "type": "string"
+                }
+            }
+        },
+        "membershipsdomain.ClientMembership": {
+            "type": "object",
+            "properties": {
+                "cancellation_notes": {
+                    "type": "string"
+                },
+                "cancellation_reason": {
+                    "$ref": "#/definitions/membershipsdomain.CancellationReason"
+                },
+                "cancellation_reason_id": {
+                    "type": "string"
+                },
+                "client_membership_id": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "invoice_id": {
+                    "type": "string"
+                },
+                "membership_type": {
+                    "$ref": "#/definitions/membershipsdomain.MembershipType"
+                },
+                "membership_type_id": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/membershipsdomain.MembershipStatus"
+                },
+                "user": {
+                    "$ref": "#/definitions/membershipsdomain.User"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "membershipsdomain.MembershipStatus": {
+            "type": "string",
+            "enum": [
+                "Active",
+                "Expired",
+                "Cancelled"
+            ],
+            "x-enum-varnames": [
+                "StatusActive",
+                "StatusExpired",
+                "StatusCancelled"
+            ]
+        },
         "membershipsdomain.MembershipSummary": {
             "type": "object",
             "properties": {
@@ -9941,6 +10607,23 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "membershipsdomain.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -10022,6 +10705,28 @@ const docTemplate = `{
                 },
                 "price": {
                     "type": "number"
+                }
+            }
+        },
+        "membershipshandlers.UpdateClientMembershipPayload": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "cancel_notes": {
+                    "type": "string"
+                },
+                "cancel_reason_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Active",
+                        "Expired",
+                        "Cancelled"
+                    ]
                 }
             }
         },

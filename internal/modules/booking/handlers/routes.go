@@ -27,14 +27,16 @@ func (h *BookingHandlers) BookingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	scheduleRoutes := rg.Group("/schedule")
 	{
 		scheduleRoutes.Use(m.AuthJwtTokenMiddleware())
-		scheduleRoutes.GET("/branch/:branchId/client/:userId", m.RBACPermission("booking:schedule:list"), h.GetClientScheduleHandler)
-		scheduleRoutes.POST("/:classId/book", m.RBACPermission("booking:create"), h.CreateBookingHandler)
+		scheduleRoutes.GET("/branch/:branchId/client", h.GetClientScheduleHandler)
+		scheduleRoutes.GET("/branch/:branchId/client/:userId", h.GetClientScheduleHandler)
+		scheduleRoutes.POST("/:classId/book", h.CreateBookingHandler)
 	}
 
 	bookingRoutes := rg.Group("/bookings")
 	{
 		bookingRoutes.Use(m.AuthJwtTokenMiddleware())
-		bookingRoutes.GET("/client/:userId", m.RBACPermission("booking:list"), h.GetClientBookingsHandler)
-		bookingRoutes.PATCH("/:bookingId/cancel", m.RBACPermission("booking:cancel"), h.CancelBookingHandler)
+		bookingRoutes.GET("/client", h.GetClientBookingsHandler)
+		bookingRoutes.GET("/client/:userId", h.GetClientBookingsHandler)
+		bookingRoutes.PATCH("/:bookingId/cancel", h.CancelBookingHandler)
 	}
 }

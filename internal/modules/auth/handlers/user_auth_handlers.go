@@ -913,3 +913,25 @@ func (h *AuthHandlers) DeleteUserHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusNoContent, nil)
 }
+
+// @Summary		Generate QR JWT Token
+// @Description	Generates a short-lived JWT token intended for use in a QR code for authentication purposes (e.g., gym access).
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{token=string}	"Successfully generated QR token"
+// @Failure		401	{object}	object{error=string}	"Unauthorized"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/qr-token [get]
+func (h *AuthHandlers) GenerateQrJwtTokenHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+	token, err := h.services.AuthServices.GenerateQrJwtToken(ctx, user)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+	})
+}

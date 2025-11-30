@@ -15,6 +15,8 @@ var (
 	ErrBadRequest          = errors.New("bad request")
 	ErrUnauthorized        = errors.New("unauthorized")
 	ErrForbidden           = errors.New("forbidden")
+	ErrPayment             = errors.New("payment required")
+	ErrInsufficientBalance = errors.New("insufficient balance")
 )
 
 type LogErrors struct {
@@ -62,4 +64,9 @@ func (l *LogErrors) ForbiddenResponse(c *gin.Context) {
 func (l *LogErrors) UnauthorizedErrorResponse(c *gin.Context, err error) {
 	l.logger.Errorw("unauthorized error", "method", c.Request.Method, "path", c.Request.URL.Path, "error", err)
 	c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+}
+
+func (l *LogErrors) PaymentRequiredResponse(c *gin.Context) {
+	l.logger.Errorw("PaymentRequired error", "method", c.Request.Method, "path", c.Request.URL.Path)
+	c.JSON(http.StatusPaymentRequired, gin.H{"error": "Payment Required"})
 }

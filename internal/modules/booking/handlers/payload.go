@@ -11,7 +11,7 @@ import (
 // ----------------------------------------
 
 type BookUser struct {
-	UserID uuid.UUID `json:"user_id"`
+	UserID uuid.UUID `json:"user_id,omitempty"`
 }
 
 type ScheduleClassResponse struct {

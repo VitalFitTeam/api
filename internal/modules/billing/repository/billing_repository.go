@@ -8,6 +8,7 @@ import (
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -70,4 +71,42 @@ func (bs *Billingstore) UpdateInvoiceStatus(ctx context.Context, invoice *billin
 	return db.WithTX(bs.db, func(tx *gorm.DB) error {
 		return tx.WithContext(ctx).Model(invoice).Update("status", invoice.Status).Error
 	})
+}
+
+func (bs *Billingstore) GetClientIvoices(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*billingdomain.Invoice, int64, error) {
+	var invoices []*billingdomain.Invoice
+	var total int64
+
+	query := bs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).Where("user_id = ?", userID)
+
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		query = query.Where("invoice_number ILIKE ? OR status::text ILIKE ?", searchQuery, searchQuery)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	sortDirection := fq.Sort
+	if sortDirection == "" {
+		sortDirection = "desc"
+	}
+
+	page := fq.Page
+	if page < 1 {
+		page = 1
+	}
+
+	err := query.
+		Order("issue_date " + sortDirection).
+		Limit(fq.Limit).
+		Offset((page - 1) * fq.Limit).
+		Find(&invoices).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return invoices, total, nil
 }

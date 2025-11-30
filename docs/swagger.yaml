@@ -1,5 +1,23 @@
 basePath: /v1
 definitions:
+  accessdomain.CheckInResponse:
+    properties:
+      access_type:
+        type: string
+      check_in_time:
+        type: string
+      message:
+        type: string
+      service_name:
+        type: string
+    type: object
+  accesshandler.CheckInPayload:
+    properties:
+      branch_id:
+        type: string
+      qr_jwt:
+        type: string
+    type: object
   authdomain.Permission:
     properties:
       created_at:
@@ -372,6 +390,19 @@ definitions:
     - method_id
     - name
     - type
+    type: object
+  billinghandlers.ClientInvoiceResponse:
+    properties:
+      branch_id:
+        type: string
+      invoice_id:
+        type: string
+      issue_date:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
     type: object
   billinghandlers.CreateFiscalDocumentTypePayload:
     properties:
@@ -1379,6 +1410,53 @@ definitions:
       name:
         type: string
     type: object
+  membershipsdomain.CancellationReason:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      reason_id:
+        description: Mapeo a cancellation_reasons
+        type: string
+    type: object
+  membershipsdomain.ClientMembership:
+    properties:
+      cancellation_notes:
+        type: string
+      cancellation_reason:
+        $ref: '#/definitions/membershipsdomain.CancellationReason'
+      cancellation_reason_id:
+        type: string
+      client_membership_id:
+        type: string
+      end_date:
+        type: string
+      invoice_id:
+        type: string
+      membership_type:
+        $ref: '#/definitions/membershipsdomain.MembershipType'
+      membership_type_id:
+        type: string
+      start_date:
+        type: string
+      status:
+        $ref: '#/definitions/membershipsdomain.MembershipStatus'
+      user:
+        $ref: '#/definitions/membershipsdomain.User'
+      user_id:
+        type: string
+    type: object
+  membershipsdomain.MembershipStatus:
+    enum:
+    - Active
+    - Expired
+    - Cancelled
+    type: string
+    x-enum-varnames:
+    - StatusActive
+    - StatusExpired
+    - StatusCancelled
   membershipsdomain.MembershipSummary:
     properties:
       actives:
@@ -1405,6 +1483,17 @@ definitions:
       price:
         type: number
       updated_at:
+        type: string
+    type: object
+  membershipsdomain.User:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      user_id:
         type: string
     type: object
   membershipshandlers.CreateMembershipPayload:
@@ -1459,6 +1548,21 @@ definitions:
         type: string
       price:
         type: number
+    type: object
+  membershipshandlers.UpdateClientMembershipPayload:
+    properties:
+      cancel_notes:
+        type: string
+      cancel_reason_id:
+        type: string
+      status:
+        enum:
+        - Active
+        - Expired
+        - Cancelled
+        type: string
+    required:
+    - status
     type: object
   membershipshandlers.UpdateMembershipPayload:
     properties:
@@ -1882,6 +1986,57 @@ info:
   termsOfService: http://swagger.io/terms/
   title: VitalFit API
 paths:
+  /access/check-in:
+    post:
+      consumes:
+      - application/json
+      description: 'Processes a user''s check-in attempt via a QR code JWT and branch
+        ID. It follows a three-level priority flow: Confirmed Booking, Class Walk-in,
+        and Open Gym access.'
+      parameters:
+      - description: Check-In Payload with QR Token and Branch ID
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/accesshandler.CheckInPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Access Granted
+          schema:
+            $ref: '#/definitions/accessdomain.CheckInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: Payment Required
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Process User Check-In
+      tags:
+      - Access
   /admin/permissions:
     get:
       description: Lists all permissions defined in the system (from the seeder) that
@@ -2899,6 +3054,144 @@ paths:
       summary: Get an invoice by ID
       tags:
       - Billing
+  /billing/invoices/client:
+    get:
+      description: Retrieves a paginated list of invoices for a specific client. If
+        the authenticated user is a client, it returns their own invoices. If the
+        user is staff with 'billing:list' permission, they can retrieve invoices for
+        any user by providing the user's UUID in the path.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for invoice number or status
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of client invoices
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/billinghandlers.ClientInvoiceResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID or query parameters)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have permission)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client invoices
+      tags:
+      - Billing
+  /billing/invoices/client/{user_id}:
+    get:
+      description: Retrieves a paginated list of invoices for a specific client. If
+        the authenticated user is a client, it returns their own invoices. If the
+        user is staff with 'billing:list' permission, they can retrieve invoices for
+        any user by providing the user's UUID in the path.
+      parameters:
+      - description: Client UUID (required for staff to view other's invoices)
+        in: path
+        name: user_id
+        type: string
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for invoice number or status
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of client invoices
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/billinghandlers.ClientInvoiceResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid UUID or query parameters)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have permission)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client invoices
+      tags:
+      - Billing
   /billing/invoices/payment:
     post:
       consumes:
@@ -3414,12 +3707,13 @@ paths:
       - Booking
   /bookings/client/{userId}:
     get:
-      description: Returns all bookings for a specific client
+      description: Returns all bookings for a specific client. If the user is a client,
+        it returns their own bookings. If staff, the user ID must be provided in the
+        path.
       parameters:
-      - description: User UUID
+      - description: User UUID (required for staff)
         in: path
         name: userId
-        required: true
         type: string
       produces:
       - application/json
@@ -3434,7 +3728,7 @@ paths:
                 type: array
             type: object
         "400":
-          description: Bad Request
+          description: Bad Request (e.g., invalid UUID, missing userId for staff)
           schema:
             additionalProperties: true
             type: object
@@ -4639,6 +4933,153 @@ paths:
       summary: Get a count data for each status branch
       tags:
       - Branches
+  /client-memberships:
+    get:
+      description: Retrieves a paginated list of all client memberships, with optional
+        searching and filtering.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for user name, membership name, or status
+        in: query
+        name: search
+        type: string
+      - description: Filter by status
+        enum:
+        - Active
+        - Expired
+        - Cancelled
+        in: query
+        name: category
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of client memberships
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/membershipsdomain.ClientMembership'
+                type: array
+            type: object
+        "400":
+          description: 'Bad Request: Invalid query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List client memberships
+      tags:
+      - Memberships
+  /client-memberships/{clientMembershipId}:
+    get:
+      description: Retrieves a single client membership by its UUID.
+      parameters:
+      - description: Client Membership UUID
+        in: path
+        name: clientMembershipId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client membership details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/membershipsdomain.ClientMembership'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid ID'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Client membership not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client membership by ID
+      tags:
+      - Memberships
+    put:
+      consumes:
+      - application/json
+      description: Updates a client membership's status and cancellation details.
+      parameters:
+      - description: Client Membership UUID
+        in: path
+        name: clientMembershipId
+        required: true
+        type: string
+      - description: Client membership update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/membershipshandlers.UpdateClientMembershipPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client membership updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: 'Bad Request: Invalid ID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Client membership not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a client membership
+      tags:
+      - Memberships
   /equipment-types:
     get:
       description: Lists all available equipment types in the global catalog with
@@ -6256,14 +6697,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: Books a spot for the client in a class
+      description: Books a spot for a client in a class. If the user is a client,
+        they book for themselves. If staff, the 'user_id' in the payload is required.
       parameters:
       - description: Class UUID
         in: path
         name: classId
         required: true
         type: string
-      - description: User ID payload
+      - description: User ID payload (only required for staff)
         in: body
         name: payload
         required: true
@@ -6299,17 +6741,17 @@ paths:
   /schedule/branch/{branchId}/client/{userId}:
     get:
       description: Returns the available classes for a specific client in a specific
-        branch.
+        branch. If the user is a client, it returns their own schedule. If staff,
+        the user ID must be provided in the path.
       parameters:
       - description: Branch UUID
         in: path
         name: branchId
         required: true
         type: string
-      - description: Client UUID
+      - description: Client UUID (required for non-client users)
         in: path
         name: userId
-        required: true
         type: string
       produces:
       - application/json
@@ -6324,7 +6766,7 @@ paths:
                 type: array
             type: object
         "400":
-          description: Bad Request
+          description: Bad Request (e.g., invalid UUID, missing userId for staff)
           schema:
             additionalProperties: true
             type: object
@@ -6907,6 +7349,39 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: List client users
+      tags:
+      - User
+  /user/qr-token:
+    get:
+      description: Generates a short-lived JWT token intended for use in a QR code
+        for authentication purposes (e.g., gym access).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully generated QR token
+          schema:
+            properties:
+              token:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Generate QR JWT Token
       tags:
       - User
   /user/users:
