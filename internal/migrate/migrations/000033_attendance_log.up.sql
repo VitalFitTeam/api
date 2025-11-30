@@ -8,8 +8,8 @@ END $$;
 CREATE TABLE IF NOT EXISTS attendance_log (
     attendance_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     
-    user_id UUID NOT NULL,
-    
+    user_id UUID NOT NULL,    
+    service_id UUID,
     schedule_id UUID, 
     
     check_in_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS attendance_log (
         FOREIGN KEY (service_id) REFERENCES services(service_id) ON DELETE CASCADE,
     
     CONSTRAINT fk_attendance_schedule 
-        FOREIGN KEY (schedule_id) REFERENCES class_schedules(schedule_id) ON DELETE SET NULL
+        FOREIGN KEY (schedule_id) REFERENCES classes(class_id) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_attendance_user ON attendance_log(user_id);
