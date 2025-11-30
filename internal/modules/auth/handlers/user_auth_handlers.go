@@ -4,9 +4,12 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"net/http"
 
+	"github.com/MicahParks/keyfunc/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
@@ -260,6 +263,93 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 		"token": token,
 	})
 
+}
+
+// @Summary		Login with OAuth provider (Google, etc.)
+// @Description	Authenticates a user using a Clerk session token (JWT). The backend verifies the token
+// @Description	using Clerk's JWKS and extracts the user's identity securely.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		OAuthLoginPayload		true	"OAuth session token payload"
+// @Success		200		{object}	object{token=string}	"Internal JWT generated"
+// @Failure		400		{object}	object{error=string}	"Invalid payload"
+// @Failure		401		{object}	object{error=string}	"Invalid OAuth session token"
+// @Failure		404		{object}	object{error=string}	"User not found"
+// @Failure		500		{object}	object{error=string}	"Internal server error"
+// @Router			/auth/oauth-login [post]
+func (h *AuthHandlers) OAuthLoginHandler(c *gin.Context) {
+	var payload OAuthLoginPayload
+	ctx := c.Request.Context()
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	jwksURL := h.config.Clerk.JwksURL
+	if jwksURL == "" {
+		h.services.LogErrors.InternalServerError(c, errors.New("CLERK_JWKS_URL not set in config"))
+		return
+	}
+
+	jwks, err := keyfunc.Get(jwksURL, keyfunc.Options{})
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	token, err := jwt.Parse(payload.SessionToken, jwks.Keyfunc)
+	if err != nil || !token.Valid {
+		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("invalid OAuth session token"))
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("invalid token claims"))
+		return
+	}
+
+	var email string
+
+	if emailClaim, exists := claims["email"].(string); exists && emailClaim != "" {
+		email = emailClaim
+	} else if primaryEmail, exists := claims["primary_email_address"].(string); exists && primaryEmail != "" {
+		email = primaryEmail
+	} else if emailAddresses, exists := claims["email_addresses"].([]interface{}); exists && len(emailAddresses) > 0 {
+		if emailObj, ok := emailAddresses[0].(map[string]interface{}); ok {
+			if emailAddr, ok := emailObj["email_address"].(string); ok {
+				email = emailAddr
+			}
+		}
+	}
+
+	if email == "" {
+		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("email not found in token"))
+		return
+	}
+
+	user, err := h.services.UserServices.GetByEmail(ctx, email)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	internalToken, err := h.services.AuthServices.GenerateToken(user)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": internalToken,
+	})
 }
 
 // @Summary		Get current user profile

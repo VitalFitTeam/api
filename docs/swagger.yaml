@@ -179,6 +179,13 @@ definitions:
       user_id:
         type: string
     type: object
+  authhandlers.OAuthLoginPayload:
+    properties:
+      session_token:
+        type: string
+    required:
+    - session_token
+    type: object
   authhandlers.PermissionsPayload:
     properties:
       permissions:
@@ -2330,6 +2337,61 @@ paths:
               type: string
             type: object
       summary: Logs in a user and issues a JWT token
+      tags:
+      - Auth
+  /auth/oauth-login:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Authenticates a user using a Clerk session token (JWT). The backend verifies the token
+        using Clerk's JWKS and extracts the user's identity securely.
+      parameters:
+      - description: OAuth session token payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.OAuthLoginPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Internal JWT generated
+          schema:
+            properties:
+              token:
+                type: string
+            type: object
+        "400":
+          description: Invalid payload
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Invalid OAuth session token
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Login with OAuth provider (Google, etc.)
       tags:
       - Auth
   /auth/password/forgot:
