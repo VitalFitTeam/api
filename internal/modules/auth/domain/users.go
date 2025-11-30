@@ -130,5 +130,4 @@ func (u *Users) HasActiveMembership() bool {
 		return false
 	}
 	return u.ClientMembership.Status == membershipsdomain.StatusActive
-
 }
