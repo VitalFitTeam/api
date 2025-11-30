@@ -1,6 +1,8 @@
 package store
 
 import (
+	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
+	accessrepository "github.com/vitalfit/api/internal/modules/access/repository"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	authrepository "github.com/vitalfit/api/internal/modules/auth/repository"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
@@ -44,6 +46,7 @@ type Storage struct {
 	Combos          combosdomain.CombosRepository
 	FiscalDocuments billingdomain.FiscalDocumentRepository
 	Booking         bookingdomain.BookingRepository
+	Access          accessdomain.AccessRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -64,5 +67,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Combos:          combosrepository.NewCombosStore(db),
 		FiscalDocuments: billingrepository.NewFiscalDocumentStore(db),
 		Booking:         bookingrepository.NewBookingStore(db),
+		Access:          accessrepository.NewAccessStore(db),
 	}
 }
