@@ -19,6 +19,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ISS=${JWT_ISS}
       - JWT_AUD=${JWT_AUD}
+      - CLERK_JWKS_URL=${CLERK_JWKS_URL}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - FRONT_URL=${FRONT_URL}
