@@ -2,6 +2,7 @@ package authhandlers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/vitalfit/api/config"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 )
@@ -42,10 +43,14 @@ type AuthHandlersInterface interface {
 
 type AuthHandlers struct {
 	services appservices.Services
+	config   *config.Config
 }
 
 func NewAuthHandlers(services appservices.Services) *AuthHandlers {
-	return &AuthHandlers{services: services}
+	return &AuthHandlers{
+		services: services,
+		config:   config.LoadConfig(),
+	}
 }
 
 func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
@@ -56,6 +61,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		authGroup.PUT("/activate", r.ActivateUserHandler)
 		authGroup.PUT("/activate/:token", r.ActivateStaffHanlder)
 		authGroup.POST("/login", r.LoginHandler)
+		authGroup.POST("/oauth-login", r.OAuthLoginHandler)
 
 		passwordGroup := authGroup.Group("/password")
 		{

@@ -18,6 +18,7 @@ type Config struct {
 	FrontURL     string
 	RedisCfg     redisConfig
 	OpenExchange OpenExchangeConfig
+	Clerk        ClerkConfig
 }
 
 type redisConfig struct {
@@ -57,6 +58,10 @@ type TokenConfig struct {
 	Exp    time.Duration
 	Iss    string
 	Aud    string
+}
+
+type ClerkConfig struct {
+	JwksURL string
 }
 
 func LoadConfig() *Config {
@@ -100,6 +105,9 @@ func LoadConfig() *Config {
 		},
 		OpenExchange: OpenExchangeConfig{
 			AppID: env.GetString("OPEN_EXCHANGE_APP_ID", ""),
+		},
+		Clerk: ClerkConfig{
+			JwksURL: env.GetString("CLERK_JWKS_URL", ""),
 		},
 	}
 }

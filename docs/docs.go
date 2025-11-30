@@ -794,6 +794,89 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/oauth-login": {
+            "post": {
+                "description": "Authenticates a user using a Clerk session token (JWT). The backend verifies the token\nusing Clerk's JWKS and extracts the user's identity securely.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login with OAuth provider (Google, etc.)",
+                "parameters": [
+                    {
+                        "description": "OAuth session token payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authhandlers.OAuthLoginPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Internal JWT generated",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "token": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid OAuth session token",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/password/forgot": {
             "post": {
                 "description": "Envía un código OTP al correo electrónico proporcionado para iniciar el proceso de reseteo de contraseña.",
@@ -8411,6 +8494,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "authhandlers.OAuthLoginPayload": {
+            "type": "object",
+            "required": [
+                "session_token"
+            ],
+            "properties": {
+                "session_token": {
                     "type": "string"
                 }
             }

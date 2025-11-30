@@ -241,3 +241,7 @@ type GetUserResponse struct {
 	Phone             string    `json:"phone"`
 	ProfilePictureURL string    `json:"profile_picture_url"`
 }
+
+type OAuthLoginPayload struct {
+	SessionToken string `json:"session_token" binding:"required"`
+}
