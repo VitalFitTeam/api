@@ -6849,6 +6849,39 @@ paths:
       summary: List client users
       tags:
       - User
+  /user/qr-token:
+    get:
+      description: Generates a short-lived JWT token intended for use in a QR code
+        for authentication purposes (e.g., gym access).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully generated QR token
+          schema:
+            properties:
+              token:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Generate QR JWT Token
+      tags:
+      - User
   /user/users:
     get:
       consumes:
