@@ -66,9 +66,9 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	branchPaymentMethodsGroup := rg.Group("/branches/:id/payment-methods")
 	branchPaymentMethodsGroup.Use(m.AuthJwtTokenMiddleware())
 	{
-		branchPaymentMethodsGroup.GET("", m.RBACPermission("billing:list"), r.GetPaymentMethodsFromBranchHandler)
+		branchPaymentMethodsGroup.GET("", r.GetPaymentMethodsFromBranchHandler)
 		branchPaymentMethodsGroup.POST("", m.RBACPermission("billing:create"), r.AddPaymentMethodsToBranchHandler)
-		branchPaymentMethodsGroup.GET("/:method_id", m.RBACPermission("billing:get"), r.GetBranchPaymentMethodByIDHandler)
+		branchPaymentMethodsGroup.GET("/:method_id", r.GetBranchPaymentMethodByIDHandler)
 		branchPaymentMethodsGroup.PUT("/:method_id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodFromBranchHandler)
 		branchPaymentMethodsGroup.DELETE("/:method_id", m.RBACPermission("billing:delete"), r.DeletePaymentMethodsFromBranchHandler)
 	}
