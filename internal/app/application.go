@@ -94,6 +94,9 @@ func (app *application) Mount() http.Handler {
 		//booking
 		app.Handlers.BookingHandlers.BookingRoutes(v1, m)
 
+		//access
+		app.Handlers.AccessHandlers.AccessRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}
