@@ -37,3 +37,10 @@ type AttendanceLog struct {
 func (AttendanceLog) TableName() string {
 	return "attendance_log"
 }
+
+type CheckInResponse struct {
+	Message     string    `json:"message"`
+	AccessType  string    `json:"access_type"`
+	ServiceName string    `json:"service_name,omitempty"`
+	CheckInTime time.Time `json:"check_in_time"`
+}

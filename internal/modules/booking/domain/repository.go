@@ -2,6 +2,7 @@ package bookingdomain
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
@@ -28,4 +29,5 @@ type BookingRepository interface {
 
 	// GetClientBookings retorna todas las reservas de un usuario
 	GetClientBookings(ctx context.Context, userID uuid.UUID) ([]BookingWithClassInfo, error)
+	GetClientActualBook(ctx context.Context, userID, branchID uuid.UUID, startsAt time.Time, endsAt time.Time) (*Booking, error)
 }

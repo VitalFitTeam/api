@@ -58,7 +58,7 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	{
 		paymentMethodsGroup.GET("", m.RBACPermission("billing:list"), r.GetPaymentMethodsHandler)
 		paymentMethodsGroup.POST("", m.RBACPermission("billing:create"), r.CreatePaymentMethodHandler)
-		paymentMethodsGroup.GET("/:id", m.RBACPermission("billing:get"), r.GetPaymentMethodByIDHandler)
+		paymentMethodsGroup.GET("/:id", r.GetPaymentMethodByIDHandler)
 		paymentMethodsGroup.PUT("/:id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodHandler)
 		paymentMethodsGroup.DELETE("/:id", m.RBACPermission("billing:delete"), r.DeletePaymentMethodHandler)
 	}

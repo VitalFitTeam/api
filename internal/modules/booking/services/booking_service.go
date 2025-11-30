@@ -3,6 +3,7 @@ package bookingservice
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
@@ -136,13 +137,50 @@ func (s *BookingService) GetClientSchedule(
 	return s.store.Booking.GetClientSchedule(ctx, branchID, userID)
 }
 
+func (s *BookingService) GetClientBookings(ctx context.Context, userID uuid.UUID) ([]bookingdomain.BookingWithClassInfo, error) {
+	return s.store.Booking.GetClientBookings(ctx, userID)
+}
+
+func (s *BookingService) GetClientActualBook(ctx context.Context, userID, branchID uuid.UUID, startsAt time.Time, endsAt time.Time) (*bookingdomain.Booking, error) {
+	return s.store.Booking.GetClientActualBook(ctx, userID, branchID, startsAt, endsAt)
+}
+
 //
 // ------------------------------------------------------------
-// GetClientBookings
+// CanAccessService
 // ------------------------------------------------------------
 //
 
-// GetClientBookings devuelve todas las reservas de un usuario específico.
-func (s *BookingService) GetClientBookings(ctx context.Context, userID uuid.UUID) ([]bookingdomain.BookingWithClassInfo, error) {
-	return s.store.Booking.GetClientBookings(ctx, userID)
+func (s *BookingService) CanAccessService(ctx context.Context, userID, branchID, serviceID uuid.UUID) (bool, error) {
+	// 1. Verificar si el usuario tiene una membresía activa.
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+
+	if isMember {
+		// Si es miembro, verificar si el servicio es gratuito para miembros en esa sucursal.
+		branchService, err := s.store.Products.GetBranchServiceByID(ctx, branchID, serviceID)
+		if err != nil {
+			// Si no hay una configuración específica del servicio para la sucursal, no se puede determinar el acceso.
+			if errors.Is(err, shared_errors.ErrNotFound) {
+				return false, nil
+			}
+			return false, err
+		}
+
+		// Si el precio para miembros es 0, tiene acceso.
+		if branchService.PriceForMember == 0 {
+			return true, nil
+		}
+	}
+
+	// 2. Si no es miembro o el servicio tiene costo para miembros, verificar si tiene saldo/créditos.
+	clientBalance, err := s.store.Products.GetClientBalance(ctx, userID, serviceID)
+	if err != nil && !errors.Is(err, shared_errors.ErrNotFound) {
+		return false, err
+	}
+
+	// Si tiene un balance y es mayor a 0, tiene acceso.
+	return clientBalance != nil && clientBalance.Balance > 0, nil
 }

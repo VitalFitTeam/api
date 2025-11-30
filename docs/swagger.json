@@ -16,6 +16,80 @@
     },
     "basePath": "/v1",
     "paths": {
+        "/access/check-in": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Processes a user's check-in attempt via a QR code JWT and branch ID. It follows a three-level priority flow: Confirmed Booking, Class Walk-in, and Open Gym access.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access"
+                ],
+                "summary": "Process User Check-In",
+                "parameters": [
+                    {
+                        "description": "Check-In Payload with QR Token and Branch ID",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accesshandler.CheckInPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Access Granted",
+                        "schema": {
+                            "$ref": "#/definitions/accessdomain.CheckInResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "402": {
+                        "description": "Payment Required",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/admin/permissions": {
             "get": {
                 "security": [
@@ -7837,6 +7911,34 @@
         }
     },
     "definitions": {
+        "accessdomain.CheckInResponse": {
+            "type": "object",
+            "properties": {
+                "access_type": {
+                    "type": "string"
+                },
+                "check_in_time": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "service_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "accesshandler.CheckInPayload": {
+            "type": "object",
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "qr_jwt": {
+                    "type": "string"
+                }
+            }
+        },
         "authdomain.Permission": {
             "type": "object",
             "properties": {

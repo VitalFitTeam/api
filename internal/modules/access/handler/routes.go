@@ -8,6 +8,7 @@ import (
 
 type AccessHandlerInterface interface {
 	AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	CheckInHandler(c *gin.Context)
 }
 
 type AccessHandler struct {
@@ -23,4 +24,6 @@ func NewAccessHandler(services appservices.Services) *AccessHandler {
 func (r *AccessHandler) AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	accessGroup := rg.Group("/access")
 	accessGroup.Use(m.AuthJwtTokenMiddleware())
+
+	accessGroup.POST("/check-in", m.RBACPermission("access:check_in"), r.CheckInHandler)
 }

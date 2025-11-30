@@ -1,5 +1,23 @@
 basePath: /v1
 definitions:
+  accessdomain.CheckInResponse:
+    properties:
+      access_type:
+        type: string
+      check_in_time:
+        type: string
+      message:
+        type: string
+      service_name:
+        type: string
+    type: object
+  accesshandler.CheckInPayload:
+    properties:
+      branch_id:
+        type: string
+      qr_jwt:
+        type: string
+    type: object
   authdomain.Permission:
     properties:
       created_at:
@@ -1875,6 +1893,57 @@ info:
   termsOfService: http://swagger.io/terms/
   title: VitalFit API
 paths:
+  /access/check-in:
+    post:
+      consumes:
+      - application/json
+      description: 'Processes a user''s check-in attempt via a QR code JWT and branch
+        ID. It follows a three-level priority flow: Confirmed Booking, Class Walk-in,
+        and Open Gym access.'
+      parameters:
+      - description: Check-In Payload with QR Token and Branch ID
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/accesshandler.CheckInPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Access Granted
+          schema:
+            $ref: '#/definitions/accessdomain.CheckInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: Payment Required
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Process User Check-In
+      tags:
+      - Access
   /admin/permissions:
     get:
       description: Lists all permissions defined in the system (from the seeder) that

@@ -2,8 +2,10 @@ package schedulerepository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
+	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
@@ -107,6 +109,31 @@ func (s *ScheduleStore) UpdateClass(ctx context.Context, class *scheduledomain.C
 	}
 
 	return nil
+}
+
+func (s *ScheduleStore) GetAvailableClassesForBranch(ctx context.Context, branchID uuid.UUID, startTime, endTime time.Time) ([]scheduledomain.Class, error) {
+	var classes []scheduledomain.Class
+	bookingCountSubquery := s.db.Model(&bookingdomain.Booking{}).
+		Select("COALESCE(COUNT(booking_id), 0)").
+		Where("class_id = classes.class_id").
+		Where("status = 'Confirmed'").
+		Where("deleted_at IS NULL")
+
+	err := s.db.WithContext(ctx).
+		Model(&scheduledomain.Class{}).
+		Preload("Service").
+		Where("branch_id = ?", branchID).
+		Where("is_visible = ?", true).
+		Where("starts_at BETWEEN ? AND ?", startTime, endTime).
+		Where("max_capacity > (?)", bookingCountSubquery).
+		Order("starts_at ASC").
+		Find(&classes).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return classes, nil
 }
 
 // ----------------------------------------

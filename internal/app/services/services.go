@@ -56,6 +56,7 @@ type Services struct {
 }
 
 func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage) Services {
+	bookingService := bookingservice.NewBookingService(store)
 	return Services{
 		AuthServices:       authservices.NewAuthServices(store, cfg, auth, mailer),
 		UserServices:       authservices.NewUserService(store),
@@ -70,8 +71,8 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		BillingServices:    billingservice.NewBillingService(store, cache, cfg, mailer),
 		ScheduleServices:   scheduleservice.NewScheduleService(store),
 		CombosServices:     combosservices.NewCombosServices(store),
-		BookingServices:    bookingservice.NewBookingService(store),
-		AccessServices:     accessservice.NewAccessServices(store),
+		BookingServices:    bookingService,
+		AccessServices:     accessservice.NewAccessServices(store, *bookingService),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,
 	}

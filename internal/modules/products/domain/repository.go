@@ -29,6 +29,7 @@ type ProductsRepository interface {
 	DeleteBranchService(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) error
 	GetBranchServicesByIDs(ctx context.Context, branchID uuid.UUID, serviceIDs []uuid.UUID) (map[uuid.UUID]*ServiceBranchDetail, error)
 	GetBranchServiceByID(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) (*ServiceBranchDetail, error)
+	GetBranchServiceByName(ctx context.Context, branchID uuid.UUID, serviceName string) (*ServiceBranchDetail, error)
 
 	GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
 	GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)

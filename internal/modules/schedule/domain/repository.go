@@ -2,6 +2,7 @@ package scheduledomain
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -23,4 +24,6 @@ type ScheduleRepository interface {
 
 	// DeleteClass elimina (o realiza soft-delete) una clase programada.
 	DeleteClass(ctx context.Context, classID uuid.UUID) error
+
+	GetAvailableClassesForBranch(ctx context.Context, branchID uuid.UUID, startTime, endTime time.Time) ([]Class, error)
 }
