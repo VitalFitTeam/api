@@ -17,6 +17,7 @@ import (
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
+	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	"github.com/vitalfit/api/internal/store"
 	env "github.com/vitalfit/api/pkg/Env"
@@ -37,12 +38,15 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB) {
 	ctx := context.Background()
 	s.CreateSuperAdmin(store, db, ctx)
 	s.SeedPermissions(store, db, ctx)
+	s.SeedRolePermissions(store, db, ctx)
 	s.SeedUsers(store, db, ctx)
 	s.SeedServiceCategories(store, db, ctx)
 	s.SeedBanners(store, db, ctx)
+	s.SeedServices(store, db, ctx)
 	s.SeedInstructors(store, db, ctx)
 	s.SeedBranches(store, db, ctx)
 	s.SeedEquipment(store, db, ctx)
+	s.SeedMemberships(store, db, ctx)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -129,6 +133,148 @@ func (s *SeedStruct) SeedPermissions(store store.Storage, db *gorm.DB, ctx conte
 	}
 
 	log.Println("Permissions seeder completed successfully.")
+}
+
+func (s *SeedStruct) SeedRolePermissions(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/permission_set.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read permission_set.json file: %v", err)
+		return
+	}
+
+	var permissionSet map[string][]string
+	if err = json.Unmarshal(jsonFile, &permissionSet); err != nil {
+		log.Fatalf("Fatal error: could not decode permission_set.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d role permission sets in permission_set.json. Starting seeder...", len(permissionSet))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for roleName, permissionNames := range permissionSet {
+			// Obtener el rol por nombre
+			role, err := store.Roles.GetByName(ctx, roleName)
+			if err != nil {
+				log.Printf("Error getting role '%s': %v. Skipping...", roleName, err)
+				continue // O puedes retornar el error si es crítico
+			}
+
+			var permissionIDs []uuid.UUID
+			for _, permName := range permissionNames {
+				// Obtener el permiso por nombre
+				permission, err := store.Roles.GetPermissionByName(ctx, permName)
+				if err != nil {
+					log.Printf("Error getting permission '%s' for role '%s': %v. Skipping permission...", permName, roleName, err)
+					continue // O puedes retornar el error
+				}
+				permissionIDs = append(permissionIDs, permission.PermissionID)
+			}
+
+			if len(permissionIDs) > 0 {
+				// Asignar los permisos al rol
+				err := store.Roles.AssignRolePermission(ctx, role.RoleID, permissionIDs)
+				if err != nil {
+					log.Printf("Error assigning permissions to role '%s': %v", roleName, err)
+					return err // Rollback
+				}
+				log.Printf("Successfully assigned %d permissions to role '%s'", len(permissionIDs), roleName)
+			}
+		}
+		return nil // Commit
+	})
+
+	if err != nil {
+		log.Println("Error in role permissions seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Role permissions seeder completed successfully.")
+}
+
+type serviceJSON struct {
+	CategoryName  string             `json:"category_name"`
+	Description   string             `json:"description"`
+	Duration      int64              `json:"duration"`
+	IsFeatured    bool               `json:"is_featured"`
+	Name          string             `json:"name"`
+	Priority      int64              `json:"priority"`
+	ServiceImages []serviceImageJSON `json:"service_images"`
+}
+
+type serviceImageJSON struct {
+	AltText      string `json:"alt_text"`
+	DisplayOrder int    `json:"display_order"`
+	ImageURL     string `json:"image_url"`
+	IsPrimary    bool   `json:"is_primary"`
+}
+
+func (s *SeedStruct) SeedServices(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/services.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read services.json file: %v", err)
+		return
+	}
+
+	var servicesFromJSON []serviceJSON
+	if err = json.Unmarshal(jsonFile, &servicesFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode services.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d services in services.json. Starting seeder...", len(servicesFromJSON))
+
+	banners, err := store.Marketing.GetBanners(ctx)
+	if err != nil {
+		log.Printf("Error getting banners: %v. Services will be created without banners.", err)
+	}
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for _, serviceData := range servicesFromJSON {
+			category, err := store.Products.GetServiceCategoryByName(ctx, serviceData.CategoryName)
+			if err != nil {
+				log.Printf("Error getting category '%s' for service '%s': %v. Skipping...", serviceData.CategoryName, serviceData.Name, err)
+				continue
+			}
+
+			images := make([]productsdomain.ServiceImage, len(serviceData.ServiceImages))
+			for i, imgData := range serviceData.ServiceImages {
+				images[i] = productsdomain.ServiceImage{
+					ImageURL:     imgData.ImageURL,
+					AltText:      imgData.AltText,
+					DisplayOrder: imgData.DisplayOrder,
+					IsPrimary:    imgData.IsPrimary,
+				}
+			}
+
+			service := &productsdomain.Service{
+				Name:            serviceData.Name,
+				CategoryID:      category.CategoryID,
+				Description:     serviceData.Description,
+				DurationMinutes: serviceData.Duration,
+				PriorityScore:   serviceData.Priority,
+				IsFeatured:      serviceData.IsFeatured,
+				Images:          images,
+			}
+
+			var bannerID uuid.UUID
+			if len(banners) > 0 {
+				bannerID = banners[rand.Intn(len(banners))].BannerID
+			}
+
+			if err := store.Products.CreateServiceTX(ctx, tx, service, bannerID); err != nil {
+				log.Printf("Error creating service '%s': %v", service.Name, err)
+				return err // Rollback
+			}
+		}
+		return nil // Commit
+	})
+
+	if err != nil {
+		log.Println("Error in services seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Services seeder completed successfully.")
 }
 
 type instructorJSON struct {
@@ -551,6 +697,55 @@ func (s *SeedStruct) SeedEquipment(store store.Storage, db *gorm.DB, ctx context
 	}
 	log.Println("Equipment seeder completed successfully.")
 
+}
+
+type membershipJSON struct {
+	Description  string  `json:"description"`
+	DurationDays int     `json:"duration_days"`
+	IsActive     bool    `json:"is_active"`
+	Name         string  `json:"name"`
+	Price        float64 `json:"price"`
+}
+
+func (s *SeedStruct) SeedMemberships(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/memberships.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read memberships.json file: %v", err)
+		return
+	}
+
+	var membershipsFromJSON []membershipJSON
+	if err = json.Unmarshal(jsonFile, &membershipsFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode memberships.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d memberships in memberships.json. Starting seeder...", len(membershipsFromJSON))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for _, m := range membershipsFromJSON {
+			membership := &membershipsdomain.MembershipType{
+				Name:         m.Name,
+				Description:  m.Description,
+				DurationDays: m.DurationDays,
+				Price:        m.Price,
+				IsActive:     m.IsActive,
+			}
+
+			if err := tx.Create(membership).Error; err != nil {
+				log.Printf("Error creating membership '%s': %v", m.Name, err)
+				return err // Rollback
+			}
+		}
+		return nil // Commit
+	})
+
+	if err != nil {
+		log.Println("Error in memberships seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Memberships seeder completed successfully.")
 }
 
 func main() {

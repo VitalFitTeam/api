@@ -214,3 +214,10 @@ func (m *RoleStoreMock) CreatePermission(ctx context.Context, tx *gorm.DB, permi
 	args := m.Called(ctx, tx, permission)
 	return args.Error(0)
 }
+func (m *RoleStoreMock) GetPermissionByName(ctx context.Context, name string) (*authdomain.Permission, error) {
+	args := m.Called(ctx, name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*authdomain.Permission), args.Error(1)
+}

@@ -1714,7 +1714,7 @@ definitions:
       description:
         type: string
       duration:
-        maximum: 60
+        maximum: 200
         minimum: 1
         type: integer
       is_featured:
@@ -1864,7 +1864,7 @@ definitions:
       description:
         type: string
       duration:
-        maximum: 60
+        maximum: 200
         minimum: 1
         type: integer
       is_featured:

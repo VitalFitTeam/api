@@ -10968,7 +10968,7 @@ const docTemplate = `{
                 },
                 "duration": {
                     "type": "integer",
-                    "maximum": 60,
+                    "maximum": 200,
                     "minimum": 1
                 },
                 "is_featured": {
@@ -11192,7 +11192,7 @@ const docTemplate = `{
                 },
                 "duration": {
                     "type": "integer",
-                    "maximum": 60,
+                    "maximum": 200,
                     "minimum": 1
                 },
                 "is_featured": {

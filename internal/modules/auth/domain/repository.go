@@ -46,4 +46,5 @@ type RolesRepository interface {
 	DeleteRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error
 	RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error)
 	CreatePermission(ctx context.Context, tx *gorm.DB, permission *Permission) error
+	GetPermissionByName(ctx context.Context, name string) (*Permission, error)
 }

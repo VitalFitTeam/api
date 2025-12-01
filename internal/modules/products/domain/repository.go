@@ -12,6 +12,7 @@ type ProductsRepository interface {
 	CreateServiceCategory(ctx context.Context, tx *gorm.DB, serviceCategory *ServiceCategory) error
 	ListServiceCategories(ctx context.Context, tx *gorm.DB) ([]ServiceCategory, error)
 	GetServicesCategories(ctx context.Context) ([]ServiceCategory, error)
+	GetServiceCategoryByName(ctx context.Context, name string) (*ServiceCategory, error)
 
 	CreateService(ctx context.Context, service *Service, bannerID uuid.UUID) error
 	CreateServiceTX(ctx context.Context, tx *gorm.DB, service *Service, bannerID uuid.UUID) error

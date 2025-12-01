@@ -455,3 +455,20 @@ func (s *ProductsStore) GetPublicBranchServices(ctx context.Context, branchID uu
 
 	return services, count, nil
 }
+
+func (s *ProductsStore) GetServiceCategoryByName(ctx context.Context, name string) (*productsdomain.ServiceCategory, error) {
+	var serviceCategory productsdomain.ServiceCategory
+	err := s.db.WithContext(ctx).
+		Where("name = ?", name).
+		First(&serviceCategory).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &serviceCategory, nil
+
+}
