@@ -17,6 +17,7 @@ type BranchesRepository interface {
 	Delete(ctx context.Context, branchID uuid.UUID) error
 	GetBranchStatusCount(ctx context.Context) (*BranchStatusCount, error)
 	GetPublicBranchesMap(ctx context.Context) ([]PublicBranchMapResponse, error)
+	GetAllBranches(ctx context.Context) ([]*Branch, error)
 }
 
 type LocationRepository interface {

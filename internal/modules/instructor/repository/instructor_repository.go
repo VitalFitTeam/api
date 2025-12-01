@@ -286,3 +286,13 @@ func (s *InstructorStore) DeleteInstructorSpecialty(ctx context.Context, instruc
 		return nil
 	})
 }
+
+func (s *InstructorStore) GetAllInstructors(ctx context.Context) ([]*instructordomain.Instructor, error) {
+	var instructors []*instructordomain.Instructor
+	err := s.db.WithContext(ctx).
+		Find(&instructors).Error
+	if err != nil {
+		return nil, err
+	}
+	return instructors, nil
+}

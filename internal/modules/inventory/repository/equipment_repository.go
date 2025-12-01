@@ -134,3 +134,12 @@ func (s *EquipmentStore) Delete(ctx context.Context, equipmentID uuid.UUID) erro
 		return nil
 	})
 }
+
+func (s *EquipmentStore) GetAllEquipments(ctx context.Context) ([]*inventorydomain.Equipment, error) {
+	var equipments []*inventorydomain.Equipment
+	err := s.db.WithContext(ctx).Find(&equipments).Error
+	if err != nil {
+		return nil, err
+	}
+	return equipments, nil
+}

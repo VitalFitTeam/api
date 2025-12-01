@@ -42,6 +42,7 @@ type EquipmentRepository interface {
 	Update(ctx context.Context, equipment *Equipment) error
 	Delete(ctx context.Context, equipmentID uuid.UUID) error
 	GetByID(ctx context.Context, equipmentID uuid.UUID) (*Equipment, error)
+	GetAllEquipments(ctx context.Context) ([]*Equipment, error)
 }
 
 type EquipmentServicesInterface interface {
