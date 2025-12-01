@@ -472,3 +472,14 @@ func (s *ProductsStore) GetServiceCategoryByName(ctx context.Context, name strin
 	return &serviceCategory, nil
 
 }
+
+func (s *ProductsStore) GetAllServices(ctx context.Context) ([]productsdomain.Service, error) {
+	var services []productsdomain.Service
+	err := s.db.WithContext(ctx).
+		Find(&services).Error
+	if err != nil {
+		return nil, err
+	}
+	return services, nil
+
+}

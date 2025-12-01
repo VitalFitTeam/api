@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
+	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
@@ -36,17 +37,18 @@ func NewSeedStruct() *SeedStruct {
 
 func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB) {
 	ctx := context.Background()
-	s.CreateSuperAdmin(store, db, ctx)
-	s.SeedPermissions(store, db, ctx)
-	s.SeedRolePermissions(store, db, ctx)
-	s.SeedUsers(store, db, ctx)
-	s.SeedServiceCategories(store, db, ctx)
-	s.SeedBanners(store, db, ctx)
-	s.SeedServices(store, db, ctx)
-	s.SeedInstructors(store, db, ctx)
-	s.SeedBranches(store, db, ctx)
-	s.SeedEquipment(store, db, ctx)
-	s.SeedMemberships(store, db, ctx)
+	//s.CreateSuperAdmin(store, db, ctx)
+	//s.SeedPermissions(store, db, ctx)
+	//s.SeedRolePermissions(store, db, ctx)
+	//s.SeedUsers(store, db, ctx)
+	//s.SeedServiceCategories(store, db, ctx)
+	//s.SeedBanners(store, db, ctx)
+	//s.SeedServices(store, db, ctx)
+	//s.SeedInstructors(store, db, ctx)
+	//s.SeedBranches(store, db, ctx)
+	//s.SeedEquipment(store, db, ctx)
+	//s.SeedMemberships(store, db, ctx)
+	s.SeedPackages(store, db, ctx)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -746,6 +748,91 @@ func (s *SeedStruct) SeedMemberships(store store.Storage, db *gorm.DB, ctx conte
 	}
 
 	log.Println("Memberships seeder completed successfully.")
+}
+
+type packageJSON struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Price       float64 `json:"price"`
+	StartAt     string  `json:"startAt"`
+	EndAt       string  `json:"endAt"`
+}
+
+func (s *SeedStruct) SeedPackages(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/packages.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read packages.json file: %v", err)
+		return
+	}
+
+	var packagesFromJSON []packageJSON
+	if err = json.Unmarshal(jsonFile, &packagesFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode packages.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d packages in packages.json. Starting seeder...", len(packagesFromJSON))
+
+	allServices, err := store.Products.GetAllServices(ctx)
+	if err != nil {
+		log.Fatalf("Fatal error: could not get services for packages seeder: %v", err)
+		return
+	}
+
+	if len(allServices) == 0 {
+		log.Println("Warning: No services found in the database. Packages will be created without items.")
+		return
+	}
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for _, p := range packagesFromJSON {
+			startAt, err := time.Parse(time.RFC3339, p.StartAt)
+			if err != nil {
+				log.Printf("Error parsing StartAt for package '%s': %v. Skipping...", p.Name, err)
+				continue
+			}
+			endAt, err := time.Parse(time.RFC3339, p.EndAt)
+			if err != nil {
+				log.Printf("Error parsing EndAt for package '%s': %v. Skipping...", p.Name, err)
+				continue
+			}
+
+			pkg := &combosdomain.Package{
+				Name:        p.Name,
+				Description: p.Description,
+				Price:       p.Price,
+				StartAt:     &startAt,
+				EndAt:       &endAt,
+			}
+
+			// Generar items de paquete aleatorios
+			numItems := rand.Intn(3) + 2 // Entre 2 y 4 servicios por paquete
+			rand.Shuffle(len(allServices), func(i, j int) {
+				allServices[i], allServices[j] = allServices[j], allServices[i]
+			})
+
+			for i := 0; i < numItems && i < len(allServices); i++ {
+				sessions := rand.Intn(16) + 5 // Entre 5 y 20 sesiones
+				pkg.PackageItems = append(pkg.PackageItems, combosdomain.PackageItem{
+					ServiceID:        allServices[i].ServiceID,
+					SessionsIncluded: sessions,
+				})
+			}
+
+			if err := tx.Create(pkg).Error; err != nil {
+				log.Printf("Error creating package '%s': %v", p.Name, err)
+				return err // Rollback
+			}
+		}
+		return nil // Commit
+	})
+
+	if err != nil {
+		log.Println("Error in packages seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Packages seeder completed successfully.")
 }
 
 func main() {
