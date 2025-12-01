@@ -15,6 +15,7 @@ type CombosRepository interface {
 	UpdatePackage(ctx context.Context, pkg *Package) error
 	DeletePackage(ctx context.Context, packageID uuid.UUID) error
 	GetPackagesByIDs(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]*Package, error)
+	GetAllPackages(ctx context.Context) ([]*Package, error)
 
 	GetPublicPackages(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Package, int64, error)
 }

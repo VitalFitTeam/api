@@ -141,6 +141,13 @@ func (m *UserStoreMock) UpdateClientCategory(ctx context.Context, userID uuid.UU
 	args := m.Called(ctx, userID, category)
 	return args.Error(0)
 }
+func (m *UserStoreMock) GetAllClients(ctx context.Context) ([]*authdomain.Users, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*authdomain.Users), args.Error(1)
+}
 
 // ROLE MOCK FUNCTIONS
 func (m *RoleStoreMock) GetByName(ctx context.Context, name string) (*authdomain.Roles, error) {

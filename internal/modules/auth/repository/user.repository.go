@@ -453,3 +453,12 @@ func (s *UserStore) UpdateClientCategory(ctx context.Context, userID uuid.UUID, 
 		Category: category,
 	}).Error
 }
+
+func (s *UserStore) GetAllClients(ctx context.Context) ([]*authdomain.Users, error) {
+	var users []*authdomain.Users
+	err := s.db.WithContext(ctx).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

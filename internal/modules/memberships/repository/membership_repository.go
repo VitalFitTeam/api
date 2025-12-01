@@ -330,3 +330,13 @@ func (s *MembershipStore) GetClientsMemberships(ctx context.Context, fq paginati
 
 	return clientMemberships, total, nil
 }
+
+func (s *MembershipStore) GetAllMembershipTypes(ctx context.Context) ([]*membershipsdomain.MembershipType, error) {
+	var membershipTypes []*membershipsdomain.MembershipType
+	err := s.db.WithContext(ctx).Find(&membershipTypes).Error
+	if err != nil {
+		return nil, err
+	}
+	return membershipTypes, nil
+
+}
