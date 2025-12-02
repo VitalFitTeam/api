@@ -62,3 +62,21 @@ func (h *ReportHanlders) GetTotalClientsStatHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": totalClients})
 }
+
+// @Summary		Get Active Branches Count
+// @Description	Retrieves the total number of active branches.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=int64}		"Total number of active branches"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/reports/stats/total-active-branches [get]
+func (h *ReportHanlders) GetActiveBranchesCountHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	count, err := h.services.ReportServices.GetActiveBranchesCount(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": count})
+}

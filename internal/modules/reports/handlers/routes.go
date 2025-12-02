@@ -11,6 +11,7 @@ type ReportHandlersInterface interface {
 	GetGlobalSalesStatsHandler(c *gin.Context)
 	GetTopBranchesPerformanceHandler(c *gin.Context)
 	GetTotalClientsStatHandler(c *gin.Context)
+	GetActiveBranchesCountHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -29,5 +30,6 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 	billingGroup.GET("/stats/global", m.RBACPermission("billing:list"), r.GetGlobalSalesStatsHandler)
 	billingGroup.GET("/stats/top-branches", m.RBACPermission("billing:list"), r.GetTopBranchesPerformanceHandler)
 	billingGroup.GET("/stats/total-clients", m.RBACPermission("billing:list"), r.GetTotalClientsStatHandler)
+	billingGroup.GET("/stats/total-active-branches", m.RBACPermission("billing:list"), r.GetActiveBranchesCountHandler)
 
 }

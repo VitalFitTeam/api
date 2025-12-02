@@ -7,6 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
+	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	"gorm.io/gorm"
 )
@@ -158,4 +159,15 @@ func (rs *ReportStore) GetTotalClientsStat(ctx context.Context) (int64, error) {
 		return 0, err
 	}
 	return totalClients, nil
+}
+
+func (rs *ReportStore) GetActiveBranchesCount(ctx context.Context) (int64, error) {
+	var count int64
+	err := rs.db.WithContext(ctx).Model(&branchdomain.Branch{}).
+		Where("status = ?", branchdomain.BranchStatusActive).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

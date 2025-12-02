@@ -29,3 +29,7 @@ func (s *ReportService) GetTopBranchesPerformance(ctx context.Context) ([]report
 func (s *ReportService) GetTotalClientsStat(ctx context.Context) (int64, error) {
 	return s.store.Reports.GetTotalClientsStat(ctx)
 }
+
+func (s *ReportService) GetActiveBranchesCount(ctx context.Context) (int64, error) {
+	return s.store.Reports.GetActiveBranchesCount(ctx)
+}

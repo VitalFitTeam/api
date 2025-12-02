@@ -6673,6 +6673,32 @@ paths:
       summary: Get Top 5 Branches Performance
       tags:
       - Reports
+  /reports/stats/total-active-branches:
+    get:
+      description: Retrieves the total number of active branches.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total number of active branches
+          schema:
+            properties:
+              data:
+                format: int64
+                type: integer
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Active Branches Count
+      tags:
+      - Reports
   /reports/stats/total-clients:
     get:
       description: Retrieves the total number of users with the 'client' role.
