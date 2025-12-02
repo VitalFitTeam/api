@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"github.com/vitalfit/api/pkg/pagination"
@@ -244,11 +245,17 @@ func (s *UserStore) SoftDelete(ctx context.Context, userID uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()
 
-	result := s.db.WithContext(ctx).Delete(&authdomain.Users{}, userID)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Delete(&authdomain.Users{}, userID).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("user_id = ?", userID).Delete(&instructordomain.Instructor{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 // Elimina las invitaciones asociadas a ese usuario.
