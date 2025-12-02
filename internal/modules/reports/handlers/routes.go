@@ -12,6 +12,11 @@ type ReportHandlersInterface interface {
 	GetTopBranchesPerformanceHandler(c *gin.Context)
 	GetTotalClientsStatHandler(c *gin.Context)
 	GetActiveBranchesCountHandler(c *gin.Context)
+	GetSalesByCategoryHandler(c *gin.Context)
+	GetTopInstructorsByAttendanceHandler(c *gin.Context)
+	GetSalesByPaymentMethodHandler(c *gin.Context)
+	GetSalesByHourHandler(c *gin.Context)
+	GetMostUsedServicesHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -26,10 +31,19 @@ func NewReportHandlers(services appservices.Services) *ReportHanlders {
 
 func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	billingGroup := rg.Group("/reports")
-	billingGroup.Use(m.AuthJwtTokenMiddleware())
-	billingGroup.GET("/stats/global", m.RBACPermission("billing:list"), r.GetGlobalSalesStatsHandler)
-	billingGroup.GET("/stats/top-branches", m.RBACPermission("billing:list"), r.GetTopBranchesPerformanceHandler)
-	billingGroup.GET("/stats/total-clients", m.RBACPermission("billing:list"), r.GetTotalClientsStatHandler)
-	billingGroup.GET("/stats/total-active-branches", m.RBACPermission("billing:list"), r.GetActiveBranchesCountHandler)
+	billingGroup.Use(m.AuthJwtTokenMiddleware(), m.RBACPermission("reports:view_sales"))
+
+	statsGroup := billingGroup.Group("/stats")
+	statsGroup.GET("/global", r.GetGlobalSalesStatsHandler)
+	statsGroup.GET("/top-branches", r.GetTopBranchesPerformanceHandler)
+	statsGroup.GET("/total-clients", r.GetTotalClientsStatHandler)
+	statsGroup.GET("/total-active-branches", r.GetActiveBranchesCountHandler)
+
+	chartsGroup := billingGroup.Group("/charts")
+	chartsGroup.GET("/sales-by-category", r.GetSalesByCategoryHandler)
+	chartsGroup.GET("/top-instructors", r.GetTopInstructorsByAttendanceHandler)
+	chartsGroup.GET("/sales-by-payment-method", r.GetSalesByPaymentMethodHandler)
+	chartsGroup.GET("/sales-by-hour", r.GetSalesByHourHandler)
+	chartsGroup.GET("/most-used-services", r.GetMostUsedServicesHandler)
 
 }

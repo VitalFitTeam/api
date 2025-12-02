@@ -1,0 +1,139 @@
+package reporthandlers
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+func parseTimeRange(c *gin.Context) (time.Time, time.Time) {
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
+	layout := "2006-01-02"
+
+	startStr := c.DefaultQuery("start", startOfMonth.Format(layout))
+	endStr := c.DefaultQuery("end", endOfMonth.Format(layout))
+
+	start, err := time.Parse(layout, startStr)
+	if err != nil {
+		start = startOfMonth
+	}
+
+	end, err := time.Parse(layout, endStr)
+	if err != nil {
+		end = endOfMonth
+	}
+
+	return start, end
+}
+
+// @Summary		Get Sales By Category
+// @Description	Retrieves sales data grouped by product category for a Donut Chart.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			start	query		string									false	"Start date for the report (YYYY-MM-DD)"
+// @Param			end		query		string									false	"End date for the report (YYYY-MM-DD)"
+// @Success		200		{object}	object{data=[]reportdomain.ChartData}	"Sales by category data"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/charts/sales-by-category [get]
+func (h *ReportHanlders) GetSalesByCategoryHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	start, end := parseTimeRange(c)
+
+	data, err := h.services.ReportServices.GetSalesByCategory(ctx, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}
+
+// @Summary		Get Top Instructors by Attendance
+// @Description	Retrieves the top 5 instructors with the most class attendances for a Bar Chart.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			start	query		string									false	"Start date for the report (YYYY-MM-DD)"
+// @Param			end		query		string									false	"End date for the report (YYYY-MM-DD)"
+// @Success		200		{object}	object{data=[]reportdomain.ChartData}	"Top instructors by attendance"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/charts/top-instructors [get]
+func (h *ReportHanlders) GetTopInstructorsByAttendanceHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	start, end := parseTimeRange(c)
+
+	data, err := h.services.ReportServices.GetTopInstructorsByAttendance(ctx, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}
+
+// @Summary		Get Sales By Payment Method
+// @Description	Retrieves sales data grouped by payment method for a Pie Chart.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			start	query		string									false	"Start date for the report (YYYY-MM-DD)"
+// @Param			end		query		string									false	"End date for the report (YYYY-MM-DD)"
+// @Success		200		{object}	object{data=[]reportdomain.ChartData}	"Sales by payment method data"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/charts/sales-by-payment-method [get]
+func (h *ReportHanlders) GetSalesByPaymentMethodHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	start, end := parseTimeRange(c)
+
+	data, err := h.services.ReportServices.GetSalesByPaymentMethod(ctx, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}
+
+// @Summary		Get Sales By Hour
+// @Description	Retrieves sales data grouped by the hour of the day for a Line Chart.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=[]reportdomain.ChartData}	"Sales by hour data"
+// @Failure		500	{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/charts/sales-by-hour [get]
+func (h *ReportHanlders) GetSalesByHourHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	start, end := parseTimeRange(c)
+
+	data, err := h.services.ReportServices.GetSalesByHour(ctx, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}
+
+// @Summary		Get Most Used Services
+// @Description	Retrieves the top 5 most used services based on attendance.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			start	query		string									false	"Start date for the report (YYYY-MM-DD)"
+// @Param			end		query		string									false	"End date for the report (YYYY-MM-DD)"
+// @Success		200		{object}	object{data=[]reportdomain.ChartData}	"Most used services data"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/charts/most-used-services [get]
+func (h *ReportHanlders) GetMostUsedServicesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	start, end := parseTimeRange(c)
+
+	data, err := h.services.ReportServices.GetMostUsedServices(ctx, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}

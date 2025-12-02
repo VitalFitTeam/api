@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
@@ -34,7 +35,7 @@ func (rs *ReportStore) GetGlobalSalesStats(ctx context.Context) (*reportdomain.G
 
 	err := rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
 		Where("issue_date >= ? AND status = ?", currentMonthStart, validStatus).
-		Select("COALESCE(SUM(total_amount), 0)"). // COALESCE evita NULL si no hay ventas
+		Select("COALESCE(SUM(total_amount), 0)").
 		Scan(&currentTotal).Error
 	if err != nil {
 		return nil, err
@@ -79,7 +80,6 @@ func (rs *ReportStore) GetTopBranchesPerformance(ctx context.Context) ([]reportd
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
 
-	// Filtramos las facturas válidas (excluyendo Void)
 	validStatuses := []billingdomain.InvoiceStatus{
 		billingdomain.InvoiceStatusPaid,
 		billingdomain.InvoiceStatusUnpaid,
@@ -94,7 +94,6 @@ func (rs *ReportStore) GetTopBranchesPerformance(ctx context.Context) ([]reportd
 
 	var rawResults []resultRaw
 
-	// Query optimizada
 	err := rs.db.Table("invoices").
 		Select(`
             branch.name as branch_name,
@@ -112,7 +111,6 @@ func (rs *ReportStore) GetTopBranchesPerformance(ctx context.Context) ([]reportd
 		return nil, err
 	}
 
-	// Mapeo y lógica de etiquetas
 	var performanceList []reportdomain.BranchPerformance
 
 	for _, res := range rawResults {
@@ -125,7 +123,7 @@ func (rs *ReportStore) GetTopBranchesPerformance(ctx context.Context) ([]reportd
 			percentChange = 100.0
 		}
 
-		label := "Bueno"
+		label := "Good"
 		trend := "up"
 
 		if percentChange >= 10 {
@@ -170,4 +168,135 @@ func (rs *ReportStore) GetActiveBranchesCount(ctx context.Context) (int64, error
 		return 0, err
 	}
 	return count, nil
+}
+
+func (rs *ReportStore) GetSalesByCategory(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	var results []reportdomain.ChartData
+	validStatuses := []billingdomain.InvoiceStatus{
+		billingdomain.InvoiceStatusPaid,
+		billingdomain.InvoiceStatusUnpaid,
+		billingdomain.InvoiceStatusOverdue,
+	}
+
+	query := `
+        SELECT
+            CASE
+                WHEN ii.membership_type_id IS NOT NULL THEN 'Memberships'
+                WHEN ii.package_id IS NOT NULL THEN 'Packages'
+                WHEN sc.name IS NOT NULL THEN sc.name
+                ELSE 'Otros'
+            END as label,
+            SUM(ii.total_line) as value
+        FROM invoice_items ii
+        JOIN invoices i ON i.invoice_id = ii.invoice_id
+        LEFT JOIN services s ON s.service_id = ii.service_id
+        LEFT JOIN service_categories sc ON sc.category_id = s.category_id
+        WHERE i.issue_date BETWEEN ? AND ?
+        AND i.status IN ?
+        GROUP BY label
+        ORDER BY value DESC
+    `
+
+	err := rs.db.WithContext(ctx).Raw(query, start, end, validStatuses).Scan(&results).Error
+	return results, err
+}
+
+func (rs *ReportStore) GetTopInstructorsByAttendance(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	var results []reportdomain.ChartData
+
+	err := rs.db.WithContext(ctx).Table("attendance_log as al").
+		Select("u.first_name || ' ' || u.last_name as label, COUNT(*) as value").
+		Joins("JOIN classes c ON c.class_id = al.schedule_id").
+		Joins("JOIN instructors i ON i.instructor_id = c.instructor_id").
+		Joins("JOIN users u ON u.user_id = i.user_id").
+		Where("al.check_in_time BETWEEN ? AND ?", start, end).
+		Where("al.status = ?", accessdomain.AttendanceStatusAttended).
+		Group("label").
+		Order("value DESC").
+		Limit(5).
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func (rs *ReportStore) GetSalesByPaymentMethod(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	var results []reportdomain.ChartData
+	validStatuses := []billingdomain.InvoiceStatus{
+		billingdomain.InvoiceStatusPaid,
+		billingdomain.InvoiceStatusUnpaid,
+		billingdomain.InvoiceStatusOverdue,
+	}
+
+	err := rs.db.WithContext(ctx).Table("payments p").
+		Select("pm.name as label, SUM(p.amount_base) as value").
+		Joins("JOIN invoices i ON i.invoice_id = p.invoice_id").
+		Joins("JOIN payment_methods pm ON pm.method_id = p.payment_method_id").
+		Where("i.issue_date BETWEEN ? AND ?", start, end).
+		Where("i.status IN ?", validStatuses).
+		Where("p.status = ?", billingdomain.PaymentStatusCompleted).
+		Group("pm.name").
+		Order("value DESC").
+		Scan(&results).Error
+
+	return results, err
+}
+
+func (rs *ReportStore) GetSalesByHour(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	var results []reportdomain.ChartData
+	validStatuses := []billingdomain.InvoiceStatus{
+		billingdomain.InvoiceStatusPaid,
+		billingdomain.InvoiceStatusUnpaid,
+		billingdomain.InvoiceStatusOverdue,
+	}
+
+	err := rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+		Select("EXTRACT(HOUR FROM created_at) as hour, SUM(total_amount) as value").
+		Where("created_at BETWEEN ? AND ?", start, end).
+		Where("status IN ?", validStatuses).
+		Group("hour").
+		Order("hour ASC").
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	hourlyMap := make(map[int]decimal.Decimal)
+	for _, r := range results {
+		hourlyMap[r.Hour] = r.Value
+	}
+
+	fullResults := make([]reportdomain.ChartData, 24)
+	for i := 0; i < 24; i++ {
+		value := decimal.Zero
+		if val, ok := hourlyMap[i]; ok {
+			value = val
+		}
+		fullResults[i] = reportdomain.ChartData{Hour: i, Label: "Sales", Value: value}
+	}
+
+	return fullResults, nil
+}
+
+func (rs *ReportStore) GetMostUsedServices(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	var results []reportdomain.ChartData
+
+	err := rs.db.WithContext(ctx).Model(&accessdomain.AttendanceLog{}).
+		Select("s.name as label, COUNT(attendance_log.service_id) as value").
+		Joins("JOIN services s ON s.service_id = attendance_log.service_id").
+		Where("attendance_log.check_in_time BETWEEN ? AND ?", start, end).
+		Group("s.name").
+		Order("value DESC").
+		Limit(5).
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }

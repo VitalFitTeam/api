@@ -1900,6 +1900,15 @@ definitions:
       trend:
         type: string
     type: object
+  reportdomain.ChartData:
+    properties:
+      hour:
+        type: integer
+      label:
+        type: string
+      value:
+        type: number
+    type: object
   reportdomain.GlobalSalesStats:
     properties:
       percentage_change:
@@ -6619,6 +6628,179 @@ paths:
       summary: List all public services
       tags:
       - Public
+  /reports/charts/most-used-services:
+    get:
+      description: Retrieves the top 5 most used services based on attendance.
+      parameters:
+      - description: Start date for the report (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date for the report (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Most used services data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Most Used Services
+      tags:
+      - Reports
+  /reports/charts/sales-by-category:
+    get:
+      description: Retrieves sales data grouped by product category for a Donut Chart.
+      parameters:
+      - description: Start date for the report (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date for the report (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sales by category data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Sales By Category
+      tags:
+      - Reports
+  /reports/charts/sales-by-hour:
+    get:
+      description: Retrieves sales data grouped by the hour of the day for a Line
+        Chart.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sales by hour data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Sales By Hour
+      tags:
+      - Reports
+  /reports/charts/sales-by-payment-method:
+    get:
+      description: Retrieves sales data grouped by payment method for a Pie Chart.
+      parameters:
+      - description: Start date for the report (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date for the report (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sales by payment method data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Sales By Payment Method
+      tags:
+      - Reports
+  /reports/charts/top-instructors:
+    get:
+      description: Retrieves the top 5 instructors with the most class attendances
+        for a Bar Chart.
+      parameters:
+      - description: Start date for the report (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date for the report (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Top instructors by attendance
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Top Instructors by Attendance
+      tags:
+      - Reports
   /reports/stats/global:
     get:
       description: Retrieves global sales statistics, comparing the current month's

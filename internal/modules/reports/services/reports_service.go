@@ -2,6 +2,7 @@ package reportservices
 
 import (
 	"context"
+	"time"
 
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	"github.com/vitalfit/api/internal/store"
@@ -32,4 +33,24 @@ func (s *ReportService) GetTotalClientsStat(ctx context.Context) (int64, error) 
 
 func (s *ReportService) GetActiveBranchesCount(ctx context.Context) (int64, error) {
 	return s.store.Reports.GetActiveBranchesCount(ctx)
+}
+
+func (s *ReportService) GetSalesByCategory(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetSalesByCategory(ctx, start, end)
+}
+
+func (s *ReportService) GetTopInstructorsByAttendance(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetTopInstructorsByAttendance(ctx, start, end)
+}
+
+func (s *ReportService) GetSalesByPaymentMethod(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetSalesByPaymentMethod(ctx, start, end)
+}
+
+func (s *ReportService) GetSalesByHour(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetSalesByHour(ctx, start, end)
+}
+
+func (s *ReportService) GetMostUsedServices(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetMostUsedServices(ctx, start, end)
 }

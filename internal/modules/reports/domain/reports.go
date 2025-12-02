@@ -16,3 +16,9 @@ type BranchPerformance struct {
 	Label         string          `json:"label"`
 	Trend         string          `json:"trend"`
 }
+
+type ChartData struct {
+	Label string          `json:"label"`
+	Value decimal.Decimal `json:"value"`
+	Hour  int             `json:"hour,omitempty"`
+}
