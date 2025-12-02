@@ -21,9 +21,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/vitalfit/api/config"
+	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	authmocks "github.com/vitalfit/api/internal/modules/auth/mocks"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
+	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
@@ -66,6 +68,7 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices
 	s.SeedBranchRelations(store, db, ctx)
 	s.SeedClasses(store, db, ctx)
 	s.SeedInvoicesAndPayments(store, db, ctx, services)
+	s.SeedBookingsAndAttendance(store, db, ctx)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -1079,6 +1082,114 @@ func (s *SeedStruct) SeedClasses(store store.Storage, db *gorm.DB, ctx context.C
 	}
 
 	log.Println("Classes seeder completed successfully.")
+}
+
+func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB, ctx context.Context) {
+	log.Println("Starting to seed bookings and attendance...")
+
+	// 1. Obtener datos maestros
+	allBranches, err := store.Branches.GetAllBranches(ctx)
+	if err != nil || len(allBranches) == 0 {
+		log.Fatalf("Fatal: Could not get branches or no branches found: %v", err)
+		return
+	}
+	allClients, err := store.Users.GetAllClients(ctx)
+	if err != nil || len(allClients) == 0 {
+		log.Fatalf("Fatal: Could not get clients or no clients found for booking seeder: %v", err)
+		return
+	}
+
+	// Contenedores para inserción en lotes
+	var bookingsToCreate []bookingdomain.Booking
+	var attendanceToCreate []accessdomain.AttendanceLog
+	now := time.Now()
+
+	// 2. Iterar por cada SUCURSAL para obtener sus clases
+	for _, branch := range allBranches {
+		log.Printf("Processing bookings for branch: %s", branch.Name)
+
+		branchClasses, err := store.Schedule.GetClassesByBranch(ctx, branch.BranchID)
+		if err != nil || len(branchClasses) == 0 {
+			log.Printf("Warning: No classes found for branch %s. Skipping.", branch.Name)
+			continue
+		}
+
+		// 3. Iterar sobre cada clase de la sucursal
+		for _, class := range branchClasses {
+			// Omitir "Open Gym"
+			if class.Service.Name == "Open Gym" {
+				continue
+			}
+
+			// Decidir aleatoriamente cuántos clientes reservarán la clase
+			minBookings := int(float64(class.MaxCapacity) * 0.4) // Al menos el 40%
+			maxBookings := class.MaxCapacity
+			if minBookings > maxBookings {
+				minBookings = maxBookings
+			}
+			if minBookings == 0 && maxBookings > 0 {
+				minBookings = 1
+			}
+
+			numBookings := 0
+			if maxBookings > minBookings {
+				numBookings = rand.Intn(maxBookings-minBookings+1) + minBookings
+			} else if maxBookings > 0 {
+				numBookings = maxBookings
+			}
+
+			// Seleccionar clientes aleatorios para la clase
+			rand.Shuffle(len(allClients), func(i, j int) { allClients[i], allClients[j] = allClients[j], allClients[i] })
+
+			for i := 0; i < numBookings && i < len(allClients); i++ {
+				client := allClients[i]
+
+				// 4. Crear la reserva (Booking)
+				bookingDate := class.StartsAt.Add(-time.Hour * time.Duration(rand.Intn(48)+1)) // Reservado 1-48h antes
+				booking := bookingdomain.Booking{
+					UserID:    client.UserID,
+					ClassID:   class.ClassID,
+					Status:    bookingdomain.BookingStatusConfirmed,
+					CreatedAt: bookingDate,
+					UpdatedAt: bookingDate,
+				}
+				bookingsToCreate = append(bookingsToCreate, booking)
+
+				// 5. Si la clase ya pasó, simular la asistencia
+				if class.StartsAt.Before(now) {
+					attended := rand.Intn(100) < 85 // 85% de probabilidad de asistir
+
+					attendance := accessdomain.AttendanceLog{
+						UserID:    client.UserID,
+						ClassID:   &class.ClassID,
+						ServiceID: class.ServiceID, // Añadir el ServiceID de la clase
+					}
+
+					if attended {
+						checkInOffset := time.Duration(rand.Intn(30)-15) * time.Minute // +/- 15 minutos
+						attendance.CheckInTime = class.StartsAt.Add(checkInOffset)     // Corregido: Usar la variable correcta
+						attendance.Status = accessdomain.AttendanceStatusAttended
+					} else {
+						attendance.CheckInTime = class.StartsAt // Para no-shows, la hora es la de la clase
+						attendance.Status = accessdomain.AttendanceStatusNoShow
+					}
+					attendance.CreatedAt = attendance.CheckInTime
+					attendanceToCreate = append(attendanceToCreate, attendance)
+				}
+			}
+		}
+	}
+
+	// 6. Insertar en lotes
+	log.Printf("Generated %d bookings and %d attendance logs. Inserting into database...", len(bookingsToCreate), len(attendanceToCreate))
+	if err := db.CreateInBatches(&bookingsToCreate, 1000).Error; err != nil {
+		log.Fatalf("Fatal error during bookings batch insert: %v", err)
+	}
+	if err := db.CreateInBatches(&attendanceToCreate, 1000).Error; err != nil {
+		log.Fatalf("Fatal error during attendance logs batch insert: %v", err)
+	}
+
+	log.Println("Bookings and attendance seeder completed successfully.")
 }
 
 func (s *SeedStruct) SeedInvoicesAndPayments(store store.Storage, db *gorm.DB, ctx context.Context, services appservices.Services) {
