@@ -110,3 +110,46 @@ func (bs *Billingstore) GetClientIvoices(ctx context.Context, userID uuid.UUID, 
 
 	return invoices, total, nil
 }
+
+func (bs *Billingstore) GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*billingdomain.Invoice, int64, error) {
+	var invoices []*billingdomain.Invoice
+	var total int64
+
+	query := bs.db.WithContext(ctx).Model(&billingdomain.Invoice{})
+
+	if fq.Search != "" {
+		query = query.Joins("User")
+
+		searchQuery := "%" + fq.Search + "%"
+		query = query.Where(
+			"invoices.invoice_number ILIKE ? OR \"User\".first_name ILIKE ? OR \"User\".last_name ILIKE ? OR \"User\".email ILIKE ?",
+			searchQuery, searchQuery, searchQuery, searchQuery,
+		)
+	}
+
+	if fq.Status != "" {
+		query = query.Where("invoices.status = ?", fq.Status)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	sortDirection := fq.Sort
+	if sortDirection == "" {
+		sortDirection = "desc"
+	}
+
+	page := fq.Page
+	if page < 1 {
+		page = 1
+	}
+
+	err := query.Preload("User").
+		Order("invoices.issue_date " + sortDirection).
+		Limit(fq.Limit).
+		Offset((page - 1) * fq.Limit).
+		Find(&invoices).Error
+
+	return invoices, total, err
+}

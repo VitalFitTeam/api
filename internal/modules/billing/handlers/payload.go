@@ -413,3 +413,31 @@ func NewClientInvoiceResponse(invoices []*billingdomain.Invoice) []ClientInvoice
 	}
 	return responses
 }
+
+type AdminInvoiceListResponse struct {
+	InvoiceID     uuid.UUID       `json:"invoice_id"`
+	InvoiceNumber string          `json:"invoice_number"`
+	ClientName    string          `json:"client_name"`
+	IssueDate     time.Time       `json:"issue_date"`
+	TotalAmount   decimal.Decimal `json:"total_amount"`
+	Status        string          `json:"status"`
+}
+
+func NewAdminInvoiceListResponse(invoices []*billingdomain.Invoice) []AdminInvoiceListResponse {
+	if invoices == nil {
+		return []AdminInvoiceListResponse{}
+	}
+
+	responses := make([]AdminInvoiceListResponse, len(invoices))
+	for i, invoice := range invoices {
+		responses[i] = AdminInvoiceListResponse{
+			InvoiceID:     invoice.InvoiceID,
+			InvoiceNumber: invoice.InvoiceNumber,
+			ClientName:    invoice.User.FirstName + " " + invoice.User.LastName,
+			IssueDate:     invoice.IssueDate,
+			TotalAmount:   invoice.TotalAmount,
+			Status:        string(invoice.Status),
+		}
+	}
+	return responses
+}

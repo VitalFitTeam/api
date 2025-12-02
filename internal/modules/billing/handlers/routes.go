@@ -86,6 +86,7 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 
 	invoicesGroup := billingGroup.Group("/invoices")
 	invoicesGroup.POST("", r.CreateInvoiceHandler)
+	invoicesGroup.GET("", m.RBACPermission("billing:list"), r.GetInvoicesHandler)
 	invoicesGroup.GET("/:invoice_id", r.GetInvoiceByIDHandler)
 	invoicesGroup.GET("/client", r.GetClientInvoices)
 	invoicesGroup.GET("/client/:user_id", r.GetClientInvoices)

@@ -354,3 +354,64 @@ func (h *BillingHandlers) GetClientInvoices(c *gin.Context) {
 	c.JSON(200, resp)
 
 }
+
+// @Summary		List all invoices
+// @Description	Retrieves a paginated list of all invoices in the system, with filtering and search capabilities.
+// @Tags			Billing
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			limit	query		int										false	"Number of results per page"	default(10)
+// @Param			page	query		int										false	"Page number for pagination"	default(1)
+// @Param			sort	query		string									false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search	query		string									false	"Search term for invoice number"
+// @Param			status	query		string									false	"Filter by invoice status"	enums(Paid, Unpaid, Void, Overdue)
+// @Success		200		{object}	object{data=[]AdminInvoiceListResponse}	"A paginated list of invoices"
+// @Failure		400		{object}	object{error=string}					"Bad Request (e.g., invalid query parameters)"
+// @Failure		403		{object}	object{error=string}					"Forbidden (user does not have permission)"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Router			/billing/invoices [get]
+func (h *BillingHandlers) GetInvoicesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	user := h.services.UserServices.GetUserFromContext(c)
+	if user.Role.Name != "super_admin" {
+		ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, "billing:list")
+		if err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+		if !ok {
+			h.services.LogErrors.ForbiddenResponse(c)
+			return
+		}
+	}
+
+	fq, err := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Status: "Unpaid",
+	}.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	invoices, total, err := h.services.BillingServices.GetInvoices(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	data := NewAdminInvoiceListResponse(invoices)
+
+	resp := pagination.PaginatedResponseTotal[AdminInvoiceListResponse]{
+		Data:     data,
+		Count:    int64(len(data)),
+		Total:    total,
+		Next:     "",
+		Previous: "",
+	}
+
+	c.JSON(200, resp)
+}

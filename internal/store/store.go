@@ -23,6 +23,8 @@ import (
 	membershipsrepository "github.com/vitalfit/api/internal/modules/memberships/repository"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	productsrepository "github.com/vitalfit/api/internal/modules/products/repository"
+	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
+	reportrepository "github.com/vitalfit/api/internal/modules/reports/repository"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	schedulerepository "github.com/vitalfit/api/internal/modules/schedule/repository"
 
@@ -47,6 +49,7 @@ type Storage struct {
 	FiscalDocuments billingdomain.FiscalDocumentRepository
 	Booking         bookingdomain.BookingRepository
 	Access          accessdomain.AccessRepository
+	Reports         reportdomain.ReportRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -68,5 +71,6 @@ func NewStorage(db *gorm.DB) Storage {
 		FiscalDocuments: billingrepository.NewFiscalDocumentStore(db),
 		Booking:         bookingrepository.NewBookingStore(db),
 		Access:          accessrepository.NewAccessStore(db),
+		Reports:         reportrepository.NewReportStore(db),
 	}
 }

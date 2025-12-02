@@ -372,6 +372,21 @@ definitions:
     x-enum-varnames:
     - PaymentProcessingGateway
     - PaymentProcessingOffline
+  billinghandlers.AdminInvoiceListResponse:
+    properties:
+      client_name:
+        type: string
+      invoice_id:
+        type: string
+      invoice_number:
+        type: string
+      issue_date:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
+    type: object
   billinghandlers.BranchPaymentMethodResponse:
     properties:
       branch_id:
@@ -1887,6 +1902,39 @@ definitions:
     - name
     - priority
     type: object
+  reportdomain.BranchPerformance:
+    properties:
+      branch_name:
+        type: string
+      label:
+        type: string
+      percent_change:
+        type: number
+      total_sales:
+        type: number
+      trend:
+        type: string
+    type: object
+  reportdomain.ChartData:
+    properties:
+      hour:
+        type: integer
+      label:
+        type: string
+      value:
+        type: number
+    type: object
+  reportdomain.GlobalSalesStats:
+    properties:
+      percentage_change:
+        type: number
+      total_current_month:
+        type: number
+      total_last_month:
+        type: number
+      trend:
+        type: string
+    type: object
   scheduledomain.Class:
     properties:
       branch_id:
@@ -2947,6 +2995,79 @@ paths:
       tags:
       - Billing
   /billing/invoices:
+    get:
+      description: Retrieves a paginated list of all invoices in the system, with
+        filtering and search capabilities.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for invoice number
+        in: query
+        name: search
+        type: string
+      - description: Filter by invoice status
+        enum:
+        - Paid
+        - Unpaid
+        - Void
+        - Overdue
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A paginated list of invoices
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/billinghandlers.AdminInvoiceListResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request (e.g., invalid query parameters)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden (user does not have permission)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all invoices
+      tags:
+      - Billing
     post:
       consumes:
       - application/json
@@ -6595,6 +6716,285 @@ paths:
       summary: List all public services
       tags:
       - Public
+  /reports/charts/most-used-services:
+    get:
+      description: Retrieves the top 5 most used services based on attendance.
+      parameters:
+      - description: Start date for the report (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date for the report (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Most used services data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Most Used Services
+      tags:
+      - Reports
+  /reports/charts/sales-by-category:
+    get:
+      description: Retrieves sales data grouped by product category for a Donut Chart.
+      parameters:
+      - description: Start date for the report (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date for the report (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sales by category data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Sales By Category
+      tags:
+      - Reports
+  /reports/charts/sales-by-hour:
+    get:
+      description: Retrieves sales data grouped by the hour of the day for a Line
+        Chart.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sales by hour data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Sales By Hour
+      tags:
+      - Reports
+  /reports/charts/sales-by-payment-method:
+    get:
+      description: Retrieves sales data grouped by payment method for a Pie Chart.
+      parameters:
+      - description: Start date for the report (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date for the report (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sales by payment method data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Sales By Payment Method
+      tags:
+      - Reports
+  /reports/charts/top-instructors:
+    get:
+      description: Retrieves the top 5 instructors with the most class attendances
+        for a Bar Chart.
+      parameters:
+      - description: Start date for the report (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date for the report (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Top instructors by attendance
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Top Instructors by Attendance
+      tags:
+      - Reports
+  /reports/stats/global:
+    get:
+      description: Retrieves global sales statistics, comparing the current month's
+        sales with the previous month.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Global sales statistics
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.GlobalSalesStats'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Global Sales Stats
+      tags:
+      - Reports
+  /reports/stats/top-branches:
+    get:
+      description: Retrieves the performance of the top 5 branches based on current
+        month's sales.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Top 5 branches performance
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.BranchPerformance'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Top 5 Branches Performance
+      tags:
+      - Reports
+  /reports/stats/total-active-branches:
+    get:
+      description: Retrieves the total number of active branches.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total number of active branches
+          schema:
+            properties:
+              data:
+                format: int64
+                type: integer
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Active Branches Count
+      tags:
+      - Reports
+  /reports/stats/total-clients:
+    get:
+      description: Retrieves the total number of users with the 'client' role.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total number of clients
+          schema:
+            properties:
+              data:
+                format: int64
+                type: integer
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Total Clients Stat
+      tags:
+      - Reports
   /schedule/{classId}:
     delete:
       description: Deletes or cancels a class from the calendar

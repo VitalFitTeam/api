@@ -62,7 +62,7 @@ type Invoice struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 
 	// Asociaciones
-	User         authdomain.Users    `gorm:"foreignKey:UserID"`
+	User         authdomain.Users    `gorm:"foreignKey:UserID;references:UserID"`
 	Branch       branchdomain.Branch `gorm:"foreignKey:BranchID"`
 	DocumentType FiscalDocumentType  `gorm:"foreignKey:DocumentTypeID"`
 

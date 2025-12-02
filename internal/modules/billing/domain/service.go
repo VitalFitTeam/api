@@ -37,6 +37,7 @@ type BillingServiceInterface interface {
 	CreateInvoice(ctx context.Context, invoice *Invoice, items []InvoiceItem) error
 	AddPaymentToInvoice(ctx context.Context, payment *Payment) error
 	CheckInvoiceAccess(ctx context.Context, user *authdomain.Users, invoiceID uuid.UUID) error
+	GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Invoice, int64, error)
 
 	GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*Invoice, error)
 	GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*Payment, error)
