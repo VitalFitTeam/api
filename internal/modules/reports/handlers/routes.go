@@ -19,3 +19,10 @@ func NewReportHandlers(services appservices.Services) *ReportHanlders {
 		services: services,
 	}
 }
+
+func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+	billingGroup := rg.Group("/billing")
+	billingGroup.Use(m.AuthJwtTokenMiddleware())
+	billingGroup.GET("/stats/global", m.RBACPermission("billing:list"), r.GetGlobalSalesStatsHandler)
+
+}
