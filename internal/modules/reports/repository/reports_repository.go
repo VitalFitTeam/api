@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	"gorm.io/gorm"
@@ -145,4 +146,16 @@ func (rs *ReportStore) GetTopBranchesPerformance(ctx context.Context) ([]reportd
 	}
 
 	return performanceList, nil
+}
+
+func (rs *ReportStore) GetTotalClientsStat(ctx context.Context) (int64, error) {
+	var totalClients int64
+	err := rs.db.WithContext(ctx).Model(&authdomain.Users{}).
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Where("roles.name = ?", "client").
+		Count(&totalClients).Error
+	if err != nil {
+		return 0, err
+	}
+	return totalClients, nil
 }

@@ -13,7 +13,7 @@ import (
 // @Produce		json
 // @Success		200	{object}	object{data=reportdomain.GlobalSalesStats}	"Global sales statistics"
 // @Failure		500	{object}	object{error=string}						"Internal Server Error"
-// @Router			/billing/stats/global [get]
+// @Router			/reports/stats/global [get]
 func (h *ReportHanlders) GetGlobalSalesStatsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -33,7 +33,7 @@ func (h *ReportHanlders) GetGlobalSalesStatsHandler(c *gin.Context) {
 // @Produce		json
 // @Success		200	{object}	object{data=[]reportdomain.BranchPerformance}	"Top 5 branches performance"
 // @Failure		500	{object}	object{error=string}							"Internal Server Error"
-// @Router			/billing/stats/top-branches [get]
+// @Router			/reports/stats/top-branches [get]
 func (h *ReportHanlders) GetTopBranchesPerformanceHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -43,4 +43,22 @@ func (h *ReportHanlders) GetTopBranchesPerformanceHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": topBranches})
+}
+
+// @Summary		Get Total Clients Stat
+// @Description	Retrieves the total number of users with the 'client' role.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=int64}		"Total number of clients"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/reports/stats/total-clients [get]
+func (h *ReportHanlders) GetTotalClientsStatHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	totalClients, err := h.services.ReportServices.GetTotalClientsStat(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": totalClients})
 }

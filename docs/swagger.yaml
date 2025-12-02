@@ -3693,60 +3693,6 @@ paths:
       summary: Get historical exchange rate for a currency
       tags:
       - Billing
-  /billing/stats/global:
-    get:
-      description: Retrieves global sales statistics, comparing the current month's
-        sales with the previous month.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Global sales statistics
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/reportdomain.GlobalSalesStats'
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get Global Sales Stats
-      tags:
-      - Reports
-  /billing/stats/top-branches:
-    get:
-      description: Retrieves the performance of the top 5 branches based on current
-        month's sales.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Top 5 branches performance
-          schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/reportdomain.BranchPerformance'
-                type: array
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get Top 5 Branches Performance
-      tags:
-      - Reports
   /bookings/{bookingId}/cancel:
     patch:
       description: Cancels an existing booking made by the client
@@ -6673,6 +6619,86 @@ paths:
       summary: List all public services
       tags:
       - Public
+  /reports/stats/global:
+    get:
+      description: Retrieves global sales statistics, comparing the current month's
+        sales with the previous month.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Global sales statistics
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.GlobalSalesStats'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Global Sales Stats
+      tags:
+      - Reports
+  /reports/stats/top-branches:
+    get:
+      description: Retrieves the performance of the top 5 branches based on current
+        month's sales.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Top 5 branches performance
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.BranchPerformance'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Top 5 Branches Performance
+      tags:
+      - Reports
+  /reports/stats/total-clients:
+    get:
+      description: Retrieves the total number of users with the 'client' role.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total number of clients
+          schema:
+            properties:
+              data:
+                format: int64
+                type: integer
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Total Clients Stat
+      tags:
+      - Reports
   /schedule/{classId}:
     delete:
       description: Deletes or cancels a class from the calendar
