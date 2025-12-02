@@ -409,7 +409,7 @@ func (h *BillingHandlers) GetInvoicesHandler(c *gin.Context) {
 		Data:     data,
 		Count:    int64(len(data)),
 		Total:    total,
-		Next:     "", // Puedes construir las URLs de paginación si lo necesitas
+		Next:     "",
 		Previous: "",
 	}
 
