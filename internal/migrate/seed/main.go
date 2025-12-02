@@ -2,8 +2,16 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"math/rand"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/mock"
+	appservices "github.com/vitalfit/api/internal/app/services"
+	"go.uber.org/zap"
 
 	"log"
 	"os"
@@ -12,15 +20,25 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/config"
+	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	authmocks "github.com/vitalfit/api/internal/modules/auth/mocks"
+	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
+	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
+	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
+	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/internal/store/cache"
 	env "github.com/vitalfit/api/pkg/Env"
 	"github.com/vitalfit/api/pkg/db"
+	mailermocks "github.com/vitalfit/api/pkg/mailer/mocks"
 	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 
@@ -33,16 +51,24 @@ func NewSeedStruct() *SeedStruct {
 	return &SeedStruct{}
 }
 
-func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB) {
+func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices.Services) {
 	ctx := context.Background()
 	s.CreateSuperAdmin(store, db, ctx)
 	s.SeedPermissions(store, db, ctx)
+	s.SeedRolePermissions(store, db, ctx)
 	s.SeedUsers(store, db, ctx)
 	s.SeedServiceCategories(store, db, ctx)
 	s.SeedBanners(store, db, ctx)
+	s.SeedServices(store, db, ctx)
 	s.SeedInstructors(store, db, ctx)
 	s.SeedBranches(store, db, ctx)
 	s.SeedEquipment(store, db, ctx)
+	s.SeedMemberships(store, db, ctx)
+	s.SeedPackages(store, db, ctx)
+	s.SeedBranchRelations(store, db, ctx)
+	s.SeedClasses(store, db, ctx)
+	s.SeedInvoicesAndPayments(store, db, ctx, services)
+	s.SeedBookingsAndAttendance(store, db, ctx)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -129,6 +155,159 @@ func (s *SeedStruct) SeedPermissions(store store.Storage, db *gorm.DB, ctx conte
 	}
 
 	log.Println("Permissions seeder completed successfully.")
+}
+
+func randomDateInLastSixMonths() time.Time {
+	now := time.Now()
+	sixMonthsAgo := now.AddDate(0, -6, 0)
+
+	duration := now.Sub(sixMonthsAgo)
+	randomDuration := time.Duration(rand.Int63n(int64(duration)))
+
+	return sixMonthsAgo.Add(randomDuration)
+}
+
+func (s *SeedStruct) SeedRolePermissions(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/permission_set.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read permission_set.json file: %v", err)
+		return
+	}
+
+	var permissionSet map[string][]string
+	if err = json.Unmarshal(jsonFile, &permissionSet); err != nil {
+		log.Fatalf("Fatal error: could not decode permission_set.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d role permission sets in permission_set.json. Starting seeder...", len(permissionSet))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for roleName, permissionNames := range permissionSet {
+			// Obtener el rol por nombre
+			role, err := store.Roles.GetByName(ctx, roleName)
+			if err != nil {
+				log.Printf("Error getting role '%s': %v. Skipping...", roleName, err)
+				continue // O puedes retornar el error si es crítico
+			}
+
+			var permissionIDs []uuid.UUID
+			for _, permName := range permissionNames {
+				// Obtener el permiso por nombre
+				permission, err := store.Roles.GetPermissionByName(ctx, permName)
+				if err != nil {
+					log.Printf("Error getting permission '%s' for role '%s': %v. Skipping permission...", permName, roleName, err)
+					continue // O puedes retornar el error
+				}
+				permissionIDs = append(permissionIDs, permission.PermissionID)
+			}
+
+			if len(permissionIDs) > 0 {
+				// Asignar los permisos al rol
+				err := store.Roles.AssignRolePermission(ctx, role.RoleID, permissionIDs)
+				if err != nil {
+					log.Printf("Error assigning permissions to role '%s': %v", roleName, err)
+					return err // Rollback
+				}
+				log.Printf("Successfully assigned %d permissions to role '%s'", len(permissionIDs), roleName)
+			}
+		}
+		return nil // Commit
+	})
+
+	if err != nil {
+		log.Println("Error in role permissions seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Role permissions seeder completed successfully.")
+}
+
+type serviceJSON struct {
+	CategoryName  string             `json:"category_name"`
+	Description   string             `json:"description"`
+	Duration      int64              `json:"duration"`
+	IsFeatured    bool               `json:"is_featured"`
+	Name          string             `json:"name"`
+	Priority      int64              `json:"priority"`
+	ServiceImages []serviceImageJSON `json:"service_images"`
+}
+
+type serviceImageJSON struct {
+	AltText      string `json:"alt_text"`
+	DisplayOrder int    `json:"display_order"`
+	ImageURL     string `json:"image_url"`
+	IsPrimary    bool   `json:"is_primary"`
+}
+
+func (s *SeedStruct) SeedServices(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/services.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read services.json file: %v", err)
+		return
+	}
+
+	var servicesFromJSON []serviceJSON
+	if err = json.Unmarshal(jsonFile, &servicesFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode services.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d services in services.json. Starting seeder...", len(servicesFromJSON))
+
+	banners, err := store.Marketing.GetBanners(ctx)
+	if err != nil {
+		log.Printf("Error getting banners: %v. Services will be created without banners.", err)
+	}
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for _, serviceData := range servicesFromJSON {
+			category, err := store.Products.GetServiceCategoryByName(ctx, serviceData.CategoryName)
+			if err != nil {
+				log.Printf("Error getting category '%s' for service '%s': %v. Skipping...", serviceData.CategoryName, serviceData.Name, err)
+				continue
+			}
+
+			images := make([]productsdomain.ServiceImage, len(serviceData.ServiceImages))
+			for i, imgData := range serviceData.ServiceImages {
+				images[i] = productsdomain.ServiceImage{
+					ImageURL:     imgData.ImageURL,
+					AltText:      imgData.AltText,
+					DisplayOrder: imgData.DisplayOrder,
+					IsPrimary:    imgData.IsPrimary,
+				}
+			}
+
+			service := &productsdomain.Service{
+				Name:            serviceData.Name,
+				CategoryID:      category.CategoryID,
+				Description:     serviceData.Description,
+				DurationMinutes: serviceData.Duration,
+				PriorityScore:   serviceData.Priority,
+				IsFeatured:      serviceData.IsFeatured,
+				Images:          images,
+				CreatedAt:       randomDateInLastSixMonths(),
+			}
+
+			var bannerID uuid.UUID
+			if len(banners) > 0 {
+				bannerID = banners[rand.Intn(len(banners))].BannerID
+			}
+
+			if err := store.Products.CreateServiceTX(ctx, tx, service, bannerID); err != nil {
+				log.Printf("Error creating service '%s': %v", service.Name, err)
+				return err // Rollback
+			}
+		}
+		return nil // Commit
+	})
+
+	if err != nil {
+		log.Println("Error in services seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Services seeder completed successfully.")
 }
 
 type instructorJSON struct {
@@ -280,6 +459,7 @@ func (s *SeedStruct) SeedUsers(store store.Storage, dbg *gorm.DB, ctx context.Co
 				ProfilePictureURL: u.ProfilePictureURL,
 				IsValidated:       true,
 			}
+			user.CreatedAt = randomDateInLastSixMonths()
 			date, err := time.Parse("2006-01-02", u.BirthDate)
 			if err != nil {
 				date, err = time.Parse(time.RFC3339, u.BirthDate)
@@ -461,6 +641,7 @@ func (s *SeedStruct) SeedBranches(store store.Storage, db *gorm.DB, ctx context.
 				Phone:       b.Phone,
 				Status:      branchdomain.BranchStatusEnum(b.Status),
 				TaxID:       b.TaxID,
+				CreatedAt:   randomDateInLastSixMonths(),
 			}
 
 			state, err := store.Locations.FindOrCreateStateByCountry(ctx, b.State, b.Country)
@@ -536,6 +717,7 @@ func (s *SeedStruct) SeedEquipment(store store.Storage, db *gorm.DB, ctx context
 				Description: e.Description,
 				Model:       e.Model,
 				Name:        e.Name,
+				CreatedAt:   randomDateInLastSixMonths(),
 			}
 			err := tx.WithContext(ctx).Create(&equipment).Error
 			if err != nil {
@@ -553,14 +735,628 @@ func (s *SeedStruct) SeedEquipment(store store.Storage, db *gorm.DB, ctx context
 
 }
 
+type membershipJSON struct {
+	Description  string  `json:"description"`
+	DurationDays int     `json:"duration_days"`
+	IsActive     bool    `json:"is_active"`
+	Name         string  `json:"name"`
+	Price        float64 `json:"price"`
+}
+
+func (s *SeedStruct) SeedMemberships(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/memberships.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read memberships.json file: %v", err)
+		return
+	}
+
+	var membershipsFromJSON []membershipJSON
+	if err = json.Unmarshal(jsonFile, &membershipsFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode memberships.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d memberships in memberships.json. Starting seeder...", len(membershipsFromJSON))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for _, m := range membershipsFromJSON {
+			membership := &membershipsdomain.MembershipType{
+				Name:         m.Name,
+				Description:  m.Description,
+				DurationDays: m.DurationDays,
+				Price:        m.Price,
+				IsActive:     m.IsActive,
+				CreatedAt:    randomDateInLastSixMonths(),
+			}
+
+			if err := tx.Create(membership).Error; err != nil {
+				log.Printf("Error creating membership '%s': %v", m.Name, err)
+				return err // Rollback
+			}
+		}
+		return nil // Commit
+	})
+
+	if err != nil {
+		log.Println("Error in memberships seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Memberships seeder completed successfully.")
+}
+
+type packageJSON struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Price       float64 `json:"price"`
+	StartAt     string  `json:"startAt"`
+	EndAt       string  `json:"endAt"`
+}
+
+func (s *SeedStruct) SeedPackages(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/packages.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read packages.json file: %v", err)
+		return
+	}
+
+	var packagesFromJSON []packageJSON
+	if err = json.Unmarshal(jsonFile, &packagesFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode packages.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d packages in packages.json. Starting seeder...", len(packagesFromJSON))
+
+	allServices, err := store.Products.GetAllServices(ctx)
+	if err != nil {
+		log.Fatalf("Fatal error: could not get services for packages seeder: %v", err)
+		return
+	}
+
+	if len(allServices) == 0 {
+		log.Println("Warning: No services found in the database. Packages will be created without items.")
+		return
+	}
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for _, p := range packagesFromJSON {
+			startAt, err := time.Parse(time.RFC3339, p.StartAt)
+			if err != nil {
+				log.Printf("Error parsing StartAt for package '%s': %v. Skipping...", p.Name, err)
+				continue
+			}
+			endAt, err := time.Parse(time.RFC3339, p.EndAt)
+			if err != nil {
+				log.Printf("Error parsing EndAt for package '%s': %v. Skipping...", p.Name, err)
+				continue
+			}
+
+			pkg := &combosdomain.Package{
+				Name:        p.Name,
+				Description: p.Description,
+				Price:       p.Price,
+				StartAt:     &startAt,
+				EndAt:       &endAt,
+				CreatedAt:   randomDateInLastSixMonths(),
+			}
+
+			// Generar items de paquete aleatorios
+			numItems := rand.Intn(3) + 2 // Entre 2 y 4 servicios por paquete
+			rand.Shuffle(len(allServices), func(i, j int) {
+				allServices[i], allServices[j] = allServices[j], allServices[i]
+			})
+
+			for i := 0; i < numItems && i < len(allServices); i++ {
+				sessions := rand.Intn(16) + 5 // Entre 5 y 20 sesiones
+				pkg.PackageItems = append(pkg.PackageItems, combosdomain.PackageItem{
+					ServiceID:        allServices[i].ServiceID,
+					SessionsIncluded: sessions,
+				})
+			}
+
+			if err := tx.Create(pkg).Error; err != nil {
+				log.Printf("Error creating package '%s': %v", p.Name, err)
+				return err // Rollback
+			}
+		}
+		return nil // Commit
+	})
+
+	if err != nil {
+		log.Println("Error in packages seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Packages seeder completed successfully.")
+}
+
+func (s *SeedStruct) SeedBranchRelations(store store.Storage, db *gorm.DB, ctx context.Context) {
+	log.Println("Starting to seed branch relations...")
+
+	// 1. Obtener todos los datos maestros
+	allBranches, err := store.Branches.GetAllBranches(ctx)
+	if err != nil || len(allBranches) == 0 {
+		log.Fatalf("Fatal error: could not get branches or no branches found: %v", err)
+		return
+	}
+
+	allServices, err := store.Products.GetAllServices(ctx)
+	if err != nil || len(allServices) == 0 {
+		log.Println("Warning: No services found. Skipping service-branch relations.")
+	}
+
+	allInstructors, err := store.Instructor.GetAllInstructors(ctx)
+	if err != nil || len(allInstructors) == 0 {
+		log.Println("Warning: No instructors found. Skipping instructor-branch relations.")
+	}
+
+	allEquipment, err := store.Equipment.GetAllEquipments(ctx)
+	if err != nil || len(allEquipment) == 0 {
+		log.Println("Warning: No equipment found. Skipping equipment-branch relations.")
+	}
+
+	allPaymentMethods, err := store.PaymentMethods.GetPaymentMethods(ctx)
+	if err != nil || len(allPaymentMethods) == 0 {
+		log.Println("Warning: No payment methods found. Skipping payment-branch relations.")
+	}
+
+	// 2. Iterar sobre cada sucursal y asignar relaciones
+	for _, branch := range allBranches {
+		log.Printf("Processing relations for branch: %s", branch.Name)
+
+		err := db.Transaction(func(tx *gorm.DB) error {
+			// Asignar Servicios
+			if len(allServices) > 0 {
+				numServices := rand.Intn(len(allServices)/2) + 5 // Asignar entre 5 y la mitad de los servicios
+				rand.Shuffle(len(allServices), func(i, j int) { allServices[i], allServices[j] = allServices[j], allServices[i] })
+
+				var branchServices []*productsdomain.ServiceBranchDetail
+				for i := 0; i < numServices && i < len(allServices); i++ {
+					branchServices = append(branchServices, &productsdomain.ServiceBranchDetail{
+						BranchID:          branch.BranchID,
+						ServiceID:         allServices[i].ServiceID,
+						IsVisible:         true,
+						MaxCapacity:       rand.Intn(21) + 10, // 10-30
+						PriceForMember:    float64(rand.Intn(31)+10) + rand.Float64(),
+						PriceForNonMember: float64(rand.Intn(41)+20) + rand.Float64(),
+						CreatedAt:         randomDateInLastSixMonths(),
+					})
+				}
+				if err := store.Products.AssignBranchService(ctx, branchServices); err != nil {
+					return fmt.Errorf("error assigning services to branch %s: %w", branch.Name, err)
+				}
+				log.Printf(" -> Assigned %d services to %s", len(branchServices), branch.Name)
+			}
+
+			// Asignar Instructores
+			if len(allInstructors) > 0 {
+				numInstructors := rand.Intn(len(allInstructors)/2) + 2 // Asignar entre 2 y la mitad de los instructores
+				rand.Shuffle(len(allInstructors), func(i, j int) { allInstructors[i], allInstructors[j] = allInstructors[j], allInstructors[i] })
+
+				var instructorIDs []uuid.UUID
+				for i := 0; i < numInstructors && i < len(allInstructors); i++ {
+					instructorIDs = append(instructorIDs, allInstructors[i].InstructorID)
+				}
+				if err := store.Instructor.AssignInstructorsToBranch(ctx, branch.BranchID, instructorIDs); err != nil {
+					return fmt.Errorf("error assigning instructors to branch %s: %w", branch.Name, err)
+				}
+				log.Printf(" -> Assigned %d instructors to %s", len(instructorIDs), branch.Name)
+			}
+
+			// Asignar Equipamiento
+			if len(allEquipment) > 0 {
+				numEquipment := rand.Intn(20) + 10 // Asignar entre 10 y 29 items de equipamiento
+				for i := 0; i < numEquipment; i++ {
+					equipment := allEquipment[rand.Intn(len(allEquipment))]
+					inventoryItem := &inventorydomain.BranchInventory{
+						BranchID:        branch.BranchID,
+						EquipmentID:     equipment.EquipmentID,
+						SerialNumber:    fmt.Sprintf("SN-%s-%d", equipment.Model, rand.Intn(99999)),
+						Status:          inventorydomain.EquipmentAvailable,
+						AcquisitionDate: &time.Time{}, // Puedes poner una fecha random si quieres
+						Notes:           "Seeded item",
+						CreatedAt:       randomDateInLastSixMonths(),
+					}
+					if _, err := store.BranchInventory.Create(ctx, inventoryItem); err != nil {
+						// No retornamos error para no parar el seeder por un serial number duplicado
+						log.Printf("Could not create inventory item for branch %s: %v", branch.Name, err)
+					}
+				}
+				log.Printf(" -> Assigned %d equipment items to %s", numEquipment, branch.Name)
+			}
+
+			// Asignar Métodos de Pago
+			if len(allPaymentMethods) > 0 {
+				numMethods := rand.Intn(len(allPaymentMethods)) + 1 // Asignar al menos 1
+				rand.Shuffle(len(allPaymentMethods), func(i, j int) {
+					allPaymentMethods[i], allPaymentMethods[j] = allPaymentMethods[j], allPaymentMethods[i]
+				})
+
+				var branchMethods []*billingdomain.PaymentMethodsBranch
+				for i := 0; i < numMethods && i < len(allPaymentMethods); i++ {
+					branchMethods = append(branchMethods, &billingdomain.PaymentMethodsBranch{
+						BranchID:  branch.BranchID,
+						MethodID:  allPaymentMethods[i].MethodID,
+						IsActive:  true,
+						CreatedAt: randomDateInLastSixMonths(),
+					})
+				}
+				if err := store.PaymentMethods.AddPaymentMethodsToBranch(ctx, branchMethods); err != nil {
+					return fmt.Errorf("error assigning payment methods to branch %s: %w", branch.Name, err)
+				}
+				log.Printf(" -> Assigned %d payment methods to %s", len(branchMethods), branch.Name)
+			}
+
+			return nil
+		})
+		if err != nil {
+			log.Printf("Transaction failed for branch %s, rolling back. Error: %v", branch.Name, err)
+		}
+	}
+
+	log.Println("Branch relations seeder completed successfully.")
+}
+
+func (s *SeedStruct) SeedClasses(store store.Storage, db *gorm.DB, ctx context.Context) {
+	log.Println("Starting to seed classes...")
+
+	allBranches, err := store.Branches.GetAllBranches(ctx)
+	if err != nil || len(allBranches) == 0 {
+		log.Fatalf("Fatal error: could not get branches or no branches found for class seeder: %v", err)
+		return
+	}
+
+	openingHours := []int{6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 20}
+
+	startDate := time.Now().AddDate(0, -6, 0)
+	endDate := time.Now().AddDate(0, 2, 0)
+
+	var classesToCreate []scheduledomain.Class
+
+	for _, branch := range allBranches {
+		log.Printf("Generating classes for branch: %s", branch.Name)
+
+		branchServices, err := store.Products.GetBranchService(ctx, branch.BranchID)
+		if err != nil || len(branchServices) == 0 {
+			log.Printf("Warning: No services found for branch %s. Skipping class generation.", branch.Name)
+			continue
+		}
+
+		branchInstructors, err := store.Instructor.ListBranchInstructors(ctx, branch.BranchID, pagination.PaginatedFeedQuery{})
+		if err != nil || len(branchInstructors) == 0 {
+			log.Printf("Warning: No instructors found for branch %s. Skipping class generation.", branch.Name)
+			continue
+		}
+
+		for d := startDate; d.Before(endDate); d = d.AddDate(0, 0, 1) {
+			numClassesToday := rand.Intn(4) + 2 // Entre 2 y 5 clases por día
+
+			rand.Shuffle(len(openingHours), func(i, j int) {
+				openingHours[i], openingHours[j] = openingHours[j], openingHours[i]
+			})
+
+			for i := 0; i < numClassesToday; i++ {
+				randomServiceDetail := branchServices[rand.Intn(len(branchServices))]
+				randomInstructor := branchInstructors[rand.Intn(len(branchInstructors))]
+				startHour := openingHours[i%len(openingHours)] // Usar módulo para evitar index out of bounds
+				startMinute := []int{0, 15, 30, 45}[rand.Intn(4)]
+
+				startTime := time.Date(d.Year(), d.Month(), d.Day(), startHour, startMinute, 0, 0, d.Location())
+
+				duration := time.Duration(randomServiceDetail.Service.DurationMinutes) * time.Minute
+				endTime := startTime.Add(duration)
+
+				secondsBeforeStart := rand.Intn(startTime.Hour()*60*60 + startTime.Minute()*60)
+				createdAt := startTime.Add(-time.Duration(secondsBeforeStart) * time.Second)
+
+				updatedAt := createdAt.Add(time.Duration(rand.Intn(secondsBeforeStart)) * time.Second)
+
+				class := scheduledomain.Class{
+					BranchID:     branch.BranchID,
+					ServiceID:    randomServiceDetail.ServiceID,
+					InstructorID: randomInstructor.InstructorID,
+					StartsAt:     startTime,
+					EndsAt:       endTime,
+					MaxCapacity:  int(randomServiceDetail.MaxCapacity),
+					IsVisible:    true,
+					Notes:        "Clase generada por seeder",
+					CreatedAt:    createdAt,
+					UpdatedAt:    updatedAt,
+				}
+				classesToCreate = append(classesToCreate, class)
+			}
+		}
+	}
+
+	if len(classesToCreate) == 0 {
+		log.Println("No classes were generated. Seeder finished.")
+		return
+	}
+
+	log.Printf("Generated a total of %d classes. Inserting into database...", len(classesToCreate))
+
+	if err := db.CreateInBatches(&classesToCreate, 1000).Error; err != nil {
+		log.Fatalf("Fatal error during class batch insert: %v", err)
+		return
+	}
+
+	log.Println("Classes seeder completed successfully.")
+}
+
+func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB, ctx context.Context) {
+	log.Println("Starting to seed bookings and attendance...")
+
+	// 1. Obtener datos maestros
+	allBranches, err := store.Branches.GetAllBranches(ctx)
+	if err != nil || len(allBranches) == 0 {
+		log.Fatalf("Fatal: Could not get branches or no branches found: %v", err)
+		return
+	}
+	allClients, err := store.Users.GetAllClients(ctx)
+	if err != nil || len(allClients) == 0 {
+		log.Fatalf("Fatal: Could not get clients or no clients found for booking seeder: %v", err)
+		return
+	}
+
+	// Contenedores para inserción en lotes
+	var bookingsToCreate []bookingdomain.Booking
+	var attendanceToCreate []accessdomain.AttendanceLog
+	now := time.Now()
+
+	// 2. Iterar por cada SUCURSAL para obtener sus clases
+	for _, branch := range allBranches {
+		log.Printf("Processing bookings for branch: %s", branch.Name)
+
+		branchClasses, err := store.Schedule.GetClassesByBranch(ctx, branch.BranchID)
+		if err != nil || len(branchClasses) == 0 {
+			log.Printf("Warning: No classes found for branch %s. Skipping.", branch.Name)
+			continue
+		}
+
+		// 3. Iterar sobre cada clase de la sucursal
+		for _, class := range branchClasses {
+			// Omitir "Open Gym"
+			if class.Service.Name == "Open Gym" {
+				continue
+			}
+
+			// Decidir aleatoriamente cuántos clientes reservarán la clase
+			minBookings := int(float64(class.MaxCapacity) * 0.4) // Al menos el 40%
+			maxBookings := class.MaxCapacity
+			if minBookings > maxBookings {
+				minBookings = maxBookings
+			}
+			if minBookings == 0 && maxBookings > 0 {
+				minBookings = 1
+			}
+
+			numBookings := 0
+			if maxBookings > minBookings {
+				numBookings = rand.Intn(maxBookings-minBookings+1) + minBookings
+			} else if maxBookings > 0 {
+				numBookings = maxBookings
+			}
+
+			// Seleccionar clientes aleatorios para la clase
+			rand.Shuffle(len(allClients), func(i, j int) { allClients[i], allClients[j] = allClients[j], allClients[i] })
+
+			for i := 0; i < numBookings && i < len(allClients); i++ {
+				client := allClients[i]
+
+				// 4. Crear la reserva (Booking)
+				bookingDate := class.StartsAt.Add(-time.Hour * time.Duration(rand.Intn(48)+1)) // Reservado 1-48h antes
+				booking := bookingdomain.Booking{
+					UserID:    client.UserID,
+					ClassID:   class.ClassID,
+					Status:    bookingdomain.BookingStatusConfirmed,
+					CreatedAt: bookingDate,
+					UpdatedAt: bookingDate,
+				}
+				bookingsToCreate = append(bookingsToCreate, booking)
+
+				// 5. Si la clase ya pasó, simular la asistencia
+				if class.StartsAt.Before(now) {
+					attended := rand.Intn(100) < 85 // 85% de probabilidad de asistir
+
+					attendance := accessdomain.AttendanceLog{
+						UserID:    client.UserID,
+						ClassID:   &class.ClassID,
+						ServiceID: class.ServiceID, // Añadir el ServiceID de la clase
+					}
+
+					if attended {
+						checkInOffset := time.Duration(rand.Intn(30)-15) * time.Minute // +/- 15 minutos
+						attendance.CheckInTime = class.StartsAt.Add(checkInOffset)     // Corregido: Usar la variable correcta
+						attendance.Status = accessdomain.AttendanceStatusAttended
+					} else {
+						attendance.CheckInTime = class.StartsAt // Para no-shows, la hora es la de la clase
+						attendance.Status = accessdomain.AttendanceStatusNoShow
+					}
+					attendance.CreatedAt = attendance.CheckInTime
+					attendanceToCreate = append(attendanceToCreate, attendance)
+				}
+			}
+		}
+	}
+
+	// 6. Insertar en lotes
+	log.Printf("Generated %d bookings and %d attendance logs. Inserting into database...", len(bookingsToCreate), len(attendanceToCreate))
+	if err := db.CreateInBatches(&bookingsToCreate, 1000).Error; err != nil {
+		log.Fatalf("Fatal error during bookings batch insert: %v", err)
+	}
+	if err := db.CreateInBatches(&attendanceToCreate, 1000).Error; err != nil {
+		log.Fatalf("Fatal error during attendance logs batch insert: %v", err)
+	}
+
+	log.Println("Bookings and attendance seeder completed successfully.")
+}
+
+func (s *SeedStruct) SeedInvoicesAndPayments(store store.Storage, db *gorm.DB, ctx context.Context, services appservices.Services) {
+	log.Println("Starting to seed invoices and payments...")
+
+	clients, err := store.Users.GetAllClients(ctx)
+	if err != nil || len(clients) == 0 {
+		log.Fatalf("Fatal: Could not get clients or no clients found: %v", err)
+		return
+	}
+
+	allBranches, err := store.Branches.GetAllBranches(ctx)
+	if err != nil || len(allBranches) == 0 {
+		log.Fatalf("Fatal: Could not get branches or no branches found: %v", err)
+		return
+	}
+
+	membershipTypes, err := store.Membership.GetAllMembershipTypes(ctx)
+	if err != nil {
+		log.Printf("Warning: Could not get membership types: %v", err)
+	}
+
+	packages, err := store.Combos.GetAllPackages(ctx)
+	if err != nil {
+		log.Printf("Warning: Could not get packages: %v", err)
+	}
+
+	log.Printf("Seeding invoices for %d clients...", len(clients))
+
+	for _, client := range clients {
+		numInvoices := rand.Intn(5) + 1
+		log.Printf(" -> Generating %d invoices for client %s %s", numInvoices, client.FirstName, client.LastName)
+
+		for i := 0; i < numInvoices; i++ {
+			branch := allBranches[rand.Intn(len(allBranches))]
+			itemType := []string{"membership", "package", "service"}[rand.Intn(3)]
+
+			var itemsToPurchase []billingdomain.InvoiceItem
+			var invoice billingdomain.Invoice
+
+			switch itemType {
+			case "membership":
+				if len(membershipTypes) == 0 {
+					continue
+				}
+				membership := membershipTypes[rand.Intn(len(membershipTypes))]
+				itemsToPurchase = append(itemsToPurchase, billingdomain.InvoiceItem{
+					MembershipTypeID: uuid.NullUUID{UUID: membership.MembershipTypeID, Valid: true},
+					Quantity:         1,
+				})
+
+			case "package":
+				if len(packages) == 0 {
+					continue
+				}
+				pkg := packages[rand.Intn(len(packages))]
+				itemsToPurchase = append(itemsToPurchase, billingdomain.InvoiceItem{
+					PackageID: uuid.NullUUID{UUID: pkg.PackageID, Valid: true},
+					Quantity:  1,
+				})
+
+			case "service":
+				branchServices, _ := store.Products.GetBranchService(ctx, branch.BranchID)
+				if len(branchServices) == 0 {
+					continue
+				}
+				service := branchServices[rand.Intn(len(branchServices))]
+				itemsToPurchase = append(itemsToPurchase, billingdomain.InvoiceItem{
+					ServiceID: uuid.NullUUID{UUID: service.ServiceID, Valid: true},
+					Quantity:  1,
+				})
+			}
+
+			if len(itemsToPurchase) == 0 {
+				continue
+			}
+
+			invoice.UserID = client.UserID
+			invoice.BranchID = branch.BranchID
+			invoice.Status = billingdomain.InvoiceStatusUnpaid
+			if err := services.BillingServices.CreateInvoice(ctx, &invoice, itemsToPurchase); err != nil {
+				log.Printf("Error creating invoice for client %s: %v", client.Email, err)
+				continue
+			}
+
+			issueDate := randomDateInLastSixMonths()
+			db.Model(&invoice).Updates(map[string]interface{}{
+				"issue_date": issueDate,
+				"due_date":   issueDate.AddDate(0, 0, 15),
+				"created_at": issueDate,
+				"updated_at": issueDate,
+			})
+
+			branchPaymentMethods, _ := store.PaymentMethods.GetPaymentMethodsFromBranch(ctx, branch.BranchID)
+			if len(branchPaymentMethods) == 0 {
+				log.Printf("Warning: No payment methods for branch %s. Cannot simulate payment for invoice %s", branch.Name, invoice.InvoiceID)
+				continue
+			}
+
+			numPayments := rand.Intn(2) + 1
+			remainingAmount := invoice.TotalAmount
+
+			for p := 0; p < numPayments && remainingAmount.IsPositive(); p++ {
+				paymentMethod := branchPaymentMethods[rand.Intn(len(branchPaymentMethods))]
+				amountToPay := remainingAmount
+				if numPayments > 1 && p < numPayments-1 {
+					amountToPay = remainingAmount.Div(decimal.NewFromInt(2))
+				}
+
+				payment := &billingdomain.Payment{
+					InvoiceID:       invoice.InvoiceID,
+					AmountPaid:      amountToPay,
+					CurrencyPaid:    "USD",
+					PaymentMethodID: paymentMethod.MethodID,
+					Status:          billingdomain.PaymentStatusCompleted,
+					TransactionID:   sql.NullString{String: fmt.Sprintf("%d", rand.Intn(999999999)), Valid: true},
+					ReceiptURL:      sql.NullString{String: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwHvQiRst-0u9tagSYhjZn44xMn1jibvXCIQ&s", Valid: true},
+				}
+
+				if err := services.BillingServices.AddPaymentToInvoice(ctx, payment); err != nil {
+					log.Printf("Error adding payment to invoice %s: %v", invoice.InvoiceID, err)
+					break
+				}
+
+				paymentDate := issueDate.Add(time.Hour * time.Duration(rand.Intn(72)))
+				db.Model(&payment).Updates(map[string]interface{}{
+					"payment_date": paymentDate,
+					"created_at":   paymentDate,
+					"updated_at":   paymentDate,
+				})
+
+				remainingAmount = remainingAmount.Sub(amountToPay)
+			}
+			log.Printf("    - Created invoice %s with %d payment(s)", invoice.InvoiceID, numPayments)
+		}
+	}
+
+	log.Println("Invoices and payments seeder completed successfully.")
+}
+
 func main() {
+	cfg := config.LoadConfig()
+
 	addr := env.GetString("DB_ADDR", "")
 	conn, err := db.New(addr, 3, 3, "15m")
 	if err != nil {
 		log.Fatal(err)
 	}
-	store := store.NewStorage(conn)
+	var rdb *redis.Client
+	if cfg.RedisCfg.Enabled {
+		rdb = cache.NewRedisClient(cfg.RedisCfg.Addr, cfg.RedisCfg.Username, cfg.RedisCfg.Pw, cfg.RedisCfg.Db)
+		log.Print("redis cache connection established")
+
+		defer rdb.Close()
+	}
+	appStore := store.NewStorage(conn)
+
+	logger, _ := zap.NewProduction()
+	sugaredLogger := logger.Sugar()
+	testAuth := &authmocks.TestAuthenticator{}
+	mailer := &mailermocks.MockMailer{}
+	cache := cache.NewRedisStorage(rdb)
+
+	mailer.On("Send", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(200, nil)
+
+	service := appservices.NewServices(appStore, sugaredLogger, *cfg, testAuth, mailer, cache)
 	s := NewSeedStruct()
-	s.Seed(store, conn)
+	s.Seed(appStore, conn, service)
 
 }

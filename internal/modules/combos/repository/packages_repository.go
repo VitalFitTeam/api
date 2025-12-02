@@ -147,3 +147,12 @@ func (s *CombosStore) GetPackagesByIDs(ctx context.Context, ids []uuid.UUID) (ma
 
 	return packagesMap, nil
 }
+
+func (s *CombosStore) GetAllPackages(ctx context.Context) ([]*combosdomain.Package, error) {
+	var packages []*combosdomain.Package
+	err := s.db.WithContext(ctx).Find(&packages).Error
+	if err != nil {
+		return nil, err
+	}
+	return packages, nil
+}

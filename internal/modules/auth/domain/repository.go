@@ -30,6 +30,7 @@ type UserRepository interface {
 	SoftDelete(ctx context.Context, userID uuid.UUID) error
 	UpdateClientStatus(ctx context.Context, userID uuid.UUID, status UserStatusEnum) error
 	UpdateClientCategory(ctx context.Context, userID uuid.UUID, category ClientCategoryEnum) error
+	GetAllClients(ctx context.Context) ([]*Users, error)
 }
 
 type RolesRepository interface {
@@ -46,4 +47,5 @@ type RolesRepository interface {
 	DeleteRolePermission(ctx context.Context, roleID uuid.UUID, permissionID []uuid.UUID) error
 	RoleHasPermission(ctx context.Context, roleID uuid.UUID, permission string) (bool, error)
 	CreatePermission(ctx context.Context, tx *gorm.DB, permission *Permission) error
+	GetPermissionByName(ctx context.Context, name string) (*Permission, error)
 }

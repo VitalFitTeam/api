@@ -141,6 +141,13 @@ func (m *UserStoreMock) UpdateClientCategory(ctx context.Context, userID uuid.UU
 	args := m.Called(ctx, userID, category)
 	return args.Error(0)
 }
+func (m *UserStoreMock) GetAllClients(ctx context.Context) ([]*authdomain.Users, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*authdomain.Users), args.Error(1)
+}
 
 // ROLE MOCK FUNCTIONS
 func (m *RoleStoreMock) GetByName(ctx context.Context, name string) (*authdomain.Roles, error) {
@@ -213,4 +220,11 @@ func (m *RoleStoreMock) RoleHasPermission(ctx context.Context, roleID uuid.UUID,
 func (m *RoleStoreMock) CreatePermission(ctx context.Context, tx *gorm.DB, permission *authdomain.Permission) error {
 	args := m.Called(ctx, tx, permission)
 	return args.Error(0)
+}
+func (m *RoleStoreMock) GetPermissionByName(ctx context.Context, name string) (*authdomain.Permission, error) {
+	args := m.Called(ctx, name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*authdomain.Permission), args.Error(1)
 }

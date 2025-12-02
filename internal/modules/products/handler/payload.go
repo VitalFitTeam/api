@@ -14,7 +14,7 @@ type CreateServicePayload struct {
 	Name          string                  `json:"name" binding:"required"`
 	CategoryID    string                  `json:"category_id" binding:"required"`
 	Description   string                  `json:"description" binding:"required"`
-	Duration      int64                   `json:"duration" binding:"required,gte=1,lte=60"`
+	Duration      int64                   `json:"duration" binding:"required,gte=1,lte=200"`
 	Priority      int64                   `json:"priority" binding:"required,gte=1,lte=100"`
 	IsFeatured    bool                    `json:"is_featured"`
 	BannerID      string                  `json:"banner_id" binding:"required"`

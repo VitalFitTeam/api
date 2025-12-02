@@ -18,6 +18,7 @@ type InstructorRepository interface {
 	GetByID(context.Context, uuid.UUID) (*Instructor, error)
 	Update(context.Context, *Instructor) error
 	CreateAndInvitate(ctx context.Context, instructor *Instructor, token string, invitationExp time.Duration) error
+	GetAllInstructors(ctx context.Context) ([]*Instructor, error)
 
 	AssignInstructorsToBranch(ctx context.Context, branchID uuid.UUID, instructorID []uuid.UUID) error
 	ListBranchInstructors(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*Instructor, error)

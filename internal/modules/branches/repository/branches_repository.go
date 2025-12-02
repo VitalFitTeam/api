@@ -186,3 +186,12 @@ func (s *BranchesStore) GetPublicBranchesMap(ctx context.Context) ([]branchdomai
 
 	return results, nil
 }
+
+func (s *BranchesStore) GetAllBranches(ctx context.Context) ([]*branchdomain.Branch, error) {
+	var branches []*branchdomain.Branch
+	err := s.db.WithContext(ctx).Find(&branches).Error
+	if err != nil {
+		return nil, err
+	}
+	return branches, nil
+}

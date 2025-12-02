@@ -214,3 +214,21 @@ func (s *RoleStore) CreatePermission(ctx context.Context, tx *gorm.DB, permissio
 
 	return err
 }
+
+func (s *RoleStore) GetPermissionByName(ctx context.Context, name string) (*authdomain.Permission, error) {
+	var permission authdomain.Permission
+	err := s.db.WithContext(ctx).
+		Where("name = ?", name).
+		First(&permission).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+
+	}
+	return &permission, nil
+
+}
