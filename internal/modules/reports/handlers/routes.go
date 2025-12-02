@@ -8,6 +8,8 @@ import (
 
 type ReportHandlersInterface interface {
 	ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	GetGlobalSalesStatsHandler(c *gin.Context)
+	GetTopBranchesPerformanceHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -24,5 +26,6 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 	billingGroup := rg.Group("/billing")
 	billingGroup.Use(m.AuthJwtTokenMiddleware())
 	billingGroup.GET("/stats/global", m.RBACPermission("billing:list"), r.GetGlobalSalesStatsHandler)
+	billingGroup.GET("/stats/top-branches", m.RBACPermission("billing:list"), r.GetTopBranchesPerformanceHandler)
 
 }

@@ -1,7 +1,10 @@
 package reportdomain
 
-import "context"
+import (
+	"context"
+)
 
 type ReportRepository interface {
 	GetGlobalSalesStats(ctx context.Context) (*GlobalSalesStats, error)
+	GetTopBranchesPerformance(ctx context.Context) ([]BranchPerformance, error)
 }

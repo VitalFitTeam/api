@@ -2633,6 +2633,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/stats/top-branches": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the performance of the top 5 branches based on current month's sales.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Top 5 Branches Performance",
+                "responses": {
+                    "200": {
+                        "description": "Top 5 branches performance",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.BranchPerformance"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/bookings/client/{userId}": {
             "get": {
                 "security": [
@@ -11252,6 +11296,26 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/productshandler.ServiceImagesPayloads"
                     }
+                }
+            }
+        },
+        "reportdomain.BranchPerformance": {
+            "type": "object",
+            "properties": {
+                "branch_name": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "percent_change": {
+                    "type": "number"
+                },
+                "total_sales": {
+                    "type": "number"
+                },
+                "trend": {
+                    "type": "string"
                 }
             }
         },

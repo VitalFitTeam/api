@@ -21,3 +21,7 @@ func NewReportService(store store.Storage) *ReportService {
 func (s *ReportService) GetGlobalSalesStats(ctx context.Context) (*reportdomain.GlobalSalesStats, error) {
 	return s.store.Reports.GetGlobalSalesStats(ctx)
 }
+
+func (s *ReportService) GetTopBranchesPerformance(ctx context.Context) ([]reportdomain.BranchPerformance, error) {
+	return s.store.Reports.GetTopBranchesPerformance(ctx)
+}
