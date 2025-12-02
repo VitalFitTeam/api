@@ -9,6 +9,7 @@ import (
 
 type BillingRepository interface {
 	CreateInvoice(ctx context.Context, invoice *Invoice) error
+	GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Invoice, int64, error)
 	GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*Invoice, error)
 
 	UpdateInvoiceStatus(ctx context.Context, invoice *Invoice) error

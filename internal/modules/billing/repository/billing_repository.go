@@ -110,3 +110,60 @@ func (bs *Billingstore) GetClientIvoices(ctx context.Context, userID uuid.UUID, 
 
 	return invoices, total, nil
 }
+
+func (bs *Billingstore) GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*billingdomain.Invoice, int64, error) {
+	var invoices []*billingdomain.Invoice
+	var total int64
+
+	// 1. Inicia la query base
+	query := bs.db.WithContext(ctx).Model(&billingdomain.Invoice{})
+
+	// 2. Aplicar Filtros
+	// Usamos Joins("User") para que GORM haga el INNER JOIN automáticamente usando la definición del struct.
+	// NOTA: Si necesitas que aparezcan facturas SIN usuario (raro si es not null), usa "User" igual o LeftJoin manual corregido.
+	// GORM suele hacer INNER JOIN con Joins("User").
+
+	// Si hay búsqueda, necesitamos el Join para filtrar
+	if fq.Search != "" {
+		// Hacemos el Join explícito solo si vamos a filtrar por campos del usuario
+		// Ojo: Asegúrate que la tabla se llame "users" en la BD.
+		query = query.Joins("User")
+
+		searchQuery := "%" + fq.Search + "%"
+		query = query.Where(
+			"invoices.invoice_number ILIKE ? OR \"User\".first_name ILIKE ? OR \"User\".last_name ILIKE ? OR \"User\".email ILIKE ?",
+			searchQuery, searchQuery, searchQuery, searchQuery,
+		)
+	}
+
+	if fq.Status != "" {
+		query = query.Where("invoices.status = ?", fq.Status)
+	}
+
+	// 3. Contar (Importante: contar antes de paginar)
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 4. Ordenamiento
+	sortDirection := fq.Sort
+	if sortDirection == "" {
+		sortDirection = "desc"
+	}
+
+	page := fq.Page
+	if page < 1 {
+		page = 1
+	}
+
+	// 5. Ejecutar la búsqueda final
+	// Preload("User") es necesario para LLENAR el struct, aunque hayamos hecho Joins arriba para filtrar.
+	// El Joins sirve para el WHERE, el Preload para el SELECT final del objeto anidado.
+	err := query.Preload("User").
+		Order("invoices.issue_date " + sortDirection).
+		Limit(fq.Limit).
+		Offset((page - 1) * fq.Limit).
+		Find(&invoices).Error
+
+	return invoices, total, err
+}
