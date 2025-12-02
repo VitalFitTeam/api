@@ -1887,6 +1887,17 @@ definitions:
     - name
     - priority
     type: object
+  reportdomain.GlobalSalesStats:
+    properties:
+      percentage_change:
+        type: number
+      total_current_month:
+        type: number
+      total_last_month:
+        type: number
+      trend:
+        type: string
+    type: object
   scheduledomain.Class:
     properties:
       branch_id:
@@ -3669,6 +3680,32 @@ paths:
       summary: Get historical exchange rate for a currency
       tags:
       - Billing
+  /billing/stats/global:
+    get:
+      description: Retrieves global sales statistics, comparing the current month's
+        sales with the previous month.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Global sales statistics
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.GlobalSalesStats'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Global Sales Stats
+      tags:
+      - Reports
   /bookings/{bookingId}/cancel:
     patch:
       description: Cancels an existing booking made by the client

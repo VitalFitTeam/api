@@ -24,6 +24,8 @@ import (
 	membershipsservice "github.com/vitalfit/api/internal/modules/memberships/service"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	productsservice "github.com/vitalfit/api/internal/modules/products/service"
+	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
+	reportservices "github.com/vitalfit/api/internal/modules/reports/services"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	scheduleservice "github.com/vitalfit/api/internal/modules/schedule/service"
 	"github.com/vitalfit/api/internal/store/cache"
@@ -51,6 +53,7 @@ type Services struct {
 	CombosServices     combosdomain.CombosServicesInterface
 	BookingServices    bookingdomain.BookingServiceInterface
 	AccessServices     accessdomain.AcessServiceInterface
+	ReportServices     reportdomain.ReportServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
@@ -73,6 +76,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		CombosServices:     combosservices.NewCombosServices(store),
 		BookingServices:    bookingService,
 		AccessServices:     accessservice.NewAccessServices(store, *bookingService),
+		ReportServices:     reportservices.NewReportService(store),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,
 	}

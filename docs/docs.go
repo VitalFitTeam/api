@@ -2592,6 +2592,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/stats/global": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves global sales statistics, comparing the current month's sales with the previous month.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Global Sales Stats",
+                "responses": {
+                    "200": {
+                        "description": "Global sales statistics",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.GlobalSalesStats"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/bookings/client/{userId}": {
             "get": {
                 "security": [
@@ -11211,6 +11252,23 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/productshandler.ServiceImagesPayloads"
                     }
+                }
+            }
+        },
+        "reportdomain.GlobalSalesStats": {
+            "type": "object",
+            "properties": {
+                "percentage_change": {
+                    "type": "number"
+                },
+                "total_current_month": {
+                    "type": "number"
+                },
+                "total_last_month": {
+                    "type": "number"
+                },
+                "trend": {
+                    "type": "string"
                 }
             }
         },
