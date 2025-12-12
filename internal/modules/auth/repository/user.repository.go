@@ -117,19 +117,27 @@ func (s *UserStore) GetUsers(ctx context.Context, fq pagination.PaginatedFeedQue
 	return users, nil
 }
 
-func (s *UserStore) GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+func (s *UserStore) GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, int64, error) {
 	var users []*authdomain.Users
+	var total int64
 	searchQuery := "%" + fq.Search + "%"
-	err := s.db.WithContext(ctx).
+
+	query := s.db.WithContext(ctx).
+		Model(&authdomain.Users{}).
 		Joins("JOIN roles ON roles.role_id = users.role_id").
-		Preload("Role").
 		Where("roles.name = ?", "client").
-		Where("users.first_name ILIKE ? OR users.last_name ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?", searchQuery, searchQuery, searchQuery).
-		Find(&users).Error
-	if err != nil {
-		return nil, err
+		Where("users.first_name ILIKE ? OR users.last_name ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?", searchQuery, searchQuery, searchQuery)
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
 	}
-	return users, nil
+
+	err := query.Preload("Role").Limit(fq.Limit).Offset(fq.Page*fq.Limit - fq.Limit).Order("users.created_at " + fq.Sort).Find(&users).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+	return users, total, nil
 }
 
 func (s *UserStore) CreateAndInvitate(ctx context.Context, user *authdomain.Users, token string, invitationExp time.Duration) error {

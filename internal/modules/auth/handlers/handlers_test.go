@@ -652,7 +652,7 @@ func TestUserListHandlers(t *testing.T) {
 
 	t.Run("GetClientsHandler", func(t *testing.T) {
 		setupMiddleware()
-		userStoreMock.On("GetClients", mock.Anything, mock.AnythingOfType("pagination.PaginatedFeedQuery")).Return(mockUsers, nil).Once()
+		userStoreMock.On("GetClients", mock.Anything, mock.AnythingOfType("pagination.PaginatedFeedQuery")).Return(mockUsers, len(mockUsers), nil).Once()
 
 		req, _ := http.NewRequest(http.MethodGet, "/v1/user/clients", nil)
 		req.Header.Set("Authorization", "Bearer "+adminToken)

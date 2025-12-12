@@ -109,12 +109,12 @@ func (m *UserStoreMock) GetUsers(ctx context.Context, fq pagination.PaginatedFee
 	return args.Get(0).([]*authdomain.Users), args.Error(1)
 }
 
-func (m *UserStoreMock) GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
+func (m *UserStoreMock) GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, int64, error) {
 	args := m.Called(ctx, fq)
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, int64(args.Int(1)), args.Error(2)
 	}
-	return args.Get(0).([]*authdomain.Users), args.Error(1)
+	return args.Get(0).([]*authdomain.Users), int64(args.Int(1)), args.Error(2)
 }
 
 func (m *UserStoreMock) UpdateUserStaff(ctx context.Context, user *authdomain.Users) error {

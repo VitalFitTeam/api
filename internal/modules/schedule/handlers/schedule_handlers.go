@@ -73,6 +73,22 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	if user.Role.Name != "client" {
+		permission := "schedule:list"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
 	branchID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
@@ -126,6 +142,22 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 func (h *ScheduleHandlers) GetClassByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	if user.Role.Name != "client" {
+		permission := "schedule:get"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
 	classID, err := uuid.Parse(c.Param("classId"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)

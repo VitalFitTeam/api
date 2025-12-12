@@ -31,14 +31,14 @@ func (h *ScheduleHandlers) ScheduleRoutes(rg *gin.RouterGroup, m *auth.AuthMiddl
 		branchSchedule.Use(m.AuthJwtTokenMiddleware())
 
 		branchSchedule.POST("", m.RBACPermission("schedule:create"), h.CreateClassHandler)
-		branchSchedule.GET("", m.RBACPermission("schedule:list"), h.GetClassesByBranchHandler)
+		branchSchedule.GET("", h.GetClassesByBranchHandler)
 	}
 
 	classRoutes := rg.Group("/schedule")
 	{
 		classRoutes.Use(m.AuthJwtTokenMiddleware())
 
-		classRoutes.GET("/:classId", m.RBACPermission("schedule:get"), h.GetClassByIDHandler)
+		classRoutes.GET("/:classId", h.GetClassByIDHandler)
 		classRoutes.PUT("/:classId", m.RBACPermission("schedule:update"), h.UpdateClassHandler)
 		classRoutes.DELETE("/:classId", m.RBACPermission("schedule:delete"), h.DeleteClassHandler)
 	}

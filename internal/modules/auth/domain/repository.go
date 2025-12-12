@@ -24,7 +24,7 @@ type UserRepository interface {
 	ValidateResetToken(ctx context.Context, key string) error
 	GetBranchAdmins(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
 	GetUsers(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
-	GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, error)
+	GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Users, int64, error)
 	UpdateUserClient(ctx context.Context, user *Users) error
 	UpdateUserStaff(ctx context.Context, user *Users) error
 	SoftDelete(ctx context.Context, userID uuid.UUID) error

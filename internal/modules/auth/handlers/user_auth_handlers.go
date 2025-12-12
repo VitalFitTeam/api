@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/MicahParks/keyfunc/v2"
@@ -607,6 +608,9 @@ func (h *AuthHandlers) GetUsersHandler(c *gin.Context) {
 func (h *AuthHandlers) GetClientsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
 		Search: "",
 	}
 
@@ -616,7 +620,14 @@ func (h *AuthHandlers) GetClientsHandler(c *gin.Context) {
 		return
 	}
 
-	users, err := h.services.UserServices.GetClients(ctx, fq)
+	nextURL := fmt.Sprintf("/user/clients?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/user/clients?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+
+	users, total, err := h.services.UserServices.GetClients(ctx, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -637,9 +648,15 @@ func (h *AuthHandlers) GetClientsHandler(c *gin.Context) {
 		responseList = append(responseList, resp)
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"data": responseList,
-	})
+	resp := pagination.PaginatedResponseTotal[UserResponse]{
+		Data:     responseList,
+		Count:    int64(len(users)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 // @Summary		Get user by ID
