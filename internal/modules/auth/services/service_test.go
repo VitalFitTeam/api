@@ -362,6 +362,29 @@ func TestUserService(t *testing.T) {
 		})
 	})
 
+	t.Run("GetClients", func(t *testing.T) {
+		t.Run("success", func(t *testing.T) {
+			mockClients := []*authdomain.Users{{UserID: uuid.New(), FirstName: "Client"}}
+			total := 1
+			fq := pagination.PaginatedFeedQuery{Limit: 10, Page: 1}
+			userStoreMock.On("GetClients", mock.Anything, fq).Return(mockClients, total, nil).Once()
+
+			clients, count, err := userService.GetClients(context.Background(), fq)
+			assert.NoError(t, err)
+			assert.Equal(t, mockClients, clients)
+			assert.Equal(t, int64(total), count)
+			userStoreMock.AssertExpectations(t)
+		})
+
+		t.Run("failure", func(t *testing.T) {
+			fq := pagination.PaginatedFeedQuery{Limit: 10, Page: 1}
+			userStoreMock.On("GetClients", mock.Anything, fq).Return(nil, 0, assert.AnError).Once()
+			_, _, err := userService.GetClients(context.Background(), fq)
+			assert.Error(t, err)
+			userStoreMock.AssertExpectations(t)
+		})
+	})
+
 	t.Run("UpdateClient", func(t *testing.T) {
 		userToUpdate := &authdomain.Users{UserID: mockUser.UserID, FirstName: "Updated Client"}
 		userStoreMock.On("UpdateUserClient", mock.Anything, userToUpdate).Return(nil).Once()

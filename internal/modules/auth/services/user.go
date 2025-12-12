@@ -74,12 +74,12 @@ func (h *UserService) GetUsers(ctx context.Context, fq pagination.PaginatedFeedQ
 	}
 	return users, nil
 }
-func (h *UserService) GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, error) {
-	users, err := h.store.Users.GetClients(ctx, fq)
+func (h *UserService) GetClients(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*authdomain.Users, int64, error) {
+	users, total, err := h.store.Users.GetClients(ctx, fq)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return users, nil
+	return users, total, nil
 }
 
 func (h *UserService) Delete(ctx context.Context, userID uuid.UUID) error {
