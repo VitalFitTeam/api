@@ -243,6 +243,23 @@ func (h *ProductsHandler) DeleteServiceHandler(c *gin.Context) {
 // @Router			/services/{id} [get]
 func (h *ProductsHandler) GetServiceByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()
+
+	user := h.services.UserServices.GetUserFromContext(c)
+	if user.Role.Name != "client" {
+		permission := "services:get"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
+
 	serviceID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)

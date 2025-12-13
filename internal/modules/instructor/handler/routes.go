@@ -37,7 +37,7 @@ func (r *InstructorHandlers) InstructorRoutes(rg *gin.RouterGroup, m *auth.AuthM
 		instructorGroup.POST("", m.RBACPermission("instructors:create"), r.CreateInstructorHandler)
 		instructorGroup.GET("", m.RBACPermission("instructors:list"), r.GetInstructorsHandler)
 		instructorGroup.GET("/summary", m.RBACPermission("instructors:list"), r.GetSummaryHandler)
-		instructorGroup.GET("/:id", m.RBACPermission("instructors:get"), r.GetInstructorByIDHandler)
+		instructorGroup.GET("/:id", r.GetInstructorByIDHandler)
 		instructorGroup.PUT("/:id", m.RBACPermission("instructors:update"), r.UpdateInstructorHandler)
 		instructorGroup.DELETE("/:id", m.RBACPermission("instructors:delete"), r.DeleteInstructorHandler)
 		instructorGroup.POST("/:id/specialty", m.RBACPermission("instructors:update"), r.AssignInstructorSpecialtyHandler)

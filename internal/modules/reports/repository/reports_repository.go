@@ -136,10 +136,10 @@ func (rs *ReportStore) GetTopBranchesPerformance(ctx context.Context) ([]reportd
 		}
 
 		performanceList = append(performanceList, reportdomain.BranchPerformance{
-			BranchName:    res.BranchName,
-			TotalSales:    res.CurrentTotal,
+			Label:         res.BranchName,
+			Value:         res.CurrentTotal,
 			PercentChange: percentChange,
-			Label:         label,
+			Status:        label,
 			Trend:         trend,
 		})
 	}
