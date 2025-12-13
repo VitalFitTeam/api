@@ -11794,20 +11794,20 @@ const docTemplate = `{
         "reportdomain.BranchPerformance": {
             "type": "object",
             "properties": {
-                "branch_name": {
-                    "type": "string"
-                },
                 "label": {
                     "type": "string"
                 },
                 "percent_change": {
                     "type": "number"
                 },
-                "total_sales": {
-                    "type": "number"
+                "status": {
+                    "type": "string"
                 },
                 "trend": {
                     "type": "string"
+                },
+                "value": {
+                    "type": "number"
                 }
             }
         },

@@ -10,10 +10,10 @@ type GlobalSalesStats struct {
 }
 
 type BranchPerformance struct {
-	BranchName    string          `json:"branch_name"`
-	TotalSales    decimal.Decimal `json:"total_sales"`
-	PercentChange float64         `json:"percent_change"`
 	Label         string          `json:"label"`
+	Value         decimal.Decimal `json:"value"`
+	PercentChange float64         `json:"percent_change"`
+	Status        string          `json:"status"`
 	Trend         string          `json:"trend"`
 }
 
