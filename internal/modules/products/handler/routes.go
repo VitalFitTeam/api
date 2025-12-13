@@ -45,7 +45,7 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 		ProductGroup.GET("/summary", m.RBACPermission("services:list"), r.GetSummaryServicesHandler)
 
 		ProductGroup.POST("", m.RBACPermission("services:create"), r.CreateServiceHandler)
-		ProductGroup.GET("/:id", m.RBACPermission("services:get"), r.GetServiceByIDHandler)
+		ProductGroup.GET("/:id", r.GetServiceByIDHandler)
 		ProductGroup.DELETE("/:id", m.RBACPermission("services:delete"), r.DeleteServiceHandler)
 		ProductGroup.PUT("/:id", m.RBACPermission("services:update"), r.UpdateServiceHandler)
 	}
