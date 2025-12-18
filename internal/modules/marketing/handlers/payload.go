@@ -84,27 +84,6 @@ func (p *CreatePromotionPayload) toPromotion() (*marketingdomain.Promotion, erro
 	return promotion, nil
 }
 
-func (p *UpdatePromotionPayload) toPromotion() (*marketingdomain.Promotion, error) {
-	promotion := &marketingdomain.Promotion{
-		Name:          p.Name,
-		Code:          p.Code,
-		DiscountType:  p.DiscountType,
-		DiscountValue: p.DiscountValue,
-	}
-
-	if p.StartDate != nil {
-		promotion.StartDate = *p.StartDate
-	}
-	if p.EndDate != nil {
-		promotion.EndDate = *p.EndDate
-	}
-	if p.IsActive != nil {
-		promotion.IsActive = *p.IsActive
-	}
-
-	return promotion, nil
-}
-
 type PromotionResponse struct {
 	PromotionID   uuid.UUID                    `json:"promotion_id"`
 	Name          string                       `json:"name"`
