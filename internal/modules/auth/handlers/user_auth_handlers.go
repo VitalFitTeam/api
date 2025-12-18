@@ -177,6 +177,68 @@ func (h *AuthHandlers) ActivateUserHandler(c *gin.Context) {
 
 }
 
+// @Summary		Resend Activation Code
+// @Description	Resends a new activation code to the user's email if the account is not yet activated.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		ResendActivationCodePayload	true	"Email payload"
+// @Success		200		{object}	map[string]interface{}		"Code sent successfully"
+// @Failure		400		{object}	map[string]interface{}		"Bad Request"
+// @Failure		404		{object}	map[string]interface{}		"User not found"
+// @Failure		409		{object}	map[string]interface{}		"User already active"
+// @Failure		500		{object}	map[string]interface{}		"Internal Server Error"
+// @Router			/auth/resend-activation [post]
+func (h *AuthHandlers) ResendActivationCodeHandler(c *gin.Context) {
+	var payload ResendActivationCodePayload
+	ctx := c.Request.Context()
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	user, err := h.services.UserServices.GetByEmail(ctx, payload.Email)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	if user.IsValidated {
+		h.services.LogErrors.ConflictResponse(c, errors.New("user is already activated"))
+		return
+	}
+
+	key, err := otp.GenerateCode(6)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	hash := sha256.Sum256([]byte(key))
+	hashedKey := hex.EncodeToString(hash[:])
+
+	if err := h.services.AuthServices.UpdateActivationCode(ctx, user.UserID, hashedKey); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	status, err := h.services.AuthServices.MailSender(ctx, user, key, mailer.UserWelcomeTemplate)
+	if err != nil {
+		h.services.Logger.Errorw("error sending activation email", "error", err)
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(status, gin.H{
+		"message": "activation code sent",
+		"code":    key,
+	})
+}
+
 // @Summary		Activate staff user account
 // @Description	Activates a staff user's account using the invitation token from the URL and sets their initial password.
 // @Tags			User
@@ -239,6 +301,11 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 		default:
 			h.services.LogErrors.InternalServerError(c, err)
 		}
+		return
+	}
+
+	if !user.IsValidated {
+		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("account not activated"))
 		return
 	}
 

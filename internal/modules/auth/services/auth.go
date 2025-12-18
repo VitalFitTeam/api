@@ -125,6 +125,13 @@ func (h *AuthService) ActivateStaff(ctx context.Context, token string, password 
 	return nil
 }
 
+func (h *AuthService) UpdateActivationCode(ctx context.Context, userID uuid.UUID, code string) error {
+	if err := h.store.Users.UpdateActivationCode(ctx, userID, code, h.config.Mail.Exp); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (h *AuthService) GetByEmail(ctx context.Context, email string) (*authdomain.Users, error) {
 	users, err := h.store.Users.GetByEmail(ctx, email)
 	if err != nil {

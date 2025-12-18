@@ -209,6 +209,20 @@ func (s *UserStore) ActivateUserStaff(ctx context.Context, token string, passwor
 
 }
 
+func (s *UserStore) UpdateActivationCode(ctx context.Context, userID uuid.UUID, token string, invitationExp time.Duration) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := s.deleteUserInvitations(ctx, tx, userID); err != nil {
+			return err
+		}
+
+		if err := s.createUserInvitation(ctx, tx, token, userID, invitationExp); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*authdomain.Users, error) {
 	var user authdomain.Users
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
@@ -218,7 +232,6 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*authdomain.U
 		Preload("ClientProfile").
 		Preload("ClientMembership").
 		Where("email = ?", email).
-		Where("is_validated = ?", true).
 		First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

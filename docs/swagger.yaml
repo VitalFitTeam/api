@@ -213,6 +213,13 @@ definitions:
     required:
     - permissions
     type: object
+  authhandlers.ResendActivationCodePayload:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   authhandlers.ResetPasswordPayload:
     properties:
       confirm_password:
@@ -2782,6 +2789,50 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Register New User Staff
+      tags:
+      - Auth
+  /auth/resend-activation:
+    post:
+      consumes:
+      - application/json
+      description: Resends a new activation code to the user's email if the account
+        is not yet activated.
+      parameters:
+      - description: Email payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.ResendActivationCodePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Code sent successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: User already active
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Resend Activation Code
       tags:
       - Auth
   /billing/fiscal-document-types:

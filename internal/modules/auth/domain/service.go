@@ -30,6 +30,7 @@ type AuthServicesInterface interface {
 	ValidateResetToken(ctx context.Context, key string) error
 	GenerateQrJwtToken(ctx context.Context, user *Users) (string, error)
 	UpgradePassword(ctx context.Context, user *Users) error
+	UpdateActivationCode(ctx context.Context, userID uuid.UUID, code string) error
 }
 
 type UserServicesInterface interface {
