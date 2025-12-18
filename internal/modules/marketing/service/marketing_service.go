@@ -57,3 +57,53 @@ func (s *MarketingService) GetBanners(ctx context.Context) ([]*marketingdomain.B
 	}
 	return banners, nil
 }
+
+// Promotion operations
+
+func (s *MarketingService) CreatePromotion(ctx context.Context, promotion *marketingdomain.Promotion) error {
+	// Check if code already exists
+	if promotion.Code != "" {
+		existing, err := s.store.Marketing.GetPromotionByCode(ctx, promotion.Code)
+		if err == nil && existing != nil {
+			return err
+		}
+	}
+
+	err := s.store.Marketing.CreatePromotion(ctx, promotion)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *MarketingService) UpdatePromotion(ctx context.Context, promotion *marketingdomain.Promotion) error {
+	err := s.store.Marketing.UpdatePromotion(ctx, promotion)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *MarketingService) DeletePromotion(ctx context.Context, promotionID uuid.UUID) error {
+	err := s.store.Marketing.DeletePromotion(ctx, promotionID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *MarketingService) GetPromotionByID(ctx context.Context, promotionID uuid.UUID) (*marketingdomain.Promotion, error) {
+	promotion, err := s.store.Marketing.GetPromotionByID(ctx, promotionID)
+	if err != nil {
+		return nil, err
+	}
+	return promotion, nil
+}
+
+func (s *MarketingService) GetPromotions(ctx context.Context) ([]*marketingdomain.Promotion, error) {
+	promotions, err := s.store.Marketing.GetPromotions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return promotions, nil
+}

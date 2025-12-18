@@ -97,3 +97,82 @@ func (s *MarketingStore) GetBanners(ctx context.Context) ([]*marketingdomain.Ban
 	}
 	return banners, nil
 }
+
+// Promotion operations
+
+func (s *MarketingStore) CreatePromotion(ctx context.Context, promotion *marketingdomain.Promotion) error {
+	err := s.db.WithContext(ctx).Create(promotion).Error
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return shared_errors.ErrConflict
+			}
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *MarketingStore) UpdatePromotion(ctx context.Context, promotion *marketingdomain.Promotion) error {
+	err := s.db.WithContext(ctx).Save(promotion).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return shared_errors.ErrNotFound
+		default:
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *MarketingStore) DeletePromotion(ctx context.Context, promotionID uuid.UUID) error {
+	err := s.db.WithContext(ctx).Delete(&marketingdomain.Promotion{}, promotionID).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return shared_errors.ErrNotFound
+		default:
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *MarketingStore) GetPromotionByID(ctx context.Context, promotionID uuid.UUID) (*marketingdomain.Promotion, error) {
+	promotion := &marketingdomain.Promotion{}
+	err := s.db.WithContext(ctx).First(promotion, promotionID).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return promotion, nil
+}
+
+func (s *MarketingStore) GetPromotions(ctx context.Context) ([]*marketingdomain.Promotion, error) {
+	promotions := []*marketingdomain.Promotion{}
+	err := s.db.WithContext(ctx).Find(&promotions).Error
+	if err != nil {
+		return nil, err
+	}
+	return promotions, nil
+}
+
+func (s *MarketingStore) GetPromotionByCode(ctx context.Context, code string) (*marketingdomain.Promotion, error) {
+	promotion := &marketingdomain.Promotion{}
+	err := s.db.WithContext(ctx).Where("code = ?", code).First(promotion).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return promotion, nil
+}
