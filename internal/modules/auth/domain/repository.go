@@ -31,6 +31,8 @@ type UserRepository interface {
 	UpdateClientStatus(ctx context.Context, userID uuid.UUID, status UserStatusEnum) error
 	UpdateClientCategory(ctx context.Context, userID uuid.UUID, category ClientCategoryEnum) error
 	GetAllClients(ctx context.Context) ([]*Users, error)
+	UpgradePassword(ctx context.Context, user *Users) error
+	UpdateActivationCode(ctx context.Context, userID uuid.UUID, token string, invitationExp time.Duration) error
 }
 
 type RolesRepository interface {

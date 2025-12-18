@@ -148,6 +148,14 @@ func (m *UserStoreMock) GetAllClients(ctx context.Context) ([]*authdomain.Users,
 	}
 	return args.Get(0).([]*authdomain.Users), args.Error(1)
 }
+func (m *UserStoreMock) UpgradePassword(ctx context.Context, user *authdomain.Users) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+func (m *UserStoreMock) UpdateActivationCode(ctx context.Context, userID uuid.UUID, token string, invitationExp time.Duration) error {
+	args := m.Called(ctx, userID, token, invitationExp)
+	return args.Error(0)
+}
 
 // ROLE MOCK FUNCTIONS
 func (m *RoleStoreMock) GetByName(ctx context.Context, name string) (*authdomain.Roles, error) {
