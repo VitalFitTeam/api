@@ -355,6 +355,15 @@ func (s *UserStore) ResetUserPassword(ctx context.Context, key string, user *aut
 	})
 }
 
+func (s *UserStore) UpgradePassword(ctx context.Context, user *authdomain.Users) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).Model(user).Select("password_hash").Updates(user).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func (s *UserStore) userResetToken(ctx context.Context, tx *gorm.DB, userID uuid.UUID, key string, tokenExp time.Duration) error {
 	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
 	defer cancel()

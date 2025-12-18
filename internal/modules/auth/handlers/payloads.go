@@ -92,6 +92,12 @@ type ResetPasswordPayload struct {
 	Token           string `json:"token" binding:"required"`
 }
 
+type UpdatePassswordPayload struct {
+	CurrentPassword string `json:"current_password" binding:"required,min=8"`
+	NewPassword     string `json:"new_password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=NewPassword"`
+}
+
 type CreateRolesPayload struct {
 	Name        string   `json:"name" binding:"required"`
 	Description string   `json:"description" binding:"required"`

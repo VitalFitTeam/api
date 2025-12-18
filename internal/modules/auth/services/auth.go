@@ -189,6 +189,13 @@ func (h *AuthService) ValidateResetToken(ctx context.Context, key string) error 
 	return nil
 }
 
+func (h *AuthService) UpgradePassword(ctx context.Context, user *authdomain.Users) error {
+	if err := h.store.Users.UpgradePassword(ctx, user); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (h *AuthService) GenerateQrJwtToken(ctx context.Context, user *authdomain.Users) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": user.UserID,

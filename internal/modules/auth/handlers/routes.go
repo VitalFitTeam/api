@@ -30,6 +30,7 @@ type AuthHandlersInterface interface {
 	GetUserByEmailHandler(c *gin.Context)
 	DeleteUserHandler(c *gin.Context)
 	GenerateQrJwtTokenHandler(c *gin.Context)
+	ChangePasswordHandler(c *gin.Context)
 	//Roles
 	GetRolesHandler(c *gin.Context)
 	CreateRoleHandler(c *gin.Context)
@@ -86,6 +87,7 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	{ //private routes
 		userGroup.GET("/whoami", r.WhoAmI)
 		userGroup.GET("/qr-token", r.GenerateQrJwtTokenHandler)
+		userGroup.POST("/change-password", r.ChangePasswordHandler)
 
 		userGroup.GET("/branch-admins",
 			m.RBACPermission("users:list"),

@@ -952,3 +952,42 @@ func (h *AuthHandlers) GenerateQrJwtTokenHandler(c *gin.Context) {
 		"token": token,
 	})
 }
+
+// @Summary		Change User Password
+// @Description	Allows an authenticated user to change their password by providing the current and new password.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		UpdatePassswordPayload	true	"Password change payload"
+// @Success		204		{object}	nil						"Password changed successfully"
+// @Failure		400		{object}	object{error=string}	"Bad Request: Invalid payload"
+// @Failure		401		{object}	object{error=string}	"Unauthorized: Invalid current password"
+// @Failure		500		{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/change-password [post]
+func (h *AuthHandlers) ChangePasswordHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+	var payload UpdatePassswordPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	match, err := user.PasswordHash.Matches(payload.CurrentPassword)
+	if err != nil || !match {
+		h.services.LogErrors.UnauthorizedErrorResponse(c, err)
+		return
+	}
+
+	if err := user.PasswordHash.Set(payload.NewPassword); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	if err := h.services.AuthServices.UpgradePassword(ctx, user); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+
+}

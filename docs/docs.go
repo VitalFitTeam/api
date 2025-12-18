@@ -8443,6 +8443,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/change-password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Allows an authenticated user to change their password by providing the current and new password.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Change User Password",
+                "parameters": [
+                    {
+                        "description": "Password change payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authhandlers.UpdatePassswordPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Password changed successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: Invalid current password",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user/clients": {
             "get": {
                 "security": [
@@ -9315,6 +9384,27 @@ const docTemplate = `{
                 },
                 "token": {
                     "type": "string"
+                }
+            }
+        },
+        "authhandlers.UpdatePassswordPayload": {
+            "type": "object",
+            "required": [
+                "confirm_password",
+                "current_password",
+                "new_password"
+            ],
+            "properties": {
+                "confirm_password": {
+                    "type": "string"
+                },
+                "current_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
                 }
             }
         },
