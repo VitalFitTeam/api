@@ -76,6 +76,10 @@ type CodePayload struct {
 	Code string `json:"code" binding:"required"`
 }
 
+type ResendActivationCodePayload struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
 type CreateUserTokenPayload struct {
 	Email    string `json:"email" binding:"required,email,max=255"`
 	Password string `json:"password" binding:"required,min=3,max=72"`
@@ -90,6 +94,12 @@ type ResetPasswordPayload struct {
 	Password        string `json:"password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
 	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=Password"`
 	Token           string `json:"token" binding:"required"`
+}
+
+type UpdatePassswordPayload struct {
+	CurrentPassword string `json:"current_password" binding:"required,min=8"`
+	NewPassword     string `json:"new_password" binding:"required,min=8,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ,containsany=0123456789,containsany=!@#$%^&*"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,eqfield=NewPassword"`
 }
 
 type CreateRolesPayload struct {

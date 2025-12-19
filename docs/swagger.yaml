@@ -213,6 +213,13 @@ definitions:
     required:
     - permissions
     type: object
+  authhandlers.ResendActivationCodePayload:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   authhandlers.ResetPasswordPayload:
     properties:
       confirm_password:
@@ -226,6 +233,21 @@ definitions:
     - confirm_password
     - password
     - token
+    type: object
+  authhandlers.UpdatePassswordPayload:
+    properties:
+      confirm_password:
+        type: string
+      current_password:
+        minLength: 8
+        type: string
+      new_password:
+        minLength: 8
+        type: string
+    required:
+    - confirm_password
+    - current_password
+    - new_password
     type: object
   authhandlers.UpdateStaffPasswordPayload:
     properties:
@@ -2872,6 +2894,50 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Register New User Staff
+      tags:
+      - Auth
+  /auth/resend-activation:
+    post:
+      consumes:
+      - application/json
+      description: Resends a new activation code to the user's email if the account
+        is not yet activated.
+      parameters:
+      - description: Email payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.ResendActivationCodePayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Code sent successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: User already active
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Resend Activation Code
       tags:
       - Auth
   /billing/fiscal-document-types:
@@ -8004,6 +8070,50 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get user by email
+      tags:
+      - User
+  /user/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Allows an authenticated user to change their password by providing
+        the current and new password.
+      parameters:
+      - description: Password change payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.UpdatePassswordPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Password changed successfully
+        "400":
+          description: 'Bad Request: Invalid payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: 'Unauthorized: Invalid current password'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Change User Password
       tags:
       - User
   /user/clients:
