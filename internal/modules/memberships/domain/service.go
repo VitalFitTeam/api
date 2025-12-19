@@ -21,4 +21,10 @@ type MembershipsServiceInterface interface {
 	GetClientMembership(ctx context.Context, clientID uuid.UUID) (*ClientMembership, error)
 	GetClientsMemberships(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*ClientMembership, int64, error)
 	GetClientMembershipByID(ctx context.Context, clientMembershipID uuid.UUID) (*ClientMembership, error)
+
+	CreateCancellationReason(ctx context.Context, reason *CancellationReason) error
+	UpdateCancellationReason(ctx context.Context, reason *CancellationReason) error
+	DeleteCancellationReason(ctx context.Context, id uuid.UUID) error
+	GetCancellationReasonByID(ctx context.Context, id uuid.UUID) (*CancellationReason, error)
+	GetCancellationReasons(ctx context.Context) ([]*CancellationReason, error)
 }

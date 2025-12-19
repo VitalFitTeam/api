@@ -101,3 +101,31 @@ func (s *MembershipService) GetClientMembershipByID(ctx context.Context, clientM
 func (s *MembershipService) GetClientsMemberships(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.ClientMembership, int64, error) {
 	return s.store.Membership.GetClientsMemberships(ctx, fq)
 }
+
+// Cancellation Reasons operations
+
+func (s *MembershipService) CreateCancellationReason(ctx context.Context, reason *membershipsdomain.CancellationReason) error {
+	// Check if description already exists
+	existing, err := s.store.Membership.GetCancellationReasonByDescription(ctx, reason.Description)
+	if err == nil && existing != nil {
+		return err
+	}
+
+	return s.store.Membership.CreateCancellationReason(ctx, reason)
+}
+
+func (s *MembershipService) UpdateCancellationReason(ctx context.Context, reason *membershipsdomain.CancellationReason) error {
+	return s.store.Membership.UpdateCancellationReason(ctx, reason)
+}
+
+func (s *MembershipService) DeleteCancellationReason(ctx context.Context, id uuid.UUID) error {
+	return s.store.Membership.DeleteCancellationReason(ctx, id)
+}
+
+func (s *MembershipService) GetCancellationReasonByID(ctx context.Context, id uuid.UUID) (*membershipsdomain.CancellationReason, error) {
+	return s.store.Membership.GetCancellationReasonByID(ctx, id)
+}
+
+func (s *MembershipService) GetCancellationReasons(ctx context.Context) ([]*membershipsdomain.CancellationReason, error) {
+	return s.store.Membership.GetCancellationReasons(ctx)
+}
