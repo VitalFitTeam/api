@@ -2,7 +2,7 @@ tmp
 .env
 .envrc
 bin/
-
+docs/
 # Logs
 logs
 *.log
