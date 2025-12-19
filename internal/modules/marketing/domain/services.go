@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type MarketingServiceInterface interface {
@@ -19,5 +20,5 @@ type MarketingServiceInterface interface {
 	UpdatePromotion(context.Context, *Promotion) error
 	DeletePromotion(context.Context, uuid.UUID) error
 	GetPromotionByID(context.Context, uuid.UUID) (*Promotion, error)
-	GetPromotions(context.Context) ([]*Promotion, error)
+	GetPromotions(context.Context, pagination.PaginatedFeedQuery) ([]*Promotion, int64, error)
 }

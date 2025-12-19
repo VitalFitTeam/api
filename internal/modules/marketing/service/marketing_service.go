@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type MarketingService struct {
@@ -100,10 +101,10 @@ func (s *MarketingService) GetPromotionByID(ctx context.Context, promotionID uui
 	return promotion, nil
 }
 
-func (s *MarketingService) GetPromotions(ctx context.Context) ([]*marketingdomain.Promotion, error) {
-	promotions, err := s.store.Marketing.GetPromotions(ctx)
+func (s *MarketingService) GetPromotions(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*marketingdomain.Promotion, int64, error) {
+	promotions, total, err := s.store.Marketing.GetPromotions(ctx, fq)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return promotions, nil
+	return promotions, total, nil
 }

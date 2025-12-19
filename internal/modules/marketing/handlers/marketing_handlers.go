@@ -1,11 +1,13 @@
 package marketinghandlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 // @Summary		Create a new banner
@@ -401,12 +403,37 @@ func (h *MarketingHandler) GetPromotionByIDHandler(c *gin.Context) {
 // @Tags			Marketing
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Success		200	{object}	object{data=[]PromotionResponse}
-// @Failure		500	{object}	object{error=string}	"error: Internal Server Error"
+// @Param			limit	query		int		false	"Number of results per page"	default(10)
+// @Param			page	query		int		false	"Page number for pagination"	default(1)
+// @Param			sort	query		string	false	"Sort direction (asc/desc)"		enums(asc, desc)	default(desc)
+// @Param			search	query		string	false	"Search term"
+// @Success		200		{object}	object{data=[]PromotionResponse}
+// @Failure		500		{object}	object{error=string}	"error: Internal Server Error"
 // @Router			/marketing/promotions [get]
 func (h *MarketingHandler) GetPromotionsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
-	promotions, err := h.services.MarketingServices.GetPromotions(ctx)
+
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Search: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/marketing/promotions?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, fq.Page+1, fq.Sort, fq.Search)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/marketing/promotions?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, previousPage, fq.Sort, fq.Search)
+
+	promotions, total, err := h.services.MarketingServices.GetPromotions(ctx, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -427,5 +454,14 @@ func (h *MarketingHandler) GetPromotionsHandler(c *gin.Context) {
 			UpdatedAt:     promotion.UpdatedAt,
 		})
 	}
-	c.JSON(http.StatusOK, gin.H{"data": resp})
+
+	response := pagination.PaginatedResponseTotal[*PromotionResponse]{
+		Data:     resp,
+		Count:    int64(len(promotions)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
