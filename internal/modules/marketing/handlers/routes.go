@@ -13,6 +13,11 @@ type MarketingHandlerInterface interface {
 	DeleteBannerHandler(c *gin.Context)
 	GetBannerByIDHandler(c *gin.Context)
 	GetBannersHandler(c *gin.Context)
+	CreatePromotionHandler(c *gin.Context)
+	UpdatePromotionHandler(c *gin.Context)
+	DeletePromotionHandler(c *gin.Context)
+	GetPromotionByIDHandler(c *gin.Context)
+	GetPromotionsHandler(c *gin.Context)
 }
 
 type MarketingHandler struct {
@@ -27,11 +32,22 @@ func (r *MarketingHandler) MarketingRoutes(rg *gin.RouterGroup, m *auth.AuthMidd
 	marketingGroup := rg.Group("/marketing")
 	{
 		marketingGroup.Use(m.AuthJwtTokenMiddleware())
+
+		// Banner routes
 		bannersGroup := marketingGroup.Group("/banners")
 		bannersGroup.POST("", m.RBACPermission("marketing:create"), r.CreateBannerHandler)
 		bannersGroup.GET("", m.RBACPermission("marketing:list"), r.GetBannersHandler)
 		bannersGroup.GET("/:id", m.RBACPermission("marketing:get"), r.GetBannerByIDHandler)
 		bannersGroup.PUT("/:id", m.RBACPermission("marketing:update"), r.UpdateBannerHandler)
 		bannersGroup.DELETE("/:id", m.RBACPermission("marketing:delete"), r.DeleteBannerHandler)
+
+		// Promotion routes
+		// Access: Super Admin (full CRUD), Admin Franquicia (read and activate/deactivate via update)
+		promotionsGroup := marketingGroup.Group("/promotions")
+		promotionsGroup.POST("", m.RBACPermission("promotions:create"), r.CreatePromotionHandler)
+		promotionsGroup.GET("", m.RBACPermission("promotions:list"), r.GetPromotionsHandler)
+		promotionsGroup.GET("/:id", m.RBACPermission("promotions:get"), r.GetPromotionByIDHandler)
+		promotionsGroup.PUT("/:id", m.RBACPermission("promotions:update"), r.UpdatePromotionHandler)
+		promotionsGroup.DELETE("/:id", m.RBACPermission("promotions:delete"), r.DeletePromotionHandler)
 	}
 }

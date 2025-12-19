@@ -1407,6 +1407,39 @@ definitions:
       name:
         type: string
     type: object
+  marketingdomain.DiscountType:
+    enum:
+    - Percentage
+    - FixedAmount
+    type: string
+    x-enum-varnames:
+    - DiscountTypePercentage
+    - DiscountTypeFixedAmount
+  marketingdomain.Promotion:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      discount_type:
+        $ref: '#/definitions/marketingdomain.DiscountType'
+      discount_value:
+        type: number
+      end_date:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      promotion_id:
+        type: string
+      start_date:
+        type: string
+      updated_at:
+        type: string
+    type: object
   marketinghandlers.BannerResponse:
     properties:
       banner_id:
@@ -1436,6 +1469,57 @@ definitions:
     - link_url
     - name
     type: object
+  marketinghandlers.CreatePromotionPayload:
+    properties:
+      code:
+        type: string
+      discount_type:
+        allOf:
+        - $ref: '#/definitions/marketingdomain.DiscountType'
+        enum:
+        - Percentage
+        - FixedAmount
+      discount_value:
+        type: number
+      end_date:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      start_date:
+        type: string
+    required:
+    - code
+    - discount_type
+    - discount_value
+    - end_date
+    - name
+    - start_date
+    type: object
+  marketinghandlers.PromotionResponse:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      discount_type:
+        $ref: '#/definitions/marketingdomain.DiscountType'
+      discount_value:
+        type: number
+      end_date:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      promotion_id:
+        type: string
+      start_date:
+        type: string
+      updated_at:
+        type: string
+    type: object
   marketinghandlers.UpdateBannerPayload:
     properties:
       image_url:
@@ -1445,6 +1529,27 @@ definitions:
       link_url:
         type: string
       name:
+        type: string
+    type: object
+  marketinghandlers.UpdatePromotionPayload:
+    properties:
+      code:
+        type: string
+      discount_type:
+        allOf:
+        - $ref: '#/definitions/marketingdomain.DiscountType'
+        enum:
+        - Percentage
+        - FixedAmount
+      discount_value:
+        type: number
+      end_date:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      start_date:
         type: string
     type: object
   membershipsdomain.CancellationReason:
@@ -6038,6 +6143,233 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a banner
+      tags:
+      - Marketing
+  /marketing/promotions:
+    get:
+      description: Retrieves a list of all promotions.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort direction (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/marketinghandlers.PromotionResponse'
+                type: array
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all promotions
+      tags:
+      - Marketing
+    post:
+      consumes:
+      - application/json
+      description: Adds a new promotion, coupon or discount to the system.
+      parameters:
+      - description: Promotion creation payload
+        in: body
+        name: promotion
+        required: true
+        schema:
+          $ref: '#/definitions/marketinghandlers.CreatePromotionPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Promotion created successfully
+          schema:
+            $ref: '#/definitions/marketingdomain.Promotion'
+        "400":
+          description: 'error: Bad Request'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: 'error: Conflict - Code already exists'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new promotion
+      tags:
+      - Marketing
+  /marketing/promotions/{id}:
+    delete:
+      description: Deletes a promotion from the system.
+      parameters:
+      - description: Promotion UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: 'error: Bad Request - Invalid ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Promotion not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a promotion
+      tags:
+      - Marketing
+    get:
+      description: Retrieves a single promotion by its UUID.
+      parameters:
+      - description: Promotion UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/marketinghandlers.PromotionResponse'
+            type: object
+        "400":
+          description: 'error: Bad Request - Invalid ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Promotion not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get promotion by ID
+      tags:
+      - Marketing
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing promotion's details.
+      parameters:
+      - description: Promotion UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Promotion update payload
+        in: body
+        name: promotion
+        required: true
+        schema:
+          $ref: '#/definitions/marketinghandlers.UpdatePromotionPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Promotion updated successfully
+          schema:
+            $ref: '#/definitions/marketingdomain.Promotion'
+        "400":
+          description: 'error: Bad Request - Invalid ID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Promotion not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a promotion
       tags:
       - Marketing
   /membership-plans:
