@@ -39,12 +39,12 @@ const (
 
 type CancellationReason struct {
 	// Mapeo a cancellation_reasons
-	ReasonID    uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"reason_id"`
-	Description string     `gorm:"type:varchar(255);unique;not null" json:"description"`
-	IsActive    bool       `gorm:"type:boolean;not null;default:true" json:"is_active"`
-	CreatedAt   time.Time  `gorm:"default:now()" json:"created_at"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
-	DeletedAt   *time.Time `gorm:"index" json:"deleted_at,omitempty"`
+	ReasonID    uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"reason_id"`
+	Description string         `gorm:"type:varchar(255);unique;not null" json:"description"`
+	IsActive    bool           `gorm:"type:boolean;not null;default:true" json:"is_active"`
+	CreatedAt   time.Time      `gorm:"default:now()" json:"created_at"`
+	UpdatedAt   *time.Time     `json:"updated_at,omitempty"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
 }
 
 func (CancellationReason) TableName() string {

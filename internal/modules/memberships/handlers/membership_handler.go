@@ -527,13 +527,37 @@ func (h *MembershipHandler) CreateCancellationReasonHandler(c *gin.Context) {
 // @Tags			Memberships
 // @Produce		json
 // @Security		ApiKeyAuth
-// @Success		200	{object}	object{data=[]CancellationReasonResponse}	"List of cancellation reasons"
-// @Failure		500	{object}	object{error=string}						"error: Internal Server Error"
+// @Param			limit	query		int											false	"Number of results per page"	default(10)
+// @Param			page	query		int											false	"Page number for pagination"	default(1)
+// @Param			sort	query		string										false	"Sort direction (asc/desc)"		enums(asc, desc)	default(asc)
+// @Param			search	query		string										false	"Search term"
+// @Success		200		{object}	object{data=[]CancellationReasonResponse}	"List of cancellation reasons"
+// @Failure		500		{object}	object{error=string}						"error: Internal Server Error"
 // @Router			/memberships/cancellation-reasons [get]
 func (h *MembershipHandler) GetCancellationReasonsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	reasons, err := h.services.MembershipServices.GetCancellationReasons(ctx)
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "asc",
+		Search: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/memberships/cancellation-reasons?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, fq.Page+1, fq.Sort, fq.Search)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/memberships/cancellation-reasons?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, previousPage, fq.Sort, fq.Search)
+
+	reasons, total, err := h.services.MembershipServices.GetCancellationReasons(ctx, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -548,7 +572,15 @@ func (h *MembershipHandler) GetCancellationReasonsHandler(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": data})
+	resp := pagination.PaginatedResponseTotal[*CancellationReasonResponse]{
+		Data:     data,
+		Count:    int64(len(reasons)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 // @Summary		Update a cancellation reason

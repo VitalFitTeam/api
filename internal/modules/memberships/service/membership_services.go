@@ -126,6 +126,6 @@ func (s *MembershipService) GetCancellationReasonByID(ctx context.Context, id uu
 	return s.store.Membership.GetCancellationReasonByID(ctx, id)
 }
 
-func (s *MembershipService) GetCancellationReasons(ctx context.Context) ([]*membershipsdomain.CancellationReason, error) {
-	return s.store.Membership.GetCancellationReasons(ctx)
+func (s *MembershipService) GetCancellationReasons(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.CancellationReason, int64, error) {
+	return s.store.Membership.GetCancellationReasons(ctx, fq)
 }

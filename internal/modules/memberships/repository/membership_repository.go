@@ -376,17 +376,12 @@ func (s *MembershipStore) UpdateCancellationReason(ctx context.Context, reason *
 
 func (s *MembershipStore) DeleteCancellationReason(ctx context.Context, id uuid.UUID) error {
 	// Soft delete - set deleted_at timestamp
-	err := s.db.WithContext(ctx).
-		Model(&membershipsdomain.CancellationReason{}).
-		Where("reason_id = ?", id).
-		Update("deleted_at", time.Now()).Error
-	if err != nil {
-		switch err {
-		case gorm.ErrRecordNotFound:
-			return shared_errors.ErrNotFound
-		default:
-			return err
-		}
+	result := s.db.WithContext(ctx).Delete(&membershipsdomain.CancellationReason{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return shared_errors.ErrNotFound
 	}
 	return nil
 }
@@ -405,13 +400,33 @@ func (s *MembershipStore) GetCancellationReasonByID(ctx context.Context, id uuid
 	return reason, nil
 }
 
-func (s *MembershipStore) GetCancellationReasons(ctx context.Context) ([]*membershipsdomain.CancellationReason, error) {
+func (s *MembershipStore) GetCancellationReasons(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.CancellationReason, int64, error) {
 	var reasons []*membershipsdomain.CancellationReason
-	err := s.db.WithContext(ctx).Order("description ASC").Find(&reasons).Error
-	if err != nil {
-		return nil, err
+	var total int64
+
+	query := s.db.WithContext(ctx).Model(&membershipsdomain.CancellationReason{})
+
+	if fq.Search != "" {
+		query = query.Where("description ILIKE ?", "%"+fq.Search+"%")
 	}
-	return reasons, nil
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	page := fq.Page
+	if page < 1 {
+		page = 1
+	}
+
+	err := query.Order("description " + fq.Sort).
+		Limit(fq.Limit).
+		Offset((page - 1) * fq.Limit).
+		Find(&reasons).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return reasons, total, nil
 }
 
 func (s *MembershipStore) GetCancellationReasonByDescription(ctx context.Context, description string) (*membershipsdomain.CancellationReason, error) {
