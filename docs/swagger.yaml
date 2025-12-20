@@ -2180,6 +2180,30 @@ definitions:
       starts_at:
         type: string
     type: object
+  staffhandlers.AssignStaffToBranchPayload:
+    properties:
+      staff_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - staff_ids
+    type: object
+  staffhandlers.BranchStaffResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      user_id:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -5229,6 +5253,136 @@ paths:
       summary: Update a branch service
       tags:
       - Branch Services
+  /branches/{id}/staff:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of staff members assigned to a specific branch,
+        optionally filtered by role.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by Role UUID
+        in: query
+        name: role_id
+        type: string
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/staffhandlers.BranchStaffResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List staff in a branch
+      tags:
+      - Branch Staff
+    post:
+      consumes:
+      - application/json
+      description: Assigns one or more staff members to a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with staff UUIDs
+        in: body
+        name: staff
+        required: true
+        schema:
+          $ref: '#/definitions/staffhandlers.AssignStaffToBranchPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Staff assigned successfully
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign staff to a branch
+      tags:
+      - Branch Staff
+  /branches/{id}/staff/{staffId}:
+    delete:
+      description: Removes a specific staff member from a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Staff UUID
+        in: path
+        name: staffId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Staff removed successfully
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove staff from a branch
+      tags:
+      - Branch Staff
   /branches/status:
     get:
       description: Get a count data for each status branch

@@ -4,8 +4,11 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	staffdomain "github.com/vitalfit/api/internal/modules/staff/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -41,4 +44,54 @@ func (s *StaffStore) AssignStaffToBranch(ctx context.Context, branchID uuid.UUID
 	})
 
 	return err
+}
+
+func (s *StaffStore) ListBranchStaffByRole(ctx context.Context, branchID uuid.UUID, roleID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]authdomain.Users, error) {
+	var users []authdomain.Users
+
+	query := s.db.WithContext(ctx).
+		Model(&authdomain.Users{}).
+		Joins("JOIN branch_staff ON branch_staff.user_id = users.user_id").
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Where("branch_staff.branch_id = ?", branchID)
+
+	if roleID != uuid.Nil {
+		query = query.Where("users.role_id = ?", roleID)
+	}
+
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		query = query.Where(
+			"users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?",
+			searchQuery, searchQuery, searchQuery, searchQuery,
+		)
+	}
+
+	if fq.Role != "" {
+		roleQuery := "%" + fq.Role + "%"
+		query = query.Where("roles.name ILIKE ?", roleQuery)
+	}
+
+	err := query.Preload("Role").
+		Limit(fq.Limit).
+		Offset(fq.Page*fq.Limit - fq.Limit).
+		Find(&users).Error
+
+	return users, err
+}
+
+func (s *StaffStore) RemoveStaffFromBranch(ctx context.Context, branchID uuid.UUID, staffID uuid.UUID) error {
+	result := s.db.WithContext(ctx).
+		Where("branch_id = ? AND user_id = ?", branchID, staffID).
+		Delete(&staffdomain.BranchStaff{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return shared_errors.ErrNotFound
+	}
+
+	return nil
 }
