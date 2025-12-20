@@ -239,3 +239,28 @@ func (h *BookingHandlers) GetClientBookingsHandler(c *gin.Context) {
 		"data": bookings,
 	})
 }
+
+// @Summary		Get class bookings count
+// @Description	Returns the total number of bookings for a specific class.
+// @Tags			Booking
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			classId	path		string					true	"Class UUID"
+// @Success		200		{object}	map[string]interface{}	"Count returned"
+// @Failure		400		{object}	map[string]interface{}	"Bad Request"
+// @Failure		500		{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/schedule/{classId}/bookings/count [get]
+func (h *BookingHandlers) GetClassBookingsCountHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	classID, err := uuid.Parse(c.Param("classId"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, errors.New("invalid classId format"))
+		return
+	}
+	count, err := h.services.BookingServices.CountBookingsForClass(ctx, classID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"count": count})
+}

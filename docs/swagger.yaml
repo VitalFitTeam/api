@@ -7758,6 +7758,38 @@ paths:
       summary: Book class
       tags:
       - Booking
+  /schedule/{classId}/bookings/count:
+    get:
+      description: Returns the total number of bookings for a specific class.
+      parameters:
+      - description: Class UUID
+        in: path
+        name: classId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Count returned
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get class bookings count
+      tags:
+      - Booking
   /schedule/branch/{branchId}/client/{userId}:
     get:
       description: Returns the available classes for a specific client in a specific

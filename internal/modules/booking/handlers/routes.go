@@ -12,6 +12,7 @@ type BookingHandlersInterface interface {
 	GetClientScheduleHandler(c *gin.Context)
 	CreateBookingHandler(c *gin.Context)
 	CancelBookingHandler(c *gin.Context)
+	GetClassBookingsCountHandler(c *gin.Context)
 }
 
 type BookingHandlers struct {
@@ -30,6 +31,7 @@ func (h *BookingHandlers) BookingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 		scheduleRoutes.GET("/branch/:branchId/client", h.GetClientScheduleHandler)
 		scheduleRoutes.GET("/branch/:branchId/client/:userId", h.GetClientScheduleHandler)
 		scheduleRoutes.POST("/:classId/book", h.CreateBookingHandler)
+		scheduleRoutes.GET("/:classId/bookings/count", h.GetClassBookingsCountHandler)
 	}
 
 	bookingRoutes := rg.Group("/bookings")
