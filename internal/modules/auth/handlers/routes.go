@@ -15,6 +15,7 @@ type AuthHandlersInterface interface {
 	RegisterUserStaffHandler(c *gin.Context)
 	RegisterUserClientHandler(c *gin.Context)
 	ActivateUserHandler(c *gin.Context)
+	ResendActivationCodeHandler(c *gin.Context)
 	ActivateStaffHanlder(c *gin.Context)
 	LoginHandler(c *gin.Context)
 	WhoAmI(c *gin.Context)
@@ -30,6 +31,7 @@ type AuthHandlersInterface interface {
 	GetUserByEmailHandler(c *gin.Context)
 	DeleteUserHandler(c *gin.Context)
 	GenerateQrJwtTokenHandler(c *gin.Context)
+	ChangePasswordHandler(c *gin.Context)
 	//Roles
 	GetRolesHandler(c *gin.Context)
 	CreateRoleHandler(c *gin.Context)
@@ -58,6 +60,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	authGroup := rg.Group("/auth")
 	{ //public routes
 		authGroup.POST("/register", r.RegisterUserClientHandler)
+		authGroup.POST("/resend-activation", r.ResendActivationCodeHandler)
 		authGroup.PUT("/activate", r.ActivateUserHandler)
 		authGroup.PUT("/activate/:token", r.ActivateStaffHanlder)
 		authGroup.POST("/login", r.LoginHandler)
@@ -86,6 +89,7 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	{ //private routes
 		userGroup.GET("/whoami", r.WhoAmI)
 		userGroup.GET("/qr-token", r.GenerateQrJwtTokenHandler)
+		userGroup.POST("/change-password", r.ChangePasswordHandler)
 
 		userGroup.GET("/branch-admins",
 			m.RBACPermission("users:list"),

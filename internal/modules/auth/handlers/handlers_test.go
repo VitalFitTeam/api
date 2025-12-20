@@ -107,6 +107,7 @@ func TestLoginHandler(t *testing.T) {
 
 	testPassword := "password123"
 	mockUser := newTestUser("login@example.com", testPassword)
+	mockUser.IsValidated = true
 
 	t.Run("should fail with invalid credentials (wrong password)", func(t *testing.T) {
 		userStoreMock.On("GetByEmail", mock.Anything, mockUser.Email).Return(mockUser, nil).Once()
@@ -143,8 +144,24 @@ func TestLoginHandler(t *testing.T) {
 		userStoreMock.AssertExpectations(t)
 	})
 
+	t.Run("should fail if user is not activated", func(t *testing.T) {
+		inactiveUser := newTestUser("inactive@example.com", testPassword)
+
+		userStoreMock.On("GetByEmail", mock.Anything, inactiveUser.Email).Return(inactiveUser, nil).Once()
+
+		body := newLoginPayload(inactiveUser.Email, testPassword, "web")
+		req, _ := http.NewRequest(http.MethodPost, "/v1/auth/login", body)
+		req.Header.Set("Content-Type", "application/json")
+
+		rr := app.ExecuteRequest(req, mux)
+
+		app.CheckResponseCode(t, http.StatusUnauthorized, rr.Code)
+		userStoreMock.AssertExpectations(t)
+	})
+
 	t.Run("should fail when a client tries to log in to the dashboard", func(t *testing.T) {
 		clientUser := newTestUser("client-login@example.com", testPassword)
+		clientUser.IsValidated = true
 		clientUser.Role = authdomain.Roles{Name: "client"}
 
 		userStoreMock.On("GetByEmail", mock.Anything, clientUser.Email).Return(clientUser, nil).Once()

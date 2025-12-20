@@ -179,6 +179,23 @@ func TestAuthService(t *testing.T) {
 		assert.NoError(t, err)
 		userStoreMock.AssertExpectations(t)
 	})
+
+	t.Run("UpdateActivationCode", func(t *testing.T) {
+		code := "new-hashed-code"
+		userStoreMock.On("UpdateActivationCode", mock.Anything, mockUser.UserID, code, mock.AnythingOfType("time.Duration")).Return(nil).Once()
+
+		err := authService.UpdateActivationCode(context.Background(), mockUser.UserID, code)
+		assert.NoError(t, err)
+		userStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("UpgradePassword", func(t *testing.T) {
+		userStoreMock.On("UpgradePassword", mock.Anything, mockUser).Return(nil).Once()
+
+		err := authService.UpgradePassword(context.Background(), mockUser)
+		assert.NoError(t, err)
+		userStoreMock.AssertExpectations(t)
+	})
 }
 
 func TestUserService(t *testing.T) {

@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -154,13 +155,36 @@ func (s *MarketingStore) GetPromotionByID(ctx context.Context, promotionID uuid.
 	return promotion, nil
 }
 
-func (s *MarketingStore) GetPromotions(ctx context.Context) ([]*marketingdomain.Promotion, error) {
+func (s *MarketingStore) GetPromotions(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*marketingdomain.Promotion, int64, error) {
 	promotions := []*marketingdomain.Promotion{}
-	err := s.db.WithContext(ctx).Find(&promotions).Error
-	if err != nil {
-		return nil, err
+	var count int64
+
+	tx := s.db.WithContext(ctx).Model(&marketingdomain.Promotion{})
+
+	if fq.Search != "" {
+		tx = tx.Where("name ILIKE ? OR code ILIKE ?", "%"+fq.Search+"%", "%"+fq.Search+"%")
 	}
-	return promotions, nil
+
+	if err := tx.Count(&count).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if fq.Sort != "" && fq.Sortby != "" {
+		tx = tx.Order(fq.Sortby + " " + fq.Sort)
+	} else {
+		tx = tx.Order("created_at desc")
+	}
+
+	page := fq.Page
+	if page < 1 {
+		page = 1
+	}
+
+	err := tx.Limit(fq.Limit).Offset((page - 1) * fq.Limit).Find(&promotions).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return promotions, count, nil
 }
 
 func (s *MarketingStore) GetPromotionByCode(ctx context.Context, code string) (*marketingdomain.Promotion, error) {
