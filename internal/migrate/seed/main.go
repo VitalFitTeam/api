@@ -69,6 +69,7 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices
 	s.SeedClasses(store, db, ctx)
 	s.SeedInvoicesAndPayments(store, db, ctx, services)
 	s.SeedBookingsAndAttendance(store, db, ctx)
+	s.SeedStaffAssignment(store, db, ctx, services)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -1328,6 +1329,55 @@ func (s *SeedStruct) SeedInvoicesAndPayments(store store.Storage, db *gorm.DB, c
 	}
 
 	log.Println("Invoices and payments seeder completed successfully.")
+}
+func (s *SeedStruct) SeedStaffAssignment(store store.Storage, db *gorm.DB, ctx context.Context, services appservices.Services) {
+	log.Println("Starting seeding staff assignments for ALL eligible users...")
+
+	var users []*authdomain.Users
+	err := db.Preload("Role").
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Where("roles.name NOT IN ?", []string{"client", "instructor", "super_admin", "branch_admin"}).
+		Find(&users).Error
+
+	if err != nil {
+		log.Printf("Error fetching eligible users: %v", err)
+		return
+	}
+
+	if len(users) == 0 {
+		log.Println("No eligible users found.")
+		return
+	}
+
+	branches, err := store.Branches.GetAllBranches(ctx)
+	if err != nil {
+		log.Printf("Error fetching branches: %v", err)
+		return
+	}
+
+	if len(branches) == 0 {
+		log.Println("No branches found.")
+		return
+	}
+
+	log.Printf("Found %d users and %d branches. Starting assignment...", len(users), len(branches))
+
+	successCount := 0
+
+	for _, user := range users {
+		randomBranch := branches[rand.Intn(len(branches))]
+
+		log.Printf("Assigning User: %s to Branch: %s", user.FirstName, randomBranch.Name)
+
+		if err := services.Staff.AssignStaffToBranch(ctx, randomBranch.BranchID, []uuid.UUID{user.UserID}); err != nil {
+			log.Printf("Failed to assign user %s: %v", user.UserID, err)
+			continue
+		}
+
+		successCount++
+	}
+
+	log.Printf("Staff assignment seeding completed. Successfully assigned: %d/%d users.", successCount, len(users))
 }
 
 func main() {
