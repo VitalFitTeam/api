@@ -128,6 +128,12 @@ func (h *BookingHandlers) CreateBookingHandler(c *gin.Context) {
 		switch {
 		case errors.Is(err, shared_errors.ErrPayment):
 			h.services.LogErrors.PaymentRequiredResponse(c)
+		case errors.Is(err, shared_errors.ErrPastClass):
+			h.services.LogErrors.BadRequestResponse(c, err)
+		case errors.Is(err, shared_errors.ErrFullClass):
+			h.services.LogErrors.BadRequestResponse(c, err)
+		case errors.Is(err, shared_errors.ErrNotFound):
+			h.services.LogErrors.NotFoundResponse(c)
 		default:
 			h.services.LogErrors.InternalServerError(c, err)
 		}

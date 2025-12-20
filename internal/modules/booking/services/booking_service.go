@@ -32,13 +32,17 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, cl
 		return uuid.Nil, err
 	}
 
+	if class.StartsAt.Before(time.Now()) {
+		return uuid.Nil, shared_errors.ErrPastClass
+	}
+
 	if class.MaxCapacity > 0 {
 		count, err := s.store.Booking.CountBookingsForClass(ctx, classID)
 		if err != nil {
 			return uuid.Nil, err
 		}
 		if count >= int64(class.MaxCapacity) {
-			return uuid.Nil, errors.New("class is full")
+			return uuid.Nil, shared_errors.ErrFullClass
 		}
 	}
 
