@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	staffdomain "github.com/vitalfit/api/internal/modules/staff/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
@@ -94,4 +95,18 @@ func (s *StaffStore) RemoveStaffFromBranch(ctx context.Context, branchID uuid.UU
 	}
 
 	return nil
+}
+
+func (s *StaffStore) GetStaffBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error) {
+	var branchStaff []staffdomain.BranchStaff
+	err := s.db.WithContext(ctx).
+		Preload("Branch").
+		Where("user_id = ?", userID).
+		Find(&branchStaff).Error
+
+	branches := make([]branchdomain.Branch, 0, len(branchStaff))
+	for _, bs := range branchStaff {
+		branches = append(branches, bs.Branch)
+	}
+	return branches, err
 }

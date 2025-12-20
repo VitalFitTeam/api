@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/pagination"
 )
@@ -27,4 +28,8 @@ func (s *StaffService) ListBranchStaffByRole(ctx context.Context, branchID uuid.
 
 func (s *StaffService) RemoveStaffFromBranch(ctx context.Context, branchID uuid.UUID, staffID uuid.UUID) error {
 	return s.store.Staff.RemoveStaffFromBranch(ctx, branchID, staffID)
+}
+
+func (s *StaffService) GetStaffBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error) {
+	return s.store.Staff.GetStaffBranches(ctx, userID)
 }
