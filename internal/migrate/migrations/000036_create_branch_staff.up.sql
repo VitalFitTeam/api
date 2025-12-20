@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS branch_staff (
     branch_id UUID NOT NULL,
-    user_id UUID NOT NULL,
+    user_id UUID NOT NULL UNIQUE,
     
 
     CONSTRAINT pk_branch_staff PRIMARY KEY (branch_id, user_id),
