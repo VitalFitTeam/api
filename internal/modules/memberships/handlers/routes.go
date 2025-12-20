@@ -45,6 +45,17 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 		clientMembershipsGroup.GET("/:clientMembershipId", m.RBACPermission("members:get"), r.GetClientMembershipByID)
 		clientMembershipsGroup.PUT("/:clientMembershipId", m.RBACPermission("members:update"), r.UpdateClientMembership)
 	}
+
+	// Cancellation Reasons routes
+	// Access: Super Admin exclusive
+	cancellationReasonsGroup := rg.Group("/memberships/cancellation-reasons")
+	{
+		cancellationReasonsGroup.Use(m.AuthJwtTokenMiddleware())
+		cancellationReasonsGroup.POST("", m.RBACPermission("cancellation-reasons:create"), r.CreateCancellationReasonHandler)
+		cancellationReasonsGroup.GET("", m.RBACPermission("cancellation-reasons:list"), r.GetCancellationReasonsHandler)
+		cancellationReasonsGroup.PUT("/:id", m.RBACPermission("cancellation-reasons:update"), r.UpdateCancellationReasonHandler)
+		cancellationReasonsGroup.DELETE("/:id", m.RBACPermission("cancellation-reasons:delete"), r.DeleteCancellationReasonHandler)
+	}
 }
 
 func (r *MembershipHandler) PublicMembershipRoutes(rg *gin.RouterGroup) {

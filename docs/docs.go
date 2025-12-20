@@ -6888,6 +6888,305 @@ const docTemplate = `{
                 }
             }
         },
+        "/memberships/cancellation-reasons": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all cancellation reasons, ordered alphabetically by description.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "List all cancellation reasons",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "asc",
+                        "description": "Sort direction (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of cancellation reasons",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/membershipshandlers.CancellationReasonResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Adds a new standardized cancellation reason for memberships.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Create a new cancellation reason",
+                "parameters": [
+                    {
+                        "description": "Cancellation reason creation payload",
+                        "name": "reason",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/membershipshandlers.CreateCancellationReasonPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Cancellation reason created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/membershipshandlers.CancellationReasonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "error: Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "error: Conflict - Description already exists",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/memberships/cancellation-reasons/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates an existing cancellation reason's description and/or active status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Update a cancellation reason",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cancellation Reason UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Cancellation reason update payload",
+                        "name": "reason",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/membershipshandlers.UpdateCancellationReasonPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cancellation reason updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/membershipshandlers.CancellationReasonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "error: Bad Request - Invalid ID or payload",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "error: Not Found - Cancellation reason not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "error: Conflict - Description already exists",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Soft deletes a cancellation reason by setting the deleted_at timestamp.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Delete a cancellation reason",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Cancellation Reason UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "error: Bad Request - Invalid ID",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "error: Not Found - Cancellation reason not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/packages": {
             "get": {
                 "security": [
@@ -11761,6 +12060,12 @@ const docTemplate = `{
         "membershipsdomain.CancellationReason": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -11769,6 +12074,9 @@ const docTemplate = `{
                 },
                 "reason_id": {
                     "description": "Mapeo a cancellation_reasons",
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -11887,6 +12195,34 @@ const docTemplate = `{
                 }
             }
         },
+        "membershipshandlers.CancellationReasonResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "reason_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "membershipshandlers.CreateCancellationReasonPayload": {
+            "type": "object",
+            "required": [
+                "description"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                }
+            }
+        },
         "membershipshandlers.CreateMembershipPayload": {
             "type": "object",
             "required": [
@@ -11964,6 +12300,17 @@ const docTemplate = `{
                 },
                 "price": {
                     "type": "number"
+                }
+            }
+        },
+        "membershipshandlers.UpdateCancellationReasonPayload": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
                 }
             }
         },

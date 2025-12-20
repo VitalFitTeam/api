@@ -474,3 +474,214 @@ func (h *MembershipHandler) UpdateClientMembership(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Client membership updated successfully"})
 }
+
+// Cancellation Reasons Handlers
+
+// @Summary		Create a new cancellation reason
+// @Description	Adds a new standardized cancellation reason for memberships.
+// @Tags			Memberships
+// @Accept			json
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			reason	body		CreateCancellationReasonPayload	true	"Cancellation reason creation payload"
+// @Success		201		{object}	CancellationReasonResponse		"Cancellation reason created successfully"
+// @Failure		400		{object}	object{error=string}			"error: Bad Request"
+// @Failure		409		{object}	object{error=string}			"error: Conflict - Description already exists"
+// @Failure		500		{object}	object{error=string}			"error: Internal Server Error"
+// @Router			/memberships/cancellation-reasons [post]
+func (h *MembershipHandler) CreateCancellationReasonHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var payload CreateCancellationReasonPayload
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	reason := &membershipsdomain.CancellationReason{
+		Description: payload.Description,
+		IsActive:    payload.IsActive,
+	}
+
+	if err := h.services.MembershipServices.CreateCancellationReason(ctx, reason); err != nil {
+		switch err {
+		case shared_errors.ErrConflict:
+			h.services.LogErrors.ConflictResponse(c, err)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	resp := &CancellationReasonResponse{
+		ReasonID:    reason.ReasonID,
+		Description: reason.Description,
+		IsActive:    reason.IsActive,
+	}
+
+	c.JSON(http.StatusCreated, resp)
+}
+
+// @Summary		List all cancellation reasons
+// @Description	Retrieves all cancellation reasons, ordered alphabetically by description.
+// @Tags			Memberships
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			limit	query		int											false	"Number of results per page"	default(10)
+// @Param			page	query		int											false	"Page number for pagination"	default(1)
+// @Param			sort	query		string										false	"Sort direction (asc/desc)"		enums(asc, desc)	default(asc)
+// @Param			search	query		string										false	"Search term"
+// @Success		200		{object}	object{data=[]CancellationReasonResponse}	"List of cancellation reasons"
+// @Failure		500		{object}	object{error=string}						"error: Internal Server Error"
+// @Router			/memberships/cancellation-reasons [get]
+func (h *MembershipHandler) GetCancellationReasonsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "asc",
+		Search: "",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/memberships/cancellation-reasons?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, fq.Page+1, fq.Sort, fq.Search)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/memberships/cancellation-reasons?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, previousPage, fq.Sort, fq.Search)
+
+	reasons, total, err := h.services.MembershipServices.GetCancellationReasons(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	data := make([]*CancellationReasonResponse, 0, len(reasons))
+	for _, r := range reasons {
+		data = append(data, &CancellationReasonResponse{
+			ReasonID:    r.ReasonID,
+			Description: r.Description,
+			IsActive:    r.IsActive,
+		})
+	}
+
+	resp := pagination.PaginatedResponseTotal[*CancellationReasonResponse]{
+		Data:     data,
+		Count:    int64(len(reasons)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary		Update a cancellation reason
+// @Description	Updates an existing cancellation reason's description and/or active status.
+// @Tags			Memberships
+// @Accept			json
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			id		path		string							true	"Cancellation Reason UUID"
+// @Param			reason	body		UpdateCancellationReasonPayload	true	"Cancellation reason update payload"
+// @Success		200		{object}	CancellationReasonResponse		"Cancellation reason updated successfully"
+// @Failure		400		{object}	object{error=string}			"error: Bad Request - Invalid ID or payload"
+// @Failure		404		{object}	object{error=string}			"error: Not Found - Cancellation reason not found"
+// @Failure		409		{object}	object{error=string}			"error: Conflict - Description already exists"
+// @Failure		500		{object}	object{error=string}			"error: Internal Server Error"
+// @Router			/memberships/cancellation-reasons/{id} [put]
+func (h *MembershipHandler) UpdateCancellationReasonHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var payload UpdateCancellationReasonPayload
+
+	reasonID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	// Get existing reason
+	existingReason, err := h.services.MembershipServices.GetCancellationReasonByID(ctx, reasonID)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	// Update only provided fields
+	if payload.Description != "" {
+		existingReason.Description = payload.Description
+	}
+	if payload.IsActive != nil {
+		existingReason.IsActive = *payload.IsActive
+	}
+
+	if err := h.services.MembershipServices.UpdateCancellationReason(ctx, existingReason); err != nil {
+		switch err {
+		case shared_errors.ErrConflict:
+			h.services.LogErrors.ConflictResponse(c, err)
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	resp := &CancellationReasonResponse{
+		ReasonID:    existingReason.ReasonID,
+		Description: existingReason.Description,
+		IsActive:    existingReason.IsActive,
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary		Delete a cancellation reason
+// @Description	Soft deletes a cancellation reason by setting the deleted_at timestamp.
+// @Tags			Memberships
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Param			id	path		string					true	"Cancellation Reason UUID"
+// @Success		204	{object}	nil						"No Content"
+// @Failure		400	{object}	object{error=string}	"error: Bad Request - Invalid ID"
+// @Failure		404	{object}	object{error=string}	"error: Not Found - Cancellation reason not found"
+// @Failure		500	{object}	object{error=string}	"error: Internal Server Error"
+// @Router			/memberships/cancellation-reasons/{id} [delete]
+func (h *MembershipHandler) DeleteCancellationReasonHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	reasonID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	if err := h.services.MembershipServices.DeleteCancellationReason(ctx, reasonID); err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
