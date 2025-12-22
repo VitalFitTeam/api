@@ -1365,16 +1365,32 @@ func (s *SeedStruct) SeedStaffAssignment(store store.Storage, db *gorm.DB, ctx c
 	successCount := 0
 
 	for _, user := range users {
-		randomBranch := branches[rand.Intn(len(branches))]
-
-		log.Printf("Assigning User: %s to Branch: %s", user.FirstName, randomBranch.Name)
-
-		if err := services.Staff.AssignStaffToBranch(ctx, randomBranch.BranchID, []uuid.UUID{user.UserID}); err != nil {
-			log.Printf("Failed to assign user %s: %v", user.UserID, err)
-			continue
+		numBranches := 1
+		if user.Role.Name != "receptionist" {
+			maxB := 3
+			if len(branches) < maxB {
+				maxB = len(branches)
+			}
+			numBranches = rand.Intn(maxB) + 1
 		}
 
-		successCount++
+		rand.Shuffle(len(branches), func(i, j int) { branches[i], branches[j] = branches[j], branches[i] })
+
+		assigned := false
+		for i := 0; i < numBranches; i++ {
+			targetBranch := branches[i]
+			log.Printf("Assigning User: %s (Role: %s) to Branch: %s", user.FirstName, user.Role.Name, targetBranch.Name)
+
+			if err := services.Staff.AssignStaffToBranch(ctx, targetBranch.BranchID, []uuid.UUID{user.UserID}); err != nil {
+				log.Printf("Failed to assign user %s to branch %s: %v", user.UserID, targetBranch.Name, err)
+			} else {
+				assigned = true
+			}
+		}
+
+		if assigned {
+			successCount++
+		}
 	}
 
 	log.Printf("Staff assignment seeding completed. Successfully assigned: %d/%d users.", successCount, len(users))

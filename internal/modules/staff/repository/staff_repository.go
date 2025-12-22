@@ -110,3 +110,12 @@ func (s *StaffStore) GetStaffBranches(ctx context.Context, userID uuid.UUID) ([]
 	}
 	return branches, err
 }
+
+func (s *StaffStore) GetUsersByIds(ctx context.Context, userIDs []uuid.UUID) ([]authdomain.Users, error) {
+	var users []authdomain.Users
+	err := s.db.WithContext(ctx).
+		Preload("Role").
+		Where("user_id IN ?", userIDs).
+		Find(&users).Error
+	return users, err
+}
