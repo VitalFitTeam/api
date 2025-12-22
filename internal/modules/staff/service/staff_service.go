@@ -57,3 +57,7 @@ func (s *StaffService) RemoveStaffFromBranch(ctx context.Context, branchID uuid.
 func (s *StaffService) GetStaffBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error) {
 	return s.store.Staff.GetStaffBranches(ctx, userID)
 }
+
+func (s *StaffService) GetManagedBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error) {
+	return s.store.Staff.GetManagedBranches(ctx, userID)
+}

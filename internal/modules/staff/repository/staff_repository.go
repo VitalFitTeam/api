@@ -119,3 +119,11 @@ func (s *StaffStore) GetUsersByIds(ctx context.Context, userIDs []uuid.UUID) ([]
 		Find(&users).Error
 	return users, err
 }
+
+func (s *StaffStore) GetManagedBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error) {
+	var branches []branchdomain.Branch
+	err := s.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Find(&branches).Error
+	return branches, err
+}

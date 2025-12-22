@@ -14,4 +14,5 @@ type StaffServiceInterface interface {
 	ListBranchStaffByRole(ctx context.Context, branchID uuid.UUID, roleID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]authdomain.Users, error)
 	RemoveStaffFromBranch(ctx context.Context, branchID uuid.UUID, staffID uuid.UUID) error
 	GetStaffBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error)
+	GetManagedBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error)
 }
