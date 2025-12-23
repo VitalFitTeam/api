@@ -111,11 +111,18 @@ func (bs *Billingstore) GetClientIvoices(ctx context.Context, userID uuid.UUID, 
 	return invoices, total, nil
 }
 
-func (bs *Billingstore) GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*billingdomain.Invoice, int64, error) {
+func (bs *Billingstore) GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery, branchIDs []uuid.UUID) ([]*billingdomain.Invoice, int64, error) {
 	var invoices []*billingdomain.Invoice
 	var total int64
 
 	query := bs.db.WithContext(ctx).Model(&billingdomain.Invoice{})
+
+	if branchIDs != nil {
+		if len(branchIDs) == 0 {
+			return []*billingdomain.Invoice{}, 0, nil
+		}
+		query = query.Where("branch_id IN ?", branchIDs)
+	}
 
 	if fq.Search != "" {
 		query = query.Joins("User")

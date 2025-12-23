@@ -3263,6 +3263,10 @@ paths:
         in: query
         name: status
         type: string
+      - description: Filter by branch UUID
+        in: query
+        name: branch_id
+        type: string
       produces:
       - application/json
       responses:

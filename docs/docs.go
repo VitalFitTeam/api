@@ -1601,6 +1601,12 @@ const docTemplate = `{
                         "description": "Filter by invoice status",
                         "name": "status",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
