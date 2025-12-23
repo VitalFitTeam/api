@@ -24,6 +24,7 @@ type ProductsRepository interface {
 	GetServiceByID(ctx context.Context, serviceID uuid.UUID) (*Service, error)
 	UpdateService(ctx context.Context, service *Service, bannerID uuid.UUID) error
 	GetAllServices(ctx context.Context) ([]Service, error)
+	GetServiceImagesAndBanners(ctx context.Context, serviceID uuid.UUID) (*Service, error)
 
 	AssignBranchService(ctx context.Context, branchServices []*ServiceBranchDetail) error
 	GetBranchService(ctx context.Context, branchID uuid.UUID) ([]*ServiceBranchDetail, error)
@@ -33,8 +34,8 @@ type ProductsRepository interface {
 	GetBranchServiceByID(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) (*ServiceBranchDetail, error)
 	GetBranchServiceByName(ctx context.Context, branchID uuid.UUID, serviceName string) (*ServiceBranchDetail, error)
 
-	GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
-	GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]ServiceWithPrice, int64, error)
+	GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*ServiceWithPrice, int64, error)
+	GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*ServiceWithPrice, int64, error)
 
 	ClientServiceBalance(ctx context.Context, clientBalance *ClientServiceBalance) error
 	GetClientBalance(ctx context.Context, userID uuid.UUID, serviceID uuid.UUID) (*ClientServiceBalance, error)
