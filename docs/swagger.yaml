@@ -2189,6 +2189,13 @@ definitions:
     required:
     - staff_ids
     type: object
+  staffhandlers.BranchResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   staffhandlers.BranchStaffResponse:
     properties:
       email:
@@ -8246,6 +8253,58 @@ paths:
       summary: Get a summary of services
       tags:
       - Services
+  /staff/branches:
+    get:
+      description: Retrieves a list of branches where the current staff member is
+        assigned.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/staffhandlers.BranchResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get staff assigned branches
+      tags:
+      - Staff
+  /staff/managed-branches:
+    get:
+      description: Retrieves a list of branches managed by the current staff member
+        (branch_admin).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/staffhandlers.BranchResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get managed branches
+      tags:
+      - Staff
   /user/{id}:
     delete:
       description: Deletes a user from the system. Requires appropriate permissions.

@@ -47,6 +47,35 @@ func (h *StaffHandlers) AssignStaffToBranchHandler(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
+// @Summary		Get managed branches
+// @Description	Retrieves a list of branches managed by the current staff member (branch_admin).
+// @Tags			Staff
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=[]BranchResponse}
+// @Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/staff/managed-branches [get]
+func (h *StaffHandlers) GetManagedBranchesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	branches, err := h.services.Staff.GetManagedBranches(ctx, user.UserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	response := make([]BranchResponse, 0, len(branches))
+	for _, b := range branches {
+		response = append(response, BranchResponse{
+			ID:   b.BranchID,
+			Name: b.Name,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": response})
+}
+
 // @Summary		List staff in a branch
 // @Description	Retrieves a list of staff members assigned to a specific branch, optionally filtered by role.
 // @Tags			Branch Staff
@@ -103,6 +132,35 @@ func (h *StaffHandlers) ListBranchStaffByRoleHandler(c *gin.Context) {
 			Role:      user.Role.Name,
 		}
 		response = append(response, s)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": response})
+}
+
+// @Summary		Get staff assigned branches
+// @Description	Retrieves a list of branches where the current staff member is assigned.
+// @Tags			Staff
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=[]BranchResponse}
+// @Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/staff/branches [get]
+func (h *StaffHandlers) GetStaffBranchesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	branches, err := h.services.Staff.GetStaffBranches(ctx, user.UserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	response := make([]BranchResponse, 0, len(branches))
+	for _, b := range branches {
+		response = append(response, BranchResponse{
+			ID:   b.BranchID,
+			Name: b.Name,
+		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": response})

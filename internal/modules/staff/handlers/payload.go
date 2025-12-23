@@ -28,3 +28,8 @@ type BranchStaffResponse struct {
 	Phone     string    `json:"phone"`
 	Role      string    `json:"role"`
 }
+
+type BranchResponse struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}

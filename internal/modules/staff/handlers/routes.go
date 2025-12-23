@@ -11,6 +11,8 @@ type StaffHandlersInterface interface {
 	AssignStaffToBranchHandler(c *gin.Context)
 	ListBranchStaffByRoleHandler(c *gin.Context)
 	RemoveStaffFromBranchHandler(c *gin.Context)
+	GetManagedBranchesHandler(c *gin.Context)
+	GetStaffBranchesHandler(c *gin.Context)
 }
 
 type StaffHandlers struct {
@@ -28,5 +30,12 @@ func (h *StaffHandlers) StaffRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 		staffRoutes.POST("", m.RBACPermission("users:update"), h.AssignStaffToBranchHandler)
 		staffRoutes.GET("", m.RBACPermission("users:list"), h.ListBranchStaffByRoleHandler)
 		staffRoutes.DELETE("/:staffId", m.RBACPermission("users:update"), h.RemoveStaffFromBranchHandler)
+	}
+
+	staffMemberRoutes := rg.Group("/staff")
+	{
+		staffMemberRoutes.Use(m.AuthJwtTokenMiddleware())
+		staffMemberRoutes.GET("/managed-branches", h.GetManagedBranchesHandler)
+		staffMemberRoutes.GET("/branches", h.GetStaffBranchesHandler)
 	}
 }
