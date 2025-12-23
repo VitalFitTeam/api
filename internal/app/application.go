@@ -100,6 +100,9 @@ func (app *application) Mount() http.Handler {
 		//reports
 		app.Handlers.ReportHandlers.ReportRoutes(v1, m)
 
+		//staff
+		app.Handlers.StaffHandlers.StaffRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}

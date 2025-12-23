@@ -420,6 +420,28 @@ func (h *ProductsHandler) PublicGetServicesHandler(c *gin.Context) {
 
 	data := make([]PublicServiceResponse, 0, len(services))
 	for _, service := range services {
+		images := make([]ImagesRensponse, len(service.Service.Images))
+		for i, img := range service.Service.Images {
+			images[i] = ImagesRensponse{
+				ImageID:      img.ImageID,
+				ImageURL:     img.ImageURL,
+				AltText:      img.AltText,
+				DisplayOrder: img.DisplayOrder,
+				IsPrimary:    img.IsPrimary,
+			}
+		}
+
+		banners := make([]marketinghandlers.BannerResponse, len(service.Service.Banners))
+		for i, b := range service.Service.Banners {
+			banners[i] = marketinghandlers.BannerResponse{
+				BannerID: b.BannerID,
+				Name:     b.Name,
+				ImageURL: b.ImageURL,
+				LinkURL:  b.LinkURL,
+				IsActive: b.IsActive,
+			}
+		}
+
 		data = append(data, PublicServiceResponse{
 			ServiceID:       service.Service.ServiceID,
 			CategoryID:      service.Service.CategoryID,
@@ -434,8 +456,8 @@ func (h *ProductsHandler) PublicGetServicesHandler(c *gin.Context) {
 				CategoryID: service.Service.Category.CategoryID,
 				Name:       service.Service.Category.Name,
 			},
-			Images:                  make([]ImagesRensponse, 0, len(service.Service.Images)),
-			Banners:                 make([]marketinghandlers.BannerResponse, 0, len(service.Service.Banners)),
+			Images:                  images,
+			Banners:                 banners,
 			LowestPriceMember:       service.LowestPriceMember,
 			LowestPriceNoMember:     service.LowestPriceNonMember,
 			BaseCurrency:            "USD",
@@ -516,6 +538,28 @@ func (h *ProductsHandler) PublicGetBranchServicesHandler(c *gin.Context) {
 
 	data := make([]PublicServiceResponse, 0, len(services))
 	for _, service := range services {
+		images := make([]ImagesRensponse, len(service.Service.Images))
+		for i, img := range service.Service.Images {
+			images[i] = ImagesRensponse{
+				ImageID:      img.ImageID,
+				ImageURL:     img.ImageURL,
+				AltText:      img.AltText,
+				DisplayOrder: img.DisplayOrder,
+				IsPrimary:    img.IsPrimary,
+			}
+		}
+
+		banners := make([]marketinghandlers.BannerResponse, len(service.Service.Banners))
+		for i, b := range service.Service.Banners {
+			banners[i] = marketinghandlers.BannerResponse{
+				BannerID: b.BannerID,
+				Name:     b.Name,
+				ImageURL: b.ImageURL,
+				LinkURL:  b.LinkURL,
+				IsActive: b.IsActive,
+			}
+		}
+
 		data = append(data, PublicServiceResponse{
 			ServiceID:       service.Service.ServiceID,
 			CategoryID:      service.Service.CategoryID,
@@ -530,8 +574,8 @@ func (h *ProductsHandler) PublicGetBranchServicesHandler(c *gin.Context) {
 				CategoryID: service.Service.Category.CategoryID,
 				Name:       service.Service.Category.Name,
 			},
-			Images:                  make([]ImagesRensponse, 0, len(service.Service.Images)),
-			Banners:                 make([]marketinghandlers.BannerResponse, 0, len(service.Service.Banners)),
+			Images:                  images,
+			Banners:                 banners,
 			LowestPriceMember:       service.LowestPriceMember,
 			LowestPriceNoMember:     service.LowestPriceNonMember,
 			BaseCurrency:            "USD",

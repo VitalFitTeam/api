@@ -15,4 +15,5 @@ type BookingServiceInterface interface {
 	GetClientBookings(ctx context.Context, userID uuid.UUID) ([]BookingWithClassInfo, error)
 	GetClientActualBook(ctx context.Context, userID, branchID uuid.UUID, startsAt time.Time, endsAt time.Time) (*Booking, error)
 	CanAccessService(ctx context.Context, userID, branchID, serviceID uuid.UUID) (bool, error)
+	CountBookingsForClass(ctx context.Context, classID uuid.UUID) (int64, error)
 }

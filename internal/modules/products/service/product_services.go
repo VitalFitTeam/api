@@ -50,10 +50,38 @@ func (s *ProductsService) UpdateService(ctx context.Context, service *productsdo
 	return s.store.Products.UpdateService(ctx, service, bannerID)
 }
 
-func (s *ProductsService) GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]productsdomain.ServiceWithPrice, int64, error) {
-	return s.store.Products.GetPublicServices(ctx, fq)
+func (s *ProductsService) GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*productsdomain.ServiceWithPrice, int64, error) {
+	services, total, err := s.store.Products.GetPublicServices(ctx, fq)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := range services {
+		details, err := s.store.Products.GetServiceImagesAndBanners(ctx, services[i].ServiceID)
+		if err == nil {
+			services[i].Images = details.Images
+			services[i].Banners = details.Banners
+		}
+	}
+	return services, total, nil
 }
 
-func (s *ProductsService) GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]productsdomain.ServiceWithPrice, int64, error) {
-	return s.store.Products.GetPublicBranchServices(ctx, branchID, fq)
+func (s *ProductsService) GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*productsdomain.ServiceWithPrice, int64, error) {
+	services, total, err := s.store.Products.GetPublicBranchServices(ctx, branchID, fq)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := range services {
+		details, err := s.store.Products.GetServiceImagesAndBanners(ctx, services[i].ServiceID)
+		if err == nil {
+			services[i].Images = details.Images
+			services[i].Banners = details.Banners
+		}
+	}
+	return services, total, nil
+}
+
+func (s *ProductsService) GetServiceImagesAndBanners(ctx context.Context, serviceID uuid.UUID) (*productsdomain.Service, error) {
+	return s.store.Products.GetServiceImagesAndBanners(ctx, serviceID)
 }

@@ -496,6 +496,6 @@ func (bs *BillingService) GetClientIvoices(ctx context.Context, userID uuid.UUID
 	return invoices, total, nil
 }
 
-func (bs *BillingService) GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*billingdomain.Invoice, int64, error) {
-	return bs.store.Billing.GetInvoices(ctx, fq)
+func (bs *BillingService) GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery, branchIDs []uuid.UUID) ([]*billingdomain.Invoice, int64, error) {
+	return bs.store.Billing.GetInvoices(ctx, fq, branchIDs)
 }
