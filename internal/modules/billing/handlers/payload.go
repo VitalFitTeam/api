@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -93,8 +94,7 @@ func (h *BillingHandlers) validateBranchConfig(payloadConfig json.RawMessage, me
 
 	case billingdomain.PaymentMethodTransfer:
 
-		switch method.Name {
-		case "Zelle":
+		if strings.Contains(method.Name, "Zelle") {
 			var zelleConfig ZelleConfig
 			if err := json.Unmarshal(payloadConfig, &zelleConfig); err != nil {
 				return errors.New("invalid configuration json for Zelle")
@@ -103,7 +103,7 @@ func (h *BillingHandlers) validateBranchConfig(payloadConfig json.RawMessage, me
 				return err
 			}
 
-		case "Bank Transfer":
+		} else if strings.Contains(method.Name, "Bank Transfer") {
 			var bankTransferConfig BankTransferConfig
 			if err := json.Unmarshal(payloadConfig, &bankTransferConfig); err != nil {
 				return errors.New("invalid configuration json for Bank Transfer")
@@ -112,7 +112,7 @@ func (h *BillingHandlers) validateBranchConfig(payloadConfig json.RawMessage, me
 				return err
 			}
 
-		case "Pago Movil":
+		} else if strings.Contains(method.Name, "Pago Movil") {
 			var pagoMovilConfig PagoMovilConfig
 			if err := json.Unmarshal(payloadConfig, &pagoMovilConfig); err != nil {
 				return errors.New("invalid configuration json for Pago Móvil")
@@ -121,7 +121,7 @@ func (h *BillingHandlers) validateBranchConfig(payloadConfig json.RawMessage, me
 				return err
 			}
 
-		default:
+		} else {
 			return errors.New("configuration not supported for this transfer method")
 		}
 
