@@ -32,6 +32,10 @@ func (s *ReportService) GetMonthlySalesKPI(ctx context.Context, branchID *uuid.U
 	return s.store.Reports.GetMonthlySalesKPI(ctx, branchID)
 }
 
+func (s *ReportService) GetActiveMembersKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetActiveMembersKPI(ctx, branchID)
+}
+
 func (s *ReportService) GetTopBranchesPerformance(ctx context.Context) ([]reportdomain.BranchPerformance, error) {
 	return s.store.Reports.GetTopBranchesPerformance(ctx)
 }

@@ -185,6 +185,51 @@ func (rs *ReportStore) GetMonthlySalesKPI(ctx context.Context, branchID *uuid.UU
 	}, nil
 }
 
+func (rs *ReportStore) GetActiveMembersKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	thirtyDaysAgo := now.AddDate(0, 0, -30)
+	sixtyDaysAgo := now.AddDate(0, 0, -60)
+
+	var currentCount, prevCount int64
+
+	// Helper function to build query
+	buildQuery := func(start, end time.Time) *gorm.DB {
+		query := rs.db.WithContext(ctx).Table("attendance_log al").
+			Where("al.check_in_time >= ? AND al.check_in_time <= ?", start, end)
+
+		if branchID != nil {
+			query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
+				Where("c.branch_id = ?", *branchID)
+		}
+		return query
+	}
+
+	// Current Value: Attendance in last 30 days
+	if err := buildQuery(thirtyDaysAgo, now).Distinct("al.user_id").Count(&currentCount).Error; err != nil {
+		return nil, err
+	}
+
+	// Previous Value: Attendance in previous 30 days window
+	if err := buildQuery(sixtyDaysAgo, thirtyDaysAgo).Distinct("al.user_id").Count(&prevCount).Error; err != nil {
+		return nil, err
+	}
+
+	percentageChange := 0.0
+	if prevCount > 0 {
+		percentageChange = float64(currentCount-prevCount) / float64(prevCount) * 100
+	} else if currentCount > 0 {
+		percentageChange = 100.0
+	}
+
+	return &reportdomain.KPICard{
+		Title:        "Active Members",
+		Value:        decimal.NewFromInt(currentCount),
+		TrendPercent: percentageChange,
+		TrendLabel:   "vs. the previous 30 days",
+		IsPositive:   percentageChange >= 0,
+	}, nil
+}
+
 func (rs *ReportStore) GetTopBranchesPerformance(ctx context.Context) ([]reportdomain.BranchPerformance, error) {
 	now := time.Now()
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
