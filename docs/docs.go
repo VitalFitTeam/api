@@ -8386,6 +8386,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/kpi/monthly-sales": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves total accumulated sales for the current month and the trend vs previous month.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Branch"
+                ],
+                "summary": "Get Monthly Sales KPI",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Monthly sales KPI",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.KPICard"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/stats/global": {
             "get": {
                 "security": [
@@ -13241,6 +13290,29 @@ const docTemplate = `{
                 },
                 "trend": {
                     "type": "string"
+                }
+            }
+        },
+        "reportdomain.KPICard": {
+            "type": "object",
+            "properties": {
+                "is_positive": {
+                    "type": "boolean"
+                },
+                "target": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "trend_label": {
+                    "type": "string"
+                },
+                "trend_percent": {
+                    "type": "number"
+                },
+                "value": {
+                    "type": "number"
                 }
             }
         },

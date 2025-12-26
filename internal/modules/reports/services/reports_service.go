@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	"github.com/vitalfit/api/internal/store"
 )
@@ -25,6 +26,10 @@ func (s *ReportService) GetGlobalSalesStats(ctx context.Context) (*reportdomain.
 
 func (s *ReportService) GetTotalSales(ctx context.Context) (*reportdomain.TotalSalesStats, error) {
 	return s.store.Reports.GetTotalSales(ctx)
+}
+
+func (s *ReportService) GetMonthlySalesKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetMonthlySalesKPI(ctx, branchID)
 }
 
 func (s *ReportService) GetTopBranchesPerformance(ctx context.Context) ([]reportdomain.BranchPerformance, error) {

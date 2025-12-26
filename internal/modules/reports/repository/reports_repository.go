@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
@@ -131,6 +132,56 @@ func (rs *ReportStore) GetTotalSales(ctx context.Context) (*reportdomain.TotalSa
 		TotalSales:       totalLifetime,
 		PercentageChange: percentageChange,
 		Trend:            trend,
+	}, nil
+}
+
+func (rs *ReportStore) GetMonthlySalesKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	var currentTotal, prevTotal decimal.Decimal
+	validStatus := billingdomain.InvoiceStatusPaid
+
+	// Query Current Month
+	queryCurrent := rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+		Where("issue_date >= ? AND status = ?", currentMonthStart, validStatus)
+
+	if branchID != nil {
+		queryCurrent = queryCurrent.Where("branch_id = ?", *branchID)
+	}
+
+	if err := queryCurrent.Select("COALESCE(SUM(total_amount), 0)").Scan(&currentTotal).Error; err != nil {
+		return nil, err
+	}
+
+	// Query Previous Month
+	queryPrev := rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+		Where("issue_date >= ? AND issue_date < ? AND status = ?", prevMonthStart, currentMonthStart, validStatus)
+
+	if branchID != nil {
+		queryPrev = queryPrev.Where("branch_id = ?", *branchID)
+	}
+
+	if err := queryPrev.Select("COALESCE(SUM(total_amount), 0)").Scan(&prevTotal).Error; err != nil {
+		return nil, err
+	}
+
+	// Calculate Variation
+	percentageChange := 0.0
+	if !prevTotal.IsZero() {
+		diff := currentTotal.Sub(prevTotal)
+		percentageChange, _ = diff.Div(prevTotal).Mul(decimal.NewFromInt(100)).Float64()
+	} else if !currentTotal.IsZero() {
+		percentageChange = 100.0
+	}
+
+	return &reportdomain.KPICard{
+		Title:        "Total Sales (Month)",
+		Value:        currentTotal,
+		TrendPercent: percentageChange,
+		TrendLabel:   "vs previous month",
+		IsPositive:   percentageChange >= 0,
 	}, nil
 }
 

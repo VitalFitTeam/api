@@ -28,3 +28,12 @@ type ChartData struct {
 	Value decimal.Decimal `json:"value"`
 	Hour  int             `json:"hour,omitempty"`
 }
+
+type KPICard struct {
+	Title        string          `json:"title"`
+	Value        decimal.Decimal `json:"value"`
+	TrendPercent float64         `json:"trend_percent"`
+	TrendLabel   string          `json:"trend_label"`
+	IsPositive   bool            `json:"is_positive"`
+	Target       decimal.Decimal `json:"target,omitempty"`
+}

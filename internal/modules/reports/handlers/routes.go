@@ -9,6 +9,7 @@ import (
 type ReportHandlersInterface interface {
 	ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	GetGlobalSalesStatsHandler(c *gin.Context)
+	GetMonthlySalesKPIHandler(c *gin.Context)
 	GetTotalSalesHandler(c *gin.Context)
 	GetTopBranchesPerformanceHandler(c *gin.Context)
 	GetTotalClientsStatHandler(c *gin.Context)
@@ -40,6 +41,9 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 	statsGroup.GET("/top-branches", r.GetTopBranchesPerformanceHandler)
 	statsGroup.GET("/total-clients", r.GetTotalClientsStatHandler)
 	statsGroup.GET("/total-active-branches", r.GetActiveBranchesCountHandler)
+
+	kpiGroup := billingGroup.Group("/kpi")
+	kpiGroup.GET("/monthly-sales", r.GetMonthlySalesKPIHandler)
 
 	chartsGroup := billingGroup.Group("/charts")
 	chartsGroup.GET("/sales-by-category", r.GetSalesByCategoryHandler)

@@ -3,11 +3,14 @@ package reportdomain
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ReportRepository interface {
 	GetGlobalSalesStats(ctx context.Context) (*GlobalSalesStats, error)
 	GetTotalSales(ctx context.Context) (*TotalSalesStats, error)
+	GetMonthlySalesKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetTopBranchesPerformance(ctx context.Context) ([]BranchPerformance, error)
 	GetTotalClientsStat(ctx context.Context) (int64, error)
 	GetActiveBranchesCount(ctx context.Context) (int64, error)
