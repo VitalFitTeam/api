@@ -25,4 +25,5 @@ type ReportServiceInterface interface {
 	GetActivityHeatmap(ctx context.Context, branchID *uuid.UUID) ([]HeatmapPoint, error)
 	GetClassOccupancyChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 	GetFinancialSummary(ctx context.Context, branchID *uuid.UUID) (*FinancialSummary, error)
+	GetTodayCheckInsStat(ctx context.Context, branchID *uuid.UUID) (int64, error)
 }

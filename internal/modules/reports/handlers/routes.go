@@ -14,6 +14,7 @@ type ReportHandlersInterface interface {
 	GetOccupancyKPIHandler(c *gin.Context)
 	GetTotalSalesHandler(c *gin.Context)
 	GetFinancialSummaryHandler(c *gin.Context)
+	GetTodayCheckInsStatHandler(c *gin.Context)
 	GetTopBranchesPerformanceHandler(c *gin.Context)
 	GetTotalClientsStatHandler(c *gin.Context)
 	GetActiveBranchesCountHandler(c *gin.Context)
@@ -47,6 +48,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 	statsGroup.GET("/top-branches", r.GetTopBranchesPerformanceHandler)
 	statsGroup.GET("/total-clients", r.GetTotalClientsStatHandler)
 	statsGroup.GET("/total-active-branches", r.GetActiveBranchesCountHandler)
+	statsGroup.GET("/check-ins-today", r.GetTodayCheckInsStatHandler)
 
 	kpiGroup := billingGroup.Group("/kpi")
 	kpiGroup.GET("/monthly-sales", r.GetMonthlySalesKPIHandler)

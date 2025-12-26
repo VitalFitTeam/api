@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // @Summary		Get Global Sales Stats
@@ -92,6 +93,32 @@ func (h *ReportHanlders) GetTotalClientsStatHandler(c *gin.Context) {
 func (h *ReportHanlders) GetActiveBranchesCountHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	count, err := h.services.ReportServices.GetActiveBranchesCount(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": count})
+}
+
+// @Summary		Get Today's Check-Ins
+// @Description	Retrieves the count of check-ins for the current day.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string					false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=int64}		"Count of check-ins"
+// @Failure		500			{object}	object{error=string}	"Internal Server Error"
+// @Router			/reports/stats/check-ins-today [get]
+func (h *ReportHanlders) GetTodayCheckInsStatHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+	count, err := h.services.ReportServices.GetTodayCheckInsStat(ctx, branchID)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return

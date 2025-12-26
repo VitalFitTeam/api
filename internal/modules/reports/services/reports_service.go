@@ -87,3 +87,7 @@ func (s *ReportService) GetClassOccupancyChart(ctx context.Context, branchID *uu
 func (s *ReportService) GetFinancialSummary(ctx context.Context, branchID *uuid.UUID) (*reportdomain.FinancialSummary, error) {
 	return s.store.Reports.GetFinancialSummary(ctx, branchID)
 }
+
+func (s *ReportService) GetTodayCheckInsStat(ctx context.Context, branchID *uuid.UUID) (int64, error) {
+	return s.store.Reports.GetTodayCheckInsStat(ctx, branchID)
+}

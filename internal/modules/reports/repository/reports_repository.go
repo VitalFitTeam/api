@@ -681,3 +681,21 @@ func (rs *ReportStore) GetFinancialSummary(ctx context.Context, branchID *uuid.U
 
 	return &reportdomain.FinancialSummary{Items: items, Total: total}, nil
 }
+
+func (rs *ReportStore) GetTodayCheckInsStat(ctx context.Context, branchID *uuid.UUID) (int64, error) {
+	var count int64
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfDay := startOfDay.AddDate(0, 0, 1).Add(-time.Nanosecond)
+
+	query := rs.db.WithContext(ctx).Table("attendance_log al").
+		Where("al.check_in_time >= ? AND al.check_in_time <= ?", startOfDay, endOfDay)
+
+	if branchID != nil {
+		query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
+			Where("c.branch_id = ?", *branchID)
+	}
+
+	err := query.Count(&count).Error
+	return count, err
+}
