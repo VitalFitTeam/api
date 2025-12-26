@@ -37,3 +37,9 @@ type KPICard struct {
 	IsPositive   bool            `json:"is_positive"`
 	Target       decimal.Decimal `json:"target,omitempty"`
 }
+
+type HeatmapPoint struct {
+	DayOfWeek int   `json:"day_of_week"` // 1=Monday, 7=Sunday
+	Hour      int   `json:"hour"`        // Start hour of the bucket (0, 3, 6...)
+	Value     int64 `json:"value"`
+}

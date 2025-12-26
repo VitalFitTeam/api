@@ -75,3 +75,7 @@ func (s *ReportService) GetMostUsedServices(ctx context.Context, start, end time
 func (s *ReportService) GetWeeklySalesChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
 	return s.store.Reports.GetWeeklySalesChart(ctx, branchID)
 }
+
+func (s *ReportService) GetActivityHeatmap(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.HeatmapPoint, error) {
+	return s.store.Reports.GetActivityHeatmap(ctx, branchID)
+}

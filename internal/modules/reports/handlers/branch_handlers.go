@@ -114,3 +114,30 @@ func (h *ReportHanlders) GetWeeklySalesChartHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": data})
 }
+
+// @Summary		Get Activity Heatmap
+// @Description	Retrieves attendance density grouped by day of week and 3-hour blocks (last 30 days).
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string										false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=[]reportdomain.HeatmapPoint}	"Heatmap data"
+// @Failure		500			{object}	object{error=string}						"Internal Server Error"
+// @Router			/reports/charts/activity-heatmap [get]
+func (h *ReportHanlders) GetActivityHeatmapHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	data, err := h.services.ReportServices.GetActivityHeatmap(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}

@@ -8102,6 +8102,58 @@
                 }
             }
         },
+        "/reports/charts/activity-heatmap": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves attendance density grouped by day of week and 3-hour blocks (last 30 days).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Activity Heatmap",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Heatmap data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.HeatmapPoint"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/charts/most-used-services": {
             "get": {
                 "security": [
@@ -13432,6 +13484,22 @@
                 },
                 "trend": {
                     "type": "string"
+                }
+            }
+        },
+        "reportdomain.HeatmapPoint": {
+            "type": "object",
+            "properties": {
+                "day_of_week": {
+                    "description": "1=Monday, 7=Sunday",
+                    "type": "integer"
+                },
+                "hour": {
+                    "description": "Start hour of the bucket (0, 3, 6...)",
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "integer"
                 }
             }
         },

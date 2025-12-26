@@ -2093,6 +2093,17 @@ definitions:
       trend:
         type: string
     type: object
+  reportdomain.HeatmapPoint:
+    properties:
+      day_of_week:
+        description: 1=Monday, 7=Sunday
+        type: integer
+      hour:
+        description: Start hour of the bucket (0, 3, 6...)
+        type: integer
+      value:
+        type: integer
+    type: object
   reportdomain.KPICard:
     properties:
       is_positive:
@@ -7525,6 +7536,39 @@ paths:
       summary: List all public services
       tags:
       - Public
+  /reports/charts/activity-heatmap:
+    get:
+      description: Retrieves attendance density grouped by day of week and 3-hour
+        blocks (last 30 days).
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Heatmap data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.HeatmapPoint'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Activity Heatmap
+      tags:
+      - Reports
   /reports/charts/most-used-services:
     get:
       description: Retrieves the top 5 most used services based on attendance.

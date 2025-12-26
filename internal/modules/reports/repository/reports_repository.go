@@ -583,3 +583,23 @@ func (rs *ReportStore) GetWeeklySalesChart(ctx context.Context, branchID *uuid.U
 
 	return chartData, nil
 }
+
+func (rs *ReportStore) GetActivityHeatmap(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.HeatmapPoint, error) {
+	var results []reportdomain.HeatmapPoint
+
+	start := time.Now().AddDate(0, 0, -30)
+
+	query := rs.db.WithContext(ctx).Table("attendance_log al").
+		Select("EXTRACT(ISODOW FROM al.check_in_time) as day_of_week, FLOOR(EXTRACT(HOUR FROM al.check_in_time) / 3) * 3 as hour, COUNT(*) as value").
+		Where("al.check_in_time >= ?", start)
+
+	if branchID != nil {
+		query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
+			Where("c.branch_id = ?", *branchID)
+	}
+
+	if err := query.Group("day_of_week, hour").Scan(&results).Error; err != nil {
+		return nil, err
+	}
+	return results, nil
+}
