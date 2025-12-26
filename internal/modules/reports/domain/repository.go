@@ -35,4 +35,5 @@ type ReportRepository interface {
 	GetInstructorIDByUserID(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error)
 	GetInstructorStudentCountKPI(ctx context.Context, instructorID uuid.UUID) (*KPICard, error)
 	GetInstructorMonthlyClassesCount(ctx context.Context, instructorID uuid.UUID) (*KPICard, error)
+	GetInstructorClassesToday(ctx context.Context, instructorID uuid.UUID) ([]ClassScheduleItem, error)
 }

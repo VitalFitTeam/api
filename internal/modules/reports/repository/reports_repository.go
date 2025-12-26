@@ -924,3 +924,21 @@ func (rs *ReportStore) GetInstructorMonthlyClassesCount(ctx context.Context, ins
 		IsPositive:   percentageChange >= 0,
 	}, nil
 }
+
+func (rs *ReportStore) GetInstructorClassesToday(ctx context.Context, instructorID uuid.UUID) ([]reportdomain.ClassScheduleItem, error) {
+	var results []reportdomain.ClassScheduleItem
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfDay := startOfDay.AddDate(0, 0, 1).Add(-time.Nanosecond)
+
+	query := rs.db.WithContext(ctx).Table("classes c").
+		Select("c.class_id, s.name as class_name, u.first_name || ' ' || u.last_name as instructor_name, c.starts_at as start_time, c.ends_at as end_time, c.max_capacity").
+		Joins("JOIN services s ON s.service_id = c.service_id").
+		Joins("JOIN instructors i ON i.instructor_id = c.instructor_id").
+		Joins("JOIN users u ON u.user_id = i.user_id").
+		Where("c.instructor_id = ?", instructorID).
+		Where("c.starts_at >= ? AND c.starts_at <= ?", startOfDay, endOfDay)
+
+	err := query.Order("c.starts_at ASC").Scan(&results).Error
+	return results, err
+}

@@ -8586,6 +8586,61 @@
                 }
             }
         },
+        "/reports/instructors/classes-today": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all classes assigned to the instructor for the current day, regardless of whether they have already happened.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Instructor"
+                ],
+                "summary": "Get Instructor Classes Today",
+                "responses": {
+                    "200": {
+                        "description": "List of classes today",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.ClassScheduleItem"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/instructors/next-class": {
             "get": {
                 "security": [
