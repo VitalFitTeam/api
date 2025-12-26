@@ -8484,6 +8484,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/kpi/occupancy": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the average daily occupancy percentage for the current month compared to max capacity.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Branch"
+                ],
+                "summary": "Get Occupancy KPI",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Occupancy KPI",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.KPICard"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/stats/global": {
             "get": {
                 "security": [

@@ -12,6 +12,7 @@ type ReportRepository interface {
 	GetTotalSales(ctx context.Context) (*TotalSalesStats, error)
 	GetMonthlySalesKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetActiveMembersKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetOccupancyKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetTopBranchesPerformance(ctx context.Context) ([]BranchPerformance, error)
 	GetTotalClientsStat(ctx context.Context) (int64, error)
 	GetActiveBranchesCount(ctx context.Context) (int64, error)

@@ -7760,6 +7760,37 @@ paths:
       summary: Get Monthly Sales KPI
       tags:
       - Reports Branch
+  /reports/kpi/occupancy:
+    get:
+      description: Retrieves the average daily occupancy percentage for the current
+        month compared to max capacity.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Occupancy KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Occupancy KPI
+      tags:
+      - Reports Branch
   /reports/stats/global:
     get:
       description: Retrieves global sales statistics, comparing the current month's

@@ -36,6 +36,10 @@ func (s *ReportService) GetActiveMembersKPI(ctx context.Context, branchID *uuid.
 	return s.store.Reports.GetActiveMembersKPI(ctx, branchID)
 }
 
+func (s *ReportService) GetOccupancyKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetOccupancyKPI(ctx, branchID)
+}
+
 func (s *ReportService) GetTopBranchesPerformance(ctx context.Context) ([]reportdomain.BranchPerformance, error) {
 	return s.store.Reports.GetTopBranchesPerformance(ctx)
 }

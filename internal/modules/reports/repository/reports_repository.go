@@ -192,7 +192,6 @@ func (rs *ReportStore) GetActiveMembersKPI(ctx context.Context, branchID *uuid.U
 
 	var currentCount, prevCount int64
 
-	// Helper function to build query
 	buildQuery := func(start, end time.Time) *gorm.DB {
 		query := rs.db.WithContext(ctx).Table("attendance_log al").
 			Where("al.check_in_time >= ? AND al.check_in_time <= ?", start, end)
@@ -204,12 +203,10 @@ func (rs *ReportStore) GetActiveMembersKPI(ctx context.Context, branchID *uuid.U
 		return query
 	}
 
-	// Current Value: Attendance in last 30 days
 	if err := buildQuery(thirtyDaysAgo, now).Distinct("al.user_id").Count(&currentCount).Error; err != nil {
 		return nil, err
 	}
 
-	// Previous Value: Attendance in previous 30 days window
 	if err := buildQuery(sixtyDaysAgo, thirtyDaysAgo).Distinct("al.user_id").Count(&prevCount).Error; err != nil {
 		return nil, err
 	}
@@ -227,6 +224,79 @@ func (rs *ReportStore) GetActiveMembersKPI(ctx context.Context, branchID *uuid.U
 		TrendPercent: percentageChange,
 		TrendLabel:   "vs. the previous 30 days",
 		IsPositive:   percentageChange >= 0,
+	}, nil
+}
+
+func (rs *ReportStore) GetOccupancyKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	var maxCapacity int64
+	if branchID != nil {
+		err := rs.db.WithContext(ctx).Model(&branchdomain.Branch{}).
+			Where("branch_id = ?", *branchID).
+			Select("COALESCE(max_capacity, 0)").Scan(&maxCapacity).Error
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := rs.db.WithContext(ctx).Model(&branchdomain.Branch{}).
+			Where("status = ?", branchdomain.BranchStatusActive).
+			Select("COALESCE(SUM(max_capacity), 0)").Scan(&maxCapacity).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if maxCapacity == 0 {
+		return &reportdomain.KPICard{
+			Title:        "Average Occupation",
+			Value:        decimal.Zero,
+			TrendPercent: 0,
+			TrendLabel:   "Undefined capacity",
+		}, nil
+	}
+
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	daysInCurrent := float64(now.Day())
+
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+	prevMonthEnd := currentMonthStart.Add(-time.Nanosecond)
+	daysInPrev := float64(prevMonthEnd.Day())
+
+	countAttendance := func(start, end time.Time) (int64, error) {
+		var count int64
+		query := rs.db.WithContext(ctx).Table("attendance_log al").
+			Where("al.check_in_time >= ? AND al.check_in_time <= ?", start, end)
+
+		if branchID != nil {
+			query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
+				Where("c.branch_id = ?", *branchID)
+		}
+		err := query.Count(&count).Error
+		return count, err
+	}
+
+	currentCount, err := countAttendance(currentMonthStart, now)
+	if err != nil {
+		return nil, err
+	}
+	avgDailyCurrent := float64(currentCount) / daysInCurrent
+	occupancyCurrent := (avgDailyCurrent / float64(maxCapacity)) * 100
+
+	prevCount, err := countAttendance(prevMonthStart, prevMonthEnd)
+	if err != nil {
+		return nil, err
+	}
+	avgDailyPrev := float64(prevCount) / daysInPrev
+	occupancyPrev := (avgDailyPrev / float64(maxCapacity)) * 100
+
+	trendPercent := occupancyCurrent - occupancyPrev
+
+	return &reportdomain.KPICard{
+		Title:        "Average Occupation",
+		Value:        decimal.NewFromFloat(occupancyCurrent).Round(2),
+		TrendPercent: decimal.NewFromFloat(trendPercent).Round(2).InexactFloat64(),
+		TrendLabel:   "vs previous month (pts %)",
+		IsPositive:   trendPercent >= 0,
 	}, nil
 }
 
