@@ -768,3 +768,24 @@ func (rs *ReportStore) GetClassCapacityRatio(ctx context.Context, classID uuid.U
 		Ratio:        fmt.Sprintf("%d / %d", count, class.MaxCapacity),
 	}, nil
 }
+
+func (rs *ReportStore) GetUpcomingClassesToday(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ClassScheduleItem, error) {
+	var results []reportdomain.ClassScheduleItem
+	now := time.Now()
+	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+	fmt.Println(now)
+
+	query := rs.db.WithContext(ctx).Table("classes c").
+		Select("c.class_id, s.name as class_name, u.first_name || ' ' || u.last_name as instructor_name, c.starts_at as start_time, c.ends_at as end_time, c.max_capacity").
+		Joins("JOIN services s ON s.service_id = c.service_id").
+		Joins("JOIN instructors i ON i.instructor_id = c.instructor_id").
+		Joins("JOIN users u ON u.user_id = i.user_id").
+		Where("c.ends_at > ? AND c.starts_at <= ?", now, endOfDay)
+
+	if branchID != nil {
+		query = query.Where("c.branch_id = ?", *branchID)
+	}
+
+	err := query.Order("c.starts_at ASC").Scan(&results).Error
+	return results, err
+}

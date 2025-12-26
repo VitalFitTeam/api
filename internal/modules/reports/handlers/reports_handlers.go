@@ -178,3 +178,30 @@ func (h *ReportHanlders) GetClassCapacityRatioHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": stats})
 }
+
+// @Summary		Get Upcoming Classes Today
+// @Description	Retrieves a list of classes scheduled for the rest of the current day.
+// @Tags			Reports Branch
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string											false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=[]reportdomain.ClassScheduleItem}	"List of upcoming classes"
+// @Failure		500			{object}	object{error=string}							"Internal Server Error"
+// @Router			/reports/stats/upcoming-classes [get]
+func (h *ReportHanlders) GetUpcomingClassesTodayHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	classes, err := h.services.ReportServices.GetUpcomingClassesToday(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": classes})
+}

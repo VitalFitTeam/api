@@ -9109,6 +9109,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/stats/upcoming-classes": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of classes scheduled for the rest of the current day.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Branch"
+                ],
+                "summary": "Get Upcoming Classes Today",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of upcoming classes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.ClassScheduleItem"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/schedule/branch/{branchId}/client/{userId}": {
             "get": {
                 "security": [
@@ -13754,6 +13806,29 @@ const docTemplate = `{
                 },
                 "ratio": {
                     "description": "\"X / Y\"",
+                    "type": "string"
+                }
+            }
+        },
+        "reportdomain.ClassScheduleItem": {
+            "type": "object",
+            "properties": {
+                "class_id": {
+                    "type": "string"
+                },
+                "class_name": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "instructor_name": {
+                    "type": "string"
+                },
+                "max_capacity": {
+                    "type": "integer"
+                },
+                "start_time": {
                     "type": "string"
                 }
             }

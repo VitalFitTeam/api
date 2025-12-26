@@ -1,6 +1,11 @@
 package reportdomain
 
-import "github.com/shopspring/decimal"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+)
 
 type GlobalSalesStats struct {
 	TotalCurrentMonth decimal.Decimal `json:"total_current_month"`
@@ -59,4 +64,13 @@ type ClassCapacityStats struct {
 	CurrentCount int64  `json:"current_count"`
 	MaxCapacity  int    `json:"max_capacity"`
 	Ratio        string `json:"ratio"` // "X / Y"
+}
+
+type ClassScheduleItem struct {
+	ClassID        uuid.UUID `json:"class_id"`
+	ClassName      string    `json:"class_name"`
+	InstructorName string    `json:"instructor_name"`
+	StartTime      time.Time `json:"start_time"`
+	EndTime        time.Time `json:"end_time"`
+	MaxCapacity    int       `json:"max_capacity"`
 }
