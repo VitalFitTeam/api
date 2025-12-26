@@ -83,3 +83,7 @@ func (s *ReportService) GetActivityHeatmap(ctx context.Context, branchID *uuid.U
 func (s *ReportService) GetClassOccupancyChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
 	return s.store.Reports.GetClassOccupancyChart(ctx, branchID)
 }
+
+func (s *ReportService) GetFinancialSummary(ctx context.Context, branchID *uuid.UUID) (*reportdomain.FinancialSummary, error) {
+	return s.store.Reports.GetFinancialSummary(ctx, branchID)
+}

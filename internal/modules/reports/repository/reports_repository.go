@@ -624,3 +624,60 @@ func (rs *ReportStore) GetClassOccupancyChart(ctx context.Context, branchID *uui
 	err := query.Group("sc.name").Order("value DESC").Scan(&results).Error
 	return results, err
 }
+
+func (rs *ReportStore) GetFinancialSummary(ctx context.Context, branchID *uuid.UUID) (*reportdomain.FinancialSummary, error) {
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
+	type result struct {
+		Category string          `gorm:"column:category"`
+		Amount   decimal.Decimal `gorm:"column:amount"`
+	}
+
+	var queryResults []result
+
+	query := rs.db.WithContext(ctx).Table("invoice_items ii").
+		Select(`
+			CASE 
+				WHEN ii.membership_type_id IS NOT NULL THEN 'Memberships'
+				WHEN ii.service_id IS NOT NULL THEN 'Services'
+				WHEN ii.package_id IS NOT NULL THEN 'Products'
+				ELSE 'Other'
+			END as category,
+			COALESCE(SUM(ii.total_line), 0) as amount
+		`).
+		Joins("JOIN invoices i ON i.invoice_id = ii.invoice_id").
+		Where("i.status = ?", billingdomain.InvoiceStatusPaid).
+		Where("i.issue_date BETWEEN ? AND ?", startOfMonth, endOfMonth)
+
+	if branchID != nil {
+		query = query.Where("i.branch_id = ?", *branchID)
+	}
+
+	if err := query.Group("category").Scan(&queryResults).Error; err != nil {
+		return nil, err
+	}
+
+	// Initialize map with fixed categories to ensure they always appear
+	summaryMap := map[string]decimal.Decimal{
+		"Memberships": decimal.Zero,
+		"Services":    decimal.Zero,
+		"Products":    decimal.Zero,
+	}
+
+	total := decimal.Zero
+	for _, r := range queryResults {
+		summaryMap[r.Category] = r.Amount
+		total = total.Add(r.Amount)
+	}
+
+	var items []reportdomain.FinancialSummaryItem
+	// Fixed order for consistency
+	order := []string{"Memberships", "Services", "Products"}
+	for _, cat := range order {
+		items = append(items, reportdomain.FinancialSummaryItem{Category: cat, Amount: summaryMap[cat]})
+	}
+
+	return &reportdomain.FinancialSummary{Items: items, Total: total}, nil
+}

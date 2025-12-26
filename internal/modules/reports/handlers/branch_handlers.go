@@ -168,3 +168,30 @@ func (h *ReportHanlders) GetClassOccupancyChartHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": data})
 }
+
+// @Summary		Get Financial Summary
+// @Description	Retrieves revenue breakdown by business unit (Memberships, Services, Products) for the current month.
+// @Tags			Reports Branch
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string										false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=reportdomain.FinancialSummary}	"Financial summary data"
+// @Failure		500			{object}	object{error=string}						"Internal Server Error"
+// @Router			/reports/kpi/financial-summary [get]
+func (h *ReportHanlders) GetFinancialSummaryHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	summary, err := h.services.ReportServices.GetFinancialSummary(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": summary})
+}

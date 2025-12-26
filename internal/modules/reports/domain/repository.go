@@ -24,4 +24,5 @@ type ReportRepository interface {
 	GetWeeklySalesChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 	GetActivityHeatmap(ctx context.Context, branchID *uuid.UUID) ([]HeatmapPoint, error)
 	GetClassOccupancyChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
+	GetFinancialSummary(ctx context.Context, branchID *uuid.UUID) (*FinancialSummary, error)
 }

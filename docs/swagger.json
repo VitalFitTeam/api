@@ -8583,6 +8583,55 @@
                 }
             }
         },
+        "/reports/kpi/financial-summary": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves revenue breakdown by business unit (Memberships, Services, Products) for the current month.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Branch"
+                ],
+                "summary": "Get Financial Summary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Financial summary data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.FinancialSummary"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/kpi/monthly-sales": {
             "get": {
                 "security": [
@@ -13519,6 +13568,31 @@
                 },
                 "value": {
                     "type": "number"
+                }
+            }
+        },
+        "reportdomain.FinancialSummary": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/reportdomain.FinancialSummaryItem"
+                    }
+                },
+                "total": {
+                    "type": "number"
+                }
+            }
+        },
+        "reportdomain.FinancialSummaryItem": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "category": {
+                    "type": "string"
                 }
             }
         },

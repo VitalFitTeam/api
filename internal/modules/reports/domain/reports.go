@@ -43,3 +43,13 @@ type HeatmapPoint struct {
 	Hour      int   `json:"hour"`        // Start hour of the bucket (0, 3, 6...)
 	Value     int64 `json:"value"`
 }
+
+type FinancialSummaryItem struct {
+	Category string          `json:"category"`
+	Amount   decimal.Decimal `json:"amount"`
+}
+
+type FinancialSummary struct {
+	Items []FinancialSummaryItem `json:"items"`
+	Total decimal.Decimal        `json:"total"`
+}
