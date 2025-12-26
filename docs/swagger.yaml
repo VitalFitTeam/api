@@ -7978,6 +7978,38 @@ paths:
       summary: Get Today's Check-Ins
       tags:
       - Reports
+  /reports/stats/current-occupancy:
+    get:
+      description: Retrieves the real-time occupancy percentage based on check-ins
+        within the current hour vs max capacity.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Occupancy percentage
+          schema:
+            properties:
+              data:
+                format: float64
+                type: number
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Current Occupancy Percentage
+      tags:
+      - Reports
   /reports/stats/global:
     get:
       description: Retrieves global sales statistics, comparing the current month's

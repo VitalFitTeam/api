@@ -699,3 +699,48 @@ func (rs *ReportStore) GetTodayCheckInsStat(ctx context.Context, branchID *uuid.
 	err := query.Count(&count).Error
 	return count, err
 }
+
+func (rs *ReportStore) GetCurrentOccupancyStat(ctx context.Context, branchID *uuid.UUID) (decimal.Decimal, error) {
+	// 1. Obtener Capacidad Máxima
+	var maxCapacity int64
+	if branchID != nil {
+		err := rs.db.WithContext(ctx).Model(&branchdomain.Branch{}).
+			Where("branch_id = ?", *branchID).
+			Select("COALESCE(max_capacity, 0)").Scan(&maxCapacity).Error
+		if err != nil {
+			return decimal.Zero, err
+		}
+	} else {
+		err := rs.db.WithContext(ctx).Model(&branchdomain.Branch{}).
+			Where("status = ?", branchdomain.BranchStatusActive).
+			Select("COALESCE(SUM(max_capacity), 0)").Scan(&maxCapacity).Error
+		if err != nil {
+			return decimal.Zero, err
+		}
+	}
+
+	if maxCapacity == 0 {
+		return decimal.Zero, nil
+	}
+
+	var count int64
+	now := time.Now()
+	startWindow := now.Add(-3 * time.Hour)
+	endWindow := now.Add(1 * time.Hour)
+
+	query := rs.db.WithContext(ctx).Table("attendance_log al").
+		Where("al.check_in_time >= ? AND al.check_in_time <= ?", startWindow, endWindow)
+
+	if branchID != nil {
+		query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
+			Where("c.branch_id = ?", *branchID)
+	}
+
+	if err := query.Count(&count).Error; err != nil {
+		return decimal.Zero, err
+	}
+
+	// 3. Calcular Porcentaje: (Count / MaxCapacity) * 100
+	occupancy := (float64(count) / float64(maxCapacity)) * 100
+	return decimal.NewFromFloat(occupancy).Round(2), nil
+}

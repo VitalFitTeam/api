@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	"github.com/vitalfit/api/internal/store"
 )
@@ -90,4 +91,8 @@ func (s *ReportService) GetFinancialSummary(ctx context.Context, branchID *uuid.
 
 func (s *ReportService) GetTodayCheckInsStat(ctx context.Context, branchID *uuid.UUID) (int64, error) {
 	return s.store.Reports.GetTodayCheckInsStat(ctx, branchID)
+}
+
+func (s *ReportService) GetCurrentOccupancyStat(ctx context.Context, branchID *uuid.UUID) (decimal.Decimal, error) {
+	return s.store.Reports.GetCurrentOccupancyStat(ctx, branchID)
 }

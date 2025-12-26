@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 )
 
 type ReportRepository interface {
@@ -26,4 +27,5 @@ type ReportRepository interface {
 	GetClassOccupancyChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 	GetFinancialSummary(ctx context.Context, branchID *uuid.UUID) (*FinancialSummary, error)
 	GetTodayCheckInsStat(ctx context.Context, branchID *uuid.UUID) (int64, error)
+	GetCurrentOccupancyStat(ctx context.Context, branchID *uuid.UUID) (decimal.Decimal, error)
 }

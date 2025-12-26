@@ -125,3 +125,30 @@ func (h *ReportHanlders) GetTodayCheckInsStatHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": count})
 }
+
+// @Summary		Get Current Occupancy Percentage
+// @Description	Retrieves the real-time occupancy percentage based on check-ins within the current hour vs max capacity.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string					false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=float64}	"Occupancy percentage"
+// @Failure		500			{object}	object{error=string}	"Internal Server Error"
+// @Router			/reports/stats/current-occupancy [get]
+func (h *ReportHanlders) GetCurrentOccupancyStatHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	occupancy, err := h.services.ReportServices.GetCurrentOccupancyStat(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": occupancy})
+}
