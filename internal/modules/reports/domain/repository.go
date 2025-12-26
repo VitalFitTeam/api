@@ -7,6 +7,7 @@ import (
 
 type ReportRepository interface {
 	GetGlobalSalesStats(ctx context.Context) (*GlobalSalesStats, error)
+	GetTotalSales(ctx context.Context) (*TotalSalesStats, error)
 	GetTopBranchesPerformance(ctx context.Context) ([]BranchPerformance, error)
 	GetTotalClientsStat(ctx context.Context) (int64, error)
 	GetActiveBranchesCount(ctx context.Context) (int64, error)

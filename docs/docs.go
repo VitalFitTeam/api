@@ -8555,6 +8555,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/stats/total-sales": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the total accumulated sales amount from all time.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Total Sales",
+                "responses": {
+                    "200": {
+                        "description": "Total sales statistics",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.TotalSalesStats"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/schedule/branch/{branchId}/client/{userId}": {
             "get": {
                 "security": [
@@ -13196,6 +13237,20 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "total_last_month": {
+                    "type": "number"
+                },
+                "trend": {
+                    "type": "string"
+                }
+            }
+        },
+        "reportdomain.TotalSalesStats": {
+            "type": "object",
+            "properties": {
+                "percentage_change": {
+                    "type": "number"
+                },
+                "total_sales": {
                     "type": "number"
                 },
                 "trend": {

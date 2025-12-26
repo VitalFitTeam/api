@@ -26,6 +26,24 @@ func (h *ReportHanlders) GetGlobalSalesStatsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": stats})
 }
 
+// @Summary		Get Total Sales
+// @Description	Retrieves the total accumulated sales amount from all time.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=reportdomain.TotalSalesStats}	"Total sales statistics"
+// @Failure		500	{object}	object{error=string}						"Internal Server Error"
+// @Router			/reports/stats/total-sales [get]
+func (h *ReportHanlders) GetTotalSalesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	totalSales, err := h.services.ReportServices.GetTotalSales(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": totalSales})
+}
+
 // @Summary		Get Top 5 Branches Performance
 // @Description	Retrieves the performance of the top 5 branches based on current month's sales.
 // @Tags			Reports

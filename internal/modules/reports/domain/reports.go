@@ -9,6 +9,12 @@ type GlobalSalesStats struct {
 	Trend             string          `json:"trend"`
 }
 
+type TotalSalesStats struct {
+	TotalSales       decimal.Decimal `json:"total_sales"`
+	PercentageChange float64         `json:"percentage_change"`
+	Trend            string          `json:"trend"`
+}
+
 type BranchPerformance struct {
 	Label         string          `json:"label"`
 	Value         decimal.Decimal `json:"value"`

@@ -75,6 +75,65 @@ func (rs *ReportStore) GetGlobalSalesStats(ctx context.Context) (*reportdomain.G
 
 }
 
+func (rs *ReportStore) GetTotalSales(ctx context.Context) (*reportdomain.TotalSalesStats, error) {
+	var totalLifetime, currentTotal, prevTotal decimal.Decimal
+	validStatuses := []billingdomain.InvoiceStatus{
+		billingdomain.InvoiceStatusPaid,
+	}
+
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	err := rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+		Where("status IN ?", validStatuses).
+		Select("COALESCE(SUM(total_amount), 0)").
+		Scan(&totalLifetime).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate trend based on current month vs last month (using same valid statuses)
+	err = rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+		Where("issue_date >= ? AND status IN ?", currentMonthStart, validStatuses).
+		Select("COALESCE(SUM(total_amount), 0)").
+		Scan(&currentTotal).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+		Where("issue_date >= ? AND issue_date < ? AND status IN ?", prevMonthStart, currentMonthStart, validStatuses).
+		Select("COALESCE(SUM(total_amount), 0)").
+		Scan(&prevTotal).Error
+	if err != nil {
+		return nil, err
+	}
+
+	percentageChange := 0.0
+	trend := "neutral"
+
+	if !prevTotal.IsZero() {
+		diff := currentTotal.Sub(prevTotal)
+		percDecimal := diff.Div(prevTotal).Mul(decimal.NewFromInt(100))
+		percentageChange, _ = percDecimal.Float64()
+	} else if !currentTotal.IsZero() {
+		percentageChange = 100.0
+	}
+
+	if percentageChange > 5 {
+		trend = "up"
+	} else if percentageChange < -5 {
+		trend = "down"
+	}
+
+	return &reportdomain.TotalSalesStats{
+		TotalSales:       totalLifetime,
+		PercentageChange: percentageChange,
+		Trend:            trend,
+	}, nil
+}
+
 func (rs *ReportStore) GetTopBranchesPerformance(ctx context.Context) ([]reportdomain.BranchPerformance, error) {
 	now := time.Now()
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())

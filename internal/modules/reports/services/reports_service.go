@@ -23,6 +23,10 @@ func (s *ReportService) GetGlobalSalesStats(ctx context.Context) (*reportdomain.
 	return s.store.Reports.GetGlobalSalesStats(ctx)
 }
 
+func (s *ReportService) GetTotalSales(ctx context.Context) (*reportdomain.TotalSalesStats, error) {
+	return s.store.Reports.GetTotalSales(ctx)
+}
+
 func (s *ReportService) GetTopBranchesPerformance(ctx context.Context) ([]reportdomain.BranchPerformance, error) {
 	return s.store.Reports.GetTopBranchesPerformance(ctx)
 }

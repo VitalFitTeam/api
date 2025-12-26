@@ -2093,6 +2093,15 @@ definitions:
       trend:
         type: string
     type: object
+  reportdomain.TotalSalesStats:
+    properties:
+      percentage_change:
+        type: number
+      total_sales:
+        type: number
+      trend:
+        type: string
+    type: object
   scheduledomain.Class:
     properties:
       branch_id:
@@ -7778,6 +7787,31 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get Total Clients Stat
+      tags:
+      - Reports
+  /reports/stats/total-sales:
+    get:
+      description: Retrieves the total accumulated sales amount from all time.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total sales statistics
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.TotalSalesStats'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Total Sales
       tags:
       - Reports
   /schedule/{classId}:
