@@ -838,3 +838,49 @@ func (rs *ReportStore) GetInstructorIDByUserID(ctx context.Context, userID uuid.
 	}
 	return &instructor.InstructorID, nil
 }
+
+func (rs *ReportStore) GetInstructorStudentCountKPI(ctx context.Context, instructorID uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfToday := startOfToday.AddDate(0, 0, 1).Add(-time.Nanosecond)
+
+	startOfLastWeek := startOfToday.AddDate(0, 0, -7)
+	endOfLastWeek := endOfToday.AddDate(0, 0, -7)
+
+	countStudents := func(start, end time.Time) (int64, error) {
+		var count int64
+		err := rs.db.WithContext(ctx).Table("attendance_log al").
+			Joins("JOIN classes c ON c.class_id = al.schedule_id").
+			Where("c.instructor_id = ?", instructorID).
+			Where("al.check_in_time >= ? AND al.check_in_time <= ?", start, end).
+			Where("al.status = ?", accessdomain.AttendanceStatusAttended).
+			Distinct("al.user_id").
+			Count(&count).Error
+		return count, err
+	}
+
+	currentCount, err := countStudents(startOfToday, endOfToday)
+	if err != nil {
+		return nil, err
+	}
+
+	prevCount, err := countStudents(startOfLastWeek, endOfLastWeek)
+	if err != nil {
+		return nil, err
+	}
+
+	percentageChange := 0.0
+	if prevCount > 0 {
+		percentageChange = float64(currentCount-prevCount) / float64(prevCount) * 100
+	} else if currentCount > 0 {
+		percentageChange = 100.0
+	}
+
+	return &reportdomain.KPICard{
+		Title:        "Total Students (Today)",
+		Value:        decimal.NewFromInt(currentCount),
+		TrendPercent: percentageChange,
+		TrendLabel:   "vs same day last week",
+		IsPositive:   percentageChange >= 0,
+	}, nil
+}

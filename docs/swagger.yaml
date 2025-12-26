@@ -7892,6 +7892,39 @@ paths:
       summary: Get Instructor Next Class
       tags:
       - Reports Instructor
+  /reports/instructors/student-count:
+    get:
+      description: Retrieves the total number of unique students attended by the instructor
+        today, compared to the same day last week.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Student count KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Instructor Student Count KPI
+      tags:
+      - Reports Instructor
   /reports/kpi/active-members:
     get:
       description: Retrieves the count of unique members with active membership who

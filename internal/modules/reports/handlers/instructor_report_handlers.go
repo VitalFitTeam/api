@@ -33,3 +33,29 @@ func (h *ReportHanlders) GetInstructorNextClassHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
+
+// @Summary		Get Instructor Student Count KPI
+// @Description	Retrieves the total number of unique students attended by the instructor today, compared to the same day last week.
+// @Tags			Reports Instructor
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=reportdomain.KPICard}	"Student count KPI"
+// @Failure		400	{object}	object{error=string}				"Bad Request"
+// @Failure		500	{object}	object{error=string}				"Internal Server Error"
+// @Router			/reports/instructors/student-count [get]
+func (h *ReportHanlders) GetInstructorStudentCountKPIHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	instructorID, err := h.services.ReportServices.GetInstructorIDByUserID(ctx, user.UserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	kpi, err := h.services.ReportServices.GetInstructorStudentCountKPI(ctx, *instructorID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": kpi})
+}

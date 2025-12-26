@@ -33,4 +33,5 @@ type ReportServiceInterface interface {
 	GetRecentCheckIns(ctx context.Context, branchID *uuid.UUID) ([]RecentAttendanceItem, error)
 	GetInstructorNextClass(ctx context.Context, instructorID uuid.UUID) (string, error)
 	GetInstructorIDByUserID(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error)
+	GetInstructorStudentCountKPI(ctx context.Context, instructorID uuid.UUID) (*KPICard, error)
 }

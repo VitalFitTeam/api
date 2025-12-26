@@ -31,6 +31,7 @@ type ReportHandlersInterface interface {
 	GetUpcomingClassesTodayHandler(c *gin.Context)
 	GetRecentCheckInsHandler(c *gin.Context)
 	GetInstructorNextClassHandler(c *gin.Context)
+	GetInstructorStudentCountKPIHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -82,6 +83,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		attendanceGroup.GET("/stats/upcoming-classes", r.GetUpcomingClassesTodayHandler)
 		attendanceGroup.GET("/stats/recent-check-ins", r.GetRecentCheckInsHandler)
 		attendanceGroup.GET("/instructors/next-class", r.GetInstructorNextClassHandler)
+		attendanceGroup.GET("/instructors/student-count", r.GetInstructorStudentCountKPIHandler)
 		attendanceGroup.GET("/kpi/active-members", r.GetActiveMembersKPIHandler)
 		attendanceGroup.GET("/kpi/occupancy", r.GetOccupancyKPIHandler)
 		attendanceGroup.GET("/charts/top-instructors", r.GetTopInstructorsByAttendanceHandler)
