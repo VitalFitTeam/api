@@ -71,3 +71,7 @@ func (s *ReportService) GetSalesByHour(ctx context.Context, start, end time.Time
 func (s *ReportService) GetMostUsedServices(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
 	return s.store.Reports.GetMostUsedServices(ctx, start, end)
 }
+
+func (s *ReportService) GetWeeklySalesChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetWeeklySalesChart(ctx, branchID)
+}

@@ -87,3 +87,30 @@ func (h *ReportHanlders) GetOccupancyKPIHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": kpi})
 }
+
+// @Summary		Get Weekly Sales Chart
+// @Description	Retrieves daily sales trend for the current week (Mon-Sun).
+// @Tags			Reports Branch
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string									false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=[]reportdomain.ChartData}	"Weekly sales data"
+// @Failure		500			{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/charts/weekly-sales [get]
+func (h *ReportHanlders) GetWeeklySalesChartHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	data, err := h.services.ReportServices.GetWeeklySalesChart(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}

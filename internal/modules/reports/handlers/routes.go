@@ -21,6 +21,7 @@ type ReportHandlersInterface interface {
 	GetSalesByPaymentMethodHandler(c *gin.Context)
 	GetSalesByHourHandler(c *gin.Context)
 	GetMostUsedServicesHandler(c *gin.Context)
+	GetWeeklySalesChartHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -55,5 +56,6 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 	chartsGroup.GET("/sales-by-payment-method", r.GetSalesByPaymentMethodHandler)
 	chartsGroup.GET("/sales-by-hour", r.GetSalesByHourHandler)
 	chartsGroup.GET("/most-used-services", r.GetMostUsedServicesHandler)
+	chartsGroup.GET("/weekly-sales", r.GetWeeklySalesChartHandler)
 
 }

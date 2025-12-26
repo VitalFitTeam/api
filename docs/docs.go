@@ -8386,6 +8386,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/charts/weekly-sales": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves daily sales trend for the current week (Mon-Sun).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Branch"
+                ],
+                "summary": "Get Weekly Sales Chart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weekly sales data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.ChartData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/kpi/active-members": {
             "get": {
                 "security": [

@@ -525,3 +525,61 @@ func (rs *ReportStore) GetMostUsedServices(ctx context.Context, start, end time.
 
 	return results, nil
 }
+
+func (rs *ReportStore) GetWeeklySalesChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
+	now := time.Now()
+
+	// Calcular inicio de semana (Lunes)
+	offset := int(now.Weekday())
+	if offset == 0 {
+		offset = 7
+	}
+	offset-- // Ajustar para que Lunes sea 0 offset desde el inicio
+	startOfWeek := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, -offset)
+	endOfWeek := startOfWeek.AddDate(0, 0, 7).Add(-time.Nanosecond)
+
+	validStatuses := []billingdomain.InvoiceStatus{
+		billingdomain.InvoiceStatusPaid,
+		billingdomain.InvoiceStatusUnpaid,
+		billingdomain.InvoiceStatusOverdue,
+	}
+
+	type dailyResult struct {
+		Date  time.Time       `gorm:"column:date"`
+		Total decimal.Decimal `gorm:"column:total"`
+	}
+
+	var queryResults []dailyResult
+
+	query := rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+		Select("DATE(issue_date) as date, SUM(total_amount) as total").
+		Where("issue_date BETWEEN ? AND ?", startOfWeek, endOfWeek).
+		Where("status IN ?", validStatuses)
+
+	if branchID != nil {
+		query = query.Where("branch_id = ?", *branchID)
+	}
+
+	err := query.Group("DATE(issue_date)").Scan(&queryResults).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Mapear resultados a un mapa para acceso rápido
+	salesMap := make(map[string]decimal.Decimal)
+	for _, r := range queryResults {
+		salesMap[r.Date.Format("2006-01-02")] = r.Total
+	}
+
+	// Construir respuesta completa para los 7 días (Lunes a Domingo)
+	var chartData []reportdomain.ChartData
+	days := []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+
+	for i := 0; i < 7; i++ {
+		currentDay := startOfWeek.AddDate(0, 0, i)
+		val := salesMap[currentDay.Format("2006-01-02")] // Será 0 si no existe (decimal.Decimal zero value)
+		chartData = append(chartData, reportdomain.ChartData{Label: days[i], Value: val})
+	}
+
+	return chartData, nil
+}
