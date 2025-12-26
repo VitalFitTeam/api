@@ -773,7 +773,6 @@ func (rs *ReportStore) GetUpcomingClassesToday(ctx context.Context, branchID *uu
 	var results []reportdomain.ClassScheduleItem
 	now := time.Now()
 	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
-	fmt.Println(now)
 
 	query := rs.db.WithContext(ctx).Table("classes c").
 		Select("c.class_id, s.name as class_name, u.first_name || ' ' || u.last_name as instructor_name, c.starts_at as start_time, c.ends_at as end_time, c.max_capacity").
@@ -787,5 +786,23 @@ func (rs *ReportStore) GetUpcomingClassesToday(ctx context.Context, branchID *uu
 	}
 
 	err := query.Order("c.starts_at ASC").Scan(&results).Error
+	return results, err
+}
+
+func (rs *ReportStore) GetRecentCheckIns(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.RecentAttendanceItem, error) {
+	var results []reportdomain.RecentAttendanceItem
+
+	query := rs.db.WithContext(ctx).Table("attendance_log al").
+		Select("u.first_name || ' ' || u.last_name as user_name, al.check_in_time, s.name as service_name").
+		Joins("JOIN users u ON u.user_id = al.user_id").
+		Joins("JOIN services s ON s.service_id = al.service_id").
+		Where("al.status = ?", accessdomain.AttendanceStatusAttended)
+
+	if branchID != nil {
+		query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
+			Where("c.branch_id = ?", *branchID)
+	}
+
+	err := query.Order("al.check_in_time DESC").Limit(4).Scan(&results).Error
 	return results, err
 }

@@ -104,3 +104,7 @@ func (s *ReportService) GetClassCapacityRatio(ctx context.Context, classID uuid.
 func (s *ReportService) GetUpcomingClassesToday(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ClassScheduleItem, error) {
 	return s.store.Reports.GetUpcomingClassesToday(ctx, branchID)
 }
+
+func (s *ReportService) GetRecentCheckIns(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.RecentAttendanceItem, error) {
+	return s.store.Reports.GetRecentCheckIns(ctx, branchID)
+}

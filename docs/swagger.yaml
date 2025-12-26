@@ -2162,6 +2162,15 @@ definitions:
       value:
         type: number
     type: object
+  reportdomain.RecentAttendanceItem:
+    properties:
+      check_in_time:
+        type: string
+      service_name:
+        type: string
+      user_name:
+        type: string
+    type: object
   reportdomain.TotalSalesStats:
     properties:
       percentage_change:
@@ -8102,6 +8111,38 @@ paths:
       summary: Get Global Sales Stats
       tags:
       - Reports
+  /reports/stats/recent-check-ins:
+    get:
+      description: Retrieves the last 4 check-ins for the current day.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of recent check-ins
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.RecentAttendanceItem'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Recent Check-Ins
+      tags:
+      - Reports Branch
   /reports/stats/top-branches:
     get:
       description: Retrieves the performance of the top 5 branches based on current

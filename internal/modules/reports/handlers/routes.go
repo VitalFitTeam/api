@@ -29,6 +29,7 @@ type ReportHandlersInterface interface {
 	GetClassOccupancyChartHandler(c *gin.Context)
 	GetClassCapacityRatioHandler(c *gin.Context)
 	GetUpcomingClassesTodayHandler(c *gin.Context)
+	GetRecentCheckInsHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -55,6 +56,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 	statsGroup.GET("/current-occupancy", r.GetCurrentOccupancyStatHandler)
 	statsGroup.GET("/class-capacity", r.GetClassCapacityRatioHandler)
 	statsGroup.GET("/upcoming-classes", r.GetUpcomingClassesTodayHandler)
+	statsGroup.GET("/recent-check-ins", r.GetRecentCheckInsHandler)
 
 	kpiGroup := billingGroup.Group("/kpi")
 	kpiGroup.GET("/monthly-sales", r.GetMonthlySalesKPIHandler)

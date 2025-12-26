@@ -205,3 +205,30 @@ func (h *ReportHanlders) GetUpcomingClassesTodayHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": classes})
 }
+
+// @Summary		Get Recent Check-Ins
+// @Description	Retrieves the last 4 check-ins for the current day.
+// @Tags			Reports Branch
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string												false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=[]reportdomain.RecentAttendanceItem}	"List of recent check-ins"
+// @Failure		500			{object}	object{error=string}								"Internal Server Error"
+// @Router			/reports/stats/recent-check-ins [get]
+func (h *ReportHanlders) GetRecentCheckInsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	recentCheckIns, err := h.services.ReportServices.GetRecentCheckIns(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": recentCheckIns})
+}

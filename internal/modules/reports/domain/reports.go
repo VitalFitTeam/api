@@ -74,3 +74,9 @@ type ClassScheduleItem struct {
 	EndTime        time.Time `json:"end_time"`
 	MaxCapacity    int       `json:"max_capacity"`
 }
+
+type RecentAttendanceItem struct {
+	UserName    string    `json:"user_name"`
+	CheckInTime time.Time `json:"check_in_time"`
+	ServiceName string    `json:"service_name"`
+}

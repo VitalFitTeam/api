@@ -30,4 +30,5 @@ type ReportRepository interface {
 	GetCurrentOccupancyStat(ctx context.Context, branchID *uuid.UUID) (decimal.Decimal, error)
 	GetClassCapacityRatio(ctx context.Context, classID uuid.UUID) (*ClassCapacityStats, error)
 	GetUpcomingClassesToday(ctx context.Context, branchID *uuid.UUID) ([]ClassScheduleItem, error)
+	GetRecentCheckIns(ctx context.Context, branchID *uuid.UUID) ([]RecentAttendanceItem, error)
 }
