@@ -884,3 +884,43 @@ func (rs *ReportStore) GetInstructorStudentCountKPI(ctx context.Context, instruc
 		IsPositive:   percentageChange >= 0,
 	}, nil
 }
+
+func (rs *ReportStore) GetInstructorMonthlyClassesCount(ctx context.Context, instructorID uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	nextMonthStart := currentMonthStart.AddDate(0, 1, 0)
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	var currentCount int64
+	err := rs.db.WithContext(ctx).Model(&scheduledomain.Class{}).
+		Where("instructor_id = ?", instructorID).
+		Where("starts_at >= ? AND starts_at < ?", currentMonthStart, nextMonthStart).
+		Count(&currentCount).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var prevCount int64
+	err = rs.db.WithContext(ctx).Model(&scheduledomain.Class{}).
+		Where("instructor_id = ?", instructorID).
+		Where("starts_at >= ? AND starts_at < ?", prevMonthStart, currentMonthStart).
+		Count(&prevCount).Error
+	if err != nil {
+		return nil, err
+	}
+
+	percentageChange := 0.0
+	if prevCount > 0 {
+		percentageChange = float64(currentCount-prevCount) / float64(prevCount) * 100
+	} else if currentCount > 0 {
+		percentageChange = 100.0
+	}
+
+	return &reportdomain.KPICard{
+		Title:        "Total Classes (Month)",
+		Value:        decimal.NewFromInt(currentCount),
+		TrendPercent: percentageChange,
+		TrendLabel:   "vs previous month",
+		IsPositive:   percentageChange >= 0,
+	}, nil
+}

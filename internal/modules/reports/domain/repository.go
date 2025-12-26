@@ -34,4 +34,5 @@ type ReportRepository interface {
 	GetInstructorNextClass(ctx context.Context, instructorID uuid.UUID) (*time.Time, error)
 	GetInstructorIDByUserID(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error)
 	GetInstructorStudentCountKPI(ctx context.Context, instructorID uuid.UUID) (*KPICard, error)
+	GetInstructorMonthlyClassesCount(ctx context.Context, instructorID uuid.UUID) (*KPICard, error)
 }

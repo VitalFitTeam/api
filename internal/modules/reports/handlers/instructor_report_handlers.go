@@ -59,3 +59,29 @@ func (h *ReportHanlders) GetInstructorStudentCountKPIHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": kpi})
 }
+
+// @Summary		Get Instructor Monthly Classes Count
+// @Description	Retrieves the total number of classes assigned to the instructor for the current month.
+// @Tags			Reports Instructor
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=reportdomain.KPICard}	"Classes count KPI"
+// @Failure		400	{object}	object{error=string}				"Bad Request"
+// @Failure		500	{object}	object{error=string}				"Internal Server Error"
+// @Router			/reports/instructors/classes-count [get]
+func (h *ReportHanlders) GetInstructorMonthlyClassesCountHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	instructorID, err := h.services.ReportServices.GetInstructorIDByUserID(ctx, user.UserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	kpi, err := h.services.ReportServices.GetInstructorMonthlyClassesCount(ctx, *instructorID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": kpi})
+}

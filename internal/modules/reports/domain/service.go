@@ -34,4 +34,5 @@ type ReportServiceInterface interface {
 	GetInstructorNextClass(ctx context.Context, instructorID uuid.UUID) (string, error)
 	GetInstructorIDByUserID(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error)
 	GetInstructorStudentCountKPI(ctx context.Context, instructorID uuid.UUID) (*KPICard, error)
+	GetInstructorMonthlyClassesCount(ctx context.Context, instructorID uuid.UUID) (*KPICard, error)
 }
