@@ -2,6 +2,7 @@ package reportrepository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,6 +12,7 @@ import (
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"gorm.io/gorm"
 )
 
@@ -701,7 +703,6 @@ func (rs *ReportStore) GetTodayCheckInsStat(ctx context.Context, branchID *uuid.
 }
 
 func (rs *ReportStore) GetCurrentOccupancyStat(ctx context.Context, branchID *uuid.UUID) (decimal.Decimal, error) {
-	// 1. Obtener Capacidad Máxima
 	var maxCapacity int64
 	if branchID != nil {
 		err := rs.db.WithContext(ctx).Model(&branchdomain.Branch{}).
@@ -740,7 +741,30 @@ func (rs *ReportStore) GetCurrentOccupancyStat(ctx context.Context, branchID *uu
 		return decimal.Zero, err
 	}
 
-	// 3. Calcular Porcentaje: (Count / MaxCapacity) * 100
 	occupancy := (float64(count) / float64(maxCapacity)) * 100
 	return decimal.NewFromFloat(occupancy).Round(2), nil
+}
+
+func (rs *ReportStore) GetClassCapacityRatio(ctx context.Context, classID uuid.UUID) (*reportdomain.ClassCapacityStats, error) {
+	var class scheduledomain.Class
+	// Get class info (capacity and service name)
+	if err := rs.db.WithContext(ctx).Joins("Service").First(&class, "class_id = ?", classID).Error; err != nil {
+		return nil, err
+	}
+
+	var count int64
+	// Count attendees
+	if err := rs.db.WithContext(ctx).Model(&accessdomain.AttendanceLog{}).
+		Where("schedule_id = ?", classID).
+		Where("status = ?", accessdomain.AttendanceStatusAttended).
+		Count(&count).Error; err != nil {
+		return nil, err
+	}
+
+	return &reportdomain.ClassCapacityStats{
+		ClassName:    class.Service.Name,
+		CurrentCount: count,
+		MaxCapacity:  class.MaxCapacity,
+		Ratio:        fmt.Sprintf("%d / %d", count, class.MaxCapacity),
+	}, nil
 }

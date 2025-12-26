@@ -53,3 +53,10 @@ type FinancialSummary struct {
 	Items []FinancialSummaryItem `json:"items"`
 	Total decimal.Decimal        `json:"total"`
 }
+
+type ClassCapacityStats struct {
+	ClassName    string `json:"class_name"`
+	CurrentCount int64  `json:"current_count"`
+	MaxCapacity  int    `json:"max_capacity"`
+	Ratio        string `json:"ratio"` // "X / Y"
+}

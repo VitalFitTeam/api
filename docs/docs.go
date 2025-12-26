@@ -8750,7 +8750,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Reports"
+                    "Reports Branch"
                 ],
                 "summary": "Get Today's Check-Ins",
                 "parameters": [
@@ -8788,6 +8788,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/stats/class-capacity": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the attendance vs capacity ratio for a specific class (e.g. \"25 / 30\").",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Branch"
+                ],
+                "summary": "Get Class Capacity Ratio",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Class UUID",
+                        "name": "class_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Class capacity stats",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.ClassCapacityStats"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/stats/current-occupancy": {
             "get": {
                 "security": [
@@ -8800,7 +8861,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Reports"
+                    "Reports Branch"
                 ],
                 "summary": "Get Current Occupancy Percentage",
                 "parameters": [
@@ -13676,6 +13737,24 @@ const docTemplate = `{
                 },
                 "value": {
                     "type": "number"
+                }
+            }
+        },
+        "reportdomain.ClassCapacityStats": {
+            "type": "object",
+            "properties": {
+                "class_name": {
+                    "type": "string"
+                },
+                "current_count": {
+                    "type": "integer"
+                },
+                "max_capacity": {
+                    "type": "integer"
+                },
+                "ratio": {
+                    "description": "\"X / Y\"",
+                    "type": "string"
                 }
             }
         },

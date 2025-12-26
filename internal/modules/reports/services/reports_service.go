@@ -96,3 +96,7 @@ func (s *ReportService) GetTodayCheckInsStat(ctx context.Context, branchID *uuid
 func (s *ReportService) GetCurrentOccupancyStat(ctx context.Context, branchID *uuid.UUID) (decimal.Decimal, error) {
 	return s.store.Reports.GetCurrentOccupancyStat(ctx, branchID)
 }
+
+func (s *ReportService) GetClassCapacityRatio(ctx context.Context, classID uuid.UUID) (*reportdomain.ClassCapacityStats, error) {
+	return s.store.Reports.GetClassCapacityRatio(ctx, classID)
+}

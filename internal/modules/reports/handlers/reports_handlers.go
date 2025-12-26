@@ -102,7 +102,7 @@ func (h *ReportHanlders) GetActiveBranchesCountHandler(c *gin.Context) {
 
 // @Summary		Get Today's Check-Ins
 // @Description	Retrieves the count of check-ins for the current day.
-// @Tags			Reports
+// @Tags			Reports Branch
 // @Security		ApiKeyAuth
 // @Produce		json
 // @Param			branch_id	query		string					false	"Filter by Branch UUID"
@@ -128,7 +128,7 @@ func (h *ReportHanlders) GetTodayCheckInsStatHandler(c *gin.Context) {
 
 // @Summary		Get Current Occupancy Percentage
 // @Description	Retrieves the real-time occupancy percentage based on check-ins within the current hour vs max capacity.
-// @Tags			Reports
+// @Tags			Reports Branch
 // @Security		ApiKeyAuth
 // @Produce		json
 // @Param			branch_id	query		string					false	"Filter by Branch UUID"
@@ -151,4 +151,30 @@ func (h *ReportHanlders) GetCurrentOccupancyStatHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": occupancy})
+}
+
+// @Summary		Get Class Capacity Ratio
+// @Description	Retrieves the attendance vs capacity ratio for a specific class (e.g. "25 / 30").
+// @Tags			Reports Branch
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			class_id	query		string											true	"Class UUID"
+// @Success		200			{object}	object{data=reportdomain.ClassCapacityStats}	"Class capacity stats"
+// @Failure		400			{object}	object{error=string}							"Bad Request"
+// @Failure		500			{object}	object{error=string}							"Internal Server Error"
+// @Router			/reports/stats/class-capacity [get]
+func (h *ReportHanlders) GetClassCapacityRatioHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	idStr := c.Query("class_id")
+	classID, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class_id"})
+		return
+	}
+	stats, err := h.services.ReportServices.GetClassCapacityRatio(ctx, classID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": stats})
 }
