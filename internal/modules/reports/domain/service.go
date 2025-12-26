@@ -23,4 +23,5 @@ type ReportServiceInterface interface {
 	GetMostUsedServices(ctx context.Context, start, end time.Time) ([]ChartData, error)
 	GetWeeklySalesChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 	GetActivityHeatmap(ctx context.Context, branchID *uuid.UUID) ([]HeatmapPoint, error)
+	GetClassOccupancyChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 }

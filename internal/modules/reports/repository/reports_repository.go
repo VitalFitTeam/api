@@ -603,3 +603,24 @@ func (rs *ReportStore) GetActivityHeatmap(ctx context.Context, branchID *uuid.UU
 	}
 	return results, nil
 }
+
+func (rs *ReportStore) GetClassOccupancyChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
+	var results []reportdomain.ChartData
+
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
+	query := rs.db.WithContext(ctx).Table("classes c").
+		Select("sc.name as label, ROUND(AVG((CAST((SELECT COUNT(*) FROM attendance_log al WHERE al.schedule_id = c.class_id AND al.status = 'Attended') AS DECIMAL) / NULLIF(c.max_capacity, 0)) * 100), 2) as value").
+		Joins("JOIN services s ON s.service_id = c.service_id").
+		Joins("JOIN service_categories sc ON sc.category_id = s.category_id").
+		Where("c.starts_at BETWEEN ? AND ?", startOfMonth, endOfMonth)
+
+	if branchID != nil {
+		query = query.Where("c.branch_id = ?", *branchID)
+	}
+
+	err := query.Group("sc.name").Order("value DESC").Scan(&results).Error
+	return results, err
+}

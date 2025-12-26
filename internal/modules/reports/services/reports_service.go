@@ -79,3 +79,7 @@ func (s *ReportService) GetWeeklySalesChart(ctx context.Context, branchID *uuid.
 func (s *ReportService) GetActivityHeatmap(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.HeatmapPoint, error) {
 	return s.store.Reports.GetActivityHeatmap(ctx, branchID)
 }
+
+func (s *ReportService) GetClassOccupancyChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetClassOccupancyChart(ctx, branchID)
+}

@@ -23,6 +23,7 @@ type ReportHandlersInterface interface {
 	GetMostUsedServicesHandler(c *gin.Context)
 	GetWeeklySalesChartHandler(c *gin.Context)
 	GetActivityHeatmapHandler(c *gin.Context)
+	GetClassOccupancyChartHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -59,5 +60,6 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 	chartsGroup.GET("/most-used-services", r.GetMostUsedServicesHandler)
 	chartsGroup.GET("/weekly-sales", r.GetWeeklySalesChartHandler)
 	chartsGroup.GET("/activity-heatmap", r.GetActivityHeatmapHandler)
+	chartsGroup.GET("/class-occupancy", r.GetClassOccupancyChartHandler)
 
 }

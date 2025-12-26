@@ -8122,7 +8122,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Reports"
+                    "Reports Branch"
                 ],
                 "summary": "Get Activity Heatmap",
                 "parameters": [
@@ -8143,6 +8143,58 @@ const docTemplate = `{
                                     "type": "array",
                                     "items": {
                                         "$ref": "#/definitions/reportdomain.HeatmapPoint"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/charts/class-occupancy": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves average occupancy percentage per class category for the current month.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Branch"
+                ],
+                "summary": "Get Class Occupancy Chart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Class occupancy data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.ChartData"
                                     }
                                 }
                             }
