@@ -642,7 +642,7 @@ func (rs *ReportStore) GetFinancialSummary(ctx context.Context, branchID *uuid.U
 			CASE 
 				WHEN ii.membership_type_id IS NOT NULL THEN 'Memberships'
 				WHEN ii.service_id IS NOT NULL THEN 'Services'
-				WHEN ii.package_id IS NOT NULL THEN 'Products'
+				WHEN ii.package_id IS NOT NULL THEN 'Combos'
 				ELSE 'Other'
 			END as category,
 			COALESCE(SUM(ii.total_line), 0) as amount
@@ -674,7 +674,7 @@ func (rs *ReportStore) GetFinancialSummary(ctx context.Context, branchID *uuid.U
 
 	var items []reportdomain.FinancialSummaryItem
 	// Fixed order for consistency
-	order := []string{"Memberships", "Services", "Products"}
+	order := []string{"Memberships", "Services", "Combos"}
 	for _, cat := range order {
 		items = append(items, reportdomain.FinancialSummaryItem{Category: cat, Amount: summaryMap[cat]})
 	}
