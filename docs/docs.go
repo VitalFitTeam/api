@@ -8542,6 +8542,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/instructors/next-class": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the start time of the next class for a specific instructor today.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Instructor"
+                ],
+                "summary": "Get Instructor Next Class",
+                "responses": {
+                    "200": {
+                        "description": "Next class time or 'Sin pendientes'",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/kpi/active-members": {
             "get": {
                 "security": [

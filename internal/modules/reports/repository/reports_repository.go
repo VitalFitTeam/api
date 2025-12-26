@@ -2,6 +2,7 @@ package reportrepository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
+	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"gorm.io/gorm"
@@ -805,4 +807,34 @@ func (rs *ReportStore) GetRecentCheckIns(ctx context.Context, branchID *uuid.UUI
 
 	err := query.Order("al.check_in_time DESC").Limit(4).Scan(&results).Error
 	return results, err
+}
+
+func (rs *ReportStore) GetInstructorNextClass(ctx context.Context, instructorID uuid.UUID) (*time.Time, error) {
+	var class scheduledomain.Class
+	now := time.Now()
+	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 999999999, now.Location())
+
+	err := rs.db.WithContext(ctx).Model(&scheduledomain.Class{}).
+		Where("instructor_id = ?", instructorID).
+		Where("starts_at > ? AND starts_at <= ?", now, endOfDay).
+		Order("starts_at ASC").
+		First(&class).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &class.StartsAt, nil
+}
+
+func (rs *ReportStore) GetInstructorIDByUserID(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error) {
+	var instructor instructordomain.Instructor
+	err := rs.db.WithContext(ctx).Model(&instructordomain.Instructor{}).
+		Select("instructor_id").Where("user_id = ?", userID).First(&instructor).Error
+	if err != nil {
+		return nil, err
+	}
+	return &instructor.InstructorID, nil
 }

@@ -108,3 +108,18 @@ func (s *ReportService) GetUpcomingClassesToday(ctx context.Context, branchID *u
 func (s *ReportService) GetRecentCheckIns(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.RecentAttendanceItem, error) {
 	return s.store.Reports.GetRecentCheckIns(ctx, branchID)
 }
+
+func (s *ReportService) GetInstructorNextClass(ctx context.Context, instructorID uuid.UUID) (string, error) {
+	nextClassTime, err := s.store.Reports.GetInstructorNextClass(ctx, instructorID)
+	if err != nil {
+		return "", err
+	}
+	if nextClassTime == nil {
+		return "Sin pendientes", nil
+	}
+	return nextClassTime.Format("03:04 PM"), nil
+}
+
+func (s *ReportService) GetInstructorIDByUserID(ctx context.Context, userID uuid.UUID) (*uuid.UUID, error) {
+	return s.store.Reports.GetInstructorIDByUserID(ctx, userID)
+}
