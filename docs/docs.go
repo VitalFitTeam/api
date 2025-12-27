@@ -9070,6 +9070,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/kpi/mrr": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the sum of revenue generated solely from memberships (excluding one-time products/services) for the current month.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Get Monthly Recurring Revenue (MRR) KPI",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "MRR KPI",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.KPICard"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/kpi/occupancy": {
             "get": {
                 "security": [

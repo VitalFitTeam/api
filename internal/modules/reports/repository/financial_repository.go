@@ -60,7 +60,6 @@ func (rs *ReportStore) GetAverageTicketKPI(ctx context.Context, branchID *uuid.U
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
 
-	// Helper para calcular el promedio (Total / Count) en un rango
 	calcAvg := func(start time.Time, end *time.Time) (decimal.Decimal, error) {
 		var result struct {
 			Total decimal.Decimal
@@ -131,6 +130,43 @@ func (rs *ReportStore) GetAccountsReceivableKPI(ctx context.Context, branchID *u
 		Value:      totalDebt,
 		TrendLabel: "Total Outstanding Debt",
 	}, nil
+}
+
+func (rs *ReportStore) GetMonthlyRecurringRevenueKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	calcMRR := func(start time.Time, end *time.Time) (decimal.Decimal, error) {
+		var total decimal.Decimal
+		query := rs.db.WithContext(ctx).Table("invoice_items ii").
+			Joins("JOIN invoices i ON i.invoice_id = ii.invoice_id").
+			Where("i.issue_date >= ? AND i.status = ?", start, billingdomain.InvoiceStatusPaid).
+			Where("ii.membership_type_id IS NOT NULL") // Filtro clave para MRR: Solo membresías
+
+		if end != nil {
+			query = query.Where("i.issue_date < ?", end)
+		}
+
+		if branchID != nil {
+			query = query.Where("i.branch_id = ?", *branchID)
+		}
+
+		err := query.Select("COALESCE(SUM(ii.total_line), 0)").Scan(&total).Error
+		return total, err
+	}
+
+	currentMRR, err := calcMRR(currentMonthStart, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	prevMRR, err := calcMRR(prevMonthStart, &currentMonthStart)
+	if err != nil {
+		return nil, err
+	}
+
+	return calculateTrend(currentMRR, prevMRR, "MRR (Memberships)", "vs previous month")
 }
 
 func calculateTrend(current, prev decimal.Decimal, title, label string) (*reportdomain.KPICard, error) {
