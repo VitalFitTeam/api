@@ -499,3 +499,12 @@ func (bs *BillingService) GetClientIvoices(ctx context.Context, userID uuid.UUID
 func (bs *BillingService) GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery, branchIDs []uuid.UUID) ([]*billingdomain.Invoice, int64, error) {
 	return bs.store.Billing.GetInvoices(ctx, fq, branchIDs)
 }
+
+func (bs *BillingService) GetTaxRateByBranchID(ctx context.Context, branchID uuid.UUID) (decimal.Decimal, error) {
+	branch, err := bs.store.Branches.GetByID(ctx, branchID)
+	if err != nil {
+		return decimal.Zero, err
+	}
+
+	return billingdomain.GetTaxRateByLocation(branch.State.Country.Name), nil
+}
