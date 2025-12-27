@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func parseTimeRange(c *gin.Context) (time.Time, time.Time) {
@@ -30,21 +31,28 @@ func parseTimeRange(c *gin.Context) (time.Time, time.Time) {
 	return start, end
 }
 
-// @Summary		Get Sales By Category
-// @Description	Retrieves sales data grouped by product category for a Donut Chart.
+// @Summary		Get Sales Volume By Service (Category)
+// @Description	Retrieves sales data grouped by category (Memberships, Packages, Service Categories) ordered by revenue. Ideal for Horizontal Bar Charts.
 // @Tags			Reports
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			start	query		string									false	"Start date for the report (YYYY-MM-DD)"
-// @Param			end		query		string									false	"End date for the report (YYYY-MM-DD)"
-// @Success		200		{object}	object{data=[]reportdomain.ChartData}	"Sales by category data"
-// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Param			branch_id	query		string									false	"Filter by Branch UUID"
+// @Param			start		query		string									false	"Start date for the report (YYYY-MM-DD)"
+// @Param			end			query		string									false	"End date for the report (YYYY-MM-DD)"
+// @Success		200			{object}	object{data=[]reportdomain.ChartData}	"Sales volume by category data"
+// @Failure		500			{object}	object{error=string}					"Internal Server Error"
 // @Router			/reports/charts/sales-by-category [get]
 func (h *ReportHanlders) GetSalesByCategoryHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	start, end := parseTimeRange(c)
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
 
-	data, err := h.services.ReportServices.GetSalesByCategory(ctx, start, end)
+	data, err := h.services.ReportServices.GetSalesByCategory(ctx, branchID, start, end)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return

@@ -53,8 +53,8 @@ func (s *ReportService) GetActiveBranchesCount(ctx context.Context) (int64, erro
 	return s.store.Reports.GetActiveBranchesCount(ctx)
 }
 
-func (s *ReportService) GetSalesByCategory(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
-	return s.store.Reports.GetSalesByCategory(ctx, start, end)
+func (s *ReportService) GetSalesByCategory(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetSalesByCategory(ctx, branchID, start, end)
 }
 
 func (s *ReportService) GetTopInstructorsByAttendance(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {

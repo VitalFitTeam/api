@@ -8403,15 +8403,21 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves sales data grouped by product category for a Donut Chart.",
+                "description": "Retrieves sales data grouped by category (Memberships, Packages, Service Categories) ordered by revenue. Ideal for Horizontal Bar Charts.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Reports"
                 ],
-                "summary": "Get Sales By Category",
+                "summary": "Get Sales Volume By Service (Category)",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Start date for the report (YYYY-MM-DD)",
@@ -8427,7 +8433,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Sales by category data",
+                        "description": "Sales volume by category data",
                         "schema": {
                             "type": "object",
                             "properties": {

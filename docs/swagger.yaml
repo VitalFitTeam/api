@@ -7770,8 +7770,13 @@ paths:
       - Reports
   /reports/charts/sales-by-category:
     get:
-      description: Retrieves sales data grouped by product category for a Donut Chart.
+      description: Retrieves sales data grouped by category (Memberships, Packages,
+        Service Categories) ordered by revenue. Ideal for Horizontal Bar Charts.
       parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
       - description: Start date for the report (YYYY-MM-DD)
         in: query
         name: start
@@ -7784,7 +7789,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Sales by category data
+          description: Sales volume by category data
           schema:
             properties:
               data:
@@ -7801,7 +7806,7 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: Get Sales By Category
+      summary: Get Sales Volume By Service (Category)
       tags:
       - Reports
   /reports/charts/sales-by-hour:

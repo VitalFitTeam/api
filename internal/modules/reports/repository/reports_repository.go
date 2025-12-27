@@ -399,7 +399,7 @@ func (rs *ReportStore) GetActiveBranchesCount(ctx context.Context) (int64, error
 	return count, nil
 }
 
-func (rs *ReportStore) GetSalesByCategory(ctx context.Context, start, end time.Time) ([]reportdomain.ChartData, error) {
+func (rs *ReportStore) GetSalesByCategory(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.ChartData, error) {
 	var results []reportdomain.ChartData
 	validStatuses := []billingdomain.InvoiceStatus{
 		billingdomain.InvoiceStatusPaid,
@@ -407,26 +407,27 @@ func (rs *ReportStore) GetSalesByCategory(ctx context.Context, start, end time.T
 		billingdomain.InvoiceStatusOverdue,
 	}
 
-	query := `
-        SELECT
-            CASE
-                WHEN ii.membership_type_id IS NOT NULL THEN 'Memberships'
-                WHEN ii.package_id IS NOT NULL THEN 'Packages'
-                WHEN sc.name IS NOT NULL THEN sc.name
-                ELSE 'Otros'
-            END as label,
-            SUM(ii.total_line) as value
-        FROM invoice_items ii
-        JOIN invoices i ON i.invoice_id = ii.invoice_id
-        LEFT JOIN services s ON s.service_id = ii.service_id
-        LEFT JOIN service_categories sc ON sc.category_id = s.category_id
-        WHERE i.issue_date BETWEEN ? AND ?
-        AND i.status IN ?
-        GROUP BY label
-        ORDER BY value DESC
-    `
+	query := rs.db.WithContext(ctx).Table("invoice_items ii").
+		Select(`
+			CASE
+				WHEN ii.membership_type_id IS NOT NULL THEN 'Memberships'
+				WHEN ii.package_id IS NOT NULL THEN 'Packages'
+				WHEN sc.name IS NOT NULL THEN sc.name
+				ELSE 'Other'
+			END as label,
+			COALESCE(SUM(ii.total_line), 0) as value
+		`).
+		Joins("JOIN invoices i ON i.invoice_id = ii.invoice_id").
+		Joins("LEFT JOIN services s ON s.service_id = ii.service_id").
+		Joins("LEFT JOIN service_categories sc ON sc.category_id = s.category_id").
+		Where("i.issue_date BETWEEN ? AND ?", start, end).
+		Where("i.status IN ?", validStatuses)
 
-	err := rs.db.WithContext(ctx).Raw(query, start, end, validStatuses).Scan(&results).Error
+	if branchID != nil {
+		query = query.Where("i.branch_id = ?", *branchID)
+	}
+
+	err := query.Group("label").Order("value DESC").Scan(&results).Error
 	return results, err
 }
 
