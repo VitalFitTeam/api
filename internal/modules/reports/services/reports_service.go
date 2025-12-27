@@ -155,3 +155,7 @@ func (s *ReportService) GetMonthlyRecurringRevenueKPI(ctx context.Context, branc
 func (s *ReportService) GetMonthlyRevenueChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
 	return s.store.Reports.GetMonthlyRevenueChart(ctx, branchID)
 }
+
+func (s *ReportService) GetBillingByBranchMatrix(ctx context.Context, start, end time.Time) (*reportdomain.BillingMatrix, error) {
+	return s.store.Reports.GetBillingByBranchMatrix(ctx, start, end)
+}

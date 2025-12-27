@@ -80,3 +80,16 @@ type RecentAttendanceItem struct {
 	CheckInTime time.Time `json:"check_in_time"`
 	ServiceName string    `json:"service_name"`
 }
+
+type BillingMatrixRow struct {
+	Concept string                     `json:"concept"`
+	Values  map[string]decimal.Decimal `json:"values"` // BranchName -> Amount
+	Total   decimal.Decimal            `json:"total"`  // Global Total for this concept
+}
+
+type BillingMatrix struct {
+	Branches   []string                   `json:"branches"`    // List of branch names (columns)
+	Rows       []BillingMatrixRow         `json:"rows"`        // Data rows
+	Totals     map[string]decimal.Decimal `json:"totals"`      // BranchName -> Total Vertical
+	GrandTotal decimal.Decimal            `json:"grand_total"` // Total of Totals
+}

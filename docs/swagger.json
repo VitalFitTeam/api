@@ -9022,6 +9022,61 @@
                 }
             }
         },
+        "/reports/kpi/billing-matrix": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a comparative matrix of revenue by concept (rows) and branch (columns).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Get Billing Detail by Branch Matrix",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Billing matrix data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.BillingMatrix"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/kpi/financial-summary": {
             "get": {
                 "security": [
@@ -14335,6 +14390,55 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/productshandler.ServiceImagesPayloads"
+                    }
+                }
+            }
+        },
+        "reportdomain.BillingMatrix": {
+            "type": "object",
+            "properties": {
+                "branches": {
+                    "description": "List of branch names (columns)",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "grand_total": {
+                    "description": "Total of Totals",
+                    "type": "number"
+                },
+                "rows": {
+                    "description": "Data rows",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/reportdomain.BillingMatrixRow"
+                    }
+                },
+                "totals": {
+                    "description": "BranchName -\u003e Total Vertical",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "reportdomain.BillingMatrixRow": {
+            "type": "object",
+            "properties": {
+                "concept": {
+                    "type": "string"
+                },
+                "total": {
+                    "description": "Global Total for this concept",
+                    "type": "number"
+                },
+                "values": {
+                    "description": "BranchName -\u003e Amount",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
                     }
                 }
             }

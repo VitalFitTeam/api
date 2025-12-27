@@ -169,6 +169,82 @@ func (rs *ReportStore) GetMonthlyRecurringRevenueKPI(ctx context.Context, branch
 	return calculateTrend(currentMRR, prevMRR, "MRR (Memberships)", "vs previous month")
 }
 
+func (rs *ReportStore) GetBillingByBranchMatrix(ctx context.Context, start, end time.Time) (*reportdomain.BillingMatrix, error) {
+	type queryResult struct {
+		BranchName string          `gorm:"column:branch_name"`
+		Category   string          `gorm:"column:category"`
+		Amount     decimal.Decimal `gorm:"column:amount"`
+	}
+
+	var results []queryResult
+
+	err := rs.db.WithContext(ctx).Table("invoice_items ii").
+		Select(`
+			b.name as branch_name,
+			CASE 
+				WHEN ii.membership_type_id IS NOT NULL THEN 'Memberships'
+				WHEN ii.service_id IS NOT NULL THEN 'Services'
+				WHEN ii.package_id IS NOT NULL THEN 'Combos'
+				ELSE 'Other'
+			END as category,
+			COALESCE(SUM(ii.total_line), 0) as amount
+		`).
+		Joins("JOIN invoices i ON i.invoice_id = ii.invoice_id").
+		Joins("JOIN branch b ON b.branch_id = i.branch_id").
+		Where("i.status = ?", billingdomain.InvoiceStatusPaid).
+		Where("i.issue_date BETWEEN ? AND ?", start, end).
+		Group("b.name, category").
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize structures
+	matrix := &reportdomain.BillingMatrix{
+		Branches:   []string{},
+		Rows:       []reportdomain.BillingMatrixRow{},
+		Totals:     make(map[string]decimal.Decimal),
+		GrandTotal: decimal.Zero,
+	}
+
+	// Concepts are fixed to ensure order
+	concepts := []string{"Memberships", "Services", "Combos", "Other"}
+	rowsMap := make(map[string]*reportdomain.BillingMatrixRow)
+	branchesSet := make(map[string]bool)
+
+	for _, c := range concepts {
+		rowsMap[c] = &reportdomain.BillingMatrixRow{
+			Concept: c,
+			Values:  make(map[string]decimal.Decimal),
+			Total:   decimal.Zero,
+		}
+	}
+
+	for _, r := range results {
+		if !branchesSet[r.BranchName] {
+			branchesSet[r.BranchName] = true
+			matrix.Branches = append(matrix.Branches, r.BranchName)
+			matrix.Totals[r.BranchName] = decimal.Zero
+		}
+
+		row := rowsMap[r.Category]
+		row.Values[r.BranchName] = r.Amount
+		row.Total = row.Total.Add(r.Amount)
+
+		// Update vertical totals
+		matrix.Totals[r.BranchName] = matrix.Totals[r.BranchName].Add(r.Amount)
+		matrix.GrandTotal = matrix.GrandTotal.Add(r.Amount)
+	}
+
+	// Convert map to slice in order
+	for _, c := range concepts {
+		matrix.Rows = append(matrix.Rows, *rowsMap[c])
+	}
+
+	return matrix, nil
+}
+
 func calculateTrend(current, prev decimal.Decimal, title, label string) (*reportdomain.KPICard, error) {
 	percentageChange := 0.0
 	if !prev.IsZero() {

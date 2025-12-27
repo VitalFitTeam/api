@@ -2060,6 +2060,40 @@ definitions:
     - name
     - priority
     type: object
+  reportdomain.BillingMatrix:
+    properties:
+      branches:
+        description: List of branch names (columns)
+        items:
+          type: string
+        type: array
+      grand_total:
+        description: Total of Totals
+        type: number
+      rows:
+        description: Data rows
+        items:
+          $ref: '#/definitions/reportdomain.BillingMatrixRow'
+        type: array
+      totals:
+        additionalProperties:
+          type: number
+        description: BranchName -> Total Vertical
+        type: object
+    type: object
+  reportdomain.BillingMatrixRow:
+    properties:
+      concept:
+        type: string
+      total:
+        description: Global Total for this concept
+        type: number
+      values:
+        additionalProperties:
+          type: number
+        description: BranchName -> Amount
+        type: object
+    type: object
   reportdomain.BranchPerformance:
     properties:
       label:
@@ -8167,6 +8201,41 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get Average Ticket KPI
+      tags:
+      - Reports Financial
+  /reports/kpi/billing-matrix:
+    get:
+      description: Retrieves a comparative matrix of revenue by concept (rows) and
+        branch (columns).
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Billing matrix data
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.BillingMatrix'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Billing Detail by Branch Matrix
       tags:
       - Reports Financial
   /reports/kpi/financial-summary:

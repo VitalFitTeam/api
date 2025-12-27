@@ -131,3 +131,24 @@ func (h *ReportHanlders) GetMonthlyRevenueChartHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": data})
 }
+
+// @Summary		Get Billing Detail by Branch Matrix
+// @Description	Retrieves a comparative matrix of revenue by concept (rows) and branch (columns).
+// @Tags			Reports Financial
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			start	query		string									false	"Start date (YYYY-MM-DD)"
+// @Param			end		query		string									false	"End date (YYYY-MM-DD)"
+// @Success		200		{object}	object{data=reportdomain.BillingMatrix}	"Billing matrix data"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/kpi/billing-matrix [get]
+func (h *ReportHanlders) GetBillingByBranchMatrixHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	start, end := parseTimeRange(c)
+	matrix, err := h.services.ReportServices.GetBillingByBranchMatrix(ctx, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": matrix})
+}
