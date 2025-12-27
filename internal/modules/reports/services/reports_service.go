@@ -139,3 +139,7 @@ func (s *ReportService) GetInstructorClassesToday(ctx context.Context, instructo
 func (s *ReportService) GetWeeklyRevenueKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetWeeklyRevenueKPI(ctx, branchID)
 }
+
+func (s *ReportService) GetAverageTicketKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetAverageTicketKPI(ctx, branchID)
+}
