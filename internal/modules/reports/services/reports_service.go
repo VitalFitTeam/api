@@ -135,3 +135,7 @@ func (s *ReportService) GetInstructorMonthlyClassesCount(ctx context.Context, in
 func (s *ReportService) GetInstructorClassesToday(ctx context.Context, instructorID uuid.UUID) ([]reportdomain.ClassScheduleItem, error) {
 	return s.store.Reports.GetInstructorClassesToday(ctx, instructorID)
 }
+
+func (s *ReportService) GetWeeklyRevenueKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetWeeklyRevenueKPI(ctx, branchID)
+}

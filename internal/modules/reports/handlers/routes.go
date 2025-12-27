@@ -34,6 +34,7 @@ type ReportHandlersInterface interface {
 	GetInstructorStudentCountKPIHandler(c *gin.Context)
 	GetInstructorMonthlyClassesCountHandler(c *gin.Context)
 	GetInstructorClassesTodayHandler(c *gin.Context)
+	GetWeeklyRevenueKPIHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -71,6 +72,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 	financialGroup.Use(m.RBACPermission("reports:view_financial"))
 	{
 		financialGroup.GET("/kpi/financial-summary", r.GetFinancialSummaryHandler)
+		financialGroup.GET("/kpi/weekly-revenue", r.GetWeeklyRevenueKPIHandler)
 	}
 
 	// Attendance Routes
