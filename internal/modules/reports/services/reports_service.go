@@ -151,3 +151,7 @@ func (s *ReportService) GetAccountsReceivableKPI(ctx context.Context, branchID *
 func (s *ReportService) GetMonthlyRecurringRevenueKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetMonthlyRecurringRevenueKPI(ctx, branchID)
 }
+
+func (s *ReportService) GetMonthlyRevenueChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetMonthlyRevenueChart(ctx, branchID)
+}

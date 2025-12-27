@@ -106,3 +106,28 @@ func (h *ReportHanlders) GetAverageTicketKPIHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": kpi})
 }
+
+// @Summary		Get Monthly Revenue Chart
+// @Description	Retrieves total revenue per month for the current year.
+// @Tags			Reports Financial
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string									false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=[]reportdomain.ChartData}	"Monthly revenue data"
+// @Failure		500			{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/charts/monthly-revenue [get]
+func (h *ReportHanlders) GetMonthlyRevenueChartHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+	data, err := h.services.ReportServices.GetMonthlyRevenueChart(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}

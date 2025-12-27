@@ -38,6 +38,7 @@ type ReportHandlersInterface interface {
 	GetAverageTicketKPIHandler(c *gin.Context)
 	GetAccountsReceivableKPIHandler(c *gin.Context)
 	GetMonthlyRecurringRevenueKPIHandler(c *gin.Context)
+	GetMonthlyRevenueChartHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -68,6 +69,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		salesGroup.GET("/charts/sales-by-payment-method", r.GetSalesByPaymentMethodHandler)
 		salesGroup.GET("/charts/sales-by-hour", r.GetSalesByHourHandler)
 		salesGroup.GET("/charts/weekly-sales", r.GetWeeklySalesChartHandler)
+		salesGroup.GET("/charts/monthly-revenue", r.GetMonthlyRevenueChartHandler)
 	}
 
 	// Financial Routes

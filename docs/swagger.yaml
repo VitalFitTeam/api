@@ -7700,6 +7700,38 @@ paths:
       summary: Get Class Occupancy Chart
       tags:
       - Reports Branch
+  /reports/charts/monthly-revenue:
+    get:
+      description: Retrieves total revenue per month for the current year.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Monthly revenue data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Monthly Revenue Chart
+      tags:
+      - Reports Financial
   /reports/charts/most-used-services:
     get:
       description: Retrieves the top 5 most used services based on attendance.

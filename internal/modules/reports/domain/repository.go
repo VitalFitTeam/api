@@ -40,4 +40,5 @@ type ReportRepository interface {
 	GetAverageTicketKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetAccountsReceivableKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetMonthlyRecurringRevenueKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetMonthlyRevenueChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 }

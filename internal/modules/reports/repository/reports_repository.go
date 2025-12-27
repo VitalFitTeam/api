@@ -942,3 +942,46 @@ func (rs *ReportStore) GetInstructorClassesToday(ctx context.Context, instructor
 	err := query.Order("c.starts_at ASC").Scan(&results).Error
 	return results, err
 }
+
+func (rs *ReportStore) GetMonthlyRevenueChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
+	now := time.Now()
+	startOfYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location())
+	endOfYear := time.Date(now.Year(), 12, 31, 23, 59, 59, 999999999, now.Location())
+
+	type result struct {
+		Month int             `gorm:"column:month"`
+		Total decimal.Decimal `gorm:"column:total"`
+	}
+
+	var queryResults []result
+
+	query := rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+		Select("EXTRACT(MONTH FROM issue_date) as month, COALESCE(SUM(total_amount), 0) as total").
+		Where("issue_date BETWEEN ? AND ?", startOfYear, endOfYear).
+		Where("status = ?", billingdomain.InvoiceStatusPaid)
+
+	if branchID != nil {
+		query = query.Where("branch_id = ?", *branchID)
+	}
+
+	err := query.Group("EXTRACT(MONTH FROM issue_date)").Scan(&queryResults).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Inicializar estructura para los 12 meses
+	chartData := make([]reportdomain.ChartData, 12)
+	months := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+
+	resultsMap := make(map[int]decimal.Decimal)
+	for _, r := range queryResults {
+		resultsMap[r.Month] = r.Total
+	}
+
+	for i := 0; i < 12; i++ {
+		val := resultsMap[i+1] // Meses 1-12
+		chartData[i] = reportdomain.ChartData{Label: months[i], Value: val}
+	}
+
+	return chartData, nil
+}
