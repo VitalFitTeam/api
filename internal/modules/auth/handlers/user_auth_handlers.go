@@ -99,11 +99,6 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		return
 	}
 
-	if payload.RoleName == "client" {
-		h.services.LogErrors.BadRequestResponse(c, shared_errors.ErrBadRequest)
-		return
-	}
-
 	user, err := payload.CreateUser()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
