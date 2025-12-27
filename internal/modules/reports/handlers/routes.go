@@ -40,6 +40,7 @@ type ReportHandlersInterface interface {
 	GetMonthlyRecurringRevenueKPIHandler(c *gin.Context)
 	GetMonthlyRevenueChartHandler(c *gin.Context)
 	GetBillingByBranchMatrixHandler(c *gin.Context)
+	GetTotalTransactionsHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -83,6 +84,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		financialGroup.GET("/kpi/accounts-receivable", r.GetAccountsReceivableKPIHandler)
 		financialGroup.GET("/kpi/mrr", r.GetMonthlyRecurringRevenueKPIHandler)
 		financialGroup.GET("/kpi/billing-matrix", r.GetBillingByBranchMatrixHandler)
+		financialGroup.GET("/kpi/total-transactions", r.GetTotalTransactionsHandler)
 	}
 
 	// Attendance Routes

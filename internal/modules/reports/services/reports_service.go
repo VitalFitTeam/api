@@ -159,3 +159,7 @@ func (s *ReportService) GetMonthlyRevenueChart(ctx context.Context, branchID *uu
 func (s *ReportService) GetBillingByBranchMatrix(ctx context.Context, start, end time.Time) (*reportdomain.BillingMatrix, error) {
 	return s.store.Reports.GetBillingByBranchMatrix(ctx, start, end)
 }
+
+func (s *ReportService) GetTotalTransactions(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetTotalTransactions(ctx, branchID)
+}

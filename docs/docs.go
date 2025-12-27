@@ -9281,6 +9281,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/kpi/total-transactions": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the total lifetime count of completed transactions (payments). Supports filtering by branch. Includes a trend comparison (current month vs previous month).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Get Total Transactions Stats",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Total transactions KPI",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.KPICard"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/kpi/weekly-revenue": {
             "get": {
                 "security": [

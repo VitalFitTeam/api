@@ -8362,6 +8362,38 @@ paths:
       summary: Get Occupancy KPI
       tags:
       - Reports Branch
+  /reports/kpi/total-transactions:
+    get:
+      description: Retrieves the total lifetime count of completed transactions (payments).
+        Supports filtering by branch. Includes a trend comparison (current month vs
+        previous month).
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total transactions KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Total Transactions Stats
+      tags:
+      - Reports Financial
   /reports/kpi/weekly-revenue:
     get:
       description: Retrieves total revenue (sum of completed payments) for the current

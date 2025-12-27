@@ -8,6 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
+	"gorm.io/gorm"
 )
 
 func (rs *ReportStore) GetWeeklyRevenueKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
@@ -243,6 +244,57 @@ func (rs *ReportStore) GetBillingByBranchMatrix(ctx context.Context, start, end 
 	}
 
 	return matrix, nil
+}
+
+func (rs *ReportStore) GetTotalTransactions(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	var totalLifetime, currentCount, prevCount int64
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	// Base query builder
+	buildQuery := func() *gorm.DB {
+		query := rs.db.WithContext(ctx).Model(&billingdomain.Payment{}).
+			Joins("JOIN invoices i ON i.invoice_id = payments.invoice_id").
+			Where("payments.status = ?", billingdomain.PaymentStatusCompleted)
+
+		if branchID != nil {
+			query = query.Where("i.branch_id = ?", *branchID)
+		}
+		return query
+	}
+
+	// 1. Lifetime Total
+	if err := buildQuery().Count(&totalLifetime).Error; err != nil {
+		return nil, err
+	}
+
+	// 2. Current Month Count
+	if err := buildQuery().Where("payments.payment_date >= ?", currentMonthStart).Count(&currentCount).Error; err != nil {
+		return nil, err
+	}
+
+	// 3. Previous Month Count
+	if err := buildQuery().Where("payments.payment_date >= ? AND payments.payment_date < ?", prevMonthStart, currentMonthStart).Count(&prevCount).Error; err != nil {
+		return nil, err
+	}
+
+	// Calculate Trend
+	percentageChange := 0.0
+
+	if prevCount > 0 {
+		percentageChange = float64(currentCount-prevCount) / float64(prevCount) * 100
+	} else if currentCount > 0 {
+		percentageChange = 100.0
+	}
+
+	return &reportdomain.KPICard{
+		Title:        "Total Transactions",
+		Value:        decimal.NewFromInt(totalLifetime),
+		TrendPercent: percentageChange,
+		TrendLabel:   "vs previous month",
+		IsPositive:   percentageChange >= 0,
+	}, nil
 }
 
 func calculateTrend(current, prev decimal.Decimal, title, label string) (*reportdomain.KPICard, error) {
