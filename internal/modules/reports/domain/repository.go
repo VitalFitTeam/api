@@ -38,4 +38,5 @@ type ReportRepository interface {
 	GetInstructorClassesToday(ctx context.Context, instructorID uuid.UUID) ([]ClassScheduleItem, error)
 	GetWeeklyRevenueKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetAverageTicketKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetAccountsReceivableKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 }

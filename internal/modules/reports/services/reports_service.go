@@ -143,3 +143,7 @@ func (s *ReportService) GetWeeklyRevenueKPI(ctx context.Context, branchID *uuid.
 func (s *ReportService) GetAverageTicketKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetAverageTicketKPI(ctx, branchID)
 }
+
+func (s *ReportService) GetAccountsReceivableKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetAccountsReceivableKPI(ctx, branchID)
+}

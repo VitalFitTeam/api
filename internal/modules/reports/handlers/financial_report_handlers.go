@@ -32,6 +32,31 @@ func (h *ReportHanlders) GetWeeklyRevenueKPIHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": kpi})
 }
 
+// @Summary		Get Accounts Receivable KPI
+// @Description	Retrieves the total outstanding debt (Accounts Receivable) from unpaid or overdue invoices of active users.
+// @Tags			Reports Financial
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string								false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=reportdomain.KPICard}	"Accounts Receivable KPI"
+// @Failure		500			{object}	object{error=string}				"Internal Server Error"
+// @Router			/reports/kpi/accounts-receivable [get]
+func (h *ReportHanlders) GetAccountsReceivableKPIHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+	kpi, err := h.services.ReportServices.GetAccountsReceivableKPI(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": kpi})
+}
+
 // @Summary		Get Average Ticket KPI
 // @Description	Retrieves the average transaction value (Total Revenue / Number of Transactions) for the current month compared to the previous month.
 // @Tags			Reports Financial

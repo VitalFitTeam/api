@@ -102,6 +102,37 @@ func (rs *ReportStore) GetAverageTicketKPI(ctx context.Context, branchID *uuid.U
 	return calculateTrend(currentAvg, prevAvg, "Average Ticket", "vs previous month")
 }
 
+func (rs *ReportStore) GetAccountsReceivableKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	var totalDebt decimal.Decimal
+
+	// Suma (Total Factura - Total Pagado) para facturas pendientes de usuarios activos
+	query := rs.db.WithContext(ctx).Table("invoices i").
+		Select("COALESCE(SUM(i.total_amount - COALESCE(paid_sum.paid, 0)), 0)").
+		Joins("JOIN users u ON u.user_id = i.user_id").
+		Joins(`LEFT JOIN (
+			SELECT invoice_id, SUM(amount_base) as paid 
+			FROM payments 
+			WHERE status = ? 
+			GROUP BY invoice_id
+		) paid_sum ON paid_sum.invoice_id = i.invoice_id`, billingdomain.PaymentStatusCompleted).
+		Where("i.status IN ?", []billingdomain.InvoiceStatus{billingdomain.InvoiceStatusUnpaid, billingdomain.InvoiceStatusOverdue}).
+		Where("u.deleted_at IS NULL")
+
+	if branchID != nil {
+		query = query.Where("i.branch_id = ?", *branchID)
+	}
+
+	if err := query.Scan(&totalDebt).Error; err != nil {
+		return nil, err
+	}
+
+	return &reportdomain.KPICard{
+		Title:      "Accounts Receivable",
+		Value:      totalDebt,
+		TrendLabel: "Total Outstanding Debt",
+	}, nil
+}
+
 func calculateTrend(current, prev decimal.Decimal, title, label string) (*reportdomain.KPICard, error) {
 	percentageChange := 0.0
 	if !prev.IsZero() {
