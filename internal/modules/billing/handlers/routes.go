@@ -37,6 +37,7 @@ type BillingHandlersInterface interface {
 	GetInvoiceByIDHandler(c *gin.Context)
 
 	GetClientInvoices(c *gin.Context)
+	GetTaxRateByBranchIDHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -53,9 +54,10 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	billingGroup := rg.Group("/billing")
 	billingGroup.Use(m.AuthJwtTokenMiddleware())
 
-	billingGroup.GET("/rates", m.RBACPermission("billing:list"), r.GetRates)
-	billingGroup.GET("/rates/:currency", m.RBACPermission("billing:list"), r.GetSpecificCurrencyRates)
+	billingGroup.GET("/rates", r.GetRates)
+	billingGroup.GET("/rates/:currency", r.GetSpecificCurrencyRates)
 	billingGroup.GET("/rates/historical/:date/:currency", m.RBACPermission("billing:list"), r.GetHistoricalSpecificCurrencyRateHandler)
+	billingGroup.GET("/tax-rate/:branch_id", r.GetTaxRateByBranchIDHandler)
 	paymentMethodsGroup := billingGroup.Group("/payment-methods")
 	{
 		paymentMethodsGroup.GET("", m.RBACPermission("billing:list"), r.GetPaymentMethodsHandler)

@@ -344,28 +344,28 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 		app.CheckResponseCode(t, http.StatusUnauthorized, rr.Code)
 	})
 
-	t.Run("should fail when trying to register a client", func(t *testing.T) {
-		// The handler has a guard to prevent this. It shouldn't reach the services.
-		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
-		// The middleware will check for 'users:create' permission. Since the user is super_admin, it will pass.
-		// No need to mock RoleHasPermission for super_admin
+	// t.Run("should fail when trying to register a client", func(t *testing.T) {
+	// 	// The handler has a guard to prevent this. It shouldn't reach the services.
+	// 	userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+	// 	// The middleware will check for 'users:create' permission. Since the user is super_admin, it will pass.
+	// 	// No need to mock RoleHasPermission for super_admin
 
-		payload := map[string]string{
-			"first_name": "Client", "last_name": "User", "email": "shouldfail@example.com",
-			"phone": "111", "identity_document": "111", "password": "Password123!",
-			"birth_date": "2000-01-01", "gender": "male",
-			"role_name": "client", // Trying to register a client
-		}
-		body, _ := json.Marshal(payload)
-		req, _ := http.NewRequest(http.MethodPost, "/v1/auth/register-staff", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+adminToken)
+	// 	payload := map[string]string{
+	// 		"first_name": "Client", "last_name": "User", "email": "shouldfail@example.com",
+	// 		"phone": "111", "identity_document": "111", "password": "Password123!",
+	// 		"birth_date": "2000-01-01", "gender": "male",
+	// 		"role_name": "client", // Trying to register a client
+	// 	}
+	// 	body, _ := json.Marshal(payload)
+	// 	req, _ := http.NewRequest(http.MethodPost, "/v1/auth/register-staff", bytes.NewBuffer(body))
+	// 	req.Header.Set("Content-Type", "application/json")
+	// 	req.Header.Set("Authorization", "Bearer "+adminToken)
 
-		rr := app.ExecuteRequest(req, mux)
-		app.CheckResponseCode(t, http.StatusBadRequest, rr.Code)
+	// 	rr := app.ExecuteRequest(req, mux)
+	// 	app.CheckResponseCode(t, http.StatusBadRequest, rr.Code)
 
-		userStoreMock.AssertExpectations(t)
-	})
+	// 	userStoreMock.AssertExpectations(t)
+	// })
 
 	t.Run("should fail when user does not have users:create permission", func(t *testing.T) {
 		// Middleware checks

@@ -9,6 +9,13 @@ import (
 type ReportHandlersInterface interface {
 	ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	GetGlobalSalesStatsHandler(c *gin.Context)
+	GetMonthlySalesKPIHandler(c *gin.Context)
+	GetActiveMembersKPIHandler(c *gin.Context)
+	GetOccupancyKPIHandler(c *gin.Context)
+	GetTotalSalesHandler(c *gin.Context)
+	GetFinancialSummaryHandler(c *gin.Context)
+	GetTodayCheckInsStatHandler(c *gin.Context)
+	GetCurrentOccupancyStatHandler(c *gin.Context)
 	GetTopBranchesPerformanceHandler(c *gin.Context)
 	GetTotalClientsStatHandler(c *gin.Context)
 	GetActiveBranchesCountHandler(c *gin.Context)
@@ -17,6 +24,23 @@ type ReportHandlersInterface interface {
 	GetSalesByPaymentMethodHandler(c *gin.Context)
 	GetSalesByHourHandler(c *gin.Context)
 	GetMostUsedServicesHandler(c *gin.Context)
+	GetWeeklySalesChartHandler(c *gin.Context)
+	GetActivityHeatmapHandler(c *gin.Context)
+	GetClassOccupancyChartHandler(c *gin.Context)
+	GetClassCapacityRatioHandler(c *gin.Context)
+	GetUpcomingClassesTodayHandler(c *gin.Context)
+	GetRecentCheckInsHandler(c *gin.Context)
+	GetInstructorNextClassHandler(c *gin.Context)
+	GetInstructorStudentCountKPIHandler(c *gin.Context)
+	GetInstructorMonthlyClassesCountHandler(c *gin.Context)
+	GetInstructorClassesTodayHandler(c *gin.Context)
+	GetWeeklyRevenueKPIHandler(c *gin.Context)
+	GetAverageTicketKPIHandler(c *gin.Context)
+	GetAccountsReceivableKPIHandler(c *gin.Context)
+	GetMonthlyRecurringRevenueKPIHandler(c *gin.Context)
+	GetMonthlyRevenueChartHandler(c *gin.Context)
+	GetBillingByBranchMatrixHandler(c *gin.Context)
+	GetTotalTransactionsHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -30,20 +54,59 @@ func NewReportHandlers(services appservices.Services) *ReportHanlders {
 }
 
 func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
-	billingGroup := rg.Group("/reports")
-	billingGroup.Use(m.AuthJwtTokenMiddleware(), m.RBACPermission("reports:view_sales"))
+	reportsGroup := rg.Group("/reports")
+	reportsGroup.Use(m.AuthJwtTokenMiddleware())
 
-	statsGroup := billingGroup.Group("/stats")
-	statsGroup.GET("/global", r.GetGlobalSalesStatsHandler)
-	statsGroup.GET("/top-branches", r.GetTopBranchesPerformanceHandler)
-	statsGroup.GET("/total-clients", r.GetTotalClientsStatHandler)
-	statsGroup.GET("/total-active-branches", r.GetActiveBranchesCountHandler)
+	// Sales Routes
+	salesGroup := reportsGroup.Group("")
+	salesGroup.Use(m.RBACPermission("reports:view_sales"))
+	{
+		salesGroup.GET("/stats/global", r.GetGlobalSalesStatsHandler)
+		salesGroup.GET("/stats/total-sales", r.GetTotalSalesHandler)
+		salesGroup.GET("/stats/top-branches", r.GetTopBranchesPerformanceHandler)
 
-	chartsGroup := billingGroup.Group("/charts")
-	chartsGroup.GET("/sales-by-category", r.GetSalesByCategoryHandler)
-	chartsGroup.GET("/top-instructors", r.GetTopInstructorsByAttendanceHandler)
-	chartsGroup.GET("/sales-by-payment-method", r.GetSalesByPaymentMethodHandler)
-	chartsGroup.GET("/sales-by-hour", r.GetSalesByHourHandler)
-	chartsGroup.GET("/most-used-services", r.GetMostUsedServicesHandler)
+		salesGroup.GET("/kpi/monthly-sales", r.GetMonthlySalesKPIHandler)
 
+		salesGroup.GET("/charts/sales-by-category", r.GetSalesByCategoryHandler)
+		salesGroup.GET("/charts/sales-by-payment-method", r.GetSalesByPaymentMethodHandler)
+		salesGroup.GET("/charts/sales-by-hour", r.GetSalesByHourHandler)
+		salesGroup.GET("/charts/weekly-sales", r.GetWeeklySalesChartHandler)
+		salesGroup.GET("/charts/monthly-revenue", r.GetMonthlyRevenueChartHandler)
+	}
+
+	// Financial Routes
+	financialGroup := reportsGroup.Group("")
+	financialGroup.Use(m.RBACPermission("reports:view_financial"))
+	{
+		financialGroup.GET("/kpi/financial-summary", r.GetFinancialSummaryHandler)
+		financialGroup.GET("/kpi/weekly-revenue", r.GetWeeklyRevenueKPIHandler)
+		financialGroup.GET("/kpi/average-ticket", r.GetAverageTicketKPIHandler)
+		financialGroup.GET("/kpi/accounts-receivable", r.GetAccountsReceivableKPIHandler)
+		financialGroup.GET("/kpi/mrr", r.GetMonthlyRecurringRevenueKPIHandler)
+		financialGroup.GET("/kpi/billing-matrix", r.GetBillingByBranchMatrixHandler)
+		financialGroup.GET("/kpi/total-transactions", r.GetTotalTransactionsHandler)
+	}
+
+	// Attendance Routes
+	attendanceGroup := reportsGroup.Group("")
+	attendanceGroup.Use(m.RBACPermission("reports:view_attendance"))
+	{
+		attendanceGroup.GET("/stats/total-clients", r.GetTotalClientsStatHandler)
+		attendanceGroup.GET("/stats/total-active-branches", r.GetActiveBranchesCountHandler)
+		attendanceGroup.GET("/stats/check-ins-today", r.GetTodayCheckInsStatHandler)
+		attendanceGroup.GET("/stats/current-occupancy", r.GetCurrentOccupancyStatHandler)
+		attendanceGroup.GET("/stats/class-capacity", r.GetClassCapacityRatioHandler)
+		attendanceGroup.GET("/stats/upcoming-classes", r.GetUpcomingClassesTodayHandler)
+		attendanceGroup.GET("/stats/recent-check-ins", r.GetRecentCheckInsHandler)
+		attendanceGroup.GET("/instructors/next-class", r.GetInstructorNextClassHandler)
+		attendanceGroup.GET("/instructors/student-count", r.GetInstructorStudentCountKPIHandler)
+		attendanceGroup.GET("/instructors/classes-count", r.GetInstructorMonthlyClassesCountHandler)
+		attendanceGroup.GET("/instructors/classes-today", r.GetInstructorClassesTodayHandler)
+		attendanceGroup.GET("/kpi/active-members", r.GetActiveMembersKPIHandler)
+		attendanceGroup.GET("/kpi/occupancy", r.GetOccupancyKPIHandler)
+		attendanceGroup.GET("/charts/top-instructors", r.GetTopInstructorsByAttendanceHandler)
+		attendanceGroup.GET("/charts/most-used-services", r.GetMostUsedServicesHandler)
+		attendanceGroup.GET("/charts/activity-heatmap", r.GetActivityHeatmapHandler)
+		attendanceGroup.GET("/charts/class-occupancy", r.GetClassOccupancyChartHandler)
+	}
 }

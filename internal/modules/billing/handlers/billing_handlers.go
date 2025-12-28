@@ -477,3 +477,35 @@ func (h *BillingHandlers) GetInvoicesHandler(c *gin.Context) {
 
 	c.JSON(200, resp)
 }
+
+// @Summary		Get tax rate by branch ID
+// @Description	Retrieves the tax rate applicable for a specific branch based on its location (Country).
+// @Tags			Billing
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	path		string					true	"Branch UUID"
+// @Success		200			{object}	object{tax_rate=string}	"Tax rate as decimal string"
+// @Failure		400			{object}	object{error=string}	"Bad Request"
+// @Failure		404			{object}	object{error=string}	"Not Found"
+// @Failure		500			{object}	object{error=string}	"Internal Server Error"
+// @Router			/billing/tax-rate/{branch_id} [get]
+func (h *BillingHandlers) GetTaxRateByBranchIDHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	branchID, err := uuid.Parse(c.Param("branch_id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	taxRate, err := h.services.BillingServices.GetTaxRateByBranchID(ctx, branchID)
+	if err != nil {
+		if errors.Is(err, shared_errors.ErrNotFound) {
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(200, gin.H{"tax_rate": taxRate})
+}
