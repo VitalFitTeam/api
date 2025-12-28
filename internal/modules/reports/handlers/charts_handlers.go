@@ -145,3 +145,29 @@ func (h *ReportHanlders) GetMostUsedServicesHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": data})
 }
+
+// @Summary		Get New vs Recurring Users Chart
+// @Description	Retrieves the evolution of New vs Recurring users per month for the current year. Ideal for Stacked Area Charts.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string											false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=[]reportdomain.StackedChartData}	"New vs Recurring data"
+// @Failure		500			{object}	object{error=string}							"Internal Server Error"
+// @Router			/reports/charts/new-vs-recurring [get]
+func (h *ReportHanlders) GetNewVsRecurringChartHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	data, err := h.services.ReportServices.GetNewVsRecurringChart(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}

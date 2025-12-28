@@ -175,3 +175,7 @@ func (s *ReportService) GetRetentionRateKPI(ctx context.Context, branchID *uuid.
 func (s *ReportService) GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetAverageCLVKPI(ctx, branchID)
 }
+
+func (s *ReportService) GetNewVsRecurringChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.StackedChartData, error) {
+	return s.store.Reports.GetNewVsRecurringChart(ctx, branchID)
+}

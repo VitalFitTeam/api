@@ -93,3 +93,9 @@ type BillingMatrix struct {
 	Totals     map[string]decimal.Decimal `json:"totals"`      // BranchName -> Total Vertical
 	GrandTotal decimal.Decimal            `json:"grand_total"` // Total of Totals
 }
+
+type StackedChartData struct {
+	Label     string `json:"label"`     // Month Name
+	New       int64  `json:"new"`       // Registered this month
+	Recurring int64  `json:"recurring"` // Active this month but registered previously
+}

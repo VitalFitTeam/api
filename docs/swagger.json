@@ -8388,6 +8388,58 @@
                 }
             }
         },
+        "/reports/charts/new-vs-recurring": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the evolution of New vs Recurring users per month for the current year. Ideal for Stacked Area Charts.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get New vs Recurring Users Chart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "New vs Recurring data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.StackedChartData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/charts/sales-by-category": {
             "get": {
                 "security": [
@@ -14806,6 +14858,23 @@
                 },
                 "user_name": {
                     "type": "string"
+                }
+            }
+        },
+        "reportdomain.StackedChartData": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "description": "Month Name",
+                    "type": "string"
+                },
+                "new": {
+                    "description": "Registered this month",
+                    "type": "integer"
+                },
+                "recurring": {
+                    "description": "Active this month but registered previously",
+                    "type": "integer"
                 }
             }
         },

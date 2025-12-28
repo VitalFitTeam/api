@@ -514,6 +514,67 @@ func (rs *ReportStore) GetRetentionRateKPI(ctx context.Context, branchID *uuid.U
 	}, nil
 }
 
+func (rs *ReportStore) GetNewVsRecurringChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.StackedChartData, error) {
+	now := time.Now()
+	months := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+	var chartData []reportdomain.StackedChartData
+
+	// Iterate over the 12 months of the current year
+	for i := 1; i <= 12; i++ {
+		startMonth := time.Date(now.Year(), time.Month(i), 1, 0, 0, 0, 0, now.Location())
+		endMonth := startMonth.AddDate(0, 1, 0)
+
+		// Skip future months
+		if startMonth.After(now) {
+			chartData = append(chartData, reportdomain.StackedChartData{Label: months[i-1], New: 0, Recurring: 0})
+			continue
+		}
+
+		// 1. Calculate NEW Users (Registered in this month)
+		var newCount int64
+		queryNew := rs.db.WithContext(ctx).Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at >= ? AND users.created_at < ?", startMonth, endMonth)
+
+		if branchID != nil {
+			// If filtering by branch, user must have an invoice in that branch (Acquisition proxy)
+			queryNew = queryNew.Joins("JOIN invoices i ON i.user_id = users.user_id").
+				Where("i.branch_id = ?", *branchID).
+				Distinct("users.user_id")
+		}
+
+		if err := queryNew.Count(&newCount).Error; err != nil {
+			return nil, err
+		}
+
+		// 2. Calculate RECURRING Users (Active in this month BUT registered before this month)
+		// Active = Has attendance in this month
+		var recurringCount int64
+		queryRecurring := rs.db.WithContext(ctx).Table("attendance_log al").
+			Joins("JOIN users u ON u.user_id = al.user_id").
+			Where("al.check_in_time >= ? AND al.check_in_time < ?", startMonth, endMonth).
+			Where("u.created_at < ?", startMonth) // Registered BEFORE this month
+
+		if branchID != nil {
+			queryRecurring = queryRecurring.Joins("JOIN classes c ON c.class_id = al.schedule_id").
+				Where("c.branch_id = ?", *branchID)
+		}
+
+		if err := queryRecurring.Distinct("al.user_id").Count(&recurringCount).Error; err != nil {
+			return nil, err
+		}
+
+		chartData = append(chartData, reportdomain.StackedChartData{
+			Label:     months[i-1],
+			New:       newCount,
+			Recurring: recurringCount,
+		})
+	}
+
+	return chartData, nil
+}
+
 func (rs *ReportStore) GetSalesByCategory(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.ChartData, error) {
 	var results []reportdomain.ChartData
 	validStatuses := []billingdomain.InvoiceStatus{
