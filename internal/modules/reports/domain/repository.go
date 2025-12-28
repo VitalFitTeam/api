@@ -44,4 +44,5 @@ type ReportRepository interface {
 	GetBillingByBranchMatrix(ctx context.Context, start, end time.Time) (*BillingMatrix, error)
 	GetTotalTransactions(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetRetentionRateKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 }

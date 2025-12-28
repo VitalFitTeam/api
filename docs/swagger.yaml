@@ -8394,6 +8394,38 @@ paths:
       summary: Get Occupancy KPI
       tags:
       - Reports Branch
+  /reports/kpi/retention-rate:
+    get:
+      description: 'Retrieves the percentage of existing clients who remained active
+        during the current month. Formula: ((End Clients - New Clients) / Start Clients)
+        * 100.'
+      parameters:
+      - description: Filter by Branch UUID (Currently Global)
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Retention Rate KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Retention Rate KPI
+      tags:
+      - Reports
   /reports/kpi/total-transactions:
     get:
       description: Retrieves the total lifetime count of completed transactions (payments).

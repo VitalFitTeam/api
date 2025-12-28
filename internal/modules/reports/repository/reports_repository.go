@@ -442,6 +442,78 @@ func (rs *ReportStore) GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID
 	}, nil
 }
 
+func (rs *ReportStore) GetRetentionRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	// Helper para calcular retención en un rango de fechas
+	calcRetention := func(start, end time.Time) (float64, error) {
+		var S, N, E int64
+
+		// S (Start): Clientes al inicio del mes.
+		// Deben haber sido creados antes del inicio Y (no eliminados O eliminados después del inicio)
+		err := rs.db.WithContext(ctx).Unscoped().Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at < ?", start).
+			Where("users.deleted_at IS NULL OR users.deleted_at >= ?", start).
+			Count(&S).Error
+		if err != nil {
+			return 0, err
+		}
+
+		if S == 0 {
+			return 0, nil
+		}
+
+		// N (New): Clientes nuevos durante el mes
+		err = rs.db.WithContext(ctx).Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at >= ? AND users.created_at < ?", start, end).
+			Count(&N).Error
+		if err != nil {
+			return 0, err
+		}
+
+		// E (End): Clientes al final del mes (o ahora)
+		err = rs.db.WithContext(ctx).Unscoped().Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at < ?", end).
+			Where("users.deleted_at IS NULL OR users.deleted_at >= ?", end).
+			Count(&E).Error
+		if err != nil {
+			return 0, err
+		}
+
+		// Fórmula: ((E - N) / S) * 100
+		retention := (float64(E-N) / float64(S)) * 100
+		return retention, nil
+	}
+
+	currentRetention, err := calcRetention(currentMonthStart, now)
+	if err != nil {
+		return nil, err
+	}
+
+	prevRetention, err := calcRetention(prevMonthStart, currentMonthStart)
+	if err != nil {
+		return nil, err
+	}
+
+	trend := currentRetention - prevRetention
+
+	return &reportdomain.KPICard{
+		Title:        "Retention Rate",
+		Value:        decimal.NewFromFloat(currentRetention).Round(2),
+		TrendPercent: decimal.NewFromFloat(trend).Round(2).InexactFloat64(),
+		TrendLabel:   "vs previous month (pts %)",
+		IsPositive:   trend >= 0,
+	}, nil
+}
+
 func (rs *ReportStore) GetSalesByCategory(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.ChartData, error) {
 	var results []reportdomain.ChartData
 	validStatuses := []billingdomain.InvoiceStatus{

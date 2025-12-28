@@ -167,3 +167,7 @@ func (s *ReportService) GetTotalTransactions(ctx context.Context, branchID *uuid
 func (s *ReportService) GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetNewClientsKPI(ctx, branchID)
 }
+
+func (s *ReportService) GetRetentionRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetRetentionRateKPI(ctx, branchID)
+}
