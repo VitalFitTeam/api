@@ -171,3 +171,7 @@ func (s *ReportService) GetNewClientsKPI(ctx context.Context, branchID *uuid.UUI
 func (s *ReportService) GetRetentionRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetRetentionRateKPI(ctx, branchID)
 }
+
+func (s *ReportService) GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetAverageCLVKPI(ctx, branchID)
+}

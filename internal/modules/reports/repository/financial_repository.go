@@ -14,7 +14,6 @@ import (
 func (rs *ReportStore) GetWeeklyRevenueKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	now := time.Now()
 
-	// Calcular inicio de semana actual (Lunes)
 	offset := int(now.Weekday())
 	if offset == 0 {
 		offset = 7
@@ -25,7 +24,6 @@ func (rs *ReportStore) GetWeeklyRevenueKPI(ctx context.Context, branchID *uuid.U
 
 	var currentTotal, prevTotal decimal.Decimal
 
-	// Query Current Week
 	queryCurrent := rs.db.WithContext(ctx).Table("payments p").
 		Joins("JOIN invoices i ON i.invoice_id = p.invoice_id").
 		Where("p.payment_date >= ?", startOfWeek).
@@ -39,7 +37,6 @@ func (rs *ReportStore) GetWeeklyRevenueKPI(ctx context.Context, branchID *uuid.U
 		return nil, err
 	}
 
-	// Query Previous Week
 	queryPrev := rs.db.WithContext(ctx).Table("payments p").
 		Joins("JOIN invoices i ON i.invoice_id = p.invoice_id").
 		Where("p.payment_date >= ? AND p.payment_date < ?", startOfPrevWeek, startOfWeek).
@@ -105,7 +102,6 @@ func (rs *ReportStore) GetAverageTicketKPI(ctx context.Context, branchID *uuid.U
 func (rs *ReportStore) GetAccountsReceivableKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	var totalDebt decimal.Decimal
 
-	// Suma (Total Factura - Total Pagado) para facturas pendientes de usuarios activos
 	query := rs.db.WithContext(ctx).Table("invoices i").
 		Select("COALESCE(SUM(i.total_amount - COALESCE(paid_sum.paid, 0)), 0)").
 		Joins("JOIN users u ON u.user_id = i.user_id").
@@ -201,7 +197,6 @@ func (rs *ReportStore) GetBillingByBranchMatrix(ctx context.Context, start, end 
 		return nil, err
 	}
 
-	// Initialize structures
 	matrix := &reportdomain.BillingMatrix{
 		Branches:   []string{},
 		Rows:       []reportdomain.BillingMatrixRow{},
@@ -209,7 +204,6 @@ func (rs *ReportStore) GetBillingByBranchMatrix(ctx context.Context, start, end 
 		GrandTotal: decimal.Zero,
 	}
 
-	// Concepts are fixed to ensure order
 	concepts := []string{"Memberships", "Services", "Combos", "Other"}
 	rowsMap := make(map[string]*reportdomain.BillingMatrixRow)
 	branchesSet := make(map[string]bool)
@@ -233,12 +227,10 @@ func (rs *ReportStore) GetBillingByBranchMatrix(ctx context.Context, start, end 
 		row.Values[r.BranchName] = r.Amount
 		row.Total = row.Total.Add(r.Amount)
 
-		// Update vertical totals
 		matrix.Totals[r.BranchName] = matrix.Totals[r.BranchName].Add(r.Amount)
 		matrix.GrandTotal = matrix.GrandTotal.Add(r.Amount)
 	}
 
-	// Convert map to slice in order
 	for _, c := range concepts {
 		matrix.Rows = append(matrix.Rows, *rowsMap[c])
 	}
@@ -264,22 +256,18 @@ func (rs *ReportStore) GetTotalTransactions(ctx context.Context, branchID *uuid.
 		return query
 	}
 
-	// 1. Lifetime Total
 	if err := buildQuery().Count(&totalLifetime).Error; err != nil {
 		return nil, err
 	}
 
-	// 2. Current Month Count
 	if err := buildQuery().Where("payments.payment_date >= ?", currentMonthStart).Count(&currentCount).Error; err != nil {
 		return nil, err
 	}
 
-	// 3. Previous Month Count
 	if err := buildQuery().Where("payments.payment_date >= ? AND payments.payment_date < ?", prevMonthStart, currentMonthStart).Count(&prevCount).Error; err != nil {
 		return nil, err
 	}
 
-	// Calculate Trend
 	percentageChange := 0.0
 
 	if prevCount > 0 {
@@ -295,6 +283,56 @@ func (rs *ReportStore) GetTotalTransactions(ctx context.Context, branchID *uuid.
 		TrendLabel:   "vs previous month",
 		IsPositive:   percentageChange >= 0,
 	}, nil
+}
+
+func (rs *ReportStore) GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	thirtyDaysAgo := now.AddDate(0, 0, -30)
+
+	calcCLV := func(dateLimit time.Time) (decimal.Decimal, error) {
+		var totalRevenue decimal.Decimal
+		var totalCustomers int64
+
+		queryRev := rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+			Where("issue_date <= ? AND status = ?", dateLimit, billingdomain.InvoiceStatusPaid)
+
+		if branchID != nil {
+			queryRev = queryRev.Where("branch_id = ?", *branchID)
+		}
+
+		if err := queryRev.Select("COALESCE(SUM(total_amount), 0)").Scan(&totalRevenue).Error; err != nil {
+			return decimal.Zero, err
+		}
+
+		queryCust := rs.db.WithContext(ctx).Model(&billingdomain.Invoice{}).
+			Where("issue_date <= ? AND status = ?", dateLimit, billingdomain.InvoiceStatusPaid)
+
+		if branchID != nil {
+			queryCust = queryCust.Where("branch_id = ?", *branchID)
+		}
+
+		if err := queryCust.Distinct("user_id").Count(&totalCustomers).Error; err != nil {
+			return decimal.Zero, err
+		}
+
+		if totalCustomers == 0 {
+			return decimal.Zero, nil
+		}
+
+		return totalRevenue.Div(decimal.NewFromInt(totalCustomers)), nil
+	}
+
+	currentCLV, err := calcCLV(now)
+	if err != nil {
+		return nil, err
+	}
+
+	prevCLV, err := calcCLV(thirtyDaysAgo)
+	if err != nil {
+		return nil, err
+	}
+
+	return calculateTrend(currentCLV, prevCLV, "Average CLV", "vs 30 days ago")
 }
 
 func calculateTrend(current, prev decimal.Decimal, title, label string) (*reportdomain.KPICard, error) {

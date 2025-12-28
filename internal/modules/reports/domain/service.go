@@ -45,4 +45,5 @@ type ReportServiceInterface interface {
 	GetTotalTransactions(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetRetentionRateKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 }

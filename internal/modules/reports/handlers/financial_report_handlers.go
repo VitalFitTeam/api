@@ -177,3 +177,28 @@ func (h *ReportHanlders) GetTotalTransactionsHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": kpi})
 }
+
+// @Summary		Get Average Customer Lifetime Value (CLV) KPI
+// @Description	Retrieves the average revenue generated per customer (Historical Revenue / Unique Paying Customers).
+// @Tags			Reports Financial
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string								false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=reportdomain.KPICard}	"Average CLV KPI"
+// @Failure		500			{object}	object{error=string}				"Internal Server Error"
+// @Router			/reports/kpi/clv [get]
+func (h *ReportHanlders) GetAverageCLVKPIHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+	kpi, err := h.services.ReportServices.GetAverageCLVKPI(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": kpi})
+}
