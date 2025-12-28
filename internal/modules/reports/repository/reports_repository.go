@@ -222,8 +222,13 @@ func (rs *ReportStore) GetActiveMembersKPI(ctx context.Context, branchID *uuid.U
 		percentageChange = 100.0
 	}
 
+	title := "Active Members"
+	if branchID == nil {
+		title = "Global Active Members"
+	}
+
 	return &reportdomain.KPICard{
-		Title:        "Active Members",
+		Title:        title,
 		Value:        decimal.NewFromInt(currentCount),
 		TrendPercent: percentageChange,
 		TrendLabel:   "vs. the previous 30 days",
@@ -397,6 +402,287 @@ func (rs *ReportStore) GetActiveBranchesCount(ctx context.Context) (int64, error
 		return 0, err
 	}
 	return count, nil
+}
+
+func (rs *ReportStore) GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	nextMonthStart := currentMonthStart.AddDate(0, 1, 0)
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	var currentCount, prevCount int64
+
+	// Helper para construir la query base (filtrando por rol 'client')
+	buildQuery := func(start, end time.Time) *gorm.DB {
+		query := rs.db.WithContext(ctx).Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at >= ? AND users.created_at < ?", start, end)
+
+		// Nota: Actualmente la tabla Users no tiene branch_id directo, por lo que este KPI
+		// funciona principalmente a nivel global. Si se requiere filtro por sucursal,
+		// se debería unir con tablas de membresía o registro específico.
+		return query
+	}
+
+	if err := buildQuery(currentMonthStart, nextMonthStart).Count(&currentCount).Error; err != nil {
+		return nil, err
+	}
+
+	if err := buildQuery(prevMonthStart, currentMonthStart).Count(&prevCount).Error; err != nil {
+		return nil, err
+	}
+
+	return &reportdomain.KPICard{
+		Title:        "New Clients",
+		Value:        decimal.NewFromInt(currentCount),
+		TrendPercent: calculatePercentageChange(currentCount, prevCount),
+		TrendLabel:   "vs previous month",
+		IsPositive:   currentCount >= prevCount,
+	}, nil
+}
+
+func (rs *ReportStore) GetRetentionRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	// Helper para calcular retención en un rango de fechas
+	calcRetention := func(start, end time.Time) (float64, error) {
+		var S, N, E int64
+
+		// S (Start): Clientes al inicio del mes.
+		// Deben haber sido creados antes del inicio Y (no eliminados O eliminados después del inicio)
+		err := rs.db.WithContext(ctx).Unscoped().Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at < ?", start).
+			Where("users.deleted_at IS NULL OR users.deleted_at >= ?", start).
+			Count(&S).Error
+		if err != nil {
+			return 0, err
+		}
+
+		if S == 0 {
+			return 0, nil
+		}
+
+		// N (New): Clientes nuevos durante el mes
+		err = rs.db.WithContext(ctx).Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at >= ? AND users.created_at < ?", start, end).
+			Count(&N).Error
+		if err != nil {
+			return 0, err
+		}
+
+		// E (End): Clientes al final del mes (o ahora)
+		err = rs.db.WithContext(ctx).Unscoped().Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at < ?", end).
+			Where("users.deleted_at IS NULL OR users.deleted_at >= ?", end).
+			Count(&E).Error
+		if err != nil {
+			return 0, err
+		}
+
+		// Fórmula: ((E - N) / S) * 100
+		retention := (float64(E-N) / float64(S)) * 100
+		return retention, nil
+	}
+
+	currentRetention, err := calcRetention(currentMonthStart, now)
+	if err != nil {
+		return nil, err
+	}
+
+	prevRetention, err := calcRetention(prevMonthStart, currentMonthStart)
+	if err != nil {
+		return nil, err
+	}
+
+	trend := currentRetention - prevRetention
+
+	return &reportdomain.KPICard{
+		Title:        "Retention Rate",
+		Value:        decimal.NewFromFloat(currentRetention).Round(2),
+		TrendPercent: decimal.NewFromFloat(trend).Round(2).InexactFloat64(),
+		TrendLabel:   "vs previous month (pts %)",
+		IsPositive:   trend >= 0,
+	}, nil
+}
+
+func (rs *ReportStore) GetNewVsRecurringChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.StackedChartData, error) {
+	now := time.Now()
+	months := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+	var chartData []reportdomain.StackedChartData
+
+	// Iterate over the 12 months of the current year
+	for i := 1; i <= 12; i++ {
+		startMonth := time.Date(now.Year(), time.Month(i), 1, 0, 0, 0, 0, now.Location())
+		endMonth := startMonth.AddDate(0, 1, 0)
+
+		// Skip future months
+		if startMonth.After(now) {
+			chartData = append(chartData, reportdomain.StackedChartData{Label: months[i-1], New: 0, Recurring: 0})
+			continue
+		}
+
+		// 1. Calculate NEW Users (Registered in this month)
+		var newCount int64
+		queryNew := rs.db.WithContext(ctx).Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at >= ? AND users.created_at < ?", startMonth, endMonth)
+
+		if branchID != nil {
+			// If filtering by branch, user must have an invoice in that branch (Acquisition proxy)
+			queryNew = queryNew.Joins("JOIN invoices i ON i.user_id = users.user_id").
+				Where("i.branch_id = ?", *branchID).
+				Distinct("users.user_id")
+		}
+
+		if err := queryNew.Count(&newCount).Error; err != nil {
+			return nil, err
+		}
+
+		// 2. Calculate RECURRING Users (Active in this month BUT registered before this month)
+		// Active = Has attendance in this month
+		var recurringCount int64
+		queryRecurring := rs.db.WithContext(ctx).Table("attendance_log al").
+			Joins("JOIN users u ON u.user_id = al.user_id").
+			Where("al.check_in_time >= ? AND al.check_in_time < ?", startMonth, endMonth).
+			Where("u.created_at < ?", startMonth) // Registered BEFORE this month
+
+		if branchID != nil {
+			queryRecurring = queryRecurring.Joins("JOIN classes c ON c.class_id = al.schedule_id").
+				Where("c.branch_id = ?", *branchID)
+		}
+
+		if err := queryRecurring.Distinct("al.user_id").Count(&recurringCount).Error; err != nil {
+			return nil, err
+		}
+
+		chartData = append(chartData, reportdomain.StackedChartData{
+			Label:     months[i-1],
+			New:       newCount,
+			Recurring: recurringCount,
+		})
+	}
+
+	return chartData, nil
+}
+
+func (rs *ReportStore) GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.CohortRetention, error) {
+	// Analizar los últimos 12 meses
+	now := time.Now()
+	end := now
+	start := now.AddDate(0, -11, 0) // 12 meses atrás incluyendo el actual
+	start = time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, start.Location())
+
+	// SQL Query compleja para cohortes
+	// 1. cohort_users: Usuarios creados en el rango, agrupados por mes.
+	// 2. activity: Pagos completados de esos usuarios.
+	// 3. Cruce para calcular retención.
+
+	query := `
+		WITH cohort_users AS (
+			SELECT 
+				u.user_id, 
+				DATE_TRUNC('month', u.created_at) as cohort_date
+			FROM users u
+			JOIN roles r ON r.role_id = u.role_id
+			WHERE r.name = 'client'
+			AND u.created_at >= ? AND u.created_at <= ?
+			` + checkBranchFilterUser(branchID) + `
+		),
+		activity AS (
+			SELECT DISTINCT
+				i.user_id,
+				DATE_TRUNC('month', p.payment_date) as activity_date
+			FROM payments p
+			JOIN invoices i ON i.invoice_id = p.invoice_id
+			WHERE p.status = 'Completed'
+			AND p.payment_date >= ?
+			` + checkBranchFilterInvoice(branchID) + `
+		)
+		SELECT 
+			TO_CHAR(c.cohort_date, 'YYYY-MM') as cohort_month_str,
+			COUNT(DISTINCT c.user_id) as cohort_size,
+			(EXTRACT(YEAR FROM a.activity_date) - EXTRACT(YEAR FROM c.cohort_date)) * 12 + 
+			(EXTRACT(MONTH FROM a.activity_date) - EXTRACT(MONTH FROM c.cohort_date)) as month_idx,
+			COUNT(DISTINCT a.user_id) as active_count
+		FROM cohort_users c
+		LEFT JOIN activity a ON a.user_id = c.user_id AND a.activity_date >= c.cohort_date
+		GROUP BY c.cohort_date, month_idx
+		ORDER BY c.cohort_date DESC, month_idx ASC
+	`
+
+	type queryResult struct {
+		CohortMonthStr string `gorm:"column:cohort_month_str"`
+		CohortSize     int64  `gorm:"column:cohort_size"`
+		MonthIdx       *int   `gorm:"column:month_idx"` // Puede ser null si no hay actividad
+		ActiveCount    int64  `gorm:"column:active_count"`
+	}
+
+	var rows []queryResult
+	var args []interface{}
+	if branchID != nil {
+		args = []interface{}{start, end, *branchID, start, *branchID}
+	} else {
+		args = []interface{}{start, end, start}
+	}
+
+	if err := rs.db.WithContext(ctx).Raw(query, args...).Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	// Procesar resultados en estructura de respuesta
+	cohortMap := make(map[string]*reportdomain.CohortRetention)
+	var result []reportdomain.CohortRetention
+	var order []string // Para mantener el orden de fecha descendente
+
+	for _, r := range rows {
+		if _, exists := cohortMap[r.CohortMonthStr]; !exists {
+			cohort := &reportdomain.CohortRetention{
+				CohortMonth: r.CohortMonthStr,
+				CohortSize:  r.CohortSize,
+				Retention:   make([]float64, 13), // Hasta 12 meses + mes 0
+			}
+			// Mes 0 siempre 100%
+			cohort.Retention[0] = 100.0
+			cohortMap[r.CohortMonthStr] = cohort
+			order = append(order, r.CohortMonthStr)
+		}
+
+		if r.MonthIdx != nil && *r.MonthIdx >= 0 && *r.MonthIdx < 13 && r.CohortSize > 0 {
+			percentage := (float64(r.ActiveCount) / float64(r.CohortSize)) * 100
+			cohortMap[r.CohortMonthStr].Retention[*r.MonthIdx] = decimal.NewFromFloat(percentage).Round(1).InexactFloat64()
+		}
+	}
+
+	for _, month := range order {
+		result = append(result, *cohortMap[month])
+	}
+
+	return result, nil
+}
+
+// Helpers para inyección de SQL condicional (seguro porque branchID es UUID validado)
+func checkBranchFilterUser(branchID *uuid.UUID) string {
+	if branchID != nil {
+		return "AND EXISTS (SELECT 1 FROM invoices i WHERE i.user_id = u.user_id AND i.branch_id = ?)"
+	}
+	return ""
+}
+
+func checkBranchFilterInvoice(branchID *uuid.UUID) string {
+	if branchID != nil {
+		return "AND i.branch_id = ?"
+	}
+	return ""
 }
 
 func (rs *ReportStore) GetSalesByCategory(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.ChartData, error) {
@@ -587,6 +873,15 @@ func (rs *ReportStore) GetWeeklySalesChart(ctx context.Context, branchID *uuid.U
 	}
 
 	return chartData, nil
+}
+
+func calculatePercentageChange(current, prev int64) float64 {
+	if prev > 0 {
+		return float64(current-prev) / float64(prev) * 100
+	} else if current > 0 {
+		return 100.0
+	}
+	return 0.0
 }
 
 func (rs *ReportStore) GetActivityHeatmap(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.HeatmapPoint, error) {

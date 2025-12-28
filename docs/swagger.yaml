@@ -2143,6 +2143,20 @@ definitions:
       start_time:
         type: string
     type: object
+  reportdomain.CohortRetention:
+    properties:
+      cohort_month:
+        description: e.g., "Jan 2024"
+        type: string
+      cohort_size:
+        description: Total users in cohort
+        type: integer
+      retention:
+        description: Percentage for Month 0, 1, 2...
+        items:
+          type: number
+        type: array
+    type: object
   reportdomain.FinancialSummary:
     properties:
       items:
@@ -2204,6 +2218,18 @@ definitions:
         type: string
       user_name:
         type: string
+    type: object
+  reportdomain.StackedChartData:
+    properties:
+      label:
+        description: Month Name
+        type: string
+      new:
+        description: Registered this month
+        type: integer
+      recurring:
+        description: Active this month but registered previously
+        type: integer
     type: object
   reportdomain.TotalSalesStats:
     properties:
@@ -7701,6 +7727,39 @@ paths:
       summary: Get Activity Heatmap
       tags:
       - Reports Branch
+  /reports/charts/cash-flow:
+    get:
+      description: Retrieves total actual income (cash flow) from completed payments
+        per month for the current year.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Monthly cash flow data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Monthly Cash Flow Chart
+      tags:
+      - Reports Financial
   /reports/charts/class-occupancy:
     get:
       description: Retrieves average occupancy percentage per class category for the
@@ -7734,6 +7793,40 @@ paths:
       summary: Get Class Occupancy Chart
       tags:
       - Reports Branch
+  /reports/charts/cohort-analysis:
+    get:
+      description: Retrieves user retention percentages grouped by registration month
+        (cohort). Month 0 is always 100%. Subsequent months show the % of users who
+        made a payment.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cohort analysis data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.CohortRetention'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Cohort Analysis (Retention Heatmap)
+      tags:
+      - Reports
   /reports/charts/monthly-revenue:
     get:
       description: Retrieves total revenue per month for the current year.
@@ -7800,6 +7893,39 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get Most Used Services
+      tags:
+      - Reports
+  /reports/charts/new-vs-recurring:
+    get:
+      description: Retrieves the evolution of New vs Recurring users per month for
+        the current year. Ideal for Stacked Area Charts.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New vs Recurring data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.StackedChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get New vs Recurring Users Chart
       tags:
       - Reports
   /reports/charts/sales-by-category:
@@ -8143,8 +8269,9 @@ paths:
       - Reports Financial
   /reports/kpi/active-members:
     get:
-      description: Retrieves the count of unique members with active membership who
-        attended in the last 30 days.
+      description: Retrieves the count of unique active members (based on attendance
+        in the last 30 days). If branch_id is provided, filters by branch; otherwise,
+        returns global count.
       parameters:
       - description: Filter by Branch UUID
         in: query
@@ -8171,7 +8298,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get Active Members KPI
       tags:
-      - Reports Branch
+      - Reports
   /reports/kpi/average-ticket:
     get:
       description: Retrieves the average transaction value (Total Revenue / Number
@@ -8236,6 +8363,37 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get Billing Detail by Branch Matrix
+      tags:
+      - Reports Financial
+  /reports/kpi/clv:
+    get:
+      description: Retrieves the average revenue generated per customer (Historical
+        Revenue / Unique Paying Customers).
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Average CLV KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Average Customer Lifetime Value (CLV) KPI
       tags:
       - Reports Financial
   /reports/kpi/financial-summary:
@@ -8331,6 +8489,37 @@ paths:
       summary: Get Monthly Recurring Revenue (MRR) KPI
       tags:
       - Reports Financial
+  /reports/kpi/new-clients:
+    get:
+      description: Retrieves the count of new clients registered in the current month
+        compared to the previous month.
+      parameters:
+      - description: Filter by Branch UUID (Currently Global)
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New Clients KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get New Clients KPI
+      tags:
+      - Reports
   /reports/kpi/occupancy:
     get:
       description: Retrieves the average daily occupancy percentage for the current
@@ -8362,6 +8551,38 @@ paths:
       summary: Get Occupancy KPI
       tags:
       - Reports Branch
+  /reports/kpi/retention-rate:
+    get:
+      description: 'Retrieves the percentage of existing clients who remained active
+        during the current month. Formula: ((End Clients - New Clients) / Start Clients)
+        * 100.'
+      parameters:
+      - description: Filter by Branch UUID (Currently Global)
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Retention Rate KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Retention Rate KPI
+      tags:
+      - Reports
   /reports/kpi/total-transactions:
     get:
       description: Retrieves the total lifetime count of completed transactions (payments).

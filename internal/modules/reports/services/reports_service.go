@@ -163,3 +163,27 @@ func (s *ReportService) GetBillingByBranchMatrix(ctx context.Context, start, end
 func (s *ReportService) GetTotalTransactions(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetTotalTransactions(ctx, branchID)
 }
+
+func (s *ReportService) GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetNewClientsKPI(ctx, branchID)
+}
+
+func (s *ReportService) GetRetentionRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetRetentionRateKPI(ctx, branchID)
+}
+
+func (s *ReportService) GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetAverageCLVKPI(ctx, branchID)
+}
+
+func (s *ReportService) GetNewVsRecurringChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.StackedChartData, error) {
+	return s.store.Reports.GetNewVsRecurringChart(ctx, branchID)
+}
+
+func (s *ReportService) GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.CohortRetention, error) {
+	return s.store.Reports.GetCohortAnalysis(ctx, branchID)
+}
+
+func (s *ReportService) GetMonthlyCashFlowChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetMonthlyCashFlowChart(ctx, branchID)
+}

@@ -41,6 +41,12 @@ type ReportHandlersInterface interface {
 	GetMonthlyRevenueChartHandler(c *gin.Context)
 	GetBillingByBranchMatrixHandler(c *gin.Context)
 	GetTotalTransactionsHandler(c *gin.Context)
+	GetNewClientsKPIHandler(c *gin.Context)
+	GetMonthlyCashFlowChartHandler(c *gin.Context)
+	GetRetentionRateKPIHandler(c *gin.Context)
+	GetAverageCLVKPIHandler(c *gin.Context)
+	GetNewVsRecurringChartHandler(c *gin.Context)
+	GetCohortAnalysisHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -72,6 +78,8 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		salesGroup.GET("/charts/sales-by-hour", r.GetSalesByHourHandler)
 		salesGroup.GET("/charts/weekly-sales", r.GetWeeklySalesChartHandler)
 		salesGroup.GET("/charts/monthly-revenue", r.GetMonthlyRevenueChartHandler)
+		salesGroup.GET("/charts/new-vs-recurring", r.GetNewVsRecurringChartHandler)
+		salesGroup.GET("/charts/cohort-analysis", r.GetCohortAnalysisHandler)
 	}
 
 	// Financial Routes
@@ -85,6 +93,8 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		financialGroup.GET("/kpi/mrr", r.GetMonthlyRecurringRevenueKPIHandler)
 		financialGroup.GET("/kpi/billing-matrix", r.GetBillingByBranchMatrixHandler)
 		financialGroup.GET("/kpi/total-transactions", r.GetTotalTransactionsHandler)
+		financialGroup.GET("/kpi/clv", r.GetAverageCLVKPIHandler)
+		financialGroup.GET("/charts/cash-flow", r.GetMonthlyCashFlowChartHandler)
 	}
 
 	// Attendance Routes
@@ -103,6 +113,8 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		attendanceGroup.GET("/instructors/classes-count", r.GetInstructorMonthlyClassesCountHandler)
 		attendanceGroup.GET("/instructors/classes-today", r.GetInstructorClassesTodayHandler)
 		attendanceGroup.GET("/kpi/active-members", r.GetActiveMembersKPIHandler)
+		attendanceGroup.GET("/kpi/new-clients", r.GetNewClientsKPIHandler)
+		attendanceGroup.GET("/kpi/retention-rate", r.GetRetentionRateKPIHandler)
 		attendanceGroup.GET("/kpi/occupancy", r.GetOccupancyKPIHandler)
 		attendanceGroup.GET("/charts/top-instructors", r.GetTopInstructorsByAttendanceHandler)
 		attendanceGroup.GET("/charts/most-used-services", r.GetMostUsedServicesHandler)

@@ -1,6 +1,7 @@
 package staffhandlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -115,15 +116,15 @@ func (h *StaffHandlers) ListBranchStaffByRoleHandler(c *gin.Context) {
 		}
 	}
 
-	users, err := h.services.Staff.ListBranchStaffByRole(ctx, branchID, roleID, fq)
+	users, total, err := h.services.Staff.ListBranchStaffByRole(ctx, branchID, roleID, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
-	response := make([]*BranchStaffResponse, 0, len(users))
+	response := make([]BranchStaffResponse, 0, len(users))
 	for _, user := range users {
-		s := &BranchStaffResponse{
+		s := BranchStaffResponse{
 			UserID:    user.UserID,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
@@ -134,7 +135,31 @@ func (h *StaffHandlers) ListBranchStaffByRoleHandler(c *gin.Context) {
 		response = append(response, s)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": response})
+	// Generate navigation links
+	q := c.Request.URL.Query()
+	q.Set("limit", fmt.Sprintf("%d", fq.Limit))
+
+	// Next URL
+	q.Set("page", fmt.Sprintf("%d", fq.Page+1))
+	nextURL := fmt.Sprintf("%s?%s", c.Request.URL.Path, q.Encode())
+
+	// Previous URL
+	prevPage := fq.Page - 1
+	if prevPage < 1 {
+		prevPage = 1
+	}
+	q.Set("page", fmt.Sprintf("%d", prevPage))
+	previousURL := fmt.Sprintf("%s?%s", c.Request.URL.Path, q.Encode())
+
+	resp := pagination.PaginatedResponseTotal[BranchStaffResponse]{
+		Data:     response,
+		Count:    int64(len(users)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 // @Summary		Get staff assigned branches

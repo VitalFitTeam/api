@@ -35,8 +35,8 @@ func (h *ReportHanlders) GetMonthlySalesKPIHandler(c *gin.Context) {
 }
 
 // @Summary		Get Active Members KPI
-// @Description	Retrieves the count of unique members with active membership who attended in the last 30 days.
-// @Tags			Reports Branch
+// @Description	Retrieves the count of unique active members (based on attendance in the last 30 days). If branch_id is provided, filters by branch; otherwise, returns global count.
+// @Tags			Reports
 // @Security		ApiKeyAuth
 // @Produce		json
 // @Param			branch_id	query		string								false	"Filter by Branch UUID"

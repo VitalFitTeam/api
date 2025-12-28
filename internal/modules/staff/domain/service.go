@@ -11,7 +11,7 @@ import (
 
 type StaffServiceInterface interface {
 	AssignStaffToBranch(ctx context.Context, branchID uuid.UUID, staffID []uuid.UUID) error
-	ListBranchStaffByRole(ctx context.Context, branchID uuid.UUID, roleID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]authdomain.Users, error)
+	ListBranchStaffByRole(ctx context.Context, branchID uuid.UUID, roleID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]authdomain.Users, int64, error)
 	RemoveStaffFromBranch(ctx context.Context, branchID uuid.UUID, staffID uuid.UUID) error
 	GetStaffBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error)
 	GetManagedBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error)

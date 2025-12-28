@@ -8234,6 +8234,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/charts/cash-flow": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves total actual income (cash flow) from completed payments per month for the current year.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Get Monthly Cash Flow Chart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Monthly cash flow data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.ChartData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/charts/class-occupancy": {
             "get": {
                 "security": [
@@ -8267,6 +8319,58 @@ const docTemplate = `{
                                     "type": "array",
                                     "items": {
                                         "$ref": "#/definitions/reportdomain.ChartData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/charts/cohort-analysis": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves user retention percentages grouped by registration month (cohort). Month 0 is always 100%. Subsequent months show the % of users who made a payment.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Cohort Analysis (Retention Heatmap)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cohort analysis data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.CohortRetention"
                                     }
                                 }
                             }
@@ -8377,6 +8481,58 @@ const docTemplate = `{
                                     "type": "array",
                                     "items": {
                                         "$ref": "#/definitions/reportdomain.ChartData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/charts/new-vs-recurring": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the evolution of New vs Recurring users per month for the current year. Ideal for Stacked Area Charts.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get New vs Recurring Users Chart",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "New vs Recurring data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.StackedChartData"
                                     }
                                 }
                             }
@@ -8939,12 +9095,12 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves the count of unique members with active membership who attended in the last 30 days.",
+                "description": "Retrieves the count of unique active members (based on attendance in the last 30 days). If branch_id is provided, filters by branch; otherwise, returns global count.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Reports Branch"
+                    "Reports"
                 ],
                 "summary": "Get Active Members KPI",
                 "parameters": [
@@ -9067,6 +9223,55 @@ const docTemplate = `{
                             "properties": {
                                 "data": {
                                     "$ref": "#/definitions/reportdomain.BillingMatrix"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/kpi/clv": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the average revenue generated per customer (Historical Revenue / Unique Paying Customers).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Get Average Customer Lifetime Value (CLV) KPI",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Average CLV KPI",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.KPICard"
                                 }
                             }
                         }
@@ -9232,6 +9437,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/kpi/new-clients": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the count of new clients registered in the current month compared to the previous month.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get New Clients KPI",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID (Currently Global)",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "New Clients KPI",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.KPICard"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/kpi/occupancy": {
             "get": {
                 "security": [
@@ -9258,6 +9512,55 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "Occupancy KPI",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.KPICard"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/kpi/retention-rate": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the percentage of existing clients who remained active during the current month. Formula: ((End Clients - New Clients) / Start Clients) * 100.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Retention Rate KPI",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID (Currently Global)",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Retention Rate KPI",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -14575,6 +14878,26 @@ const docTemplate = `{
                 }
             }
         },
+        "reportdomain.CohortRetention": {
+            "type": "object",
+            "properties": {
+                "cohort_month": {
+                    "description": "e.g., \"Jan 2024\"",
+                    "type": "string"
+                },
+                "cohort_size": {
+                    "description": "Total users in cohort",
+                    "type": "integer"
+                },
+                "retention": {
+                    "description": "Percentage for Month 0, 1, 2...",
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                }
+            }
+        },
         "reportdomain.FinancialSummary": {
             "type": "object",
             "properties": {
@@ -14667,6 +14990,23 @@ const docTemplate = `{
                 },
                 "user_name": {
                     "type": "string"
+                }
+            }
+        },
+        "reportdomain.StackedChartData": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "description": "Month Name",
+                    "type": "string"
+                },
+                "new": {
+                    "description": "Registered this month",
+                    "type": "integer"
+                },
+                "recurring": {
+                    "description": "Active this month but registered previously",
+                    "type": "integer"
                 }
             }
         },

@@ -43,4 +43,10 @@ type ReportServiceInterface interface {
 	GetMonthlyRevenueChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 	GetBillingByBranchMatrix(ctx context.Context, start, end time.Time) (*BillingMatrix, error)
 	GetTotalTransactions(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetRetentionRateKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetNewVsRecurringChart(ctx context.Context, branchID *uuid.UUID) ([]StackedChartData, error)
+	GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]CohortRetention, error)
+	GetMonthlyCashFlowChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 }

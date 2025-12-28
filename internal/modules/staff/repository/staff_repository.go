@@ -47,8 +47,9 @@ func (s *StaffStore) AssignStaffToBranch(ctx context.Context, branchID uuid.UUID
 	return err
 }
 
-func (s *StaffStore) ListBranchStaffByRole(ctx context.Context, branchID uuid.UUID, roleID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]authdomain.Users, error) {
+func (s *StaffStore) ListBranchStaffByRole(ctx context.Context, branchID uuid.UUID, roleID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]authdomain.Users, int64, error) {
 	var users []authdomain.Users
+	var total int64
 
 	query := s.db.WithContext(ctx).
 		Model(&authdomain.Users{}).
@@ -73,12 +74,16 @@ func (s *StaffStore) ListBranchStaffByRole(ctx context.Context, branchID uuid.UU
 		query = query.Where("roles.name ILIKE ?", roleQuery)
 	}
 
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
 	err := query.Preload("Role").
 		Limit(fq.Limit).
 		Offset(fq.Page*fq.Limit - fq.Limit).
 		Find(&users).Error
 
-	return users, err
+	return users, total, err
 }
 
 func (s *StaffStore) RemoveStaffFromBranch(ctx context.Context, branchID uuid.UUID, staffID uuid.UUID) error {
