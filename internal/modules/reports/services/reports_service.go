@@ -163,3 +163,7 @@ func (s *ReportService) GetBillingByBranchMatrix(ctx context.Context, start, end
 func (s *ReportService) GetTotalTransactions(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetTotalTransactions(ctx, branchID)
 }
+
+func (s *ReportService) GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetNewClientsKPI(ctx, branchID)
+}

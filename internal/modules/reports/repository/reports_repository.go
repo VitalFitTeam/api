@@ -404,6 +404,44 @@ func (rs *ReportStore) GetActiveBranchesCount(ctx context.Context) (int64, error
 	return count, nil
 }
 
+func (rs *ReportStore) GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	nextMonthStart := currentMonthStart.AddDate(0, 1, 0)
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	var currentCount, prevCount int64
+
+	// Helper para construir la query base (filtrando por rol 'client')
+	buildQuery := func(start, end time.Time) *gorm.DB {
+		query := rs.db.WithContext(ctx).Model(&authdomain.Users{}).
+			Joins("JOIN roles ON roles.role_id = users.role_id").
+			Where("roles.name = ?", "client").
+			Where("users.created_at >= ? AND users.created_at < ?", start, end)
+
+		// Nota: Actualmente la tabla Users no tiene branch_id directo, por lo que este KPI
+		// funciona principalmente a nivel global. Si se requiere filtro por sucursal,
+		// se debería unir con tablas de membresía o registro específico.
+		return query
+	}
+
+	if err := buildQuery(currentMonthStart, nextMonthStart).Count(&currentCount).Error; err != nil {
+		return nil, err
+	}
+
+	if err := buildQuery(prevMonthStart, currentMonthStart).Count(&prevCount).Error; err != nil {
+		return nil, err
+	}
+
+	return &reportdomain.KPICard{
+		Title:        "New Clients",
+		Value:        decimal.NewFromInt(currentCount),
+		TrendPercent: calculatePercentageChange(currentCount, prevCount),
+		TrendLabel:   "vs previous month",
+		IsPositive:   currentCount >= prevCount,
+	}, nil
+}
+
 func (rs *ReportStore) GetSalesByCategory(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.ChartData, error) {
 	var results []reportdomain.ChartData
 	validStatuses := []billingdomain.InvoiceStatus{
@@ -592,6 +630,15 @@ func (rs *ReportStore) GetWeeklySalesChart(ctx context.Context, branchID *uuid.U
 	}
 
 	return chartData, nil
+}
+
+func calculatePercentageChange(current, prev int64) float64 {
+	if prev > 0 {
+		return float64(current-prev) / float64(prev) * 100
+	} else if current > 0 {
+		return 100.0
+	}
+	return 0.0
 }
 
 func (rs *ReportStore) GetActivityHeatmap(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.HeatmapPoint, error) {

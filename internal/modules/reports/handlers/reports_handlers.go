@@ -232,3 +232,29 @@ func (h *ReportHanlders) GetRecentCheckInsHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": recentCheckIns})
 }
+
+// @Summary		Get New Clients KPI
+// @Description	Retrieves the count of new clients registered in the current month compared to the previous month.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string								false	"Filter by Branch UUID (Currently Global)"
+// @Success		200			{object}	object{data=reportdomain.KPICard}	"New Clients KPI"
+// @Failure		500			{object}	object{error=string}				"Internal Server Error"
+// @Router			/reports/kpi/new-clients [get]
+func (h *ReportHanlders) GetNewClientsKPIHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+	kpi, err := h.services.ReportServices.GetNewClientsKPI(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": kpi})
+}
