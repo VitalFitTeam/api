@@ -8143,8 +8143,9 @@ paths:
       - Reports Financial
   /reports/kpi/active-members:
     get:
-      description: Retrieves the count of unique members with active membership who
-        attended in the last 30 days.
+      description: Retrieves the count of unique active members (based on attendance
+        in the last 30 days). If branch_id is provided, filters by branch; otherwise,
+        returns global count.
       parameters:
       - description: Filter by Branch UUID
         in: query
@@ -8171,7 +8172,7 @@ paths:
       - ApiKeyAuth: []
       summary: Get Active Members KPI
       tags:
-      - Reports Branch
+      - Reports
   /reports/kpi/average-ticket:
     get:
       description: Retrieves the average transaction value (Total Revenue / Number

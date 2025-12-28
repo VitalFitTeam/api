@@ -222,8 +222,13 @@ func (rs *ReportStore) GetActiveMembersKPI(ctx context.Context, branchID *uuid.U
 		percentageChange = 100.0
 	}
 
+	title := "Active Members"
+	if branchID == nil {
+		title = "Global Active Members"
+	}
+
 	return &reportdomain.KPICard{
-		Title:        "Active Members",
+		Title:        title,
 		Value:        decimal.NewFromInt(currentCount),
 		TrendPercent: percentageChange,
 		TrendLabel:   "vs. the previous 30 days",

@@ -8931,12 +8931,12 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Retrieves the count of unique members with active membership who attended in the last 30 days.",
+                "description": "Retrieves the count of unique active members (based on attendance in the last 30 days). If branch_id is provided, filters by branch; otherwise, returns global count.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Reports Branch"
+                    "Reports"
                 ],
                 "summary": "Get Active Members KPI",
                 "parameters": [
