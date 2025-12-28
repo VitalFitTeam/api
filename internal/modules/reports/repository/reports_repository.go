@@ -575,6 +575,116 @@ func (rs *ReportStore) GetNewVsRecurringChart(ctx context.Context, branchID *uui
 	return chartData, nil
 }
 
+func (rs *ReportStore) GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.CohortRetention, error) {
+	// Analizar los últimos 12 meses
+	now := time.Now()
+	end := now
+	start := now.AddDate(0, -11, 0) // 12 meses atrás incluyendo el actual
+	start = time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, start.Location())
+
+	// SQL Query compleja para cohortes
+	// 1. cohort_users: Usuarios creados en el rango, agrupados por mes.
+	// 2. activity: Pagos completados de esos usuarios.
+	// 3. Cruce para calcular retención.
+
+	query := `
+		WITH cohort_users AS (
+			SELECT 
+				u.user_id, 
+				DATE_TRUNC('month', u.created_at) as cohort_date
+			FROM users u
+			JOIN roles r ON r.role_id = u.role_id
+			WHERE r.name = 'client'
+			AND u.created_at >= ? AND u.created_at <= ?
+			` + checkBranchFilterUser(branchID) + `
+		),
+		activity AS (
+			SELECT DISTINCT
+				i.user_id,
+				DATE_TRUNC('month', p.payment_date) as activity_date
+			FROM payments p
+			JOIN invoices i ON i.invoice_id = p.invoice_id
+			WHERE p.status = 'Completed'
+			AND p.payment_date >= ?
+			` + checkBranchFilterInvoice(branchID) + `
+		)
+		SELECT 
+			TO_CHAR(c.cohort_date, 'YYYY-MM') as cohort_month_str,
+			COUNT(DISTINCT c.user_id) as cohort_size,
+			(EXTRACT(YEAR FROM a.activity_date) - EXTRACT(YEAR FROM c.cohort_date)) * 12 + 
+			(EXTRACT(MONTH FROM a.activity_date) - EXTRACT(MONTH FROM c.cohort_date)) as month_idx,
+			COUNT(DISTINCT a.user_id) as active_count
+		FROM cohort_users c
+		LEFT JOIN activity a ON a.user_id = c.user_id AND a.activity_date >= c.cohort_date
+		GROUP BY c.cohort_date, month_idx
+		ORDER BY c.cohort_date DESC, month_idx ASC
+	`
+
+	type queryResult struct {
+		CohortMonthStr string `gorm:"column:cohort_month_str"`
+		CohortSize     int64  `gorm:"column:cohort_size"`
+		MonthIdx       *int   `gorm:"column:month_idx"` // Puede ser null si no hay actividad
+		ActiveCount    int64  `gorm:"column:active_count"`
+	}
+
+	var rows []queryResult
+	var args []interface{}
+	if branchID != nil {
+		args = []interface{}{start, end, *branchID, start, *branchID}
+	} else {
+		args = []interface{}{start, end, start}
+	}
+
+	if err := rs.db.WithContext(ctx).Raw(query, args...).Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	// Procesar resultados en estructura de respuesta
+	cohortMap := make(map[string]*reportdomain.CohortRetention)
+	var result []reportdomain.CohortRetention
+	var order []string // Para mantener el orden de fecha descendente
+
+	for _, r := range rows {
+		if _, exists := cohortMap[r.CohortMonthStr]; !exists {
+			cohort := &reportdomain.CohortRetention{
+				CohortMonth: r.CohortMonthStr,
+				CohortSize:  r.CohortSize,
+				Retention:   make([]float64, 13), // Hasta 12 meses + mes 0
+			}
+			// Mes 0 siempre 100%
+			cohort.Retention[0] = 100.0
+			cohortMap[r.CohortMonthStr] = cohort
+			order = append(order, r.CohortMonthStr)
+		}
+
+		if r.MonthIdx != nil && *r.MonthIdx >= 0 && *r.MonthIdx < 13 && r.CohortSize > 0 {
+			percentage := (float64(r.ActiveCount) / float64(r.CohortSize)) * 100
+			cohortMap[r.CohortMonthStr].Retention[*r.MonthIdx] = decimal.NewFromFloat(percentage).Round(1).InexactFloat64()
+		}
+	}
+
+	for _, month := range order {
+		result = append(result, *cohortMap[month])
+	}
+
+	return result, nil
+}
+
+// Helpers para inyección de SQL condicional (seguro porque branchID es UUID validado)
+func checkBranchFilterUser(branchID *uuid.UUID) string {
+	if branchID != nil {
+		return "AND EXISTS (SELECT 1 FROM invoices i WHERE i.user_id = u.user_id AND i.branch_id = ?)"
+	}
+	return ""
+}
+
+func checkBranchFilterInvoice(branchID *uuid.UUID) string {
+	if branchID != nil {
+		return "AND i.branch_id = ?"
+	}
+	return ""
+}
+
 func (rs *ReportStore) GetSalesByCategory(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.ChartData, error) {
 	var results []reportdomain.ChartData
 	validStatuses := []billingdomain.InvoiceStatus{

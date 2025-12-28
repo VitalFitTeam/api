@@ -8286,6 +8286,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/charts/cohort-analysis": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves user retention percentages grouped by registration month (cohort). Month 0 is always 100%. Subsequent months show the % of users who made a payment.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Cohort Analysis (Retention Heatmap)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cohort analysis data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.CohortRetention"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/charts/monthly-revenue": {
             "get": {
                 "security": [
@@ -14771,6 +14823,26 @@ const docTemplate = `{
                 },
                 "start_time": {
                     "type": "string"
+                }
+            }
+        },
+        "reportdomain.CohortRetention": {
+            "type": "object",
+            "properties": {
+                "cohort_month": {
+                    "description": "e.g., \"Jan 2024\"",
+                    "type": "string"
+                },
+                "cohort_size": {
+                    "description": "Total users in cohort",
+                    "type": "integer"
+                },
+                "retention": {
+                    "description": "Percentage for Month 0, 1, 2...",
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
                 }
             }
         },

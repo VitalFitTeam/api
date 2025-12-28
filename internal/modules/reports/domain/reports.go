@@ -99,3 +99,9 @@ type StackedChartData struct {
 	New       int64  `json:"new"`       // Registered this month
 	Recurring int64  `json:"recurring"` // Active this month but registered previously
 }
+
+type CohortRetention struct {
+	CohortMonth string    `json:"cohort_month"` // e.g., "Jan 2024"
+	CohortSize  int64     `json:"cohort_size"`  // Total users in cohort
+	Retention   []float64 `json:"retention"`    // Percentage for Month 0, 1, 2...
+}

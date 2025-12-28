@@ -179,3 +179,7 @@ func (s *ReportService) GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUI
 func (s *ReportService) GetNewVsRecurringChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.StackedChartData, error) {
 	return s.store.Reports.GetNewVsRecurringChart(ctx, branchID)
 }
+
+func (s *ReportService) GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.CohortRetention, error) {
+	return s.store.Reports.GetCohortAnalysis(ctx, branchID)
+}

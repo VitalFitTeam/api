@@ -47,4 +47,5 @@ type ReportServiceInterface interface {
 	GetRetentionRateKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetNewVsRecurringChart(ctx context.Context, branchID *uuid.UUID) ([]StackedChartData, error)
+	GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]CohortRetention, error)
 }
