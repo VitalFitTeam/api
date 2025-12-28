@@ -46,7 +46,7 @@ func (s *StaffService) AssignStaffToBranch(ctx context.Context, branchID uuid.UU
 	return s.store.Staff.AssignStaffToBranch(ctx, branchID, staffID)
 }
 
-func (s *StaffService) ListBranchStaffByRole(ctx context.Context, branchID uuid.UUID, roleID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]authdomain.Users, error) {
+func (s *StaffService) ListBranchStaffByRole(ctx context.Context, branchID uuid.UUID, roleID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]authdomain.Users, int64, error) {
 	return s.store.Staff.ListBranchStaffByRole(ctx, branchID, roleID, fq)
 }
 
