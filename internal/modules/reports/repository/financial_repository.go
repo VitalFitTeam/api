@@ -335,6 +335,49 @@ func (rs *ReportStore) GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUID
 	return calculateTrend(currentCLV, prevCLV, "Average CLV", "vs 30 days ago")
 }
 
+func (rs *ReportStore) GetMonthlyCashFlowChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
+	now := time.Now()
+	startOfYear := time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location())
+	endOfYear := time.Date(now.Year(), 12, 31, 23, 59, 59, 999999999, now.Location())
+
+	type result struct {
+		Month int             `gorm:"column:month"`
+		Total decimal.Decimal `gorm:"column:total"`
+	}
+
+	var queryResults []result
+
+	query := rs.db.WithContext(ctx).Table("payments p").
+		Select("EXTRACT(MONTH FROM p.payment_date) as month, COALESCE(SUM(p.amount_base), 0) as total").
+		Joins("JOIN invoices i ON i.invoice_id = p.invoice_id").
+		Where("p.payment_date BETWEEN ? AND ?", startOfYear, endOfYear).
+		Where("p.status = ?", billingdomain.PaymentStatusCompleted)
+
+	if branchID != nil {
+		query = query.Where("i.branch_id = ?", *branchID)
+	}
+
+	err := query.Group("EXTRACT(MONTH FROM p.payment_date)").Scan(&queryResults).Error
+	if err != nil {
+		return nil, err
+	}
+
+	chartData := make([]reportdomain.ChartData, 12)
+	months := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+
+	resultsMap := make(map[int]decimal.Decimal)
+	for _, r := range queryResults {
+		resultsMap[r.Month] = r.Total
+	}
+
+	for i := 0; i < 12; i++ {
+		val := resultsMap[i+1]
+		chartData[i] = reportdomain.ChartData{Label: months[i], Value: val}
+	}
+
+	return chartData, nil
+}
+
 func calculateTrend(current, prev decimal.Decimal, title, label string) (*reportdomain.KPICard, error) {
 	percentageChange := 0.0
 	if !prev.IsZero() {

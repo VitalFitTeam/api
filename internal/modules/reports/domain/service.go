@@ -48,4 +48,5 @@ type ReportServiceInterface interface {
 	GetAverageCLVKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetNewVsRecurringChart(ctx context.Context, branchID *uuid.UUID) ([]StackedChartData, error)
 	GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]CohortRetention, error)
+	GetMonthlyCashFlowChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 }

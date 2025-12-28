@@ -42,6 +42,7 @@ type ReportHandlersInterface interface {
 	GetBillingByBranchMatrixHandler(c *gin.Context)
 	GetTotalTransactionsHandler(c *gin.Context)
 	GetNewClientsKPIHandler(c *gin.Context)
+	GetMonthlyCashFlowChartHandler(c *gin.Context)
 	GetRetentionRateKPIHandler(c *gin.Context)
 	GetAverageCLVKPIHandler(c *gin.Context)
 	GetNewVsRecurringChartHandler(c *gin.Context)
@@ -93,6 +94,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		financialGroup.GET("/kpi/billing-matrix", r.GetBillingByBranchMatrixHandler)
 		financialGroup.GET("/kpi/total-transactions", r.GetTotalTransactionsHandler)
 		financialGroup.GET("/kpi/clv", r.GetAverageCLVKPIHandler)
+		financialGroup.GET("/charts/cash-flow", r.GetMonthlyCashFlowChartHandler)
 	}
 
 	// Attendance Routes

@@ -183,3 +183,7 @@ func (s *ReportService) GetNewVsRecurringChart(ctx context.Context, branchID *uu
 func (s *ReportService) GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.CohortRetention, error) {
 	return s.store.Reports.GetCohortAnalysis(ctx, branchID)
 }
+
+func (s *ReportService) GetMonthlyCashFlowChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetMonthlyCashFlowChart(ctx, branchID)
+}
