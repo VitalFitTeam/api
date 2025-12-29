@@ -98,9 +98,14 @@ func (h *BillingHandlers) UpdatePaymentMethodHandler(c *gin.Context) {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
-	paymentmethod := payload.toPaymentMethod()
-	paymentmethod.MethodID = methodID
-	err = h.services.BillingServices.UpdatePaymentMethod(ctx, paymentmethod)
+	paymentMethod := payload.toPaymentMethod()
+	if err := h.validateBranchConfig(payload.Configuration, paymentMethod); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	paymentMethod.Configuration = payload.Configuration
+	paymentMethod.MethodID = methodID
+	err = h.services.BillingServices.UpdatePaymentMethod(ctx, paymentMethod)
 	if err != nil {
 		switch err {
 		case shared_errors.ErrNotFound:
