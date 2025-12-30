@@ -1,0 +1,3 @@
+-- Note: PostgreSQL does not support dropping enum values directly
+-- This migration cannot be automatically reversed
+-- Manual intervention required if rollback is needed

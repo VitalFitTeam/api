@@ -156,3 +156,26 @@ func (s *ScheduleStore) DeleteClass(ctx context.Context, classID uuid.UUID) erro
 
 	return nil
 }
+
+// ----------------------------------------
+// GetClassBookings
+// ----------------------------------------
+
+func (s *ScheduleStore) GetClassBookings(ctx context.Context, classID uuid.UUID) ([]*scheduledomain.ClassBooking, error) {
+	var bookings []*scheduledomain.ClassBooking
+
+	err := s.db.WithContext(ctx).
+		Table("bookings").
+		Select("bookings.booking_id, bookings.user_id, users.first_name, users.last_name, users.email, users.phone, bookings.status, bookings.created_at").
+		Joins("JOIN users ON bookings.user_id = users.user_id").
+		Where("bookings.class_id = ?", classID).
+		Where("bookings.deleted_at IS NULL").
+		Order("bookings.created_at ASC").
+		Scan(&bookings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return bookings, nil
+}

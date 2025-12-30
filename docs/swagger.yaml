@@ -2265,6 +2265,25 @@ definitions:
       updated_at:
         type: string
     type: object
+  schedulehandlers.ClassBookingResponse:
+    properties:
+      booking_id:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: string
+    type: object
   schedulehandlers.ClassResponse:
     properties:
       branch_id:
@@ -9087,6 +9106,42 @@ paths:
       summary: Book class
       tags:
       - Booking
+  /schedule/{classId}/bookings:
+    get:
+      description: Retrieves all bookings for a specific class with client information
+      parameters:
+      - description: Class UUID
+        in: path
+        name: classId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of bookings
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/schedulehandlers.ClassBookingResponse'
+                type: array
+            type: object
+        "400":
+          description: Invalid class ID
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get class bookings
+      tags:
+      - Schedule
   /schedule/{classId}/bookings/count:
     get:
       description: Returns the total number of bookings for a specific class.

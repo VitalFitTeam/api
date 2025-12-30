@@ -74,3 +74,11 @@ func (s *ScheduleService) UpdateClass(ctx context.Context, class *scheduledomain
 func (s *ScheduleService) DeleteClass(ctx context.Context, classID uuid.UUID) error {
 	return s.store.Schedule.DeleteClass(ctx, classID)
 }
+
+// ----------------------------------------
+// GetClassBookings
+// ----------------------------------------
+
+func (s *ScheduleService) GetClassBookings(ctx context.Context, classID uuid.UUID) ([]*scheduledomain.ClassBooking, error) {
+	return s.store.Schedule.GetClassBookings(ctx, classID)
+}
