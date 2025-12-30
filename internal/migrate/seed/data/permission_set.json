@@ -35,7 +35,11 @@
     "reports:view_attendance",
     "reports:view_sales",
     "marketing:list",
-    "marketing:get"
+    "marketing:get",
+    "booking:list",
+    "booking:create",
+    "booking:cancel",
+    "booking:schedule:list"
   ],
   "recepcionist": [
     "users:create",

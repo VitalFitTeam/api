@@ -262,5 +262,21 @@
   {
     "name": "reports:view_sales",
     "description": "Allows viewing sales reports"
+  },
+  {
+    "name": "booking:list",
+    "description": "Allows listing all bookings for a class"
+  },
+  {
+    "name": "booking:create",
+    "description": "Allows creating bookings for clients"
+  },
+  {
+    "name": "booking:cancel",
+    "description": "Allows canceling bookings"
+  },
+  {
+    "name": "booking:schedule:list",
+    "description": "Allows listing client schedules"
   }
 ]
