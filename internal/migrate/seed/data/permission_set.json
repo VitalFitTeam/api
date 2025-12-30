@@ -30,6 +30,8 @@
     "packages:get",
     "billing:list",
     "billing:process_payment",
+    "billing:create",
+    "billing:create_invoice",
     "checkins:create",
     "checkins:list",
     "reports:view_attendance",
@@ -39,7 +41,12 @@
     "booking:list",
     "booking:create",
     "booking:cancel",
-    "booking:schedule:list"
+    "booking:schedule:list",
+    "cancellation-reasons:create",
+    "cancellation-reasons:list",
+    "cancellation-reasons:update",
+    "cancellation-reasons:delete",
+    "access:check_in"
   ],
   "recepcionist": [
     "users:create",
@@ -60,7 +67,9 @@
     "billing:list",
     "billing:process_payment",
     "checkins:create",
-    "checkins:list"
+    "checkins:list",
+    "cancellation-reasons:list",
+    "access:check_in"
   ],
   "instructor": [
     "schedule:list",
@@ -74,6 +83,7 @@
   "accountant": [
     "billing:list",
     "billing:create",
+    "billing:create_invoice",
     "billing:get",
     "billing:update",
     "billing:delete",
