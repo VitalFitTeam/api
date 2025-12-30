@@ -204,6 +204,10 @@
     "description": "Allows updating the status of a payment"
   },
   {
+    "name": "billing:create_invoice",
+    "description": "Allows creating new invoices manually"
+  },
+  {
     "name": "marketing:create",
     "description": "Allows creating new banners or marketing campaigns"
   },
