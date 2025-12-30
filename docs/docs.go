@@ -2842,6 +2842,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/bookings/class/{classId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns all bookings for a specific class with client information",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Get bookings for a class",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Class UUID",
+                        "name": "classId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bookings list",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/bookinghandlers.BookingWithUserInfoResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/bookings/client/{userId}": {
             "get": {
                 "security": [
@@ -12792,6 +12848,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "starts_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "bookinghandlers.BookingWithUserInfoResponse": {
+            "type": "object",
+            "properties": {
+                "booking_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

@@ -204,6 +204,10 @@
     "description": "Allows updating the status of a payment"
   },
   {
+    "name": "billing:create_invoice",
+    "description": "Allows creating new invoices manually"
+  },
+  {
     "name": "marketing:create",
     "description": "Allows creating new banners or marketing campaigns"
   },
@@ -282,5 +286,21 @@
   {
     "name": "access:check_in",
     "description": "Allows authorizing member access via check-in"
+  },
+  {
+    "name": "booking:list",
+    "description": "Allows listing all bookings for a class"
+  },
+  {
+    "name": "booking:create",
+    "description": "Allows creating bookings for clients"
+  },
+  {
+    "name": "booking:cancel",
+    "description": "Allows canceling bookings"
+  },
+  {
+    "name": "booking:schedule:list",
+    "description": "Allows listing client schedules"
   }
 ]

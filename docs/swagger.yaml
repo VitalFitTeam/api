@@ -711,6 +711,25 @@ definitions:
       starts_at:
         type: string
     type: object
+  bookinghandlers.BookingWithUserInfoResponse:
+    properties:
+      booking_id:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: string
+    type: object
   branchdomain.BranchStatusCount:
     properties:
       active:
@@ -4254,6 +4273,42 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Cancel booking
+      tags:
+      - Booking
+  /bookings/class/{classId}:
+    get:
+      description: Returns all bookings for a specific class with client information
+      parameters:
+      - description: Class UUID
+        in: path
+        name: classId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bookings list
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/bookinghandlers.BookingWithUserInfoResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get bookings for a class
       tags:
       - Booking
   /bookings/client/{userId}:
