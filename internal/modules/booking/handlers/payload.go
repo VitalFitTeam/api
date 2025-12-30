@@ -46,3 +46,14 @@ type BookingResponse struct {
 	Instructor  string    `json:"instructor"`
 	BranchName  string    `json:"branch_name"`
 }
+
+type BookingWithUserInfoResponse struct {
+	BookingID uuid.UUID `json:"booking_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Email     string    `json:"email"`
+	Phone     string    `json:"phone"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+}

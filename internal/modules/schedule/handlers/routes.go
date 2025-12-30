@@ -14,7 +14,6 @@ type ScheduleHandlersInterface interface {
 	UpdateClassHandler(c *gin.Context)
 	DeleteClassHandler(c *gin.Context)
 	GetClassByIDHandler(c *gin.Context)
-	GetClassBookingsHandler(c *gin.Context)
 }
 
 type ScheduleHandlers struct {
@@ -42,6 +41,5 @@ func (h *ScheduleHandlers) ScheduleRoutes(rg *gin.RouterGroup, m *auth.AuthMiddl
 		classRoutes.GET("/:classId", h.GetClassByIDHandler)
 		classRoutes.PUT("/:classId", m.RBACPermission("schedule:update"), h.UpdateClassHandler)
 		classRoutes.DELETE("/:classId", m.RBACPermission("schedule:delete"), h.DeleteClassHandler)
-		classRoutes.GET("/:classId/bookings", m.RBACPermission("schedule:view"), h.GetClassBookingsHandler)
 	}
 }

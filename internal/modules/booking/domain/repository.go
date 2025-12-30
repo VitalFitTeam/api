@@ -30,4 +30,7 @@ type BookingRepository interface {
 	// GetClientBookings retorna todas las reservas de un usuario
 	GetClientBookings(ctx context.Context, userID uuid.UUID) ([]BookingWithClassInfo, error)
 	GetClientActualBook(ctx context.Context, userID, branchID uuid.UUID, startsAt time.Time, endsAt time.Time) (*Booking, error)
+
+	// GetBookingsByClass obtiene todas las reservas de una clase con información del cliente
+	GetBookingsByClass(ctx context.Context, classID uuid.UUID) ([]*BookingWithUserInfo, error)
 }

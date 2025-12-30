@@ -26,19 +26,4 @@ type ScheduleRepository interface {
 	DeleteClass(ctx context.Context, classID uuid.UUID) error
 
 	GetAvailableClassesForBranch(ctx context.Context, branchID uuid.UUID, startTime, endTime time.Time) ([]Class, error)
-
-	// GetClassBookings obtiene todas las reservas de una clase con información del cliente
-	GetClassBookings(ctx context.Context, classID uuid.UUID) ([]*ClassBooking, error)
-}
-
-// ClassBooking representa una reserva de clase con información del cliente
-type ClassBooking struct {
-	BookingID uuid.UUID `json:"booking_id"`
-	UserID    uuid.UUID `json:"user_id"`
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
-	Email     string    `json:"email"`
-	Phone     string    `json:"phone"`
-	Status    string    `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
 }

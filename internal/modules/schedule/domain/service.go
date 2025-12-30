@@ -12,5 +12,4 @@ type ScheduleServiceInterface interface {
 	GetClassByID(ctx context.Context, classID uuid.UUID) (*Class, error)
 	UpdateClass(ctx context.Context, class *Class) error
 	DeleteClass(ctx context.Context, classID uuid.UUID) error
-	GetClassBookings(ctx context.Context, classID uuid.UUID) ([]*ClassBooking, error)
 }

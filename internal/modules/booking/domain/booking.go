@@ -14,8 +14,6 @@ const (
 	BookingStatusConfirmed         BookingStatus = "Confirmed"
 	BookingStatusCancelledByUser   BookingStatus = "CancelledByUser"
 	BookingStatusCancelledBySystem BookingStatus = "CancelledBySystem"
-	BookingStatusCheckedIn         BookingStatus = "CheckedIn"
-	BookingStatusWaitlist          BookingStatus = "Waitlist"
 )
 
 type Booking struct {
@@ -39,6 +37,17 @@ type BookingWithClassInfo struct {
 	ServiceName string    `json:"service_name"`
 	Instructor  string    `json:"instructor"`
 	BranchName  string    `json:"branch_name"`
+}
+
+type BookingWithUserInfo struct {
+	BookingID uuid.UUID `json:"booking_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Email     string    `json:"email"`
+	Phone     string    `json:"phone"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func (Booking) TableName() string {

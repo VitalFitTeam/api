@@ -270,3 +270,45 @@ func (h *BookingHandlers) GetClassBookingsCountHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"count": count})
 }
+
+// @Summary		Get bookings for a class
+// @Description	Returns all bookings for a specific class with client information
+// @Tags			Booking
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			classId	path		string									true	"Class UUID"
+// @Success		200		{object}	object{data=[]BookingWithUserInfoResponse}	"Bookings list"
+// @Failure		400		{object}	map[string]interface{}					"Bad Request"
+// @Failure		500		{object}	map[string]interface{}					"Internal Server Error"
+// @Router			/bookings/class/{classId} [get]
+func (h *BookingHandlers) GetBookingsByClassHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	classID, err := uuid.Parse(c.Param("classId"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, errors.New("invalid classId format"))
+		return
+	}
+
+	bookings, err := h.services.BookingServices.GetBookingsByClass(ctx, classID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	response := make([]*BookingWithUserInfoResponse, 0, len(bookings))
+	for _, booking := range bookings {
+		response = append(response, &BookingWithUserInfoResponse{
+			BookingID: booking.BookingID,
+			UserID:    booking.UserID,
+			FirstName: booking.FirstName,
+			LastName:  booking.LastName,
+			Email:     booking.Email,
+			Phone:     booking.Phone,
+			Status:    booking.Status,
+			CreatedAt: booking.CreatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": response})
+}
