@@ -19,3 +19,7 @@ func NewPoliciesHandler(services appservices.Services) *PoliciesHandler {
 		services: services,
 	}
 }
+
+func (h *PoliciesHandler) PolicyRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+
+}

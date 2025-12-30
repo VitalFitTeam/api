@@ -21,6 +21,8 @@ import (
 	marketingrepository "github.com/vitalfit/api/internal/modules/marketing/repository"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	membershipsrepository "github.com/vitalfit/api/internal/modules/memberships/repository"
+	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
+	policiesrepository "github.com/vitalfit/api/internal/modules/policies/repository"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	productsrepository "github.com/vitalfit/api/internal/modules/products/repository"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
@@ -53,6 +55,7 @@ type Storage struct {
 	Access          accessdomain.AccessRepository
 	Reports         reportdomain.ReportRepository
 	Staff           staffdomain.StaffRepository
+	Policies        policiesdomain.PoliciesRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -76,5 +79,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Access:          accessrepository.NewAccessStore(db),
 		Reports:         reportrepository.NewReportStore(db),
 		Staff:           staffrepository.NewStaffStore(db),
+		Policies:        policiesrepository.NewPoliciesStore(db),
 	}
 }
