@@ -9447,6 +9447,31 @@ paths:
       summary: Get staff assigned branches
       tags:
       - Staff
+  /staff/instructor-branches:
+    get:
+      description: Retrieves a list of branches where the current instructor is assigned.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/staffhandlers.BranchResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get instructor branches
+      tags:
+      - Staff
   /staff/managed-branches:
     get:
       description: Retrieves a list of branches managed by the current staff member

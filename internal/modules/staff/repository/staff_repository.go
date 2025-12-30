@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
+	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	staffdomain "github.com/vitalfit/api/internal/modules/staff/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
@@ -131,4 +132,21 @@ func (s *StaffStore) GetManagedBranches(ctx context.Context, userID uuid.UUID) (
 		Where("user_id = ?", userID).
 		Find(&branches).Error
 	return branches, err
+}
+
+func (s *StaffStore) GetInstructorBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error) {
+	var instructor instructordomain.Instructor
+	err := s.db.WithContext(ctx).
+		Preload("Branches").
+		Where("user_id = ?", userID).
+		First(&instructor).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return []branchdomain.Branch{}, nil
+		}
+		return nil, err
+	}
+
+	return instructor.Branches, nil
 }

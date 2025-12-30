@@ -262,5 +262,25 @@
   {
     "name": "reports:view_sales",
     "description": "Allows viewing sales reports"
+  },
+  {
+    "name": "cancellation-reasons:create",
+    "description": "Allows creating new cancellation reasons"
+  },
+  {
+    "name": "cancellation-reasons:list",
+    "description": "Allows listing all cancellation reasons"
+  },
+  {
+    "name": "cancellation-reasons:update",
+    "description": "Allows modifying a cancellation reason"
+  },
+  {
+    "name": "cancellation-reasons:delete",
+    "description": "Allows deleting a cancellation reason"
+  },
+  {
+    "name": "access:check_in",
+    "description": "Allows authorizing member access via check-in"
   }
 ]

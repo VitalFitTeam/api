@@ -16,4 +16,5 @@ type StaffRepository interface {
 	GetStaffBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error)
 	GetUsersByIds(ctx context.Context, userIDs []uuid.UUID) ([]authdomain.Users, error)
 	GetManagedBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error)
+	GetInstructorBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error)
 }

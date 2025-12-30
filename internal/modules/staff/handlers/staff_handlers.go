@@ -191,6 +191,35 @@ func (h *StaffHandlers) GetStaffBranchesHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": response})
 }
 
+// @Summary		Get instructor branches
+// @Description	Retrieves a list of branches where the current instructor is assigned.
+// @Tags			Staff
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=[]BranchResponse}
+// @Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/staff/instructor-branches [get]
+func (h *StaffHandlers) GetInstructorBranchesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	branches, err := h.services.Staff.GetInstructorBranches(ctx, user.UserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	response := make([]BranchResponse, 0, len(branches))
+	for _, b := range branches {
+		response = append(response, BranchResponse{
+			ID:   b.BranchID,
+			Name: b.Name,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": response})
+}
+
 // @Summary		Remove staff from a branch
 // @Description	Removes a specific staff member from a specific branch.
 // @Tags			Branch Staff
