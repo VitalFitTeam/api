@@ -13,6 +13,7 @@ type StaffHandlersInterface interface {
 	RemoveStaffFromBranchHandler(c *gin.Context)
 	GetManagedBranchesHandler(c *gin.Context)
 	GetStaffBranchesHandler(c *gin.Context)
+	GetInstructorBranchesHandler(c *gin.Context)
 }
 
 type StaffHandlers struct {
@@ -37,5 +38,6 @@ func (h *StaffHandlers) StaffRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 		staffMemberRoutes.Use(m.AuthJwtTokenMiddleware())
 		staffMemberRoutes.GET("/managed-branches", h.GetManagedBranchesHandler)
 		staffMemberRoutes.GET("/branches", h.GetStaffBranchesHandler)
+		staffMemberRoutes.GET("/instructor-branches", h.GetInstructorBranchesHandler)
 	}
 }

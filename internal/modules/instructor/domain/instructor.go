@@ -20,7 +20,7 @@ type Instructor struct {
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 
 	User     *authdomain.Users     `gorm:"foreignKey:UserID;references:UserID" json:"user,omitempty"`
-	Branches []branchdomain.Branch `gorm:"many2many:branch_instructors;" json:"branches,omitempty"`
+	Branches []branchdomain.Branch `gorm:"many2many:branch_instructors;foreignKey:InstructorID;joinForeignKey:instructor_id;references:BranchID;joinReferences:branch_id" json:"branches,omitempty"`
 
 	Specialties []*productsdomain.ServiceCategory `gorm:"many2many:instructor_specialties;foreignKey:InstructorID;joinForeignKey:instructor_id;references:CategoryID;joinReferences:category_id" json:"specialties,omitempty"`
 }

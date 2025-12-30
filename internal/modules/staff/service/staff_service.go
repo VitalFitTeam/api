@@ -61,3 +61,7 @@ func (s *StaffService) GetStaffBranches(ctx context.Context, userID uuid.UUID) (
 func (s *StaffService) GetManagedBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error) {
 	return s.store.Staff.GetManagedBranches(ctx, userID)
 }
+
+func (s *StaffService) GetInstructorBranches(ctx context.Context, userID uuid.UUID) ([]branchdomain.Branch, error) {
+	return s.store.Staff.GetInstructorBranches(ctx, userID)
+}
