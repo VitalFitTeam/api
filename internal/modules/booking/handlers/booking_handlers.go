@@ -276,10 +276,10 @@ func (h *BookingHandlers) GetClassBookingsCountHandler(c *gin.Context) {
 // @Tags			Booking
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			classId	path		string									true	"Class UUID"
+// @Param			classId	path		string										true	"Class UUID"
 // @Success		200		{object}	object{data=[]BookingWithUserInfoResponse}	"Bookings list"
-// @Failure		400		{object}	map[string]interface{}					"Bad Request"
-// @Failure		500		{object}	map[string]interface{}					"Internal Server Error"
+// @Failure		400		{object}	map[string]interface{}						"Bad Request"
+// @Failure		500		{object}	map[string]interface{}						"Internal Server Error"
 // @Router			/bookings/class/{classId} [get]
 func (h *BookingHandlers) GetBookingsByClassHandler(c *gin.Context) {
 	ctx := c.Request.Context()
