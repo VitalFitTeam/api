@@ -79,3 +79,21 @@ type UpdateClientMembershipPayload struct {
 	CancelReasonID string `json:"cancel_reason_id"`
 	CancelNotes    string `json:"cancel_notes"`
 }
+
+// Cancellation Reasons Payloads
+
+type CreateCancellationReasonPayload struct {
+	Description string `json:"description" binding:"required"`
+	IsActive    bool   `json:"is_active"`
+}
+
+type UpdateCancellationReasonPayload struct {
+	Description string `json:"description"`
+	IsActive    *bool  `json:"is_active"`
+}
+
+type CancellationReasonResponse struct {
+	ReasonID    uuid.UUID `json:"reason_id"`
+	Description string    `json:"description"`
+	IsActive    bool      `json:"is_active"`
+}

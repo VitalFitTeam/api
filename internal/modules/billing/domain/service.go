@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"github.com/vitalfit/api/pkg/pagination"
 )
@@ -37,7 +38,7 @@ type BillingServiceInterface interface {
 	CreateInvoice(ctx context.Context, invoice *Invoice, items []InvoiceItem) error
 	AddPaymentToInvoice(ctx context.Context, payment *Payment) error
 	CheckInvoiceAccess(ctx context.Context, user *authdomain.Users, invoiceID uuid.UUID) error
-	GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Invoice, int64, error)
+	GetInvoices(ctx context.Context, fq pagination.PaginatedFeedQuery, branchIDs []uuid.UUID) ([]*Invoice, int64, error)
 
 	GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*Invoice, error)
 	GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*Payment, error)
@@ -45,4 +46,5 @@ type BillingServiceInterface interface {
 	UpdateInvoiceStatus(ctx context.Context, invoice *Invoice) error
 	ActivateInvoiceItems(ctx context.Context, invoice *Invoice) error
 	GetClientIvoices(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*Invoice, int64, error)
+	GetTaxRateByBranchID(ctx context.Context, branchID uuid.UUID) (decimal.Decimal, error)
 }

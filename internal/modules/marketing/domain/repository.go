@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -21,6 +22,6 @@ type MarketingRepository interface {
 	UpdatePromotion(context.Context, *Promotion) error
 	DeletePromotion(context.Context, uuid.UUID) error
 	GetPromotionByID(context.Context, uuid.UUID) (*Promotion, error)
-	GetPromotions(context.Context) ([]*Promotion, error)
+	GetPromotions(context.Context, pagination.PaginatedFeedQuery) ([]*Promotion, int64, error)
 	GetPromotionByCode(context.Context, string) (*Promotion, error)
 }

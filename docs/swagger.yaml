@@ -1554,12 +1554,18 @@ definitions:
     type: object
   membershipsdomain.CancellationReason:
     properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
       description:
         type: string
       is_active:
         type: boolean
       reason_id:
         description: Mapeo a cancellation_reasons
+        type: string
+      updated_at:
         type: string
     type: object
   membershipsdomain.ClientMembership:
@@ -1638,6 +1644,24 @@ definitions:
       user_id:
         type: string
     type: object
+  membershipshandlers.CancellationReasonResponse:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+      reason_id:
+        type: string
+    type: object
+  membershipshandlers.CreateCancellationReasonPayload:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
+    required:
+    - description
+    type: object
   membershipshandlers.CreateMembershipPayload:
     properties:
       description:
@@ -1690,6 +1714,13 @@ definitions:
         type: string
       price:
         type: number
+    type: object
+  membershipshandlers.UpdateCancellationReasonPayload:
+    properties:
+      description:
+        type: string
+      is_active:
+        type: boolean
     type: object
   membershipshandlers.UpdateClientMembershipPayload:
     properties:
@@ -2029,6 +2060,40 @@ definitions:
     - name
     - priority
     type: object
+  reportdomain.BillingMatrix:
+    properties:
+      branches:
+        description: List of branch names (columns)
+        items:
+          type: string
+        type: array
+      grand_total:
+        description: Total of Totals
+        type: number
+      rows:
+        description: Data rows
+        items:
+          $ref: '#/definitions/reportdomain.BillingMatrixRow'
+        type: array
+      totals:
+        additionalProperties:
+          type: number
+        description: BranchName -> Total Vertical
+        type: object
+    type: object
+  reportdomain.BillingMatrixRow:
+    properties:
+      concept:
+        type: string
+      total:
+        description: Global Total for this concept
+        type: number
+      values:
+        additionalProperties:
+          type: number
+        description: BranchName -> Amount
+        type: object
+    type: object
   reportdomain.BranchPerformance:
     properties:
       label:
@@ -2051,6 +2116,63 @@ definitions:
       value:
         type: number
     type: object
+  reportdomain.ClassCapacityStats:
+    properties:
+      class_name:
+        type: string
+      current_count:
+        type: integer
+      max_capacity:
+        type: integer
+      ratio:
+        description: '"X / Y"'
+        type: string
+    type: object
+  reportdomain.ClassScheduleItem:
+    properties:
+      class_id:
+        type: string
+      class_name:
+        type: string
+      end_time:
+        type: string
+      instructor_name:
+        type: string
+      max_capacity:
+        type: integer
+      start_time:
+        type: string
+    type: object
+  reportdomain.CohortRetention:
+    properties:
+      cohort_month:
+        description: e.g., "Jan 2024"
+        type: string
+      cohort_size:
+        description: Total users in cohort
+        type: integer
+      retention:
+        description: Percentage for Month 0, 1, 2...
+        items:
+          type: number
+        type: array
+    type: object
+  reportdomain.FinancialSummary:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/reportdomain.FinancialSummaryItem'
+        type: array
+      total:
+        type: number
+    type: object
+  reportdomain.FinancialSummaryItem:
+    properties:
+      amount:
+        type: number
+      category:
+        type: string
+    type: object
   reportdomain.GlobalSalesStats:
     properties:
       percentage_change:
@@ -2058,6 +2180,62 @@ definitions:
       total_current_month:
         type: number
       total_last_month:
+        type: number
+      trend:
+        type: string
+    type: object
+  reportdomain.HeatmapPoint:
+    properties:
+      day_of_week:
+        description: 1=Monday, 7=Sunday
+        type: integer
+      hour:
+        description: Start hour of the bucket (0, 3, 6...)
+        type: integer
+      value:
+        type: integer
+    type: object
+  reportdomain.KPICard:
+    properties:
+      is_positive:
+        type: boolean
+      target:
+        type: number
+      title:
+        type: string
+      trend_label:
+        type: string
+      trend_percent:
+        type: number
+      value:
+        type: number
+    type: object
+  reportdomain.RecentAttendanceItem:
+    properties:
+      check_in_time:
+        type: string
+      service_name:
+        type: string
+      user_name:
+        type: string
+    type: object
+  reportdomain.StackedChartData:
+    properties:
+      label:
+        description: Month Name
+        type: string
+      new:
+        description: Registered this month
+        type: integer
+      recurring:
+        description: Active this month but registered previously
+        type: integer
+    type: object
+  reportdomain.TotalSalesStats:
+    properties:
+      percentage_change:
+        type: number
+      total_sales:
         type: number
       trend:
         type: string
@@ -2147,6 +2325,37 @@ definitions:
       service_id:
         type: string
       starts_at:
+        type: string
+    type: object
+  staffhandlers.AssignStaffToBranchPayload:
+    properties:
+      staff_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - staff_ids
+    type: object
+  staffhandlers.BranchResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  staffhandlers.BranchStaffResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      user_id:
         type: string
     type: object
 info:
@@ -3201,6 +3410,10 @@ paths:
         in: query
         name: status
         type: string
+      - description: Filter by branch UUID
+        in: query
+        name: branch_id
+        type: string
       produces:
       - application/json
       responses:
@@ -3959,6 +4172,52 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get historical exchange rate for a currency
+      tags:
+      - Billing
+  /billing/tax-rate/{branch_id}:
+    get:
+      description: Retrieves the tax rate applicable for a specific branch based on
+        its location (Country).
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tax rate as decimal string
+          schema:
+            properties:
+              tax_rate:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get tax rate by branch ID
       tags:
       - Billing
   /bookings/{bookingId}/cancel:
@@ -5198,6 +5457,136 @@ paths:
       summary: Update a branch service
       tags:
       - Branch Services
+  /branches/{id}/staff:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of staff members assigned to a specific branch,
+        optionally filtered by role.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by Role UUID
+        in: query
+        name: role_id
+        type: string
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/staffhandlers.BranchStaffResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List staff in a branch
+      tags:
+      - Branch Staff
+    post:
+      consumes:
+      - application/json
+      description: Assigns one or more staff members to a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with staff UUIDs
+        in: body
+        name: staff
+        required: true
+        schema:
+          $ref: '#/definitions/staffhandlers.AssignStaffToBranchPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Staff assigned successfully
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign staff to a branch
+      tags:
+      - Branch Staff
+  /branches/{id}/staff/{staffId}:
+    delete:
+      description: Removes a specific staff member from a specific branch.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Staff UUID
+        in: path
+        name: staffId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Staff removed successfully
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove staff from a branch
+      tags:
+      - Branch Staff
   /branches/status:
     get:
       description: Get a count data for each status branch
@@ -6148,6 +6537,29 @@ paths:
   /marketing/promotions:
     get:
       description: Retrieves a list of all promotions.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort direction (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
@@ -6601,6 +7013,197 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get a summary of membership types
+      tags:
+      - Memberships
+  /memberships/cancellation-reasons:
+    get:
+      description: Retrieves all cancellation reasons, ordered alphabetically by description.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: asc
+        description: Sort direction (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of cancellation reasons
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/membershipshandlers.CancellationReasonResponse'
+                type: array
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all cancellation reasons
+      tags:
+      - Memberships
+    post:
+      consumes:
+      - application/json
+      description: Adds a new standardized cancellation reason for memberships.
+      parameters:
+      - description: Cancellation reason creation payload
+        in: body
+        name: reason
+        required: true
+        schema:
+          $ref: '#/definitions/membershipshandlers.CreateCancellationReasonPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Cancellation reason created successfully
+          schema:
+            $ref: '#/definitions/membershipshandlers.CancellationReasonResponse'
+        "400":
+          description: 'error: Bad Request'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: 'error: Conflict - Description already exists'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new cancellation reason
+      tags:
+      - Memberships
+  /memberships/cancellation-reasons/{id}:
+    delete:
+      description: Soft deletes a cancellation reason by setting the deleted_at timestamp.
+      parameters:
+      - description: Cancellation Reason UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: 'error: Bad Request - Invalid ID'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Cancellation reason not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a cancellation reason
+      tags:
+      - Memberships
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing cancellation reason's description and/or active
+        status.
+      parameters:
+      - description: Cancellation Reason UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cancellation reason update payload
+        in: body
+        name: reason
+        required: true
+        schema:
+          $ref: '#/definitions/membershipshandlers.UpdateCancellationReasonPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cancellation reason updated successfully
+          schema:
+            $ref: '#/definitions/membershipshandlers.CancellationReasonResponse'
+        "400":
+          description: 'error: Bad Request - Invalid ID or payload'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: 'error: Not Found - Cancellation reason not found'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: 'error: Conflict - Description already exists'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a cancellation reason
       tags:
       - Memberships
   /packages:
@@ -7091,6 +7694,171 @@ paths:
       summary: List all public services
       tags:
       - Public
+  /reports/charts/activity-heatmap:
+    get:
+      description: Retrieves attendance density grouped by day of week and 3-hour
+        blocks (last 30 days).
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Heatmap data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.HeatmapPoint'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Activity Heatmap
+      tags:
+      - Reports Branch
+  /reports/charts/cash-flow:
+    get:
+      description: Retrieves total actual income (cash flow) from completed payments
+        per month for the current year.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Monthly cash flow data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Monthly Cash Flow Chart
+      tags:
+      - Reports Financial
+  /reports/charts/class-occupancy:
+    get:
+      description: Retrieves average occupancy percentage per class category for the
+        current month.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Class occupancy data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Class Occupancy Chart
+      tags:
+      - Reports Branch
+  /reports/charts/cohort-analysis:
+    get:
+      description: Retrieves user retention percentages grouped by registration month
+        (cohort). Month 0 is always 100%. Subsequent months show the % of users who
+        made a payment.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Cohort analysis data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.CohortRetention'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Cohort Analysis (Retention Heatmap)
+      tags:
+      - Reports
+  /reports/charts/monthly-revenue:
+    get:
+      description: Retrieves total revenue per month for the current year.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Monthly revenue data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Monthly Revenue Chart
+      tags:
+      - Reports Financial
   /reports/charts/most-used-services:
     get:
       description: Retrieves the top 5 most used services based on attendance.
@@ -7127,10 +7895,48 @@ paths:
       summary: Get Most Used Services
       tags:
       - Reports
+  /reports/charts/new-vs-recurring:
+    get:
+      description: Retrieves the evolution of New vs Recurring users per month for
+        the current year. Ideal for Stacked Area Charts.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New vs Recurring data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.StackedChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get New vs Recurring Users Chart
+      tags:
+      - Reports
   /reports/charts/sales-by-category:
     get:
-      description: Retrieves sales data grouped by product category for a Donut Chart.
+      description: Retrieves sales data grouped by category (Memberships, Packages,
+        Service Categories) ordered by revenue. Ideal for Horizontal Bar Charts.
       parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
       - description: Start date for the report (YYYY-MM-DD)
         in: query
         name: start
@@ -7143,7 +7949,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Sales by category data
+          description: Sales volume by category data
           schema:
             properties:
               data:
@@ -7160,7 +7966,7 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: Get Sales By Category
+      summary: Get Sales Volume By Service (Category)
       tags:
       - Reports
   /reports/charts/sales-by-hour:
@@ -7264,6 +8070,684 @@ paths:
       summary: Get Top Instructors by Attendance
       tags:
       - Reports
+  /reports/charts/weekly-sales:
+    get:
+      description: Retrieves daily sales trend for the current week (Mon-Sun).
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Weekly sales data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Weekly Sales Chart
+      tags:
+      - Reports Branch
+  /reports/instructors/classes-count:
+    get:
+      description: Retrieves the total number of classes assigned to the instructor
+        for the current month.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Classes count KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Instructor Monthly Classes Count
+      tags:
+      - Reports Instructor
+  /reports/instructors/classes-today:
+    get:
+      description: Retrieves all classes assigned to the instructor for the current
+        day, regardless of whether they have already happened.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of classes today
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ClassScheduleItem'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Instructor Classes Today
+      tags:
+      - Reports Instructor
+  /reports/instructors/next-class:
+    get:
+      description: Retrieves the start time of the next class for a specific instructor
+        today.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Next class time or 'Sin pendientes'
+          schema:
+            properties:
+              data:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Instructor Next Class
+      tags:
+      - Reports Instructor
+  /reports/instructors/student-count:
+    get:
+      description: Retrieves the total number of unique students attended by the instructor
+        today, compared to the same day last week.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Student count KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Instructor Student Count KPI
+      tags:
+      - Reports Instructor
+  /reports/kpi/accounts-receivable:
+    get:
+      description: Retrieves the total outstanding debt (Accounts Receivable) from
+        unpaid or overdue invoices of active users.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Accounts Receivable KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Accounts Receivable KPI
+      tags:
+      - Reports Financial
+  /reports/kpi/active-members:
+    get:
+      description: Retrieves the count of unique active members (based on attendance
+        in the last 30 days). If branch_id is provided, filters by branch; otherwise,
+        returns global count.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Active members KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Active Members KPI
+      tags:
+      - Reports
+  /reports/kpi/average-ticket:
+    get:
+      description: Retrieves the average transaction value (Total Revenue / Number
+        of Transactions) for the current month compared to the previous month.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Average Ticket KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Average Ticket KPI
+      tags:
+      - Reports Financial
+  /reports/kpi/billing-matrix:
+    get:
+      description: Retrieves a comparative matrix of revenue by concept (rows) and
+        branch (columns).
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Billing matrix data
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.BillingMatrix'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Billing Detail by Branch Matrix
+      tags:
+      - Reports Financial
+  /reports/kpi/clv:
+    get:
+      description: Retrieves the average revenue generated per customer (Historical
+        Revenue / Unique Paying Customers).
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Average CLV KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Average Customer Lifetime Value (CLV) KPI
+      tags:
+      - Reports Financial
+  /reports/kpi/financial-summary:
+    get:
+      description: Retrieves revenue breakdown by business unit (Memberships, Services,
+        Products) for the current month.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Financial summary data
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.FinancialSummary'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Financial Summary
+      tags:
+      - Reports Branch
+  /reports/kpi/monthly-sales:
+    get:
+      description: Retrieves total accumulated sales for the current month and the
+        trend vs previous month.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Monthly sales KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Monthly Sales KPI
+      tags:
+      - Reports Branch
+  /reports/kpi/mrr:
+    get:
+      description: Retrieves the sum of revenue generated solely from memberships
+        (excluding one-time products/services) for the current month.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: MRR KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Monthly Recurring Revenue (MRR) KPI
+      tags:
+      - Reports Financial
+  /reports/kpi/new-clients:
+    get:
+      description: Retrieves the count of new clients registered in the current month
+        compared to the previous month.
+      parameters:
+      - description: Filter by Branch UUID (Currently Global)
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New Clients KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get New Clients KPI
+      tags:
+      - Reports
+  /reports/kpi/occupancy:
+    get:
+      description: Retrieves the average daily occupancy percentage for the current
+        month compared to max capacity.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Occupancy KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Occupancy KPI
+      tags:
+      - Reports Branch
+  /reports/kpi/retention-rate:
+    get:
+      description: 'Retrieves the percentage of existing clients who remained active
+        during the current month. Formula: ((End Clients - New Clients) / Start Clients)
+        * 100.'
+      parameters:
+      - description: Filter by Branch UUID (Currently Global)
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Retention Rate KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Retention Rate KPI
+      tags:
+      - Reports
+  /reports/kpi/total-transactions:
+    get:
+      description: Retrieves the total lifetime count of completed transactions (payments).
+        Supports filtering by branch. Includes a trend comparison (current month vs
+        previous month).
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total transactions KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Total Transactions Stats
+      tags:
+      - Reports Financial
+  /reports/kpi/weekly-revenue:
+    get:
+      description: Retrieves total revenue (sum of completed payments) for the current
+        week compared to the previous week.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Weekly revenue KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Weekly Revenue KPI
+      tags:
+      - Reports Financial
+  /reports/stats/check-ins-today:
+    get:
+      description: Retrieves the count of check-ins for the current day.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Count of check-ins
+          schema:
+            properties:
+              data:
+                format: int64
+                type: integer
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Today's Check-Ins
+      tags:
+      - Reports Branch
+  /reports/stats/class-capacity:
+    get:
+      description: Retrieves the attendance vs capacity ratio for a specific class
+        (e.g. "25 / 30").
+      parameters:
+      - description: Class UUID
+        in: query
+        name: class_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Class capacity stats
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.ClassCapacityStats'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Class Capacity Ratio
+      tags:
+      - Reports Branch
+  /reports/stats/current-occupancy:
+    get:
+      description: Retrieves the real-time occupancy percentage based on check-ins
+        within the current hour vs max capacity.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Occupancy percentage
+          schema:
+            properties:
+              data:
+                format: float64
+                type: number
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Current Occupancy Percentage
+      tags:
+      - Reports Branch
   /reports/stats/global:
     get:
       description: Retrieves global sales statistics, comparing the current month's
@@ -7290,6 +8774,38 @@ paths:
       summary: Get Global Sales Stats
       tags:
       - Reports
+  /reports/stats/recent-check-ins:
+    get:
+      description: Retrieves the last 4 check-ins for the current day.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of recent check-ins
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.RecentAttendanceItem'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Recent Check-Ins
+      tags:
+      - Reports Branch
   /reports/stats/top-branches:
     get:
       description: Retrieves the performance of the top 5 branches based on current
@@ -7370,6 +8886,64 @@ paths:
       summary: Get Total Clients Stat
       tags:
       - Reports
+  /reports/stats/total-sales:
+    get:
+      description: Retrieves the total accumulated sales amount from all time.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Total sales statistics
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.TotalSalesStats'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Total Sales
+      tags:
+      - Reports
+  /reports/stats/upcoming-classes:
+    get:
+      description: Retrieves a list of classes scheduled for the rest of the current
+        day.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of upcoming classes
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ClassScheduleItem'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Upcoming Classes Today
+      tags:
+      - Reports Branch
   /schedule/{classId}:
     delete:
       description: Deletes or cancels a class from the calendar
@@ -7511,6 +9085,38 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Book class
+      tags:
+      - Booking
+  /schedule/{classId}/bookings/count:
+    get:
+      description: Returns the total number of bookings for a specific class.
+      parameters:
+      - description: Class UUID
+        in: path
+        name: classId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Count returned
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get class bookings count
       tags:
       - Booking
   /schedule/branch/{branchId}/client/{userId}:
@@ -7815,6 +9421,58 @@ paths:
       summary: Get a summary of services
       tags:
       - Services
+  /staff/branches:
+    get:
+      description: Retrieves a list of branches where the current staff member is
+        assigned.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/staffhandlers.BranchResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get staff assigned branches
+      tags:
+      - Staff
+  /staff/managed-branches:
+    get:
+      description: Retrieves a list of branches managed by the current staff member
+        (branch_admin).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/staffhandlers.BranchResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get managed branches
+      tags:
+      - Staff
   /user/{id}:
     delete:
       description: Deletes a user from the system. Requires appropriate permissions.

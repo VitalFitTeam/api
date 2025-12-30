@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type DiscountType string
@@ -35,17 +36,17 @@ func (BannerService) TableName() string {
 }
 
 type Promotion struct {
-	PromotionID   uuid.UUID    `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"promotion_id"`
-	Name          string       `gorm:"type:varchar(255);not null" json:"name"`
-	Code          string       `gorm:"type:varchar(50);unique" json:"code"`
-	DiscountType  DiscountType `gorm:"type:varchar(50);not null" json:"discount_type"`
-	DiscountValue float64      `gorm:"type:decimal(10,2);not null" json:"discount_value"`
-	StartDate     time.Time    `gorm:"not null" json:"start_date"`
-	EndDate       time.Time    `gorm:"not null" json:"end_date"`
-	IsActive      bool         `gorm:"not null;default:true" json:"is_active"`
-	CreatedAt     time.Time    `gorm:"default:now()" json:"created_at"`
-	UpdatedAt     *time.Time   `json:"updated_at,omitempty"`
-	DeletedAt     *time.Time   `gorm:"index" json:"deleted_at,omitempty"`
+	PromotionID   uuid.UUID      `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"promotion_id"`
+	Name          string         `gorm:"type:varchar(255);not null" json:"name"`
+	Code          string         `gorm:"type:varchar(50);unique" json:"code"`
+	DiscountType  DiscountType   `gorm:"type:varchar(50);not null" json:"discount_type"`
+	DiscountValue float64        `gorm:"type:decimal(10,2);not null" json:"discount_value"`
+	StartDate     time.Time      `gorm:"not null" json:"start_date"`
+	EndDate       time.Time      `gorm:"not null" json:"end_date"`
+	IsActive      bool           `gorm:"not null;default:true" json:"is_active"`
+	CreatedAt     time.Time      `gorm:"default:now()" json:"created_at"`
+	UpdatedAt     *time.Time     `json:"updated_at,omitempty"`
+	DeletedAt     gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
 }
 
 func (Promotion) TableName() string {

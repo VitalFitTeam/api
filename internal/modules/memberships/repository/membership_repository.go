@@ -340,3 +340,105 @@ func (s *MembershipStore) GetAllMembershipTypes(ctx context.Context) ([]*members
 	return membershipTypes, nil
 
 }
+
+// Cancellation Reasons operations
+
+func (s *MembershipStore) CreateCancellationReason(ctx context.Context, reason *membershipsdomain.CancellationReason) error {
+	err := s.db.WithContext(ctx).Create(reason).Error
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" { // unique_violation on description
+				return shared_errors.ErrConflict
+			}
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *MembershipStore) UpdateCancellationReason(ctx context.Context, reason *membershipsdomain.CancellationReason) error {
+	err := s.db.WithContext(ctx).Save(reason).Error
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" { // unique_violation on description
+				return shared_errors.ErrConflict
+			}
+		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return shared_errors.ErrNotFound
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *MembershipStore) DeleteCancellationReason(ctx context.Context, id uuid.UUID) error {
+	// Soft delete - set deleted_at timestamp
+	result := s.db.WithContext(ctx).Delete(&membershipsdomain.CancellationReason{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return shared_errors.ErrNotFound
+	}
+	return nil
+}
+
+func (s *MembershipStore) GetCancellationReasonByID(ctx context.Context, id uuid.UUID) (*membershipsdomain.CancellationReason, error) {
+	reason := &membershipsdomain.CancellationReason{}
+	err := s.db.WithContext(ctx).Where("reason_id = ?", id).First(reason).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return reason, nil
+}
+
+func (s *MembershipStore) GetCancellationReasons(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.CancellationReason, int64, error) {
+	var reasons []*membershipsdomain.CancellationReason
+	var total int64
+
+	query := s.db.WithContext(ctx).Model(&membershipsdomain.CancellationReason{})
+
+	if fq.Search != "" {
+		query = query.Where("description ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	page := fq.Page
+	if page < 1 {
+		page = 1
+	}
+
+	err := query.Order("description " + fq.Sort).
+		Limit(fq.Limit).
+		Offset((page - 1) * fq.Limit).
+		Find(&reasons).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	return reasons, total, nil
+}
+
+func (s *MembershipStore) GetCancellationReasonByDescription(ctx context.Context, description string) (*membershipsdomain.CancellationReason, error) {
+	reason := &membershipsdomain.CancellationReason{}
+	err := s.db.WithContext(ctx).Where("description = ?", description).First(reason).Error
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return reason, nil
+}

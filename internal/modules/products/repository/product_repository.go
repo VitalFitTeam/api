@@ -299,8 +299,8 @@ func (s *ProductsStore) UpdateService(ctx context.Context, service *productsdoma
 	})
 }
 
-func (s *ProductsStore) GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]productsdomain.ServiceWithPrice, int64, error) {
-	var services []productsdomain.ServiceWithPrice
+func (s *ProductsStore) GetPublicServices(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*productsdomain.ServiceWithPrice, int64, error) {
+	var services []*productsdomain.ServiceWithPrice
 	var count int64
 
 	minMemberSQL := `
@@ -394,8 +394,8 @@ func (s *ProductsStore) GetPublicServices(ctx context.Context, fq pagination.Pag
 	return services, count, nil
 }
 
-func (s *ProductsStore) GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]productsdomain.ServiceWithPrice, int64, error) {
-	var services []productsdomain.ServiceWithPrice
+func (s *ProductsStore) GetPublicBranchServices(ctx context.Context, branchID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*productsdomain.ServiceWithPrice, int64, error) {
+	var services []*productsdomain.ServiceWithPrice
 	var count int64
 
 	tx := s.db.WithContext(ctx).
@@ -482,4 +482,21 @@ func (s *ProductsStore) GetAllServices(ctx context.Context) ([]productsdomain.Se
 	}
 	return services, nil
 
+}
+
+func (s *ProductsStore) GetServiceImagesAndBanners(ctx context.Context, serviceID uuid.UUID) (*productsdomain.Service, error) {
+	service := &productsdomain.Service{}
+	err := s.db.WithContext(ctx).
+		Preload("Images").
+		Preload("Banners").
+		Select("service_id").
+		First(service, "service_id = ?", serviceID).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+	return service, nil
 }

@@ -32,13 +32,17 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, cl
 		return uuid.Nil, err
 	}
 
+	if class.StartsAt.Before(time.Now()) {
+		return uuid.Nil, shared_errors.ErrPastClass
+	}
+
 	if class.MaxCapacity > 0 {
 		count, err := s.store.Booking.CountBookingsForClass(ctx, classID)
 		if err != nil {
 			return uuid.Nil, err
 		}
 		if count >= int64(class.MaxCapacity) {
-			return uuid.Nil, errors.New("class is full")
+			return uuid.Nil, shared_errors.ErrFullClass
 		}
 	}
 
@@ -145,42 +149,35 @@ func (s *BookingService) GetClientActualBook(ctx context.Context, userID, branch
 	return s.store.Booking.GetClientActualBook(ctx, userID, branchID, startsAt, endsAt)
 }
 
-//
-// ------------------------------------------------------------
-// CanAccessService
-// ------------------------------------------------------------
-//
-
 func (s *BookingService) CanAccessService(ctx context.Context, userID, branchID, serviceID uuid.UUID) (bool, error) {
-	// 1. Verificar si el usuario tiene una membresía activa.
 	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID)
 	if err != nil {
 		return false, err
 	}
 
 	if isMember {
-		// Si es miembro, verificar si el servicio es gratuito para miembros en esa sucursal.
 		branchService, err := s.store.Products.GetBranchServiceByID(ctx, branchID, serviceID)
 		if err != nil {
-			// Si no hay una configuración específica del servicio para la sucursal, no se puede determinar el acceso.
 			if errors.Is(err, shared_errors.ErrNotFound) {
 				return false, nil
 			}
 			return false, err
 		}
 
-		// Si el precio para miembros es 0, tiene acceso.
 		if branchService.PriceForMember == 0 {
 			return true, nil
 		}
 	}
 
-	// 2. Si no es miembro o el servicio tiene costo para miembros, verificar si tiene saldo/créditos.
 	clientBalance, err := s.store.Products.GetClientBalance(ctx, userID, serviceID)
 	if err != nil && !errors.Is(err, shared_errors.ErrNotFound) {
 		return false, err
 	}
 
-	// Si tiene un balance y es mayor a 0, tiene acceso.
 	return clientBalance != nil && clientBalance.Balance > 0, nil
+}
+
+func (s *BookingService) CountBookingsForClass(ctx context.Context, classID uuid.UUID) (int64, error) {
+	return s.store.Booking.CountBookingsForClass(ctx, classID)
+
 }

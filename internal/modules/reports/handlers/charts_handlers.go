@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func parseTimeRange(c *gin.Context) (time.Time, time.Time) {
@@ -30,21 +31,54 @@ func parseTimeRange(c *gin.Context) (time.Time, time.Time) {
 	return start, end
 }
 
-// @Summary		Get Sales By Category
-// @Description	Retrieves sales data grouped by product category for a Donut Chart.
+// @Summary		Get Sales Volume By Service (Category)
+// @Description	Retrieves sales data grouped by category (Memberships, Packages, Service Categories) ordered by revenue. Ideal for Horizontal Bar Charts.
 // @Tags			Reports
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			start	query		string									false	"Start date for the report (YYYY-MM-DD)"
-// @Param			end		query		string									false	"End date for the report (YYYY-MM-DD)"
-// @Success		200		{object}	object{data=[]reportdomain.ChartData}	"Sales by category data"
-// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Param			branch_id	query		string									false	"Filter by Branch UUID"
+// @Param			start		query		string									false	"Start date for the report (YYYY-MM-DD)"
+// @Param			end			query		string									false	"End date for the report (YYYY-MM-DD)"
+// @Success		200			{object}	object{data=[]reportdomain.ChartData}	"Sales volume by category data"
+// @Failure		500			{object}	object{error=string}					"Internal Server Error"
 // @Router			/reports/charts/sales-by-category [get]
 func (h *ReportHanlders) GetSalesByCategoryHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	start, end := parseTimeRange(c)
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
 
-	data, err := h.services.ReportServices.GetSalesByCategory(ctx, start, end)
+	data, err := h.services.ReportServices.GetSalesByCategory(ctx, branchID, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}
+
+// @Summary		Get Cohort Analysis (Retention Heatmap)
+// @Description	Retrieves user retention percentages grouped by registration month (cohort). Month 0 is always 100%. Subsequent months show the % of users who made a payment.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string										false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=[]reportdomain.CohortRetention}	"Cohort analysis data"
+// @Failure		500			{object}	object{error=string}						"Internal Server Error"
+// @Router			/reports/charts/cohort-analysis [get]
+func (h *ReportHanlders) GetCohortAnalysisHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	data, err := h.services.ReportServices.GetCohortAnalysis(ctx, branchID)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -131,6 +165,32 @@ func (h *ReportHanlders) GetMostUsedServicesHandler(c *gin.Context) {
 	start, end := parseTimeRange(c)
 
 	data, err := h.services.ReportServices.GetMostUsedServices(ctx, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}
+
+// @Summary		Get New vs Recurring Users Chart
+// @Description	Retrieves the evolution of New vs Recurring users per month for the current year. Ideal for Stacked Area Charts.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string											false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=[]reportdomain.StackedChartData}	"New vs Recurring data"
+// @Failure		500			{object}	object{error=string}							"Internal Server Error"
+// @Router			/reports/charts/new-vs-recurring [get]
+func (h *ReportHanlders) GetNewVsRecurringChartHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	data, err := h.services.ReportServices.GetNewVsRecurringChart(ctx, branchID)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return

@@ -360,15 +360,16 @@ func (h *BillingHandlers) GetClientInvoices(c *gin.Context) {
 // @Tags			Billing
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			limit	query		int										false	"Number of results per page"	default(10)
-// @Param			page	query		int										false	"Page number for pagination"	default(1)
-// @Param			sort	query		string									false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
-// @Param			search	query		string									false	"Search term for invoice number"
-// @Param			status	query		string									false	"Filter by invoice status"	enums(Paid, Unpaid, Void, Overdue)
-// @Success		200		{object}	object{data=[]AdminInvoiceListResponse}	"A paginated list of invoices"
-// @Failure		400		{object}	object{error=string}					"Bad Request (e.g., invalid query parameters)"
-// @Failure		403		{object}	object{error=string}					"Forbidden (user does not have permission)"
-// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Param			limit		query		int										false	"Number of results per page"	default(10)
+// @Param			page		query		int										false	"Page number for pagination"	default(1)
+// @Param			sort		query		string									false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search		query		string									false	"Search term for invoice number"
+// @Param			status		query		string									false	"Filter by invoice status"	enums(Paid, Unpaid, Void, Overdue)
+// @Param			branch_id	query		string									false	"Filter by branch UUID"
+// @Success		200			{object}	object{data=[]AdminInvoiceListResponse}	"A paginated list of invoices"
+// @Failure		400			{object}	object{error=string}					"Bad Request (e.g., invalid query parameters)"
+// @Failure		403			{object}	object{error=string}					"Forbidden (user does not have permission)"
+// @Failure		500			{object}	object{error=string}					"Internal Server Error"
 // @Router			/billing/invoices [get]
 func (h *BillingHandlers) GetInvoicesHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -397,7 +398,68 @@ func (h *BillingHandlers) GetInvoicesHandler(c *gin.Context) {
 		return
 	}
 
-	invoices, total, err := h.services.BillingServices.GetInvoices(ctx, fq)
+	var filterBranchIDs []uuid.UUID
+	requestedBranchIDStr := c.Query("branch_id")
+
+	if user.Role.Name == "super_admin" {
+		if requestedBranchIDStr != "" {
+			id, err := uuid.Parse(requestedBranchIDStr)
+			if err != nil {
+				h.services.LogErrors.BadRequestResponse(c, errors.New("invalid branch_id"))
+				return
+			}
+			filterBranchIDs = []uuid.UUID{id}
+		}
+	} else {
+		// For non-super_admin, restrict to related branches
+		managedBranches, err := h.services.Staff.GetManagedBranches(ctx, user.UserID)
+		if err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+		staffBranches, err := h.services.Staff.GetStaffBranches(ctx, user.UserID)
+		if err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+
+		allowedBranches := make(map[uuid.UUID]bool)
+		for _, b := range managedBranches {
+			allowedBranches[b.BranchID] = true
+		}
+		for _, b := range staffBranches {
+			allowedBranches[b.BranchID] = true
+		}
+
+		if len(allowedBranches) == 0 {
+			// User has no related branches, return empty result
+			c.JSON(200, pagination.PaginatedResponseTotal[AdminInvoiceListResponse]{
+				Data:  []AdminInvoiceListResponse{},
+				Count: 0,
+				Total: 0,
+			})
+			return
+		}
+
+		if requestedBranchIDStr != "" {
+			id, err := uuid.Parse(requestedBranchIDStr)
+			if err != nil {
+				h.services.LogErrors.BadRequestResponse(c, errors.New("invalid branch_id"))
+				return
+			}
+			if !allowedBranches[id] {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+			filterBranchIDs = []uuid.UUID{id}
+		} else {
+			for id := range allowedBranches {
+				filterBranchIDs = append(filterBranchIDs, id)
+			}
+		}
+	}
+
+	invoices, total, err := h.services.BillingServices.GetInvoices(ctx, fq, filterBranchIDs)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -414,4 +476,36 @@ func (h *BillingHandlers) GetInvoicesHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, resp)
+}
+
+// @Summary		Get tax rate by branch ID
+// @Description	Retrieves the tax rate applicable for a specific branch based on its location (Country).
+// @Tags			Billing
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	path		string					true	"Branch UUID"
+// @Success		200			{object}	object{tax_rate=string}	"Tax rate as decimal string"
+// @Failure		400			{object}	object{error=string}	"Bad Request"
+// @Failure		404			{object}	object{error=string}	"Not Found"
+// @Failure		500			{object}	object{error=string}	"Internal Server Error"
+// @Router			/billing/tax-rate/{branch_id} [get]
+func (h *BillingHandlers) GetTaxRateByBranchIDHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	branchID, err := uuid.Parse(c.Param("branch_id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	taxRate, err := h.services.BillingServices.GetTaxRateByBranchID(ctx, branchID)
+	if err != nil {
+		if errors.Is(err, shared_errors.ErrNotFound) {
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(200, gin.H{"tax_rate": taxRate})
 }

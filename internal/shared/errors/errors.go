@@ -17,6 +17,8 @@ var (
 	ErrForbidden           = errors.New("forbidden")
 	ErrPayment             = errors.New("payment required")
 	ErrInsufficientBalance = errors.New("insufficient balance")
+	ErrPastClass           = errors.New("cannot book a past class")
+	ErrFullClass           = errors.New("class is full")
 )
 
 type LogErrors struct {
