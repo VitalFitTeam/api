@@ -11,6 +11,7 @@ import (
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -227,21 +228,29 @@ func (s *BookingStore) GetClientActualBook(ctx context.Context, userID, branchID
 // ------------------------------------------------------------
 //
 
-func (s *BookingStore) GetBookingsByClass(ctx context.Context, classID uuid.UUID) ([]*bookingdomain.BookingWithUserInfo, error) {
+func (s *BookingStore) GetBookingsByClass(ctx context.Context, classID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*bookingdomain.BookingWithUserInfo, int64, error) {
 	var bookings []*bookingdomain.BookingWithUserInfo
+	var total int64
 
-	err := s.db.WithContext(ctx).
+	baseQuery := s.db.WithContext(ctx).
 		Table("bookings").
-		Select("bookings.booking_id, bookings.user_id, users.first_name, users.last_name, users.email, users.phone, bookings.status, bookings.created_at").
 		Joins("JOIN users ON bookings.user_id = users.user_id").
 		Where("bookings.class_id = ?", classID).
-		Where("bookings.deleted_at IS NULL").
-		Order("bookings.created_at ASC").
+		Where("bookings.deleted_at IS NULL")
+
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := baseQuery.Select("bookings.booking_id, bookings.user_id, users.first_name, users.last_name, users.email, users.phone, bookings.status, bookings.created_at").
+		Limit(fq.Limit).
+		Offset((fq.Page - 1) * fq.Limit).
+		Order("bookings.created_at " + fq.Sort).
 		Scan(&bookings).Error
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return bookings, nil
+	return bookings, total, nil
 }

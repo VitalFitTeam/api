@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 // BookingRepository define las operaciones de acceso a datos para las reservas de clases.
@@ -32,5 +33,5 @@ type BookingRepository interface {
 	GetClientActualBook(ctx context.Context, userID, branchID uuid.UUID, startsAt time.Time, endsAt time.Time) (*Booking, error)
 
 	// GetBookingsByClass obtiene todas las reservas de una clase con información del cliente
-	GetBookingsByClass(ctx context.Context, classID uuid.UUID) ([]*BookingWithUserInfo, error)
+	GetBookingsByClass(ctx context.Context, classID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*BookingWithUserInfo, int64, error)
 }
