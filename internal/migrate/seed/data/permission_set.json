@@ -46,7 +46,8 @@
     "cancellation-reasons:list",
     "cancellation-reasons:update",
     "cancellation-reasons:delete",
-    "access:check_in"
+    "access:check_in",
+    "branch_management"
   ],
   "recepcionist": [
     "users:create",

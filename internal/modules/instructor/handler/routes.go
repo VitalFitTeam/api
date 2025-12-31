@@ -46,8 +46,8 @@ func (r *InstructorHandlers) InstructorRoutes(rg *gin.RouterGroup, m *auth.AuthM
 
 	branchInstructorGroup := rg.Group("/branches/:id/instructor").Use(m.AuthJwtTokenMiddleware())
 	{
-		branchInstructorGroup.POST("", m.RBACPermission("instructors:create"), r.AssignInstructorsToBranchHandler)
+		branchInstructorGroup.POST("", m.RBACPermission("branch_management"), r.AssignInstructorsToBranchHandler)
 		branchInstructorGroup.GET("", m.RBACPermission("instructors:list"), r.ListBranchInstructorsHandler)
-		branchInstructorGroup.DELETE("/:instructor_id", m.RBACPermission("instructors:delete"), r.RemoveInstructorFromBranchHandler)
+		branchInstructorGroup.DELETE("/:instructor_id", m.RBACPermission("branch_management"), r.RemoveInstructorFromBranchHandler)
 	}
 }
