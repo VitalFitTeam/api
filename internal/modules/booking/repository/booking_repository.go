@@ -220,3 +220,28 @@ func (s *BookingStore) GetClientActualBook(ctx context.Context, userID, branchID
 
 	return &booking, nil
 }
+
+//
+// ------------------------------------------------------------
+// GetBookingsByClass
+// ------------------------------------------------------------
+//
+
+func (s *BookingStore) GetBookingsByClass(ctx context.Context, classID uuid.UUID) ([]*bookingdomain.BookingWithUserInfo, error) {
+	var bookings []*bookingdomain.BookingWithUserInfo
+
+	err := s.db.WithContext(ctx).
+		Table("bookings").
+		Select("bookings.booking_id, bookings.user_id, users.first_name, users.last_name, users.email, users.phone, bookings.status, bookings.created_at").
+		Joins("JOIN users ON bookings.user_id = users.user_id").
+		Where("bookings.class_id = ?", classID).
+		Where("bookings.deleted_at IS NULL").
+		Order("bookings.created_at ASC").
+		Scan(&bookings).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return bookings, nil
+}

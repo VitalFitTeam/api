@@ -179,5 +179,14 @@ func (s *BookingService) CanAccessService(ctx context.Context, userID, branchID,
 
 func (s *BookingService) CountBookingsForClass(ctx context.Context, classID uuid.UUID) (int64, error) {
 	return s.store.Booking.CountBookingsForClass(ctx, classID)
+}
 
+//
+// ------------------------------------------------------------
+// GetBookingsByClass
+// ------------------------------------------------------------
+//
+
+func (s *BookingService) GetBookingsByClass(ctx context.Context, classID uuid.UUID) ([]*bookingdomain.BookingWithUserInfo, error) {
+	return s.store.Booking.GetBookingsByClass(ctx, classID)
 }
