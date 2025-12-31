@@ -55,10 +55,10 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 		Use(m.AuthJwtTokenMiddleware())
 
 	{
-		branchInventoryGroup.POST("", r.AddInventoryItemHandler)
-		branchInventoryGroup.GET("", r.ListBranchInventoryHandler)
-		branchInventoryGroup.GET("/:inventoryId", r.GetInventoryByID)
-		branchInventoryGroup.PATCH("/:inventoryId", r.UpdateInventoryItemHandler)
-		branchInventoryGroup.DELETE("/:inventoryId", r.DeleteInventoryItemHandler)
+		branchInventoryGroup.POST("", m.RBACPermission("branch_management"), r.AddInventoryItemHandler)
+		branchInventoryGroup.GET("", m.RBACPermission("branch_management"), r.ListBranchInventoryHandler)
+		branchInventoryGroup.GET("/:inventoryId", m.RBACPermission("branch_management"), r.GetInventoryByID)
+		branchInventoryGroup.PATCH("/:inventoryId", m.RBACPermission("branch_management"), r.UpdateInventoryItemHandler)
+		branchInventoryGroup.DELETE("/:inventoryId", m.RBACPermission("branch_management"), r.DeleteInventoryItemHandler)
 	}
 }

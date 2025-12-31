@@ -302,5 +302,9 @@
   {
     "name": "booking:schedule:list",
     "description": "Allows listing client schedules"
+  },
+  {
+    "name": "branch_management",
+    "description": "Allows management of branch operations"
   }
 ]

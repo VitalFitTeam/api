@@ -53,11 +53,11 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 	BranchServicesGroup := rg.Group("/branches/:id/services")
 	{
 		BranchServicesGroup.Use(m.AuthJwtTokenMiddleware())
-		BranchServicesGroup.POST("", m.RBACPermission("services:create"), r.AssignBranchServiceHandler)
-		BranchServicesGroup.GET("", m.RBACPermission("services:list"), r.GetBranchServiceHandler)
-		BranchServicesGroup.GET("/:service_id", m.RBACPermission("services:get"), r.GetBranchServiceByIDHandler)
-		BranchServicesGroup.PUT("/:service_id", m.RBACPermission("services:update"), r.UpdateBranchServiceHandler)
-		BranchServicesGroup.DELETE("/:service_id", m.RBACPermission("services:delete"), r.DeleteBranchServiceHandler)
+		BranchServicesGroup.POST("", m.RBACPermission("branch_management"), r.AssignBranchServiceHandler)
+		BranchServicesGroup.GET("", m.RBACPermission("branch_management"), r.GetBranchServiceHandler)
+		BranchServicesGroup.GET("/:service_id", m.RBACPermission("branch_management"), r.GetBranchServiceByIDHandler)
+		BranchServicesGroup.PUT("/:service_id", m.RBACPermission("branch_management"), r.UpdateBranchServiceHandler)
+		BranchServicesGroup.DELETE("/:service_id", m.RBACPermission("branch_management"), r.DeleteBranchServiceHandler)
 	}
 }
 

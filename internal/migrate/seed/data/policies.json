@@ -1,8 +1,8 @@
 [
   {
     "policy_key": "INVOICE_OVERDUE_TIME_DAYS",
-    "display_name": "Tiempo de Vencimiento de Factura",
-    "description": "Días permitidos antes de considerar una factura como vencida.",
+    "display_name": "Invoice Overdue Time",
+    "description": "Days allowed before considering an invoice as overdue.",
     "value": "3",
     "data_type": "INTEGER",
     "min_limit": 0,
@@ -11,8 +11,8 @@
   },
   {
     "policy_key": "CLASS_CANCEL_MIN_HOURS",
-    "display_name": "Antelación Cancelación de Clases",
-    "description": "Horas mínimas de antelación requeridas para cancelar una clase sin penalización.",
+    "display_name": "Class Cancellation Notice",
+    "description": "Minimum hours of notice required to cancel a class without penalty.",
     "value": "2",
     "data_type": "INTEGER",
     "min_limit": 0,
@@ -21,8 +21,8 @@
   },
   {
     "policy_key": "ACCESS_WINDOW_BEFORE_CLASS",
-    "display_name": "Ventana de Acceso Pre-Clase",
-    "description": "Minutos antes del inicio de la clase permitidos para ingresar a las instalaciones.",
+    "display_name": "Pre-Class Access Window",
+    "description": "Minutes before the start of the class allowed to enter the facilities.",
     "value": "15",
     "data_type": "INTEGER",
     "min_limit": 0,
@@ -31,8 +31,8 @@
   },
   {
     "policy_key": "MEMBERSHIP_GRACE_PERIOD_DAYS",
-    "display_name": "Días de Gracia Membresía",
-    "description": "Días de acceso permitido tras el vencimiento de la membresía antes de bloquear el acceso.",
+    "display_name": "Membership Grace Period",
+    "description": "Days of access allowed after membership expiration before blocking access.",
     "value": "2",
     "data_type": "INTEGER",
     "min_limit": 0,
@@ -41,8 +41,8 @@
   },
   {
     "policy_key": "GLOBAL_MAX_DISCOUNT",
-    "display_name": "Descuento Máximo Global",
-    "description": "Porcentaje máximo de descuento que se puede aplicar manualmente a una venta.",
+    "display_name": "Global Max Discount",
+    "description": "Maximum percentage discount that can be manually applied to a sale.",
     "value": "20.00",
     "data_type": "PERCENTAGE",
     "min_limit": 0.00,
