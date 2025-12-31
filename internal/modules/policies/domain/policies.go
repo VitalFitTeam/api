@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Tipos de datos permitidos (Enums para validación)
 const (
 	DataTypeInteger    = "INTEGER"
 	DataTypeDecimal    = "DECIMAL"
