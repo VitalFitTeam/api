@@ -2377,6 +2377,38 @@ definitions:
       user_id:
         type: string
     type: object
+  wishlisthandlers.AddToWishlistRequest:
+    properties:
+      service_id:
+        type: string
+    required:
+    - service_id
+    type: object
+  wishlisthandlers.AddToWishlistResponse:
+    properties:
+      message:
+        type: string
+      wishlist_id:
+        type: string
+    type: object
+  wishlisthandlers.RemoveFromWishlistResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  wishlisthandlers.WishlistItemResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      service_id:
+        type: string
+      service_name:
+        type: string
+      wishlist_id:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -10022,6 +10054,105 @@ paths:
       summary: Get current user profile
       tags:
       - User
+  /wishlist:
+    get:
+      description: Returns all services in the authenticated user's wishlist
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Wishlist items
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/wishlisthandlers.WishlistItemResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user wishlist
+      tags:
+      - Wishlist
+    post:
+      consumes:
+      - application/json
+      description: Adds a service to the authenticated user's wishlist
+      parameters:
+      - description: Service ID
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/wishlisthandlers.AddToWishlistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Service added to wishlist
+          schema:
+            $ref: '#/definitions/wishlisthandlers.AddToWishlistResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Service already in wishlist
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add service to wishlist
+      tags:
+      - Wishlist
+  /wishlist/{id}:
+    delete:
+      description: Removes a service from the authenticated user's wishlist
+      parameters:
+      - description: Wishlist Item UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service removed from wishlist
+          schema:
+            $ref: '#/definitions/wishlisthandlers.RemoveFromWishlistResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove service from wishlist
+      tags:
+      - Wishlist
 securityDefinitions:
   ApiKeyAuth:
     in: header
