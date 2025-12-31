@@ -1,0 +1,52 @@
+[
+  {
+    "policy_key": "INVOICE_OVERDUE_TIME_DAYS",
+    "display_name": "Tiempo de Vencimiento de Factura",
+    "description": "Días permitidos antes de considerar una factura como vencida.",
+    "value": "3",
+    "data_type": "INTEGER",
+    "min_limit": 0,
+    "max_limit": 365,
+    "is_active": true
+  },
+  {
+    "policy_key": "CLASS_CANCEL_MIN_HOURS",
+    "display_name": "Antelación Cancelación de Clases",
+    "description": "Horas mínimas de antelación requeridas para cancelar una clase sin penalización.",
+    "value": "2",
+    "data_type": "INTEGER",
+    "min_limit": 0,
+    "max_limit": 24,
+    "is_active": true
+  },
+  {
+    "policy_key": "ACCESS_WINDOW_BEFORE_CLASS",
+    "display_name": "Ventana de Acceso Pre-Clase",
+    "description": "Minutos antes del inicio de la clase permitidos para ingresar a las instalaciones.",
+    "value": "15",
+    "data_type": "INTEGER",
+    "min_limit": 0,
+    "max_limit": 60,
+    "is_active": true
+  },
+  {
+    "policy_key": "MEMBERSHIP_GRACE_PERIOD_DAYS",
+    "display_name": "Días de Gracia Membresía",
+    "description": "Días de acceso permitido tras el vencimiento de la membresía antes de bloquear el acceso.",
+    "value": "2",
+    "data_type": "INTEGER",
+    "min_limit": 0,
+    "max_limit": 30,
+    "is_active": true
+  },
+  {
+    "policy_key": "GLOBAL_MAX_DISCOUNT",
+    "display_name": "Descuento Máximo Global",
+    "description": "Porcentaje máximo de descuento que se puede aplicar manualmente a una venta.",
+    "value": "20.00",
+    "data_type": "PERCENTAGE",
+    "min_limit": 0.00,
+    "max_limit": 100.00,
+    "is_active": true
+  }
+]

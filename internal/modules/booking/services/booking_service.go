@@ -10,6 +10,7 @@ import (
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type BookingService struct {
@@ -187,6 +188,6 @@ func (s *BookingService) CountBookingsForClass(ctx context.Context, classID uuid
 // ------------------------------------------------------------
 //
 
-func (s *BookingService) GetBookingsByClass(ctx context.Context, classID uuid.UUID) ([]*bookingdomain.BookingWithUserInfo, error) {
-	return s.store.Booking.GetBookingsByClass(ctx, classID)
+func (s *BookingService) GetBookingsByClass(ctx context.Context, classID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*bookingdomain.BookingWithUserInfo, int64, error) {
+	return s.store.Booking.GetBookingsByClass(ctx, classID, fq)
 }
