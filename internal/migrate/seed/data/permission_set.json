@@ -78,7 +78,8 @@
     "services:list",
     "services:get",
     "branches:list",
-    "instructors:get"
+    "instructors:get",
+    "booking:list"
   ],
   "accountant": [
     "billing:list",
