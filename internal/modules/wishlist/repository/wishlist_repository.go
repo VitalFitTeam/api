@@ -51,7 +51,7 @@ func (s *WishlistStore) GetUserWishlist(ctx context.Context, userID uuid.UUID) (
 
 	err := s.db.WithContext(ctx).
 		Table("wishlist").
-		Select("wishlist.wishlist_id, wishlist.user_id, wishlist.service_id, services.name as service_name, services.description, services.image_url, wishlist.created_at").
+		Select("wishlist.wishlist_id, wishlist.user_id, wishlist.service_id, services.name as service_name, services.description, wishlist.created_at").
 		Joins("JOIN services ON wishlist.service_id = services.service_id").
 		Where("wishlist.user_id = ?", userID).
 		Order("wishlist.created_at DESC").

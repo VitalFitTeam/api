@@ -111,7 +111,6 @@ func (h *WishlistHandlers) GetUserWishlistHandler(c *gin.Context) {
 			ServiceID:   item.ServiceID,
 			ServiceName: item.ServiceName,
 			Description: item.Description,
-			ImageURL:    item.ImageURL,
 			CreatedAt:   item.CreatedAt,
 		})
 	}

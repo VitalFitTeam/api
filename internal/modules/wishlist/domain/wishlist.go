@@ -19,6 +19,5 @@ type WishlistWithService struct {
 	ServiceID   uuid.UUID `json:"service_id"`
 	ServiceName string    `json:"service_name"`
 	Description string    `json:"description"`
-	ImageURL    string    `json:"image_url"`
 	CreatedAt   time.Time `json:"created_at"`
 }

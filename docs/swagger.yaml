@@ -2402,8 +2402,6 @@ definitions:
         type: string
       description:
         type: string
-      image_url:
-        type: string
       service_id:
         type: string
       service_name:

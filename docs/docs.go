@@ -15519,9 +15519,6 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "image_url": {
-                    "type": "string"
-                },
                 "service_id": {
                     "type": "string"
                 },
