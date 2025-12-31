@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	wishlistdomain "github.com/vitalfit/api/internal/modules/wishlist/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -46,22 +47,34 @@ func (s *WishlistStore) RemoveFromWishlist(ctx context.Context, wishlistID uuid.
 	return nil
 }
 
-func (s *WishlistStore) GetUserWishlist(ctx context.Context, userID uuid.UUID) ([]*wishlistdomain.WishlistWithService, error) {
+func (s *WishlistStore) GetUserWishlist(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*wishlistdomain.WishlistWithService, int64, error) {
 	var wishlist []*wishlistdomain.WishlistWithService
+	var total int64
 
-	err := s.db.WithContext(ctx).
+	query := s.db.WithContext(ctx).
 		Table("wishlist").
-		Select("wishlist.wishlist_id, wishlist.user_id, wishlist.service_id, services.name as service_name, services.description, wishlist.created_at").
 		Joins("JOIN services ON wishlist.service_id = services.service_id").
-		Where("wishlist.user_id = ?", userID).
-		Order("wishlist.created_at DESC").
+		Where("wishlist.user_id = ?", userID)
+
+	if fq.Search != "" {
+		query = query.Where("services.name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.Select("wishlist.wishlist_id, wishlist.user_id, wishlist.service_id, services.name as service_name, services.description, wishlist.created_at").
+		Limit(fq.Limit).
+		Offset((fq.Page - 1) * fq.Limit).
+		Order("wishlist.created_at " + fq.Sort).
 		Scan(&wishlist).Error
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return wishlist, nil
+	return wishlist, total, nil
 }
 
 func (s *WishlistStore) WishlistExists(ctx context.Context, userID, serviceID uuid.UUID) (bool, error) {

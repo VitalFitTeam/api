@@ -7,6 +7,7 @@ import (
 	wishlistdomain "github.com/vitalfit/api/internal/modules/wishlist/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type WishlistService struct {
@@ -46,6 +47,6 @@ func (s *WishlistService) RemoveFromWishlist(ctx context.Context, wishlistID uui
 	return s.store.Wishlist.RemoveFromWishlist(ctx, wishlistID)
 }
 
-func (s *WishlistService) GetUserWishlist(ctx context.Context, userID uuid.UUID) ([]*wishlistdomain.WishlistWithService, error) {
-	return s.store.Wishlist.GetUserWishlist(ctx, userID)
+func (s *WishlistService) GetUserWishlist(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*wishlistdomain.WishlistWithService, int64, error) {
+	return s.store.Wishlist.GetUserWishlist(ctx, userID, fq)
 }

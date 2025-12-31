@@ -2,11 +2,13 @@ package wishlisthandlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 // @Summary		Add service to wishlist
@@ -90,23 +92,52 @@ func (h *WishlistHandlers) RemoveFromWishlistHandler(c *gin.Context) {
 // @Tags			Wishlist
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Success		200	{object}	object{data=[]WishlistItemResponse}	"Wishlist items"
-// @Failure		500	{object}	map[string]interface{}				"Internal Server Error"
+// @Param			limit	query		int									false	"Number of results per page"	default(10)
+// @Param			page	query		int									false	"Page number for pagination"	default(1)
+// @Param			sort	query		string								false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
+// @Param			search	query		string								false	"Search term for service name"
+// @Success		200		{object}	object{data=[]WishlistItemResponse}	"Wishlist items"
+// @Failure		500		{object}	map[string]interface{}				"Internal Server Error"
 // @Router			/wishlist [get]
 func (h *WishlistHandlers) GetUserWishlistHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
+	fq := pagination.PaginatedFeedQuery{
+		Limit: 10,
+		Page:  1,
+		Sort:  "desc",
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
 	user := h.services.UserServices.GetUserFromContext(c)
 
-	wishlist, err := h.services.WishlistServices.GetUserWishlist(ctx, user.UserID)
+	wishlist, total, err := h.services.WishlistServices.GetUserWishlist(ctx, user.UserID, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
-	response := make([]*WishlistItemResponse, 0, len(wishlist))
+	nextURL := fmt.Sprintf("/wishlist?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	if fq.Search != "" {
+		nextURL += fmt.Sprintf("&search=%s", fq.Search)
+	}
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/wishlist?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+	if fq.Search != "" {
+		previousURL += fmt.Sprintf("&search=%s", fq.Search)
+	}
+
+	response := make([]WishlistItemResponse, 0, len(wishlist))
 	for _, item := range wishlist {
-		response = append(response, &WishlistItemResponse{
+		response = append(response, WishlistItemResponse{
 			WishlistID:  item.WishlistID,
 			ServiceID:   item.ServiceID,
 			ServiceName: item.ServiceName,
@@ -115,5 +146,12 @@ func (h *WishlistHandlers) GetUserWishlistHandler(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": response})
+	resp := pagination.PaginatedResponseTotal[WishlistItemResponse]{
+		Data:     response,
+		Count:    int64(len(wishlist)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+	c.JSON(http.StatusOK, resp)
 }

@@ -10075,6 +10075,29 @@ paths:
   /wishlist:
     get:
       description: Returns all services in the authenticated user's wishlist
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for service name
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
