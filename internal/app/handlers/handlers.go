@@ -17,6 +17,7 @@ import (
 	reporthandlers "github.com/vitalfit/api/internal/modules/reports/handlers"
 	schedulehandlers "github.com/vitalfit/api/internal/modules/schedule/handlers"
 	staffhandlers "github.com/vitalfit/api/internal/modules/staff/handlers"
+	wishlisthandlers "github.com/vitalfit/api/internal/modules/wishlist/handlers"
 )
 
 type Handlers struct {
@@ -35,6 +36,7 @@ type Handlers struct {
 	ReportHandlers     reporthandlers.ReportHandlersInterface
 	StaffHandlers      staffhandlers.StaffHandlersInterface
 	PoliciesHandlers   policieshandler.PoliciesHandlerInterface
+	WishlistHandlers   wishlisthandlers.WishlistRoutes
 }
 
 func NewAppHandlers(services appservices.Services) Handlers {
@@ -54,5 +56,6 @@ func NewAppHandlers(services appservices.Services) Handlers {
 		ReportHandlers:     reporthandlers.NewReportHandlers(services),
 		StaffHandlers:      staffhandlers.NewStaffHandlers(services),
 		PoliciesHandlers:   policieshandler.NewPoliciesHandler(services),
+		WishlistHandlers:   wishlisthandlers.NewWishlistRoutes(services),
 	}
 }
