@@ -41,3 +41,17 @@ func (s *PoliciesStore) UpdatePolicy(ctx context.Context, policy *policiesdomain
 	}
 	return s.db.WithContext(ctx).Model(policy).Select("Value").Updates(policy).Error
 }
+
+func (s *PoliciesStore) GetPoliciesList(ctx context.Context, policy *policiesdomain.CommercialPolicy) ([]policiesdomain.CommercialPolicy, error) {
+	var policies []policiesdomain.CommercialPolicy
+	query := s.db.WithContext(ctx)
+
+	if policy != nil {
+		query = query.Where(policy)
+	}
+
+	if err := query.Find(&policies).Error; err != nil {
+		return nil, err
+	}
+	return policies, nil
+}
