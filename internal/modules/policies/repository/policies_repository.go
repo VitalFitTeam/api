@@ -4,6 +4,7 @@ import (
 	"context"
 
 	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
 )
@@ -32,7 +33,12 @@ func (s *PoliciesStore) CreatePolicy(ctx context.Context, policy *policiesdomain
 func (s *PoliciesStore) GetPolicyByKey(ctx context.Context, key string) (*policiesdomain.CommercialPolicy, error) {
 	var policy policiesdomain.CommercialPolicy
 	if err := s.db.WithContext(ctx).Where("policy_key = ?", key).First(&policy).Error; err != nil {
-		return nil, err
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
 	}
 	return &policy, nil
 }
