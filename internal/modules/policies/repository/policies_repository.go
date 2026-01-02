@@ -19,6 +19,10 @@ func NewPoliciesStore(db *gorm.DB) *PoliciesStore {
 
 }
 
+func (s *PoliciesStore) CreatePolicyTx(ctx context.Context, tx *gorm.DB, policy *policiesdomain.CommercialPolicy) error {
+	return tx.WithContext(ctx).Create(policy).Error
+}
+
 func (s *PoliciesStore) CreatePolicy(ctx context.Context, policy *policiesdomain.CommercialPolicy) error {
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 		return tx.WithContext(ctx).Create(policy).Error
