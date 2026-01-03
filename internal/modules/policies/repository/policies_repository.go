@@ -3,6 +3,7 @@ package policiesrepository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
@@ -64,4 +65,18 @@ func (s *PoliciesStore) GetPoliciesList(ctx context.Context, policy *policiesdom
 		return nil, err
 	}
 	return policies, nil
+}
+
+func (s *PoliciesStore) GetPolicyByID(ctx context.Context, policyID uuid.UUID) (*policiesdomain.CommercialPolicy, error) {
+	var policy policiesdomain.CommercialPolicy
+	if err := s.db.WithContext(ctx).Where("id = ?", policyID).First(&policy).Error; err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &policy, nil
+
 }

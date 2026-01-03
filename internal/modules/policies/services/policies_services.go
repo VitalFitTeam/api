@@ -3,6 +3,7 @@ package policiesservices
 import (
 	"context"
 
+	"github.com/google/uuid"
 	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
 	"github.com/vitalfit/api/internal/store"
 )
@@ -29,4 +30,7 @@ func (s *PoliciesServices) UpdatePolicy(ctx context.Context, policy *policiesdom
 }
 func (s *PoliciesServices) GetPoliciesList(ctx context.Context, policy *policiesdomain.CommercialPolicy) ([]policiesdomain.CommercialPolicy, error) {
 	return s.store.Policies.GetPoliciesList(ctx, policy)
+}
+func (s *PoliciesServices) GetPolicyByID(ctx context.Context, policyID uuid.UUID) (*policiesdomain.CommercialPolicy, error) {
+	return s.store.Policies.GetPolicyByID(ctx, policyID)
 }
