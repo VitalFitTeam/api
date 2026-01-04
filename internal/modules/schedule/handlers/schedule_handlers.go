@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"gorm.io/gorm"
 )
 
@@ -95,7 +96,13 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 		return
 	}
 
-	classes, err := h.services.ScheduleServices.GetClassesByBranch(ctx, branchID)
+	var classes []scheduledomain.Class
+	if user.Role.Name == "client" {
+		classes, err = h.services.ScheduleServices.GetUpcomingClassesByBranch(ctx, branchID)
+	} else {
+		classes, err = h.services.ScheduleServices.GetClassesByBranch(ctx, branchID)
+	}
+
 	if err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:

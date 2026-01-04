@@ -40,6 +40,10 @@ func (s *ScheduleService) GetClassesByBranch(ctx context.Context, branchID uuid.
 	return s.store.Schedule.GetClassesByBranch(ctx, branchID)
 }
 
+func (s *ScheduleService) GetUpcomingClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]scheduledomain.Class, error) {
+	return s.store.Schedule.GetUpcomingClassesByBranch(ctx, branchID)
+}
+
 // ----------------------------------------
 // GetClassByID
 // ----------------------------------------

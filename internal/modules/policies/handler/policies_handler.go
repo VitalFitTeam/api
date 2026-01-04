@@ -92,11 +92,11 @@ func (h *PoliciesHandler) GetPoliciesListHandler(c *gin.Context) {
 // @Tags			Policies
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			id	path		string							true	"Policy UUID"
-// @Success		200	{object}	object{data=PolicyResponse}		"Policy details"
-// @Failure		400	{object}	map[string]interface{}			"Bad Request: Invalid UUID format"
-// @Failure		404	{object}	map[string]interface{}			"Not Found: Policy not found"
-// @Failure		500	{object}	map[string]interface{}			"Internal Server Error"
+// @Param			id	path		string						true	"Policy UUID"
+// @Success		200	{object}	object{data=PolicyResponse}	"Policy details"
+// @Failure		400	{object}	map[string]interface{}		"Bad Request: Invalid UUID format"
+// @Failure		404	{object}	map[string]interface{}		"Not Found: Policy not found"
+// @Failure		500	{object}	map[string]interface{}		"Internal Server Error"
 // @Router			/policies/{id} [get]
 func (h *PoliciesHandler) GetPolicyByIDHandler(c *gin.Context) {
 	ctx := c.Request.Context()

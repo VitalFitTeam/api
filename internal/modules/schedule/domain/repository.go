@@ -25,5 +25,8 @@ type ScheduleRepository interface {
 	// DeleteClass elimina (o realiza soft-delete) una clase programada.
 	DeleteClass(ctx context.Context, classID uuid.UUID) error
 
+	// GetUpcomingClassesByBranch obtiene las clases futuras (o en curso) de una sucursal.
+	GetUpcomingClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]Class, error)
+
 	GetAvailableClassesForBranch(ctx context.Context, branchID uuid.UUID, startTime, endTime time.Time) ([]Class, error)
 }
