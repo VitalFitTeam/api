@@ -15652,6 +15652,17 @@ const docTemplate = `{
                 "notes": {
                     "type": "string"
                 },
+                "recurrence": {
+                    "type": "string",
+                    "enum": [
+                        "daily",
+                        "weekly",
+                        "none"
+                    ]
+                },
+                "recurrence_until": {
+                    "type": "string"
+                },
                 "service_id": {
                     "type": "string"
                 },

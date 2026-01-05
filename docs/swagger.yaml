@@ -2340,6 +2340,14 @@ definitions:
         type: integer
       notes:
         type: string
+      recurrence:
+        enum:
+        - daily
+        - weekly
+        - none
+        type: string
+      recurrence_until:
+        type: string
       service_id:
         type: string
       starts_at:

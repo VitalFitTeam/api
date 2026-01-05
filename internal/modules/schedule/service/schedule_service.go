@@ -33,6 +33,19 @@ func (s *ScheduleService) CreateClass(ctx context.Context, class *scheduledomain
 }
 
 // ----------------------------------------
+// CreateClasses
+// ----------------------------------------
+
+func (s *ScheduleService) CreateClasses(ctx context.Context, classes []scheduledomain.Class) error {
+	for _, class := range classes {
+		if !class.StartsAt.Before(class.EndsAt) {
+			return errors.New("the class start time must be before the end time")
+		}
+	}
+	return s.store.Schedule.CreateClasses(ctx, classes)
+}
+
+// ----------------------------------------
 // GetClassesByBranch
 // ----------------------------------------
 

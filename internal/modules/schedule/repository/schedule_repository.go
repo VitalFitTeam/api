@@ -34,6 +34,19 @@ func (s *ScheduleStore) CreateClass(ctx context.Context, class *scheduledomain.C
 }
 
 // ----------------------------------------
+// CreateClasses (Batch)
+// ----------------------------------------
+
+func (s *ScheduleStore) CreateClasses(ctx context.Context, classes []scheduledomain.Class) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).Create(&classes).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// ----------------------------------------
 // GetClassesByBranch
 // ----------------------------------------
 

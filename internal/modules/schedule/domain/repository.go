@@ -13,6 +13,9 @@ type ScheduleRepository interface {
 	// CreateClass crea una nueva clase programada.
 	CreateClass(ctx context.Context, class *Class) error
 
+	// CreateClasses crea múltiples clases programadas (para recurrencia).
+	CreateClasses(ctx context.Context, classes []Class) error
+
 	// GetClassesByBranch obtiene todas las clases programadas de una sucursal.
 	GetClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]Class, error)
 
