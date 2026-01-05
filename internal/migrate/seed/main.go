@@ -159,8 +159,8 @@ func (s *SeedStruct) SeedPermissions(store store.Storage, db *gorm.DB, ctx conte
 }
 
 func randomDateInLastSixMonths() time.Time {
-	now := time.Now()
-	sixMonthsAgo := now.AddDate(0, -6, 0)
+	now := time.Now().AddDate(0, 1, 0)
+	sixMonthsAgo := now.AddDate(0, -1, 0)
 
 	duration := now.Sub(sixMonthsAgo)
 	randomDuration := time.Duration(rand.Int63n(int64(duration)))
@@ -185,26 +185,23 @@ func (s *SeedStruct) SeedRolePermissions(store store.Storage, db *gorm.DB, ctx c
 
 	err = db.Transaction(func(tx *gorm.DB) error {
 		for roleName, permissionNames := range permissionSet {
-			// Obtener el rol por nombre
 			role, err := store.Roles.GetByName(ctx, roleName)
 			if err != nil {
 				log.Printf("Error getting role '%s': %v. Skipping...", roleName, err)
-				continue // O puedes retornar el error si es crítico
+				continue
 			}
 
 			var permissionIDs []uuid.UUID
 			for _, permName := range permissionNames {
-				// Obtener el permiso por nombre
 				permission, err := store.Roles.GetPermissionByName(ctx, permName)
 				if err != nil {
 					log.Printf("Error getting permission '%s' for role '%s': %v. Skipping permission...", permName, roleName, err)
-					continue // O puedes retornar el error
+					continue
 				}
 				permissionIDs = append(permissionIDs, permission.PermissionID)
 			}
 
 			if len(permissionIDs) > 0 {
-				// Asignar los permisos al rol
 				err := store.Roles.AssignRolePermission(ctx, role.RoleID, permissionIDs)
 				if err != nil {
 					log.Printf("Error assigning permissions to role '%s': %v", roleName, err)
@@ -390,7 +387,7 @@ func (s *SeedStruct) SeedInstructors(store store.Storage, db *gorm.DB, ctx conte
 			user.RoleID = role.RoleID
 
 			// Asignar especialidades aleatorias
-			numSpecialtiesToAssign := r.Intn(len(specialties)) + 1 // Asignar de 1 a len(specialties)
+			numSpecialtiesToAssign := r.Intn(len(specialties)) + 1
 			r.Shuffle(len(specialties), func(i, j int) {
 				specialties[i], specialties[j] = specialties[j], specialties[i]
 			})
@@ -842,14 +839,13 @@ func (s *SeedStruct) SeedPackages(store store.Storage, db *gorm.DB, ctx context.
 				CreatedAt:   randomDateInLastSixMonths(),
 			}
 
-			// Generar items de paquete aleatorios
-			numItems := rand.Intn(3) + 2 // Entre 2 y 4 servicios por paquete
+			numItems := rand.Intn(3) + 2
 			rand.Shuffle(len(allServices), func(i, j int) {
 				allServices[i], allServices[j] = allServices[j], allServices[i]
 			})
 
 			for i := 0; i < numItems && i < len(allServices); i++ {
-				sessions := rand.Intn(16) + 5 // Entre 5 y 20 sesiones
+				sessions := rand.Intn(16) + 5
 				pkg.PackageItems = append(pkg.PackageItems, combosdomain.PackageItem{
 					ServiceID:        allServices[i].ServiceID,
 					SessionsIncluded: sessions,
@@ -875,7 +871,6 @@ func (s *SeedStruct) SeedPackages(store store.Storage, db *gorm.DB, ctx context.
 func (s *SeedStruct) SeedBranchRelations(store store.Storage, db *gorm.DB, ctx context.Context) {
 	log.Println("Starting to seed branch relations...")
 
-	// 1. Obtener todos los datos maestros
 	allBranches, err := store.Branches.GetAllBranches(ctx)
 	if err != nil || len(allBranches) == 0 {
 		log.Fatalf("Fatal error: could not get branches or no branches found: %v", err)
@@ -902,14 +897,12 @@ func (s *SeedStruct) SeedBranchRelations(store store.Storage, db *gorm.DB, ctx c
 		log.Println("Warning: No payment methods found. Skipping payment-branch relations.")
 	}
 
-	// 2. Iterar sobre cada sucursal y asignar relaciones
 	for _, branch := range allBranches {
 		log.Printf("Processing relations for branch: %s", branch.Name)
 
 		err := db.Transaction(func(tx *gorm.DB) error {
-			// Asignar Servicios
 			if len(allServices) > 0 {
-				numServices := rand.Intn(len(allServices)/2) + 5 // Asignar entre 5 y la mitad de los servicios
+				numServices := rand.Intn(len(allServices)/2) + 5
 				rand.Shuffle(len(allServices), func(i, j int) { allServices[i], allServices[j] = allServices[j], allServices[i] })
 
 				var branchServices []*productsdomain.ServiceBranchDetail
@@ -930,9 +923,8 @@ func (s *SeedStruct) SeedBranchRelations(store store.Storage, db *gorm.DB, ctx c
 				log.Printf(" -> Assigned %d services to %s", len(branchServices), branch.Name)
 			}
 
-			// Asignar Instructores
 			if len(allInstructors) > 0 {
-				numInstructors := rand.Intn(len(allInstructors)/2) + 2 // Asignar entre 2 y la mitad de los instructores
+				numInstructors := rand.Intn(len(allInstructors)/2) + 2
 				rand.Shuffle(len(allInstructors), func(i, j int) { allInstructors[i], allInstructors[j] = allInstructors[j], allInstructors[i] })
 
 				var instructorIDs []uuid.UUID
@@ -945,9 +937,8 @@ func (s *SeedStruct) SeedBranchRelations(store store.Storage, db *gorm.DB, ctx c
 				log.Printf(" -> Assigned %d instructors to %s", len(instructorIDs), branch.Name)
 			}
 
-			// Asignar Equipamiento
 			if len(allEquipment) > 0 {
-				numEquipment := rand.Intn(20) + 10 // Asignar entre 10 y 29 items de equipamiento
+				numEquipment := rand.Intn(20) + 10
 				for i := 0; i < numEquipment; i++ {
 					equipment := allEquipment[rand.Intn(len(allEquipment))]
 					inventoryItem := &inventorydomain.BranchInventory{
@@ -955,21 +946,19 @@ func (s *SeedStruct) SeedBranchRelations(store store.Storage, db *gorm.DB, ctx c
 						EquipmentID:     equipment.EquipmentID,
 						SerialNumber:    fmt.Sprintf("SN-%s-%d", equipment.Model, rand.Intn(99999)),
 						Status:          inventorydomain.EquipmentAvailable,
-						AcquisitionDate: &time.Time{}, // Puedes poner una fecha random si quieres
+						AcquisitionDate: &time.Time{},
 						Notes:           "Seeded item",
 						CreatedAt:       randomDateInLastSixMonths(),
 					}
 					if _, err := store.BranchInventory.Create(ctx, inventoryItem); err != nil {
-						// No retornamos error para no parar el seeder por un serial number duplicado
 						log.Printf("Could not create inventory item for branch %s: %v", branch.Name, err)
 					}
 				}
 				log.Printf(" -> Assigned %d equipment items to %s", numEquipment, branch.Name)
 			}
 
-			// Asignar Métodos de Pago
 			if len(allPaymentMethods) > 0 {
-				numMethods := rand.Intn(len(allPaymentMethods)) + 1 // Asignar al menos 1
+				numMethods := rand.Intn(len(allPaymentMethods)) + 1
 				rand.Shuffle(len(allPaymentMethods), func(i, j int) {
 					allPaymentMethods[i], allPaymentMethods[j] = allPaymentMethods[j], allPaymentMethods[i]
 				})
@@ -1031,7 +1020,7 @@ func (s *SeedStruct) SeedClasses(store store.Storage, db *gorm.DB, ctx context.C
 		}
 
 		for d := startDate; d.Before(endDate); d = d.AddDate(0, 0, 1) {
-			numClassesToday := rand.Intn(4) + 2 // Entre 2 y 5 clases por día
+			numClassesToday := rand.Intn(4) + 2
 
 			rand.Shuffle(len(openingHours), func(i, j int) {
 				openingHours[i], openingHours[j] = openingHours[j], openingHours[i]
@@ -1040,7 +1029,7 @@ func (s *SeedStruct) SeedClasses(store store.Storage, db *gorm.DB, ctx context.C
 			for i := 0; i < numClassesToday; i++ {
 				randomServiceDetail := branchServices[rand.Intn(len(branchServices))]
 				randomInstructor := branchInstructors[rand.Intn(len(branchInstructors))]
-				startHour := openingHours[i%len(openingHours)] // Usar módulo para evitar index out of bounds
+				startHour := openingHours[i%len(openingHours)]
 				startMinute := []int{0, 15, 30, 45}[rand.Intn(4)]
 
 				startTime := time.Date(d.Year(), d.Month(), d.Day(), startHour, startMinute, 0, 0, d.Location())
@@ -1088,7 +1077,6 @@ func (s *SeedStruct) SeedClasses(store store.Storage, db *gorm.DB, ctx context.C
 func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB, ctx context.Context) {
 	log.Println("Starting to seed bookings and attendance...")
 
-	// 1. Obtener datos maestros
 	allBranches, err := store.Branches.GetAllBranches(ctx)
 	if err != nil || len(allBranches) == 0 {
 		log.Fatalf("Fatal: Could not get branches or no branches found: %v", err)
@@ -1100,12 +1088,10 @@ func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB,
 		return
 	}
 
-	// Contenedores para inserción en lotes
 	var bookingsToCreate []bookingdomain.Booking
 	var attendanceToCreate []accessdomain.AttendanceLog
 	now := time.Now()
 
-	// 2. Iterar por cada SUCURSAL para obtener sus clases
 	for _, branch := range allBranches {
 		log.Printf("Processing bookings for branch: %s", branch.Name)
 
@@ -1115,15 +1101,12 @@ func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB,
 			continue
 		}
 
-		// 3. Iterar sobre cada clase de la sucursal
 		for _, class := range branchClasses {
-			// Omitir "Open Gym"
 			if class.Service.Name == "Open Gym" {
 				continue
 			}
 
-			// Decidir aleatoriamente cuántos clientes reservarán la clase
-			minBookings := int(float64(class.MaxCapacity) * 0.4) // Al menos el 40%
+			minBookings := int(float64(class.MaxCapacity) * 0.4)
 			maxBookings := class.MaxCapacity
 			if minBookings > maxBookings {
 				minBookings = maxBookings
@@ -1139,13 +1122,11 @@ func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB,
 				numBookings = maxBookings
 			}
 
-			// Seleccionar clientes aleatorios para la clase
 			rand.Shuffle(len(allClients), func(i, j int) { allClients[i], allClients[j] = allClients[j], allClients[i] })
 
 			for i := 0; i < numBookings && i < len(allClients); i++ {
 				client := allClients[i]
 
-				// 4. Crear la reserva (Booking)
 				bookingDate := class.StartsAt.Add(-time.Hour * time.Duration(rand.Intn(48)+1)) // Reservado 1-48h antes
 				booking := bookingdomain.Booking{
 					UserID:    client.UserID,
@@ -1156,22 +1137,21 @@ func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB,
 				}
 				bookingsToCreate = append(bookingsToCreate, booking)
 
-				// 5. Si la clase ya pasó, simular la asistencia
 				if class.StartsAt.Before(now) {
-					attended := rand.Intn(100) < 85 // 85% de probabilidad de asistir
+					attended := rand.Intn(100) < 85
 
 					attendance := accessdomain.AttendanceLog{
 						UserID:    client.UserID,
 						ClassID:   &class.ClassID,
-						ServiceID: class.ServiceID, // Añadir el ServiceID de la clase
+						ServiceID: class.ServiceID,
 					}
 
 					if attended {
-						checkInOffset := time.Duration(rand.Intn(30)-15) * time.Minute // +/- 15 minutos
-						attendance.CheckInTime = class.StartsAt.Add(checkInOffset)     // Corregido: Usar la variable correcta
+						checkInOffset := time.Duration(rand.Intn(30)-15) * time.Minute
+						attendance.CheckInTime = class.StartsAt.Add(checkInOffset)
 						attendance.Status = accessdomain.AttendanceStatusAttended
 					} else {
-						attendance.CheckInTime = class.StartsAt // Para no-shows, la hora es la de la clase
+						attendance.CheckInTime = class.StartsAt
 						attendance.Status = accessdomain.AttendanceStatusNoShow
 					}
 					attendance.CreatedAt = attendance.CheckInTime
@@ -1181,7 +1161,6 @@ func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB,
 		}
 	}
 
-	// 6. Insertar en lotes
 	log.Printf("Generated %d bookings and %d attendance logs. Inserting into database...", len(bookingsToCreate), len(attendanceToCreate))
 	if err := db.CreateInBatches(&bookingsToCreate, 1000).Error; err != nil {
 		log.Fatalf("Fatal error during bookings batch insert: %v", err)
@@ -1206,6 +1185,15 @@ func (s *SeedStruct) SeedInvoicesAndPayments(store store.Storage, db *gorm.DB, c
 	if err != nil || len(allBranches) == 0 {
 		log.Fatalf("Fatal: Could not get branches or no branches found: %v", err)
 		return
+	}
+
+	allValidPaymentMethods, err := store.PaymentMethods.GetPaymentMethods(ctx)
+	if err != nil {
+		log.Printf("Warning: Could not get payment methods: %v", err)
+	}
+	validPaymentMethodIDs := make(map[uuid.UUID]bool)
+	for _, pm := range allValidPaymentMethods {
+		validPaymentMethodIDs[pm.MethodID] = true
 	}
 
 	membershipTypes, err := store.Membership.GetAllMembershipTypes(ctx)
@@ -1285,8 +1273,16 @@ func (s *SeedStruct) SeedInvoicesAndPayments(store store.Storage, db *gorm.DB, c
 			})
 
 			branchPaymentMethods, _ := store.PaymentMethods.GetPaymentMethodsFromBranch(ctx, branch.BranchID)
-			if len(branchPaymentMethods) == 0 {
-				log.Printf("Warning: No payment methods for branch %s. Cannot simulate payment for invoice %s", branch.Name, invoice.InvoiceID)
+
+			var validBranchMethods []*billingdomain.PaymentMethodsBranch
+			for _, bpm := range branchPaymentMethods {
+				if validPaymentMethodIDs[bpm.MethodID] {
+					validBranchMethods = append(validBranchMethods, bpm)
+				}
+			}
+
+			if len(validBranchMethods) == 0 {
+				log.Printf("Warning: No valid payment methods for branch %s. Cannot simulate payment for invoice %s", branch.Name, invoice.InvoiceID)
 				continue
 			}
 
@@ -1294,7 +1290,7 @@ func (s *SeedStruct) SeedInvoicesAndPayments(store store.Storage, db *gorm.DB, c
 			remainingAmount := invoice.TotalAmount
 
 			for p := 0; p < numPayments && remainingAmount.IsPositive(); p++ {
-				paymentMethod := branchPaymentMethods[rand.Intn(len(branchPaymentMethods))]
+				paymentMethod := validBranchMethods[rand.Intn(len(validBranchMethods))]
 				amountToPay := remainingAmount
 				if numPayments > 1 && p < numPayments-1 {
 					amountToPay = remainingAmount.Div(decimal.NewFromInt(2))
