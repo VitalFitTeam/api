@@ -1769,6 +1769,28 @@ definitions:
       price:
         type: number
     type: object
+  policieshandler.PolicyResponse:
+    properties:
+      active:
+        type: boolean
+      category:
+        type: string
+      data_type:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      value:
+        type: string
+    type: object
+  policieshandler.UpdatePolicyValue:
+    properties:
+      value:
+        type: string
+    type: object
   productsdomain.Service:
     properties:
       banners:
@@ -2317,6 +2339,14 @@ definitions:
         minimum: 1
         type: integer
       notes:
+        type: string
+      recurrence:
+        enum:
+        - daily
+        - weekly
+        - none
+        type: string
+      recurrence_until:
         type: string
       service_id:
         type: string
@@ -7511,6 +7541,111 @@ paths:
       summary: Update a package
       tags:
       - Packages
+  /policies:
+    get:
+      description: Retrieves a list of all commercial policies.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of policies
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/policieshandler.PolicyResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all policies
+      tags:
+      - Policies
+  /policies/{id}:
+    get:
+      description: Retrieves detailed information about a specific policy by its UUID.
+      parameters:
+      - description: Policy UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Policy details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/policieshandler.PolicyResponse'
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID format'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Policy not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get policy by ID
+      tags:
+      - Policies
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing policy's value.
+      parameters:
+      - description: Policy UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Payload with value to update
+        in: body
+        name: policy
+        required: true
+        schema:
+          $ref: '#/definitions/policieshandler.UpdatePolicyValue'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Policy updated successfully
+        "400":
+          description: 'Bad Request: Invalid UUID or payload'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 'Not Found: Policy not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a policy
+      tags:
+      - Policies
   /public/branches-map:
     get:
       description: Retrieves a list of public branches with minimal information for

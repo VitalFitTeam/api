@@ -2,9 +2,12 @@ package schedulehandlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"gorm.io/gorm"
 )
 
@@ -39,13 +42,89 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 		return
 	}
 
+	branch, err := h.services.BranchesServices.GetBranchByID(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
 	class, err := payload.ToClass(branchID)
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
 
-	if err := h.services.ScheduleServices.CreateClass(ctx, class); err != nil {
+	// Logic for recurrence
+	var classes []scheduledomain.Class
+	classes = append(classes, *class)
+
+	if payload.Recurrence == "daily" || payload.Recurrence == "weekly" {
+		// Limit recurrence to max 3 months to prevent infinite or too long creation
+		maxDate := class.StartsAt.AddDate(0, 3, 0)
+		limitDate := payload.RecurrenceUntil
+		if limitDate.IsZero() || limitDate.After(maxDate) {
+			limitDate = maxDate
+		}
+
+		nextStart := class.StartsAt
+		nextEnd := class.EndsAt
+
+		// Map operational days for quick lookup
+		operationalDays := make(map[branchdomain.DayOfWeekEnum]bool)
+		for _, oh := range branch.OperatingHours {
+			if !oh.IsClosed {
+				operationalDays[oh.DayOfWeek] = true
+			}
+		}
+
+		for {
+			if payload.Recurrence == "daily" {
+				nextStart = nextStart.AddDate(0, 0, 1)
+				nextEnd = nextEnd.AddDate(0, 0, 1)
+			} else if payload.Recurrence == "weekly" {
+				nextStart = nextStart.AddDate(0, 0, 7)
+				nextEnd = nextEnd.AddDate(0, 0, 7)
+			}
+
+			if nextStart.After(limitDate) {
+				break
+			}
+
+			// Skip non-operational days if operating hours are defined
+			if len(branch.OperatingHours) > 0 {
+				var dayEnum branchdomain.DayOfWeekEnum
+				switch nextStart.Weekday() {
+				case time.Monday:
+					dayEnum = branchdomain.DayMonday
+				case time.Tuesday:
+					dayEnum = branchdomain.DayTuesday
+				case time.Wednesday:
+					dayEnum = branchdomain.DayWednesday
+				case time.Thursday:
+					dayEnum = branchdomain.DayThursday
+				case time.Friday:
+					dayEnum = branchdomain.DayFriday
+				case time.Saturday:
+					dayEnum = branchdomain.DaySaturday
+				case time.Sunday:
+					dayEnum = branchdomain.DaySunday
+				}
+				if !operationalDays[dayEnum] {
+					continue
+				}
+			}
+
+			newClass := *class
+			newClass.StartsAt = nextStart
+			newClass.EndsAt = nextEnd
+			// Reset ID to allow generation of new UUID
+			newClass.ClassID = uuid.Nil
+
+			classes = append(classes, newClass)
+		}
+	}
+
+	if err := h.services.ScheduleServices.CreateClasses(ctx, classes); err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
@@ -95,7 +174,13 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 		return
 	}
 
-	classes, err := h.services.ScheduleServices.GetClassesByBranch(ctx, branchID)
+	var classes []scheduledomain.Class
+	if user.Role.Name == "client" {
+		classes, err = h.services.ScheduleServices.GetUpcomingClassesByBranch(ctx, branchID)
+	} else {
+		classes, err = h.services.ScheduleServices.GetClassesByBranch(ctx, branchID)
+	}
+
 	if err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:
