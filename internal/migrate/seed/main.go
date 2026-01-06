@@ -32,6 +32,7 @@ import (
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
+	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"github.com/vitalfit/api/internal/store"
@@ -57,6 +58,7 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices
 	s.SeedPermissions(store, db, ctx)
 	s.SeedRolePermissions(store, db, ctx)
 	s.SeedUsers(store, db, ctx)
+	s.SeedPolicies(store, db, ctx)
 	s.SeedServiceCategories(store, db, ctx)
 	s.SeedBanners(store, db, ctx)
 	s.SeedServices(store, db, ctx)
@@ -1390,6 +1392,62 @@ func (s *SeedStruct) SeedStaffAssignment(store store.Storage, db *gorm.DB, ctx c
 	}
 
 	log.Printf("Staff assignment seeding completed. Successfully assigned: %d/%d users.", successCount, len(users))
+}
+
+type policyJSON struct {
+	PolicyKey   string   `json:"policy_key"`
+	DisplayName string   `json:"display_name"`
+	Description string   `json:"description"`
+	Value       string   `json:"value"`
+	DataType    string   `json:"data_type"`
+	MinLimit    *float64 `json:"min_limit"`
+	MaxLimit    *float64 `json:"max_limit"`
+	IsActive    bool     `json:"is_active"`
+}
+
+func (s *SeedStruct) SeedPolicies(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/policies.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read policies.json file: %v", err)
+		return
+	}
+
+	var policiesFromJSON []policyJSON
+	if err = json.Unmarshal(jsonFile, &policiesFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode policies.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d policies in policies.json. Starting seeder...", len(policiesFromJSON))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for _, p := range policiesFromJSON {
+			policy := &policiesdomain.CommercialPolicy{
+				PolicyKey:   p.PolicyKey,
+				DisplayName: p.DisplayName,
+				Description: p.Description,
+				Value:       p.Value,
+				DataType:    p.DataType,
+				MinLimit:    p.MinLimit,
+				MaxLimit:    p.MaxLimit,
+				IsActive:    p.IsActive,
+				CreatedAt:   time.Now(),
+			}
+
+			if err := store.Policies.CreatePolicyTx(ctx, tx, policy); err != nil {
+				log.Printf("Error creating policy '%s': %v", p.PolicyKey, err)
+				return err
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Println("Error in policies seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Policies seeder completed successfully.")
 }
 
 func main() {
