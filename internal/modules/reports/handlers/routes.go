@@ -80,6 +80,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		salesGroup.GET("/charts/monthly-revenue", r.GetMonthlyRevenueChartHandler)
 		salesGroup.GET("/charts/new-vs-recurring", r.GetNewVsRecurringChartHandler)
 		salesGroup.GET("/charts/cohort-analysis", r.GetCohortAnalysisHandler)
+		salesGroup.GET("/charts/sales-by-demographics", r.GetSalesByDemographicsHandler)
 	}
 
 	// Financial Routes

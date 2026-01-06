@@ -8209,6 +8209,52 @@ paths:
       summary: Get Sales Volume By Service (Category)
       tags:
       - Reports
+  /reports/charts/sales-by-demographics:
+    get:
+      description: Retrieves sales volume grouped by demographic dimension (age or
+        gender).
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      - description: 'Dimension: ''age'' or ''gender'''
+        in: query
+        name: dimension
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Demographic sales data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.ChartData'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Sales By Demographics
+      tags:
+      - Reports
   /reports/charts/sales-by-hour:
     get:
       description: Retrieves sales data grouped by the hour of the day for a Line

@@ -1281,3 +1281,47 @@ func (rs *ReportStore) GetMonthlyRevenueChart(ctx context.Context, branchID *uui
 
 	return chartData, nil
 }
+
+func (rs *ReportStore) GetSalesByDemographics(ctx context.Context, branchID *uuid.UUID, start, end time.Time, dimension string) ([]reportdomain.ChartData, error) {
+	var results []reportdomain.ChartData
+	validStatuses := []billingdomain.InvoiceStatus{
+		billingdomain.InvoiceStatusPaid,
+		billingdomain.InvoiceStatusUnpaid,
+		billingdomain.InvoiceStatusOverdue,
+	}
+
+	query := rs.db.WithContext(ctx).Table("invoices i").
+		Joins("JOIN users u ON u.user_id = i.user_id").
+		Where("i.issue_date BETWEEN ? AND ?", start, end).
+		Where("i.status IN ?", validStatuses)
+
+	if branchID != nil {
+		query = query.Where("i.branch_id = ?", *branchID)
+	}
+
+	if dimension == "gender" {
+		err := query.Select("u.gender as label, COALESCE(SUM(i.total_amount), 0) as value").
+			Group("u.gender").
+			Scan(&results).Error
+		return results, err
+	} else if dimension == "age" {
+		ageCase := `CASE
+			WHEN u.birth_date IS NULL THEN 'Unknown'
+			WHEN EXTRACT(YEAR FROM age(u.birth_date)) < 18 THEN '< 18'
+			WHEN EXTRACT(YEAR FROM age(u.birth_date)) BETWEEN 18 AND 24 THEN '18-24'
+			WHEN EXTRACT(YEAR FROM age(u.birth_date)) BETWEEN 25 AND 34 THEN '25-34'
+			WHEN EXTRACT(YEAR FROM age(u.birth_date)) BETWEEN 35 AND 44 THEN '35-44'
+			WHEN EXTRACT(YEAR FROM age(u.birth_date)) BETWEEN 45 AND 54 THEN '45-54'
+			WHEN EXTRACT(YEAR FROM age(u.birth_date)) >= 55 THEN '55+'
+			ELSE 'Unknown'
+		END`
+
+		err := query.Select(ageCase + " as label, COALESCE(SUM(i.total_amount), 0) as value").
+			Group(ageCase).
+			Order("label").
+			Scan(&results).Error
+		return results, err
+	}
+
+	return nil, fmt.Errorf("invalid dimension: %s", dimension)
+}
