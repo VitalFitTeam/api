@@ -53,6 +53,15 @@ func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdom
 	if err != nil {
 		return err
 	}
+	policy, err := bs.store.Policies.GetPolicyByKey(ctx, "INVOICE_OVERDUE_TIME_DAYS")
+	if err != nil {
+		return err
+	}
+	overDueTime, err := policy.GetInt()
+	if err != nil {
+		return err
+	}
+	invoice.DueDate = time.Now().AddDate(0, 0, overDueTime)
 
 	branch, err := bs.store.Branches.GetByID(ctx, invoice.BranchID)
 	if err != nil {
