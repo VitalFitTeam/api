@@ -47,7 +47,7 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, cl
 		}
 	}
 
-	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID)
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID, 0)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -103,7 +103,6 @@ func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID)
 		return err
 	}
 
-	// 1. Obtener los detalles de la reserva para la lógica de negocio.
 	booking, err := s.store.Booking.GetBookingByID(ctx, bookingID)
 	if err != nil {
 		if errors.Is(err, shared_errors.ErrNotFound) {
@@ -121,8 +120,7 @@ func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID)
 		return shared_errors.ErrCancellationWindowClosed
 	}
 
-	// 2. Determinar si se debe reponer el saldo del cliente.
-	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, booking.UserID)
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, booking.UserID, 0)
 	if err != nil {
 		return err
 	}
@@ -164,7 +162,7 @@ func (s *BookingService) GetClientActualBook(ctx context.Context, userID, branch
 }
 
 func (s *BookingService) CanAccessService(ctx context.Context, userID, branchID, serviceID uuid.UUID) (bool, error) {
-	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID)
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID, 0)
 	if err != nil {
 		return false, err
 	}

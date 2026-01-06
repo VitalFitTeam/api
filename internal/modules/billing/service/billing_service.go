@@ -74,7 +74,7 @@ func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdom
 
 	taxRate := billingdomain.GetTaxRateByLocation(branch.State.Country.Name)
 
-	hasActiveMembership, err := bs.store.Membership.ClientHasActiveMembership(ctx, invoice.UserID)
+	hasActiveMembership, err := bs.store.Membership.ClientHasActiveMembership(ctx, invoice.UserID, 0)
 	if err != nil {
 		return fmt.Errorf("could not check for active membership: %w", err)
 	}
