@@ -94,6 +94,15 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, cl
 //
 
 func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID) error {
+	policy, err := s.store.Policies.GetPolicyByKey(ctx, "CLASS_CANCEL_MIN_HOURS")
+	if err != nil {
+		return err
+	}
+	classCancelMinHours, err := policy.GetInt()
+	if err != nil {
+		return err
+	}
+
 	// 1. Obtener los detalles de la reserva para la lógica de negocio.
 	booking, err := s.store.Booking.GetBookingByID(ctx, bookingID)
 	if err != nil {
@@ -107,6 +116,10 @@ func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID)
 		return err
 	}
 	booking.Class = *class
+
+	if time.Until(class.StartsAt) < time.Duration(classCancelMinHours)*time.Hour {
+		return shared_errors.ErrCancellationWindowClosed
+	}
 
 	// 2. Determinar si se debe reponer el saldo del cliente.
 	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, booking.UserID)

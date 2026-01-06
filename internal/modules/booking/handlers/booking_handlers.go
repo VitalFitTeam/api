@@ -184,6 +184,10 @@ func (h *BookingHandlers) CancelBookingHandler(c *gin.Context) {
 		}
 	}
 	if err := h.services.BookingServices.CancelBooking(ctx, bookingID); err != nil {
+		if errors.Is(err, shared_errors.ErrCancellationWindowClosed) {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}

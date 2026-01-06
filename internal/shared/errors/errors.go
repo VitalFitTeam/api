@@ -9,16 +9,17 @@ import (
 )
 
 var (
-	ErrNotFound            = errors.New("resource not found")
-	ErrConflict            = errors.New("resource already exists")
-	ErrInternalServerError = errors.New("internal server error")
-	ErrBadRequest          = errors.New("bad request")
-	ErrUnauthorized        = errors.New("unauthorized")
-	ErrForbidden           = errors.New("forbidden")
-	ErrPayment             = errors.New("payment required")
-	ErrInsufficientBalance = errors.New("insufficient balance")
-	ErrPastClass           = errors.New("cannot book a past class")
-	ErrFullClass           = errors.New("class is full")
+	ErrNotFound                 = errors.New("resource not found")
+	ErrConflict                 = errors.New("resource already exists")
+	ErrInternalServerError      = errors.New("internal server error")
+	ErrBadRequest               = errors.New("bad request")
+	ErrUnauthorized             = errors.New("unauthorized")
+	ErrForbidden                = errors.New("forbidden")
+	ErrPayment                  = errors.New("payment required")
+	ErrInsufficientBalance      = errors.New("insufficient balance")
+	ErrPastClass                = errors.New("cannot book a past class")
+	ErrFullClass                = errors.New("class is full")
+	ErrCancellationWindowClosed = errors.New("cannot cancel booking within the restricted time window")
 )
 
 type LogErrors struct {
