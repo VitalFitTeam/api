@@ -36,15 +36,6 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 		return nil, err
 	}
 
-	gracePolicy, err := s.store.Policies.GetPolicyByKey(ctx, "ACCESS_GRACE_PERIOD")
-	if err != nil {
-		return nil, err
-	}
-	accessGracePeriod, err := gracePolicy.GetInt()
-	if err != nil {
-		return nil, err
-	}
-
 	bookingStartTime := now.Add(-time.Duration(accessWindowBeforeClass) * time.Minute)
 	bookingEndTime := now.Add(time.Duration(accessWindowBeforeClass) * time.Minute)
 
