@@ -1,6 +1,7 @@
 package otp
 
 import (
+	crand "crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"math/rand"
@@ -31,7 +32,7 @@ func GenerateCode(length int) (string, error) {
 
 func GenerateRandomString() (string, error) {
 	b := make([]byte, 32)
-	_, err := rand.Read(b)
+	_, err := crand.Read(b)
 	if err != nil {
 		return "", err
 	}
