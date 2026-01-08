@@ -266,15 +266,11 @@ func (h *AuthService) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]
 }
 
 func (h *AuthService) RenewAccessToken(ctx context.Context, oldRefreshToken string) (string, string, error) {
-	// 1. Buscar la sesión (sin validar el token específico aún, o usando GetValidSession)
-	// Nota: Si usas GetValidSession del paso anterior, asegúrate de que busque por token exacto.
 	session, err := h.store.Session.GetByRefreshToken(ctx, oldRefreshToken)
 	if err != nil {
-		// Aquí podría caer si el token ya no es el actual (Reuse attempt detectado indirectamente)
 		return "", "", errors.New("invalid session or token reused")
 	}
 
-	// 2. Generar el NUEVO par de tokens
 	newAccessToken, err := h.GenerateAccessToken(ctx, session.UserID) // Extraje lógica a función auxiliar
 	if err != nil {
 		return "", "", err
@@ -285,12 +281,8 @@ func (h *AuthService) RenewAccessToken(ctx context.Context, oldRefreshToken stri
 		return "", "", err
 	}
 
-	// 3. ROTACIÓN ATÓMICA
-	// Intentamos cambiar el Viejo por el Nuevo en la DB
 	err = h.store.Session.RotateSession(ctx, session.ID, oldRefreshToken, newRefreshToken)
 	if err != nil {
-		// Si falla la rotación (ej. reuse detection), bloqueamos todo
-		// h.store.Sessions.Revoke(session.ID)
 		return "", "", errors.New("security alert: token reuse detected, session revoked")
 	}
 
