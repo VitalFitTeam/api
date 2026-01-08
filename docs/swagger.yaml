@@ -18,6 +18,27 @@ definitions:
       qr_jwt:
         type: string
     type: object
+  auditdomain.AuditLog:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      ip_address:
+        type: string
+      method:
+        type: string
+      path:
+        type: string
+      payload:
+        type: string
+      status:
+        type: integer
+      user_agent:
+        type: string
+      user_id:
+        type: string
+    type: object
   authdomain.Permission:
     properties:
       created_at:
@@ -2829,6 +2850,125 @@ paths:
       summary: Assign permissions to a role
       tags:
       - RBAC (Admin)
+  /audit-logs:
+    get:
+      description: Retrieves a paginated list of all audit logs.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for path or method
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paginated audit logs
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/auditdomain.AuditLog'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all audit logs
+      tags:
+      - Audit
+  /audit-logs/user/{userId}:
+    get:
+      description: Retrieves a paginated list of audit logs for a specific user.
+      parameters:
+      - description: User UUID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      - description: Search term for path or method
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paginated audit logs
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/auditdomain.AuditLog'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user audit logs
+      tags:
+      - Audit
   /auth/activate:
     put:
       consumes:

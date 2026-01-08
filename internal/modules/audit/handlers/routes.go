@@ -8,6 +8,8 @@ import (
 
 type AuditHandlersInterface interface {
 	SetupRoutes(router *gin.RouterGroup, m *auth.AuthMiddleware)
+	GetUserLogsHandler(c *gin.Context)
+	GetAllLogsHandler(c *gin.Context)
 }
 
 type AuditHandlers struct {
@@ -25,5 +27,8 @@ func (h *AuditHandlers) SetupRoutes(router *gin.RouterGroup, m *auth.AuthMiddlew
 	{
 		auditGroup.Use(m.AuthJwtTokenMiddleware())
 		auditGroup.Use(m.AuditLogMiddleware())
+
+		auditGroup.GET("/user/:userId", m.RBACPermission("audit:list"), h.GetUserLogsHandler)
+		auditGroup.GET("", m.RBACPermission("audit:list"), h.GetAllLogsHandler)
 	}
 }
