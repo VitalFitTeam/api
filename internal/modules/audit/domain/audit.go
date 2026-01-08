@@ -19,3 +19,7 @@ type AuditLog struct {
 	Payload   string    `gorm:"type:jsonb" json:"payload"`
 	CreatedAt time.Time `gorm:"index;default:CURRENT_TIMESTAMP" json:"created_at"`
 }
+
+func (a *AuditLog) TableName() string {
+	return "audit_logs"
+}
