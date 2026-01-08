@@ -20,12 +20,16 @@ import (
 	"github.com/vitalfit/api/pkg/pagination"
 )
 
-func setup(t *testing.T) (*authservices.AuthService, *authservices.UserService, *authmocks.UserStoreMock, *authmocks.RoleStoreMock, *mailermocks.MockMailer) {
+func setup(t *testing.T) (*authservices.AuthService, *authservices.UserService, *authmocks.UserStoreMock, *authmocks.RoleStoreMock, *authmocks.SessionStoreMock, *mailermocks.MockMailer) {
 	t.Helper()
 
 	mockStore := store.NewMockStore()
 	userStoreMock := mockStore.Users.(*authmocks.UserStoreMock)
 	roleStoreMock := mockStore.Roles.(*authmocks.RoleStoreMock)
+
+	sessionStoreMock := &authmocks.SessionStoreMock{}
+	mockStore.Session = sessionStoreMock
+
 	cfg := config.LoadConfig()
 	testAuth := &authmocks.TestAuthenticator{}
 	mailer := &mailermocks.MockMailer{}
@@ -33,11 +37,11 @@ func setup(t *testing.T) (*authservices.AuthService, *authservices.UserService, 
 	authService := authservices.NewAuthServices(mockStore, *cfg, testAuth, mailer)
 	userService := authservices.NewUserService(mockStore)
 
-	return authService, userService, userStoreMock, roleStoreMock, mailer
+	return authService, userService, userStoreMock, roleStoreMock, sessionStoreMock, mailer
 }
 
 func TestAuthService(t *testing.T) {
-	authService, _, userStoreMock, roleStoreMock, mailerMock := setup(t)
+	authService, _, userStoreMock, roleStoreMock, sessionStoreMock, mailerMock := setup(t)
 
 	mockUser := &authdomain.Users{
 		UserID:    uuid.New(),
@@ -149,6 +153,7 @@ func TestAuthService(t *testing.T) {
 	})
 
 	t.Run("GenerateToken", func(t *testing.T) {
+		sessionStoreMock.On("Create", mock.Anything, mock.AnythingOfType("*authdomain.Session")).Return(nil).Once()
 		token, _, err := authService.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1")
 		assert.NoError(t, err)
 		assert.NotEmpty(t, token)
@@ -163,6 +168,7 @@ func TestAuthService(t *testing.T) {
 	})
 
 	t.Run("ValidateToken", func(t *testing.T) {
+		sessionStoreMock.On("Create", mock.Anything, mock.AnythingOfType("*authdomain.Session")).Return(nil).Once()
 		validToken, _, _ := authService.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1")
 
 		parsedToken, err := authService.ValidateToken(validToken)
@@ -199,7 +205,7 @@ func TestAuthService(t *testing.T) {
 }
 
 func TestUserService(t *testing.T) {
-	_, userService, userStoreMock, roleStoreMock, _ := setup(t)
+	_, userService, userStoreMock, roleStoreMock, _, _ := setup(t)
 
 	mockUser := &authdomain.Users{
 		UserID:    uuid.New(),

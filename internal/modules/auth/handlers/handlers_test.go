@@ -57,6 +57,9 @@ func TestWhoAmI(t *testing.T) {
 		LastName:  "User",
 	}
 
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
+
 	testToken, _, err := testApp.Services.AuthServices.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1")
 	if err != nil {
 		t.Fatal(err)
@@ -109,6 +112,9 @@ func TestLoginHandler(t *testing.T) {
 	testPassword := "password123"
 	mockUser := newTestUser("login@example.com", testPassword)
 	mockUser.IsValidated = true
+
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
 
 	t.Run("should fail with invalid credentials (wrong password)", func(t *testing.T) {
 		userStoreMock.On("GetByEmail", mock.Anything, mockUser.Email).Return(mockUser, nil).Once()
@@ -316,6 +322,9 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
 	mailerMock := testApp.Services.AuthServices.(*authservices.AuthService).Mailer.(*mailermocks.MockMailer)
 
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
+
 	adminUser := &authdomain.Users{
 		UserID: uuid.New(),
 		Email:  "admin@example.com",
@@ -462,6 +471,9 @@ func TestAdminRoleRoutes(t *testing.T) {
 
 	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
 	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
+
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
 
 	// User with all role-management permissions
 	adminUser := &authdomain.Users{
@@ -639,6 +651,9 @@ func TestUserListHandlers(t *testing.T) {
 	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
 	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
 
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
+
 	adminUser := &authdomain.Users{
 		UserID: uuid.New(),
 		Email:  "listadmin@example.com",
@@ -702,6 +717,9 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 
 	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
 	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
+
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
 
 	adminRoleID := uuid.New()
 	adminUser := &authdomain.Users{
