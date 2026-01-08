@@ -2,6 +2,7 @@ package authservices
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -222,6 +223,23 @@ func (h *AuthService) UpgradePassword(ctx context.Context, user *authdomain.User
 	return nil
 }
 
+func (h *AuthService) GenerateAccessToken(ctx context.Context, userID uuid.UUID) (string, error) {
+	claims := jwt.MapClaims{
+		"sub": userID,
+		"exp": time.Now().Add(h.config.Auth.Token.AccessExp).Unix(), // Usar config de Access Token
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
+		"iss": h.config.Auth.Token.Iss,
+		"aud": h.config.Auth.Token.Aud,
+	}
+	token, err := h.auth.GenerateToken(claims)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
 func (h *AuthService) GenerateQrJwtToken(ctx context.Context, user *authdomain.Users) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": user.UserID,
@@ -237,4 +255,52 @@ func (h *AuthService) GenerateQrJwtToken(ctx context.Context, user *authdomain.U
 	}
 
 	return token, nil
+}
+
+func (h *AuthService) GetByRefreshToken(ctx context.Context, refreshToken string) (*authdomain.Session, error) {
+	return h.store.Session.GetByRefreshToken(ctx, refreshToken)
+}
+
+func (h *AuthService) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]*authdomain.Session, error) {
+	return h.store.Session.GetUserSessions(ctx, userID)
+}
+
+func (h *AuthService) RenewAccessToken(ctx context.Context, oldRefreshToken string) (string, string, error) {
+	// 1. Buscar la sesión (sin validar el token específico aún, o usando GetValidSession)
+	// Nota: Si usas GetValidSession del paso anterior, asegúrate de que busque por token exacto.
+	session, err := h.store.Session.GetByRefreshToken(ctx, oldRefreshToken)
+	if err != nil {
+		// Aquí podría caer si el token ya no es el actual (Reuse attempt detectado indirectamente)
+		return "", "", errors.New("invalid session or token reused")
+	}
+
+	// 2. Generar el NUEVO par de tokens
+	newAccessToken, err := h.GenerateAccessToken(ctx, session.UserID) // Extraje lógica a función auxiliar
+	if err != nil {
+		return "", "", err
+	}
+
+	newRefreshToken, err := otp.GenerateRandomString()
+	if err != nil {
+		return "", "", err
+	}
+
+	// 3. ROTACIÓN ATÓMICA
+	// Intentamos cambiar el Viejo por el Nuevo en la DB
+	err = h.store.Session.RotateSession(ctx, session.ID, oldRefreshToken, newRefreshToken)
+	if err != nil {
+		// Si falla la rotación (ej. reuse detection), bloqueamos todo
+		// h.store.Sessions.Revoke(session.ID)
+		return "", "", errors.New("security alert: token reuse detected, session revoked")
+	}
+
+	return newAccessToken, newRefreshToken, nil
+}
+
+func (h *AuthService) Revoke(ctx context.Context, sessionID uuid.UUID) error {
+	return h.store.Session.Revoke(ctx, sessionID)
+}
+
+func (h *AuthService) RevokeAllForUser(ctx context.Context, userID uuid.UUID) error {
+	return h.store.Session.RevokeAllForUser(ctx, userID)
 }

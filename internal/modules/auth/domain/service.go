@@ -31,6 +31,12 @@ type AuthServicesInterface interface {
 	GenerateQrJwtToken(ctx context.Context, user *Users) (string, error)
 	UpgradePassword(ctx context.Context, user *Users) error
 	UpdateActivationCode(ctx context.Context, userID uuid.UUID, code string) error
+	//session
+	GetByRefreshToken(ctx context.Context, refreshToken string) (*Session, error)
+	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]*Session, error)
+	RenewAccessToken(ctx context.Context, oldRefreshToken string) (string, string, error)
+	Revoke(ctx context.Context, sessionID uuid.UUID) error
+	RevokeAllForUser(ctx context.Context, userID uuid.UUID) error
 }
 
 type UserServicesInterface interface {
