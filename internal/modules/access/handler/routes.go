@@ -24,6 +24,7 @@ func NewAccessHandler(services appservices.Services) *AccessHandler {
 func (r *AccessHandler) AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	accessGroup := rg.Group("/access")
 	accessGroup.Use(m.AuthJwtTokenMiddleware())
+	accessGroup.Use(m.AuditLogMiddleware())
 
 	accessGroup.POST("/check-in", m.RBACPermission("access:check_in"), r.CheckInHandler)
 }

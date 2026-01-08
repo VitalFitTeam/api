@@ -38,7 +38,8 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	//  EQUIPMENT CATALOG
 	// ==============================
 	equipmentGroup := rg.Group("/equipment-types").
-		Use(m.AuthJwtTokenMiddleware())
+		Use(m.AuthJwtTokenMiddleware()).
+		Use(m.AuditLogMiddleware())
 
 	{
 		equipmentGroup.POST("", r.CreateEquipmentHandler)
@@ -52,7 +53,8 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	//  BRANCH INVENTORY
 	// ==============================
 	branchInventoryGroup := rg.Group("/branches/:id/equipment").
-		Use(m.AuthJwtTokenMiddleware())
+		Use(m.AuthJwtTokenMiddleware()).
+		Use(m.AuditLogMiddleware())
 
 	{
 		branchInventoryGroup.POST("", m.RBACPermission("branch_management"), r.AddInventoryItemHandler)

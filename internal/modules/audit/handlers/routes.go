@@ -21,5 +21,9 @@ func NewAuditHandlers(services appservices.Services) *AuditHandlers {
 }
 
 func (h *AuditHandlers) SetupRoutes(router *gin.RouterGroup, m *auth.AuthMiddleware) {
-
+	auditGroup := router.Group("/audit-logs")
+	{
+		auditGroup.Use(m.AuthJwtTokenMiddleware())
+		auditGroup.Use(m.AuditLogMiddleware())
+	}
 }

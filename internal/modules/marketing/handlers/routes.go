@@ -32,6 +32,7 @@ func (r *MarketingHandler) MarketingRoutes(rg *gin.RouterGroup, m *auth.AuthMidd
 	marketingGroup := rg.Group("/marketing")
 	{
 		marketingGroup.Use(m.AuthJwtTokenMiddleware())
+		marketingGroup.Use(m.AuditLogMiddleware())
 
 		// Banner routes
 		bannersGroup := marketingGroup.Group("/banners")

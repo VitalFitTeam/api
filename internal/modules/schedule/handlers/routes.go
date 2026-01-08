@@ -29,6 +29,7 @@ func (h *ScheduleHandlers) ScheduleRoutes(rg *gin.RouterGroup, m *auth.AuthMiddl
 	branchSchedule := rg.Group("/branches/:id/schedule")
 	{
 		branchSchedule.Use(m.AuthJwtTokenMiddleware())
+		branchSchedule.Use(m.AuditLogMiddleware())
 
 		branchSchedule.POST("", m.RBACPermission("schedule:create"), h.CreateClassHandler)
 		branchSchedule.GET("", h.GetClassesByBranchHandler)
@@ -37,6 +38,7 @@ func (h *ScheduleHandlers) ScheduleRoutes(rg *gin.RouterGroup, m *auth.AuthMiddl
 	classRoutes := rg.Group("/schedule")
 	{
 		classRoutes.Use(m.AuthJwtTokenMiddleware())
+		classRoutes.Use(m.AuditLogMiddleware())
 
 		classRoutes.GET("/:classId", h.GetClassByIDHandler)
 		classRoutes.PUT("/:classId", m.RBACPermission("schedule:update"), h.UpdateClassHandler)
