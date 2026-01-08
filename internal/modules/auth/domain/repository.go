@@ -51,3 +51,10 @@ type RolesRepository interface {
 	CreatePermission(ctx context.Context, tx *gorm.DB, permission *Permission) error
 	GetPermissionByName(ctx context.Context, name string) (*Permission, error)
 }
+
+type SessionRepository interface {
+	Create(ctx context.Context, session *Session) error
+	GetByRefreshToken(refreshToken string) (*Session, error)
+	Revoke(sessionID uuid.UUID) error
+	RevokeAllForUser(userID uuid.UUID) error
+}

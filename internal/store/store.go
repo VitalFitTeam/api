@@ -62,6 +62,7 @@ type Storage struct {
 	Policies        policiesdomain.PoliciesRepository
 	Wishlist        wishlistdomain.WishlistRepository
 	Audit           auditdomain.AuditRepository
+	Session         authdomain.SessionRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -88,5 +89,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Policies:        policiesrepository.NewPoliciesStore(db),
 		Wishlist:        wishlistrepository.NewWishlistStore(db),
 		Audit:           auditrepository.NewAuditStore(db),
+		Session:         authrepository.NewSessionStore(db),
 	}
 }
