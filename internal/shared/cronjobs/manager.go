@@ -50,4 +50,9 @@ func (m *Manager) registerRoutes() {
 		m.logger.Errorw("Error getting rates cronjob", "error", err)
 	}
 
+	_, err = m.cron.AddFunc("@daily", m.UpdateExpiredMembershipsCronjob)
+	if err != nil {
+		m.logger.Errorw("Error registering update expired memberships cronjob", "error", err)
+	}
+
 }

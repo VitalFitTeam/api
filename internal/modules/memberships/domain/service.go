@@ -27,4 +27,5 @@ type MembershipsServiceInterface interface {
 	DeleteCancellationReason(ctx context.Context, id uuid.UUID) error
 	GetCancellationReasonByID(ctx context.Context, id uuid.UUID) (*CancellationReason, error)
 	GetCancellationReasons(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*CancellationReason, int64, error)
+	UpdateExpiredMemberships(ctx context.Context) error
 }

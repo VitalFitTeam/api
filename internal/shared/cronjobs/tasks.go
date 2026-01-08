@@ -20,3 +20,14 @@ func (m *Manager) GetRatesCronjob() {
 		return
 	}
 }
+
+func (m *Manager) UpdateExpiredMembershipsCronjob() {
+	m.logger.Info("running update expired memberships cronjob")
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	if err := m.appservices.MembershipServices.UpdateExpiredMemberships(ctx); err != nil {
+		m.logger.Errorw("failed to update expired memberships", "error", err)
+		return
+	}
+}
