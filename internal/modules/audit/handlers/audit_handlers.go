@@ -40,7 +40,7 @@ func (h *AuditHandlers) GetUserLogsHandler(c *gin.Context) {
 		return
 	}
 
-	logs, err := h.services.AuditServices.GetUserLogs(ctx, userID, fq)
+	logs, total, err := h.services.AuditServices.GetUserLogs(ctx, userID, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -53,11 +53,12 @@ func (h *AuditHandlers) GetUserLogsHandler(c *gin.Context) {
 	}
 	previousURL := fmt.Sprintf("/audit-logs/user/%s?limit=%d&page=%d&sort=%s", userID, fq.Limit, previousPage, fq.Sort)
 
-	resp := pagination.PaginatedResponse[*auditdomain.AuditLog]{
+	resp := pagination.PaginatedResponseTotal[*auditdomain.AuditLog]{
 		Data:     logs,
 		Count:    int64(len(logs)),
 		Next:     nextURL,
 		Previous: previousURL,
+		Total:    total,
 	}
 
 	c.JSON(http.StatusOK, resp)
@@ -92,7 +93,7 @@ func (h *AuditHandlers) GetAllLogsHandler(c *gin.Context) {
 		return
 	}
 
-	logs, err := h.services.AuditServices.GetAllLogs(ctx, fq)
+	logs, total, err := h.services.AuditServices.GetAllLogs(ctx, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -105,11 +106,12 @@ func (h *AuditHandlers) GetAllLogsHandler(c *gin.Context) {
 	}
 	previousURL := fmt.Sprintf("/audit-logs?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
 
-	resp := pagination.PaginatedResponse[*auditdomain.AuditLog]{
+	resp := pagination.PaginatedResponseTotal[*auditdomain.AuditLog]{
 		Data:     logs,
 		Count:    int64(len(logs)),
 		Next:     nextURL,
 		Previous: previousURL,
+		Total:    total,
 	}
 
 	c.JSON(http.StatusOK, resp)
