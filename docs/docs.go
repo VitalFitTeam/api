@@ -14576,7 +14576,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "reason_id": {
-                    "description": "Mapeo a cancellation_reasons",
                     "type": "string"
                 },
                 "updated_at": {
