@@ -6,9 +6,11 @@ import (
 	"testing"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/stretchr/testify/mock"
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
+	auditmocks "github.com/vitalfit/api/internal/modules/audit/mocks"
 	authmocks "github.com/vitalfit/api/internal/modules/auth/mocks"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
@@ -26,6 +28,11 @@ func NewTestApplication(t *testing.T, cfg *config.Config) *application {
 	testAuth := &authmocks.TestAuthenticator{}
 	mailer := &mailermocks.MockMailer{}
 	mockStore := store.NewMockStore()
+
+	// Setup default expectation for Audit.CreateLog to avoid unexpected call panics in middleware
+	if mockAudit, ok := mockStore.Audit.(*auditmocks.MockAuditStore); ok {
+		mockAudit.On("CreateLog", mock.Anything, mock.Anything).Return(nil).Maybe()
+	}
 
 	// Rate limiter
 	rateLimiter := ratelimiter.NewFixedWindowLimiter(
