@@ -321,6 +321,56 @@ func (h *AuthHandlers) GetUserSessionsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": sessions})
 }
 
+// @Summary		Get User Sessions by ID
+// @Description	Retrieves active sessions for a specific user. Clients can only see their own sessions.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id	path		string	true	"User ID"
+// @Success		200	{object}	object{data=[]authdomain.Session}
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		403	{object}	object{error=string}	"Forbidden"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/{id}/sessions [get]
+func (h *AuthHandlers) GetUserSessionsByIDHandler(c *gin.Context) {
+	user := h.services.UserServices.GetUserFromContext(c)
+	ctx := c.Request.Context()
+
+	var targetUserID uuid.UUID
+	var err error
+
+	if user.Role.Name == "client" {
+		targetUserID = user.UserID
+	} else {
+		targetUserID, err = uuid.Parse(c.Param("id"))
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+
+		if user.Role.Name != "super_admin" {
+			if user.UserID != targetUserID {
+				ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, "users:get")
+				if err != nil {
+					h.services.LogErrors.InternalServerError(c, err)
+					return
+				}
+				if !ok {
+					h.services.LogErrors.ForbiddenResponse(c)
+					return
+				}
+			}
+		}
+	}
+
+	sessions, err := h.services.AuthServices.GetUserSessions(ctx, targetUserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": sessions})
+}
+
 // @Summary		Revoke Session
 // @Description	Revokes a specific session by ID.
 // @Tags			User
@@ -337,7 +387,35 @@ func (h *AuthHandlers) RevokeSessionHandler(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	// Nota: Idealmente se debería verificar que la sesión pertenezca al usuario antes de revocarla
+
+	// 1. Obtener la sesión para verificar el dueño
+	session, err := h.services.AuthServices.GetSessionByID(ctx, sessionID)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	// 2. Verificar permisos
+	user := h.services.UserServices.GetUserFromContext(c)
+	if user.Role.Name != "super_admin" {
+		if session.UserID != user.UserID {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, "users:update")
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
+
 	if err := h.services.AuthServices.Revoke(ctx, sessionID); err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -356,6 +434,54 @@ func (h *AuthHandlers) RevokeAllSessionsHandler(c *gin.Context) {
 	user := h.services.UserServices.GetUserFromContext(c)
 	ctx := c.Request.Context()
 	if err := h.services.AuthServices.RevokeAllForUser(ctx, user.UserID); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Revoke All Sessions by User ID
+// @Description	Revokes all sessions for a specific user. Clients can only revoke their own sessions.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Param			id	path	string	true	"User ID"
+// @Success		204	"No Content"
+// @Failure		400	"Bad Request"
+// @Failure		403	"Forbidden"
+// @Failure		500	"Internal Server Error"
+// @Router			/user/{id}/sessions [delete]
+func (h *AuthHandlers) RevokeAllSessionsByIDHandler(c *gin.Context) {
+	user := h.services.UserServices.GetUserFromContext(c)
+	ctx := c.Request.Context()
+
+	var targetUserID uuid.UUID
+	var err error
+
+	if user.Role.Name == "client" {
+		targetUserID = user.UserID
+	} else {
+		targetUserID, err = uuid.Parse(c.Param("id"))
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+
+		if user.Role.Name != "super_admin" {
+			if user.UserID != targetUserID {
+				ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, "users:update")
+				if err != nil {
+					h.services.LogErrors.InternalServerError(c, err)
+					return
+				}
+				if !ok {
+					h.services.LogErrors.ForbiddenResponse(c)
+					return
+				}
+			}
+		}
+	}
+
+	if err := h.services.AuthServices.RevokeAllForUser(ctx, targetUserID); err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}

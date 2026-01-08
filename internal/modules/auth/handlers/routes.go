@@ -44,8 +44,10 @@ type AuthHandlersInterface interface {
 	//Sessions
 	RenewAccessTokenHandler(c *gin.Context)
 	GetUserSessionsHandler(c *gin.Context)
+	GetUserSessionsByIDHandler(c *gin.Context)
 	RevokeSessionHandler(c *gin.Context)
 	RevokeAllSessionsHandler(c *gin.Context)
+	RevokeAllSessionsByIDHandler(c *gin.Context)
 }
 
 type AuthHandlers struct {
@@ -100,8 +102,10 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		userGroup.POST("/change-password", r.ChangePasswordHandler)
 
 		userGroup.GET("/sessions", r.GetUserSessionsHandler)
+		userGroup.GET("/:id/sessions", r.GetUserSessionsByIDHandler)
 		userGroup.DELETE("/sessions/:id", r.RevokeSessionHandler)
 		userGroup.DELETE("/sessions", r.RevokeAllSessionsHandler)
+		userGroup.DELETE("/:id/sessions", r.RevokeAllSessionsByIDHandler)
 
 		userGroup.GET("/branch-admins",
 			m.RBACPermission("users:list"),

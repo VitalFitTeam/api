@@ -33,6 +33,7 @@ type AuthServicesInterface interface {
 	UpdateActivationCode(ctx context.Context, userID uuid.UUID, code string) error
 	//session
 	GetByRefreshToken(ctx context.Context, refreshToken string) (*Session, error)
+	GetSessionByID(ctx context.Context, sessionID uuid.UUID) (*Session, error)
 	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]*Session, error)
 	RenewAccessToken(ctx context.Context, oldRefreshToken string) (string, string, error)
 	Revoke(ctx context.Context, sessionID uuid.UUID) error

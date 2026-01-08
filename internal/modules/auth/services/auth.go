@@ -261,6 +261,10 @@ func (h *AuthService) GetByRefreshToken(ctx context.Context, refreshToken string
 	return h.store.Session.GetByRefreshToken(ctx, refreshToken)
 }
 
+func (h *AuthService) GetSessionByID(ctx context.Context, sessionID uuid.UUID) (*authdomain.Session, error) {
+	return h.store.Session.GetByID(ctx, sessionID)
+}
+
 func (h *AuthService) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]*authdomain.Session, error) {
 	return h.store.Session.GetUserSessions(ctx, userID)
 }

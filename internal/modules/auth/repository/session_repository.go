@@ -38,6 +38,19 @@ func (s *SessionStore) GetByRefreshToken(ctx context.Context, refreshToken strin
 
 }
 
+func (s *SessionStore) GetByID(ctx context.Context, sessionID uuid.UUID) (*authdomain.Session, error) {
+	var session authdomain.Session
+	if err := s.db.WithContext(ctx).Where("id = ?", sessionID).First(&session).Error; err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, shared_errors.ErrNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &session, nil
+}
+
 func (s *SessionStore) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]*authdomain.Session, error) {
 	var sessions []*authdomain.Session
 	if err := s.db.WithContext(ctx).Where("user_id = ? AND is_blocked = ?", userID, false).

@@ -10120,6 +10120,77 @@ paths:
       summary: Update a client user
       tags:
       - User
+  /user/{id}/sessions:
+    delete:
+      description: Revokes all sessions for a specific user. Clients can only revoke
+        their own sessions.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      security:
+      - ApiKeyAuth: []
+      summary: Revoke All Sessions by User ID
+      tags:
+      - User
+    get:
+      description: Retrieves active sessions for a specific user. Clients can only
+        see their own sessions.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/authdomain.Session'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get User Sessions by ID
+      tags:
+      - User
   /user/{id}/staff:
     put:
       consumes:
