@@ -11,6 +11,7 @@ import (
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
+	"github.com/vitalfit/api/pkg/otp"
 )
 
 type AuthService struct {
@@ -160,22 +161,40 @@ func (h *AuthService) DeleteResetToken(ctx context.Context, userID uuid.UUID) er
 
 }
 
-func (h *AuthService) GenerateToken(user *authdomain.Users) (string, error) {
-	// generate the token -> add claims
+func (h *AuthService) GenerateToken(ctx context.Context, user *authdomain.Users, userAgent string, clientIP string) (string, string, error) {
 	claims := jwt.MapClaims{
 		"sub": user.UserID,
-		"exp": time.Now().Add(h.config.Auth.Token.Exp).Unix(),
+		"exp": time.Now().Add(h.config.Auth.Token.AccessExp).Unix(), // Usar config de Access Token
 		"iat": time.Now().Unix(),
 		"nbf": time.Now().Unix(),
 		"iss": h.config.Auth.Token.Iss,
 		"aud": h.config.Auth.Token.Aud,
 	}
-	token, err := h.auth.GenerateToken(claims)
+
+	accessToken, err := h.auth.GenerateToken(claims)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return token, nil
+	refreshToken, err := otp.GenerateRandomString()
+	if err != nil {
+		return "", "", err
+	}
+
+	session := &authdomain.Session{
+		UserID:       user.UserID,
+		RefreshToken: refreshToken,
+		UserAgent:    userAgent,
+		ClientIP:     clientIP,
+		IsBlocked:    false,
+		ExpiresAt:    time.Now().Add(h.config.Auth.Token.RefreshExp),
+	}
+
+	if err := h.store.Session.Create(ctx, session); err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
 }
 
 func (h *AuthService) ValidateToken(token string) (*jwt.Token, error) {

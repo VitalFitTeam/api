@@ -149,7 +149,7 @@ func TestAuthService(t *testing.T) {
 	})
 
 	t.Run("GenerateToken", func(t *testing.T) {
-		token, err := authService.GenerateToken(mockUser)
+		token, _, err := authService.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1")
 		assert.NoError(t, err)
 		assert.NotEmpty(t, token)
 
@@ -163,7 +163,7 @@ func TestAuthService(t *testing.T) {
 	})
 
 	t.Run("ValidateToken", func(t *testing.T) {
-		validToken, _ := authService.GenerateToken(mockUser)
+		validToken, _, _ := authService.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1")
 
 		parsedToken, err := authService.ValidateToken(validToken)
 		assert.NoError(t, err)

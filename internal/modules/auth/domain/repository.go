@@ -55,6 +55,8 @@ type RolesRepository interface {
 type SessionRepository interface {
 	Create(ctx context.Context, session *Session) error
 	GetByRefreshToken(refreshToken string) (*Session, error)
+	GetUserSessions(userID uuid.UUID) ([]*Session, error)
+
 	Revoke(sessionID uuid.UUID) error
 	RevokeAllForUser(userID uuid.UUID) error
 }

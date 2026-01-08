@@ -316,14 +316,17 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := h.services.AuthServices.GenerateToken(user)
+	userAgent := c.Request.UserAgent()
+	clientIP := c.ClientIP()
+	token, refreshToken, err := h.services.AuthServices.GenerateToken(ctx, user, userAgent, clientIP)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": token,
+		"token":         token,
+		"refresh_token": refreshToken,
 	})
 
 }
@@ -404,14 +407,17 @@ func (h *AuthHandlers) OAuthLoginHandler(c *gin.Context) {
 		return
 	}
 
-	internalToken, err := h.services.AuthServices.GenerateToken(user)
+	userAgent := c.Request.UserAgent()
+	clientIP := c.ClientIP()
+	internalToken, refreshToken, err := h.services.AuthServices.GenerateToken(ctx, user, userAgent, clientIP)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": internalToken,
+		"token":         internalToken,
+		"refresh_token": refreshToken,
 	})
 }
 

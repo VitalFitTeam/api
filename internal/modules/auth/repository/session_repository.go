@@ -37,6 +37,15 @@ func (s *SessionStore) GetByRefreshToken(refreshToken string) (*authdomain.Sessi
 
 }
 
+func (s *SessionStore) GetUserSessions(userID uuid.UUID) ([]*authdomain.Session, error) {
+	var sessions []*authdomain.Session
+	if err := s.db.Where("user_id = ? AND is_blocked = ?", userID, false).
+		Find(&sessions).Error; err != nil {
+		return nil, err
+	}
+	return sessions, nil
+}
+
 func (s *SessionStore) Revoke(sessionID uuid.UUID) error {
 	return s.db.Model(&authdomain.Session{}).
 		Where("id = ?", sessionID).
