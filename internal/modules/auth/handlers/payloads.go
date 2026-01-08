@@ -255,3 +255,7 @@ type GetUserResponse struct {
 type OAuthLoginPayload struct {
 	SessionToken string `json:"session_token" binding:"required"`
 }
+
+type RenewTokenPayload struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}

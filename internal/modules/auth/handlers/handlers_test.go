@@ -2,6 +2,7 @@ package authhandlers_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -56,7 +57,10 @@ func TestWhoAmI(t *testing.T) {
 		LastName:  "User",
 	}
 
-	testToken, err := testApp.Services.AuthServices.GenerateToken(mockUser)
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
+
+	testToken, _, err := testApp.Services.AuthServices.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,6 +112,9 @@ func TestLoginHandler(t *testing.T) {
 	testPassword := "password123"
 	mockUser := newTestUser("login@example.com", testPassword)
 	mockUser.IsValidated = true
+
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
 
 	t.Run("should fail with invalid credentials (wrong password)", func(t *testing.T) {
 		userStoreMock.On("GetByEmail", mock.Anything, mockUser.Email).Return(mockUser, nil).Once()
@@ -315,19 +322,22 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
 	mailerMock := testApp.Services.AuthServices.(*authservices.AuthService).Mailer.(*mailermocks.MockMailer)
 
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
+
 	adminUser := &authdomain.Users{
 		UserID: uuid.New(),
 		Email:  "admin@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "super_admin"},
 	}
-	adminToken, _ := testApp.Services.AuthServices.GenerateToken(adminUser)
+	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1")
 
 	authorizedUser := &authdomain.Users{
 		UserID: uuid.New(),
 		Email:  "authorized@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "branch_admin"},
 	}
-	authorizedToken, _ := testApp.Services.AuthServices.GenerateToken(authorizedUser)
+	authorizedToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), authorizedUser, "test-agent", "127.0.0.1")
 
 	// User without specific permission
 	unauthorizedUser := &authdomain.Users{
@@ -335,7 +345,7 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 		Email:  "unauthorized@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "instructor"},
 	}
-	unauthorizedToken, _ := testApp.Services.AuthServices.GenerateToken(unauthorizedUser)
+	unauthorizedToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), unauthorizedUser, "test-agent", "127.0.0.1")
 
 	t.Run("should fail when unauthenticated", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodPost, "/v1/auth/register-staff", nil)
@@ -462,13 +472,16 @@ func TestAdminRoleRoutes(t *testing.T) {
 	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
 	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
 
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
+
 	// User with all role-management permissions
 	adminUser := &authdomain.Users{
 		UserID: uuid.New(),
 		Email:  "roleadmin@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "role_administrator"},
 	}
-	adminToken, _ := testApp.Services.AuthServices.GenerateToken(adminUser)
+	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1")
 
 	// User without permissions
 	basicUser := &authdomain.Users{
@@ -476,7 +489,7 @@ func TestAdminRoleRoutes(t *testing.T) {
 		Email:  "basic@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "client"},
 	}
-	basicToken, _ := testApp.Services.AuthServices.GenerateToken(basicUser)
+	basicToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), basicUser, "test-agent", "127.0.0.1")
 
 	// Common setup for middleware checks
 	setupAdminMiddleware := func() {
@@ -638,12 +651,15 @@ func TestUserListHandlers(t *testing.T) {
 	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
 	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
 
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
+
 	adminUser := &authdomain.Users{
 		UserID: uuid.New(),
 		Email:  "listadmin@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "admin"},
 	}
-	adminToken, _ := testApp.Services.AuthServices.GenerateToken(adminUser)
+	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1")
 
 	setupMiddleware := func() {
 		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
@@ -702,6 +718,9 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
 	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
 
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
+
 	adminRoleID := uuid.New()
 	adminUser := &authdomain.Users{
 		UserID: uuid.New(),
@@ -709,7 +728,7 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 		RoleID: adminRoleID,
 		Role:   authdomain.Roles{RoleID: adminRoleID, Name: "admin"},
 	}
-	adminToken, _ := testApp.Services.AuthServices.GenerateToken(adminUser)
+	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1")
 
 	targetUserID := uuid.New()
 	mockUser := &authdomain.Users{UserID: targetUserID, FirstName: "Target", LastName: "User", Email: "target@example.com"}

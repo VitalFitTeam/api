@@ -9,8 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/vitalfit/api/config"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
+	"github.com/vitalfit/api/pkg/otp"
 )
 
 type AuthService struct {
@@ -160,22 +162,40 @@ func (h *AuthService) DeleteResetToken(ctx context.Context, userID uuid.UUID) er
 
 }
 
-func (h *AuthService) GenerateToken(user *authdomain.Users) (string, error) {
-	// generate the token -> add claims
+func (h *AuthService) GenerateToken(ctx context.Context, user *authdomain.Users, userAgent string, clientIP string) (string, string, error) {
 	claims := jwt.MapClaims{
 		"sub": user.UserID,
-		"exp": time.Now().Add(h.config.Auth.Token.Exp).Unix(),
+		"exp": time.Now().Add(h.config.Auth.Token.AccessExp).Unix(), // Usar config de Access Token
 		"iat": time.Now().Unix(),
 		"nbf": time.Now().Unix(),
 		"iss": h.config.Auth.Token.Iss,
 		"aud": h.config.Auth.Token.Aud,
 	}
-	token, err := h.auth.GenerateToken(claims)
+
+	accessToken, err := h.auth.GenerateToken(claims)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return token, nil
+	refreshToken, err := otp.GenerateRandomString()
+	if err != nil {
+		return "", "", err
+	}
+
+	session := &authdomain.Session{
+		UserID:       user.UserID,
+		RefreshToken: refreshToken,
+		UserAgent:    userAgent,
+		ClientIP:     clientIP,
+		IsBlocked:    false,
+		ExpiresAt:    time.Now().Add(h.config.Auth.Token.RefreshExp),
+	}
+
+	if err := h.store.Session.Create(ctx, session); err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
 }
 
 func (h *AuthService) ValidateToken(token string) (*jwt.Token, error) {
@@ -203,6 +223,23 @@ func (h *AuthService) UpgradePassword(ctx context.Context, user *authdomain.User
 	return nil
 }
 
+func (h *AuthService) GenerateAccessToken(ctx context.Context, userID uuid.UUID) (string, error) {
+	claims := jwt.MapClaims{
+		"sub": userID,
+		"exp": time.Now().Add(h.config.Auth.Token.AccessExp).Unix(), // Usar config de Access Token
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
+		"iss": h.config.Auth.Token.Iss,
+		"aud": h.config.Auth.Token.Aud,
+	}
+	token, err := h.auth.GenerateToken(claims)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
 func (h *AuthService) GenerateQrJwtToken(ctx context.Context, user *authdomain.Users) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": user.UserID,
@@ -218,4 +255,54 @@ func (h *AuthService) GenerateQrJwtToken(ctx context.Context, user *authdomain.U
 	}
 
 	return token, nil
+}
+
+func (h *AuthService) GetByRefreshToken(ctx context.Context, refreshToken string) (*authdomain.Session, error) {
+	return h.store.Session.GetByRefreshToken(ctx, refreshToken)
+}
+
+func (h *AuthService) GetSessionByID(ctx context.Context, sessionID uuid.UUID) (*authdomain.Session, error) {
+	return h.store.Session.GetByID(ctx, sessionID)
+}
+
+func (h *AuthService) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]*authdomain.Session, error) {
+	return h.store.Session.GetUserSessions(ctx, userID)
+}
+
+func (h *AuthService) RenewAccessToken(ctx context.Context, oldRefreshToken string) (string, string, error) {
+	session, err := h.store.Session.GetByRefreshToken(ctx, oldRefreshToken)
+	if err != nil {
+		return "", "", shared_errors.ErrInvalidSession
+	}
+
+	if session == nil {
+		return "", "", shared_errors.ErrInvalidSession
+	}
+
+	newAccessToken, err := h.GenerateAccessToken(ctx, session.UserID)
+	if err != nil {
+		return "", "", err
+	}
+
+	newRefreshToken, err := otp.GenerateRandomString()
+	if err != nil {
+		return "", "", err
+	}
+
+	newExpiry := time.Now().Add(h.config.Auth.Token.RefreshExp)
+
+	err = h.store.Session.RotateSession(ctx, session.ID, oldRefreshToken, newRefreshToken, newExpiry)
+	if err != nil {
+		return "", "", shared_errors.ErrTokenReuse
+	}
+
+	return newAccessToken, newRefreshToken, nil
+}
+
+func (h *AuthService) Revoke(ctx context.Context, sessionID uuid.UUID) error {
+	return h.store.Session.Revoke(ctx, sessionID)
+}
+
+func (h *AuthService) RevokeAllForUser(ctx context.Context, userID uuid.UUID) error {
+	return h.store.Session.RevokeAllForUser(ctx, userID)
 }

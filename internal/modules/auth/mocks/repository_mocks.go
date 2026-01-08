@@ -19,6 +19,14 @@ type RoleStoreMock struct {
 	mock.Mock
 }
 
+type SessionStoreMock struct {
+	mock.Mock
+}
+
+func NewMockSessionStore() *SessionStoreMock {
+	return &SessionStoreMock{}
+}
+
 func NewMockUserStore() *UserStoreMock {
 	return &UserStoreMock{}
 }
@@ -235,4 +243,50 @@ func (m *RoleStoreMock) GetPermissionByName(ctx context.Context, name string) (*
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*authdomain.Permission), args.Error(1)
+}
+
+//session mocks
+
+func (m *SessionStoreMock) Create(ctx context.Context, session *authdomain.Session) error {
+	args := m.Called(ctx, session)
+	return args.Error(0)
+}
+
+func (m *SessionStoreMock) GetByRefreshToken(ctx context.Context, refreshToken string) (*authdomain.Session, error) {
+	args := m.Called(ctx, refreshToken)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*authdomain.Session), args.Error(1)
+}
+
+func (m *SessionStoreMock) GetByID(ctx context.Context, sessionID uuid.UUID) (*authdomain.Session, error) {
+	args := m.Called(ctx, sessionID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*authdomain.Session), args.Error(1)
+}
+
+func (m *SessionStoreMock) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]*authdomain.Session, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*authdomain.Session), args.Error(1)
+}
+
+func (m *SessionStoreMock) RotateSession(ctx context.Context, sessionID uuid.UUID, oldToken, newToken string, newExpiry time.Time) error {
+	args := m.Called(ctx, sessionID, oldToken, newToken, newExpiry)
+	return args.Error(0)
+}
+
+func (m *SessionStoreMock) Revoke(ctx context.Context, sessionID uuid.UUID) error {
+	args := m.Called(ctx, sessionID)
+	return args.Error(0)
+}
+
+func (m *SessionStoreMock) RevokeAllForUser(ctx context.Context, userID uuid.UUID) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
 }

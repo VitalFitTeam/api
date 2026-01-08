@@ -7,8 +7,9 @@ import (
 
 func NewMockStore() Storage {
 	return Storage{
-		Users: authmocks.NewMockUserStore(),
-		Roles: authmocks.NewMockRoleStore(),
-		Audit: auditmocks.NewMockAuditStore(),
+		Users:   authmocks.NewMockUserStore(),
+		Roles:   authmocks.NewMockRoleStore(),
+		Audit:   auditmocks.NewMockAuditStore(),
+		Session: authmocks.NewMockSessionStore(),
 	}
 }
