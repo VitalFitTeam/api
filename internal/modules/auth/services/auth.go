@@ -2,7 +2,6 @@ package authservices
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/vitalfit/api/config"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
 	"github.com/vitalfit/api/pkg/otp"
@@ -268,10 +268,14 @@ func (h *AuthService) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]
 func (h *AuthService) RenewAccessToken(ctx context.Context, oldRefreshToken string) (string, string, error) {
 	session, err := h.store.Session.GetByRefreshToken(ctx, oldRefreshToken)
 	if err != nil {
-		return "", "", errors.New("invalid session or token reused")
+		return "", "", shared_errors.ErrInvalidSession
 	}
 
-	newAccessToken, err := h.GenerateAccessToken(ctx, session.UserID) // Extraje lógica a función auxiliar
+	if session == nil {
+		return "", "", shared_errors.ErrInvalidSession
+	}
+
+	newAccessToken, err := h.GenerateAccessToken(ctx, session.UserID)
 	if err != nil {
 		return "", "", err
 	}
@@ -281,9 +285,11 @@ func (h *AuthService) RenewAccessToken(ctx context.Context, oldRefreshToken stri
 		return "", "", err
 	}
 
-	err = h.store.Session.RotateSession(ctx, session.ID, oldRefreshToken, newRefreshToken)
+	newExpiry := time.Now().Add(h.config.Auth.Token.RefreshExp)
+
+	err = h.store.Session.RotateSession(ctx, session.ID, oldRefreshToken, newRefreshToken, newExpiry)
 	if err != nil {
-		return "", "", errors.New("security alert: token reuse detected, session revoked")
+		return "", "", shared_errors.ErrTokenReuse
 	}
 
 	return newAccessToken, newRefreshToken, nil

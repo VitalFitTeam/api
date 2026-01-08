@@ -2,11 +2,11 @@ package authrepository
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"gorm.io/gorm"
 )
 
@@ -47,10 +47,13 @@ func (s *SessionStore) GetUserSessions(ctx context.Context, userID uuid.UUID) ([
 	return sessions, nil
 }
 
-func (s *SessionStore) RotateSession(ctx context.Context, sessionID uuid.UUID, oldToken, newToken string) error {
+func (s *SessionStore) RotateSession(ctx context.Context, sessionID uuid.UUID, oldToken, newToken string, newExpiry time.Time) error {
 	result := s.db.WithContext(ctx).Model(&authdomain.Session{}).
 		Where("id = ? AND refresh_token = ?", sessionID, oldToken).
-		Update("refresh_token", newToken)
+		Updates(map[string]interface{}{
+			"refresh_token": newToken,
+			"expires_at":    newExpiry,
+		})
 
 	if result.Error != nil {
 		return result.Error
@@ -58,7 +61,7 @@ func (s *SessionStore) RotateSession(ctx context.Context, sessionID uuid.UUID, o
 
 	if result.RowsAffected == 0 {
 		// s.db.Model(&authdomain.Session{}).Where("id = ?", sessionID).Update("is_blocked", true)
-		return errors.New("refresh token mismatch: reuse detection")
+		return shared_errors.ErrRefreshTokenMismatch
 	}
 
 	return nil

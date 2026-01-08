@@ -41,6 +41,11 @@ type AuthHandlersInterface interface {
 	GetPermissionsHandler(c *gin.Context)
 	AssignRolePermissionHandler(c *gin.Context)
 	DeleteRolePermissionHandler(c *gin.Context)
+	//Sessions
+	RenewAccessTokenHandler(c *gin.Context)
+	GetUserSessionsHandler(c *gin.Context)
+	RevokeSessionHandler(c *gin.Context)
+	RevokeAllSessionsHandler(c *gin.Context)
 }
 
 type AuthHandlers struct {
@@ -65,6 +70,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		authGroup.PUT("/activate/:token", r.ActivateStaffHanlder)
 		authGroup.POST("/login", r.LoginHandler)
 		authGroup.POST("/oauth-login", r.OAuthLoginHandler)
+		authGroup.POST("/refresh", r.RenewAccessTokenHandler)
 
 		passwordGroup := authGroup.Group("/password")
 		{
@@ -92,6 +98,10 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		userGroup.GET("/whoami", r.WhoAmI)
 		userGroup.GET("/qr-token", r.GenerateQrJwtTokenHandler)
 		userGroup.POST("/change-password", r.ChangePasswordHandler)
+
+		userGroup.GET("/sessions", r.GetUserSessionsHandler)
+		userGroup.DELETE("/sessions/:id", r.RevokeSessionHandler)
+		userGroup.DELETE("/sessions", r.RevokeAllSessionsHandler)
 
 		userGroup.GET("/branch-admins",
 			m.RBACPermission("users:list"),
