@@ -31,6 +31,7 @@ func (r *CombosHandler) CombosRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware
 	packagesGroup := rg.Group("/packages")
 	{
 		packagesGroup.Use(m.AuthJwtTokenMiddleware())
+		packagesGroup.Use(m.AuditLogMiddleware())
 		packagesGroup.POST("", m.RBACPermission("packages:create"), r.CreatePackageHandler)
 		packagesGroup.GET("", m.RBACPermission("packages:list"), r.GetPackageHandler)
 		packagesGroup.GET("/:id", m.RBACPermission("packages:get"), r.GetPackageByIDHandler)

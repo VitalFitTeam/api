@@ -47,7 +47,7 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, cl
 		}
 	}
 
-	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID)
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID, 0)
 	if err != nil {
 		return uuid.Nil, err
 	}
@@ -94,7 +94,15 @@ func (s *BookingService) CreateBooking(ctx context.Context, userID uuid.UUID, cl
 //
 
 func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID) error {
-	// 1. Obtener los detalles de la reserva para la lógica de negocio.
+	policy, err := s.store.Policies.GetPolicyByKey(ctx, "CLASS_CANCEL_MIN_HOURS")
+	if err != nil {
+		return err
+	}
+	classCancelMinHours, err := policy.GetInt()
+	if err != nil {
+		return err
+	}
+
 	booking, err := s.store.Booking.GetBookingByID(ctx, bookingID)
 	if err != nil {
 		if errors.Is(err, shared_errors.ErrNotFound) {
@@ -108,8 +116,11 @@ func (s *BookingService) CancelBooking(ctx context.Context, bookingID uuid.UUID)
 	}
 	booking.Class = *class
 
-	// 2. Determinar si se debe reponer el saldo del cliente.
-	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, booking.UserID)
+	if time.Until(class.StartsAt) < time.Duration(classCancelMinHours)*time.Hour {
+		return shared_errors.ErrCancellationWindowClosed
+	}
+
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, booking.UserID, 0)
 	if err != nil {
 		return err
 	}
@@ -151,7 +162,7 @@ func (s *BookingService) GetClientActualBook(ctx context.Context, userID, branch
 }
 
 func (s *BookingService) CanAccessService(ctx context.Context, userID, branchID, serviceID uuid.UUID) (bool, error) {
-	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID)
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID, 0)
 	if err != nil {
 		return false, err
 	}

@@ -206,7 +206,6 @@ func (i *CreateInvoicePayload) ToInvoice() *billingdomain.Invoice {
 	invoice := &billingdomain.Invoice{
 		BranchID:       *i.BranchID,
 		IssueDate:      time.Now(),
-		DueDate:        time.Now().AddDate(0, 0, 30),
 		TotalAmount:    decimal.Zero,
 		Tax:            decimal.Zero,
 		Status:         billingdomain.InvoiceStatusUnpaid,

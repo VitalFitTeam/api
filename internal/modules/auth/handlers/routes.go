@@ -75,6 +75,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
 		protectedGroup := authGroup.Group("/").Use(
 			m.AuthJwtTokenMiddleware(),
+			m.AuditLogMiddleware(),
 			m.RBACPermission("users:create"),
 		)
 		{
@@ -86,6 +87,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
 func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	userGroup := rg.Group("/user").Use(m.AuthJwtTokenMiddleware())
+	userGroup.Use(m.AuditLogMiddleware())
 	{ //private routes
 		userGroup.GET("/whoami", r.WhoAmI)
 		userGroup.GET("/qr-token", r.GenerateQrJwtTokenHandler)
@@ -114,6 +116,7 @@ func (r *AuthHandlers) AdminRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) 
 	adminGroup := rg.Group("/admin")
 
 	adminGroup.Use(m.AuthJwtTokenMiddleware())
+	adminGroup.Use(m.AuditLogMiddleware())
 	{
 
 		adminGroup.GET("/permissions", m.RBACPermission("permissions:list"), r.GetPermissionsHandler)

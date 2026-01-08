@@ -40,6 +40,7 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 	ProductGroup := rg.Group("/services")
 	{
 		ProductGroup.Use(m.AuthJwtTokenMiddleware())
+		ProductGroup.Use(m.AuditLogMiddleware())
 		ProductGroup.GET("/categories", m.RBACPermission("services:list"), r.ListServiceCategoriesHandler)
 		ProductGroup.GET("/all", m.RBACPermission("services:list"), r.GetServicesHandler)
 		ProductGroup.GET("/summary", m.RBACPermission("services:list"), r.GetSummaryServicesHandler)
@@ -53,6 +54,7 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 	BranchServicesGroup := rg.Group("/branches/:id/services")
 	{
 		BranchServicesGroup.Use(m.AuthJwtTokenMiddleware())
+		BranchServicesGroup.Use(m.AuditLogMiddleware())
 		BranchServicesGroup.POST("", m.RBACPermission("branch_management"), r.AssignBranchServiceHandler)
 		BranchServicesGroup.GET("", m.RBACPermission("branch_management"), r.GetBranchServiceHandler)
 		BranchServicesGroup.GET("/:service_id", m.RBACPermission("branch_management"), r.GetBranchServiceByIDHandler)

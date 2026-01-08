@@ -437,9 +437,35 @@ func (h *MembershipHandler) GetClientMembershipByID(c *gin.Context) {
 func (h *MembershipHandler) UpdateClientMembership(c *gin.Context) {
 	ctx := c.Request.Context()
 
+	user := h.services.UserServices.GetUserFromContext(c)
+	if user.Role.Name != "client" {
+		permission := "members:update"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
+
 	var payload UpdateClientMembershipPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	if payload.Status == string(membershipsdomain.StatusExpired) {
+		h.services.LogErrors.BadRequestResponse(c, fmt.Errorf("cannot manually set status to Expired"))
+		return
+	}
+
+	if user.Role.Name == "client" && payload.Status == string(membershipsdomain.StatusActive) {
+		h.services.LogErrors.BadRequestResponse(c, fmt.Errorf("clients cannot activate their own membership"))
 		return
 	}
 
@@ -536,6 +562,22 @@ func (h *MembershipHandler) CreateCancellationReasonHandler(c *gin.Context) {
 // @Router			/memberships/cancellation-reasons [get]
 func (h *MembershipHandler) GetCancellationReasonsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
+
+	user := h.services.UserServices.GetUserFromContext(c)
+	if user.Role.Name != "client" {
+		permission := "cancellation-reasons:list"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
 
 	fq := pagination.PaginatedFeedQuery{
 		Limit:  10,

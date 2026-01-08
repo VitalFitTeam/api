@@ -22,7 +22,7 @@ type MembershipsRepository interface {
 
 	UpdateClientMembership(ctx context.Context, membership *ClientMembership) error
 	UpdateClientMembershipStatus(ctx context.Context, membership *ClientMembership) error
-	ClientHasActiveMembership(ctx context.Context, clientID uuid.UUID) (bool, error)
+	ClientHasActiveMembership(ctx context.Context, clientID uuid.UUID, gracePeriodDays int) (bool, error)
 	GetClientMembership(ctx context.Context, clientID uuid.UUID) (*ClientMembership, error)
 	GetClientsMemberships(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*ClientMembership, int64, error)
 	GetClientMembershipByID(ctx context.Context, clientMembershipID uuid.UUID) (*ClientMembership, error)
