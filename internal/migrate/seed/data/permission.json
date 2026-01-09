@@ -302,5 +302,17 @@
   {
     "name": "booking:schedule:list",
     "description": "Allows listing client schedules"
+  },
+  {
+    "name": "medical_info:create",
+    "description": "Allows creating medical information for clients"
+  },
+  {
+    "name": "medical_info:read",
+    "description": "Allows viewing medical information for clients"
+  },
+  {
+    "name": "medical_info:update",
+    "description": "Allows updating medical information for clients"
   }
 ]

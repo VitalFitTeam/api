@@ -108,6 +108,8 @@ func (app *application) Mount() http.Handler {
 
 		//wishlist
 		app.Handlers.WishlistHandlers.SetupRoutes(v1, m)
+		//clients
+		app.Handlers.ClientHandlers.ClientRoutes(v1, m)
 
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

@@ -11,6 +11,8 @@ import (
 	bookingrepository "github.com/vitalfit/api/internal/modules/booking/repository"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchrepository "github.com/vitalfit/api/internal/modules/branches/repository"
+	clientsdomain "github.com/vitalfit/api/internal/modules/clients/domain"
+	clientsrepository "github.com/vitalfit/api/internal/modules/clients/repository"
 	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
 	combosrepository "github.com/vitalfit/api/internal/modules/combos/repository"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
@@ -59,6 +61,7 @@ type Storage struct {
 	Staff           staffdomain.StaffRepository
 	Policies        policiesdomain.PoliciesRepository
 	Wishlist        wishlistdomain.WishlistRepository
+	Client          clientsdomain.ClientRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -84,5 +87,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Staff:           staffrepository.NewStaffStore(db),
 		Policies:        policiesrepository.NewPoliciesStore(db),
 		Wishlist:        wishlistrepository.NewWishlistStore(db),
+		Client:          clientsrepository.NewClientStore(db),
 	}
 }

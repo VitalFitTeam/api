@@ -5266,6 +5266,237 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/medical-info": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves medical information for a specific client. Only authorized roles can view medical info.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Get Medical Information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Medical information retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/clientshandler.MedicalInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates existing medical information for a client. Only authorized roles can update medical info.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Update Medical Information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Medical Information Update Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientshandler.UpdateMedicalInfoPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Medical information updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates new medical information for a client. Only authorized roles can create medical info.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Create Medical Information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Medical Information Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientshandler.CreateMedicalInfoPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Medical information created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/clientshandler.MedicalInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Medical info already exists",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/equipment-types": {
             "get": {
                 "security": [
@@ -13363,6 +13594,98 @@ const docTemplate = `{
                 "tax_id": {
                     "type": "string",
                     "minLength": 5
+                }
+            }
+        },
+        "clientshandler.CreateMedicalInfoPayload": {
+            "type": "object",
+            "properties": {
+                "allergies": {
+                    "type": "string",
+                    "example": "Penicillin, Peanuts"
+                },
+                "blood_type": {
+                    "type": "string",
+                    "example": "O+"
+                },
+                "emergency_contact": {
+                    "type": "string",
+                    "example": "Jane Doe - +1234567890 (Wife)"
+                },
+                "medical_conditions": {
+                    "type": "string",
+                    "example": "Diabetes Type 2, Hypertension"
+                },
+                "medical_risks": {
+                    "type": "string",
+                    "example": "High blood pressure, family history of heart disease"
+                },
+                "medications": {
+                    "type": "string",
+                    "example": "Metformin 500mg daily"
+                },
+                "warnings": {
+                    "type": "string",
+                    "example": "Avoid high-intensity exercises"
+                }
+            }
+        },
+        "clientshandler.MedicalInfoResponse": {
+            "type": "object",
+            "properties": {
+                "allergies": {
+                    "type": "string"
+                },
+                "blood_type": {
+                    "type": "string"
+                },
+                "emergency_contact": {
+                    "type": "string"
+                },
+                "medical_conditions": {
+                    "type": "string"
+                },
+                "medical_risks": {
+                    "type": "string"
+                },
+                "medications": {
+                    "type": "string"
+                },
+                "warnings": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientshandler.UpdateMedicalInfoPayload": {
+            "type": "object",
+            "properties": {
+                "allergies": {
+                    "type": "string",
+                    "example": "Penicillin, Peanuts"
+                },
+                "blood_type": {
+                    "type": "string",
+                    "example": "O+"
+                },
+                "emergency_contact": {
+                    "type": "string",
+                    "example": "Jane Doe - +1234567890 (Wife)"
+                },
+                "medical_conditions": {
+                    "type": "string",
+                    "example": "Diabetes Type 2, Hypertension"
+                },
+                "medical_risks": {
+                    "type": "string",
+                    "example": "High blood pressure, family history of heart disease"
+                },
+                "medications": {
+                    "type": "string",
+                    "example": "Metformin 500mg daily"
+                },
+                "warnings": {
+                    "type": "string",
+                    "example": "Avoid high-intensity exercises"
                 }
             }
         },

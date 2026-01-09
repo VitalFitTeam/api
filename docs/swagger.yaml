@@ -965,6 +965,71 @@ definitions:
     - state
     - tax_id
     type: object
+  clientshandler.CreateMedicalInfoPayload:
+    properties:
+      allergies:
+        example: Penicillin, Peanuts
+        type: string
+      blood_type:
+        example: O+
+        type: string
+      emergency_contact:
+        example: Jane Doe - +1234567890 (Wife)
+        type: string
+      medical_conditions:
+        example: Diabetes Type 2, Hypertension
+        type: string
+      medical_risks:
+        example: High blood pressure, family history of heart disease
+        type: string
+      medications:
+        example: Metformin 500mg daily
+        type: string
+      warnings:
+        example: Avoid high-intensity exercises
+        type: string
+    type: object
+  clientshandler.MedicalInfoResponse:
+    properties:
+      allergies:
+        type: string
+      blood_type:
+        type: string
+      emergency_contact:
+        type: string
+      medical_conditions:
+        type: string
+      medical_risks:
+        type: string
+      medications:
+        type: string
+      warnings:
+        type: string
+    type: object
+  clientshandler.UpdateMedicalInfoPayload:
+    properties:
+      allergies:
+        example: Penicillin, Peanuts
+        type: string
+      blood_type:
+        example: O+
+        type: string
+      emergency_contact:
+        example: Jane Doe - +1234567890 (Wife)
+        type: string
+      medical_conditions:
+        example: Diabetes Type 2, Hypertension
+        type: string
+      medical_risks:
+        example: High blood pressure, family history of heart disease
+        type: string
+      medications:
+        example: Metformin 500mg daily
+        type: string
+      warnings:
+        example: Avoid high-intensity exercises
+        type: string
+    type: object
   comboshandler.CreatePackageItemRequest:
     properties:
       serviceId:
@@ -5848,6 +5913,164 @@ paths:
       summary: Update a client membership
       tags:
       - Memberships
+  /clients/{id}/medical-info:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves medical information for a specific client. Only authorized
+        roles can view medical info.
+      parameters:
+      - description: Client User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Medical information retrieved successfully
+          schema:
+            $ref: '#/definitions/clientshandler.MedicalInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Medical Information
+      tags:
+      - Clients
+    post:
+      consumes:
+      - application/json
+      description: Creates new medical information for a client. Only authorized roles
+        can create medical info.
+      parameters:
+      - description: Client User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Medical Information Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/clientshandler.CreateMedicalInfoPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Medical information created successfully
+          schema:
+            $ref: '#/definitions/clientshandler.MedicalInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict - Medical info already exists
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create Medical Information
+      tags:
+      - Clients
+    put:
+      consumes:
+      - application/json
+      description: Updates existing medical information for a client. Only authorized
+        roles can update medical info.
+      parameters:
+      - description: Client User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Medical Information Update Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/clientshandler.UpdateMedicalInfoPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Medical information updated successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update Medical Information
+      tags:
+      - Clients
   /equipment-types:
     get:
       description: Lists all available equipment types in the global catalog with

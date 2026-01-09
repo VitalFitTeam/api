@@ -46,7 +46,10 @@
     "cancellation-reasons:list",
     "cancellation-reasons:update",
     "cancellation-reasons:delete",
-    "access:check_in"
+    "access:check_in",
+    "medical_info:create",
+    "medical_info:read",
+    "medical_info:update"
   ],
   "recepcionist": [
     "users:create",

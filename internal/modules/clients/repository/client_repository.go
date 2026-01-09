@@ -1,0 +1,71 @@
+package clientsrepository
+
+import (
+	"context"
+
+	"github.com/google/uuid"
+	clientsdomain "github.com/vitalfit/api/internal/modules/clients/domain"
+	"gorm.io/gorm"
+)
+
+type ClientStore struct {
+	db *gorm.DB
+}
+
+func NewClientStore(db *gorm.DB) *ClientStore {
+	return &ClientStore{
+		db: db,
+	}
+}
+
+// CreateMedicalInfo creates a new medical info record
+func (r *ClientStore) CreateMedicalInfo(ctx context.Context, medicalInfo *clientsdomain.ClientMedicalInfo) error {
+	return r.db.WithContext(ctx).Create(medicalInfo).Error
+}
+
+// GetMedicalInfoByUserID retrieves medical info for a specific user
+func (r *ClientStore) GetMedicalInfoByUserID(ctx context.Context, userID uuid.UUID) (*clientsdomain.ClientMedicalInfo, error) {
+	var medicalInfo clientsdomain.ClientMedicalInfo
+	err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		First(&medicalInfo).Error
+	if err != nil {
+		return nil, err
+	}
+	return &medicalInfo, nil
+}
+
+// UpdateMedicalInfo updates an existing medical info record
+func (r *ClientStore) UpdateMedicalInfo(ctx context.Context, medicalInfo *clientsdomain.ClientMedicalInfo) error {
+	return r.db.WithContext(ctx).
+		Model(&clientsdomain.ClientMedicalInfo{}).
+		Where("user_id = ?", medicalInfo.UserID).
+		Updates(medicalInfo).Error
+}
+
+// DeleteMedicalInfo soft deletes a medical info record
+func (r *ClientStore) DeleteMedicalInfo(ctx context.Context, userID uuid.UUID) error {
+	return r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Delete(&clientsdomain.ClientMedicalInfo{}).Error
+}
+
+// CreateAuditLog creates an audit log entry
+func (r *ClientStore) CreateAuditLog(ctx context.Context, auditLog *clientsdomain.MedicalInfoAuditLog) error {
+	return r.db.WithContext(ctx).Create(auditLog).Error
+}
+
+// GetAuditLogsByUserID retrieves audit logs for a specific user with pagination
+func (r *ClientStore) GetAuditLogsByUserID(ctx context.Context, userID uuid.UUID, limit, offset int) ([]clientsdomain.MedicalInfoAuditLog, error) {
+	var auditLogs []clientsdomain.MedicalInfoAuditLog
+	err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&auditLogs).Error
+	if err != nil {
+		return nil, err
+	}
+	return auditLogs, nil
+}
