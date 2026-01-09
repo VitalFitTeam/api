@@ -45,7 +45,7 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 		clientMembershipsGroup.Use(m.AuditLogMiddleware())
 		clientMembershipsGroup.GET("", m.RBACPermission("members:list"), r.GetClientsMemberships)
 		clientMembershipsGroup.GET("/:clientMembershipId", m.RBACPermission("members:get"), r.GetClientMembershipByID)
-		clientMembershipsGroup.PUT("/:clientMembershipId", m.RBACPermission("members:update"), r.UpdateClientMembership)
+		clientMembershipsGroup.PUT("/:clientMembershipId", r.UpdateClientMembership)
 	}
 
 	// Cancellation Reasons routes
