@@ -29,6 +29,7 @@ func (h *BookingHandlers) BookingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	scheduleRoutes := rg.Group("/schedule")
 	{
 		scheduleRoutes.Use(m.AuthJwtTokenMiddleware())
+		scheduleRoutes.Use(m.AuditLogMiddleware())
 		scheduleRoutes.GET("/branch/:branchId/client", h.GetClientScheduleHandler)
 		scheduleRoutes.GET("/branch/:branchId/client/:userId", h.GetClientScheduleHandler)
 		scheduleRoutes.POST("/:classId/book", h.CreateBookingHandler)
@@ -38,6 +39,7 @@ func (h *BookingHandlers) BookingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	bookingRoutes := rg.Group("/bookings")
 	{
 		bookingRoutes.Use(m.AuthJwtTokenMiddleware())
+		bookingRoutes.Use(m.AuditLogMiddleware())
 		bookingRoutes.GET("/client", h.GetClientBookingsHandler)
 		bookingRoutes.GET("/client/:userId", h.GetClientBookingsHandler)
 		bookingRoutes.PATCH("/:bookingId/cancel", h.CancelBookingHandler)

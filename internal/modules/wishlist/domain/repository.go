@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type WishlistRepository interface {
@@ -14,7 +15,7 @@ type WishlistRepository interface {
 	RemoveFromWishlist(ctx context.Context, wishlistID uuid.UUID) error
 
 	// GetUserWishlist retrieves all wishlist items for a user with service details
-	GetUserWishlist(ctx context.Context, userID uuid.UUID) ([]*WishlistWithService, error)
+	GetUserWishlist(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*WishlistWithService, int64, error)
 
 	// WishlistExists checks if a user already has a service in their wishlist
 	WishlistExists(ctx context.Context, userID, serviceID uuid.UUID) (bool, error)

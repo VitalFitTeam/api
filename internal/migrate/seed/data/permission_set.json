@@ -47,6 +47,7 @@
     "cancellation-reasons:update",
     "cancellation-reasons:delete",
     "access:check_in",
+    "branch_management",
     "medical_info:create",
     "medical_info:read",
     "medical_info:update"
@@ -81,7 +82,8 @@
     "services:list",
     "services:get",
     "branches:list",
-    "instructors:get"
+    "instructors:get",
+    "booking:list"
   ],
   "accountant": [
     "billing:list",

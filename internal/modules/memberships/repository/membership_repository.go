@@ -226,13 +226,13 @@ func (s *MembershipStore) UpdateClientMembershipStatus(ctx context.Context, memb
 	return nil
 }
 
-func (s *MembershipStore) ClientHasActiveMembership(ctx context.Context, clientID uuid.UUID) (bool, error) {
+func (s *MembershipStore) ClientHasActiveMembership(ctx context.Context, clientID uuid.UUID, gracePeriodDays int) (bool, error) {
 	var count int64
 	err := s.db.WithContext(ctx).
 		Model(&membershipsdomain.ClientMembership{}).
 		Where("user_id = ?", clientID).
 		Where("status = ?", membershipsdomain.StatusActive).
-		Where("end_date >= ?", time.Now()).
+		Where("end_date >= ?", time.Now().AddDate(0, 0, -gracePeriodDays)).
 		Count(&count).Error
 
 	if err != nil {

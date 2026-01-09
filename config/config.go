@@ -55,10 +55,11 @@ type AuthConfig struct {
 	Token TokenConfig
 }
 type TokenConfig struct {
-	Secret string
-	Exp    time.Duration
-	Iss    string
-	Aud    string
+	Secret     string
+	AccessExp  time.Duration
+	RefreshExp time.Duration
+	Iss        string
+	Aud        string
 }
 
 type ClerkConfig struct {
@@ -85,10 +86,11 @@ func LoadConfig() *Config {
 		},
 		Auth: AuthConfig{
 			Token: TokenConfig{
-				Secret: env.GetString("JWT_SECRET", ""),
-				Exp:    time.Hour * 24 * 3, //3 days
-				Iss:    env.GetString("JWT_ISS", ""),
-				Aud:    env.GetString("JWT_AUD", ""),
+				Secret:     env.GetString("JWT_SECRET", ""),
+				AccessExp:  time.Minute * 15,
+				RefreshExp: time.Hour * 24 * 7, //7 days
+				Iss:        env.GetString("JWT_ISS", ""),
+				Aud:        env.GetString("JWT_AUD", ""),
 			},
 		},
 		RateLimiter: ratelimiter.Config{

@@ -13,6 +13,9 @@ type ScheduleRepository interface {
 	// CreateClass crea una nueva clase programada.
 	CreateClass(ctx context.Context, class *Class) error
 
+	// CreateClasses crea múltiples clases programadas (para recurrencia).
+	CreateClasses(ctx context.Context, classes []Class) error
+
 	// GetClassesByBranch obtiene todas las clases programadas de una sucursal.
 	GetClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]Class, error)
 
@@ -24,6 +27,9 @@ type ScheduleRepository interface {
 
 	// DeleteClass elimina (o realiza soft-delete) una clase programada.
 	DeleteClass(ctx context.Context, classID uuid.UUID) error
+
+	// GetUpcomingClassesByBranch obtiene las clases futuras (o en curso) de una sucursal.
+	GetUpcomingClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]Class, error)
 
 	GetAvailableClassesForBranch(ctx context.Context, branchID uuid.UUID, startTime, endTime time.Time) ([]Class, error)
 }

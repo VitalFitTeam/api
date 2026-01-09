@@ -4,6 +4,8 @@ import (
 	"github.com/vitalfit/api/config"
 	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	accessservice "github.com/vitalfit/api/internal/modules/access/service"
+	auditdomain "github.com/vitalfit/api/internal/modules/audit/domain"
+	auditservice "github.com/vitalfit/api/internal/modules/audit/services"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	authservices "github.com/vitalfit/api/internal/modules/auth/services"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
@@ -65,6 +67,7 @@ type Services struct {
 	Staff              staffdomain.StaffServiceInterface
 	Policies           policiesdomain.PoliciesServicesInterface
 	WishlistServices   wishlistdomain.WishlistService
+	AuditServices      auditdomain.AuditService
 	ClientServices     clientsdomain.ClientServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
@@ -92,6 +95,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		Staff:              staffservice.NewStaffService(store),
 		Policies:           policiesservices.NewPoliciesServices(store),
 		WishlistServices:   wishlistservice.NewWishlistService(store),
+		AuditServices:      auditservice.NewAuditService(store),
 		ClientServices:     clientsservice.NewClientService(store, cfg.EncryptionKey),
 		LogErrors:          logs.NewLogErrors(logger),
 		Logger:             logger,

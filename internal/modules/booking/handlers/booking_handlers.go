@@ -2,9 +2,11 @@ package bookinghandlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/pkg/pagination"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -182,6 +184,10 @@ func (h *BookingHandlers) CancelBookingHandler(c *gin.Context) {
 		}
 	}
 	if err := h.services.BookingServices.CancelBooking(ctx, bookingID); err != nil {
+		if errors.Is(err, shared_errors.ErrCancellationWindowClosed) {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
@@ -277,6 +283,9 @@ func (h *BookingHandlers) GetClassBookingsCountHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Produce		json
 // @Param			classId	path		string										true	"Class UUID"
+// @Param			limit	query		int											false	"Number of results per page"	default(10)
+// @Param			page	query		int											false	"Page number for pagination"	default(1)
+// @Param			sort	query		string										false	"Sort order (asc/desc)"			enums(asc, desc)	default(desc)
 // @Success		200		{object}	object{data=[]BookingWithUserInfoResponse}	"Bookings list"
 // @Failure		400		{object}	map[string]interface{}						"Bad Request"
 // @Failure		500		{object}	map[string]interface{}						"Internal Server Error"
@@ -284,13 +293,32 @@ func (h *BookingHandlers) GetClassBookingsCountHandler(c *gin.Context) {
 func (h *BookingHandlers) GetBookingsByClassHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
+	fq := pagination.PaginatedFeedQuery{
+		Limit: 10,
+		Page:  1,
+		Sort:  "asc", // Default to ASC for bookings (oldest first usually)
+	}
+
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
 	classID, err := uuid.Parse(c.Param("classId"))
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, errors.New("invalid classId format"))
 		return
 	}
 
-	bookings, err := h.services.BookingServices.GetBookingsByClass(ctx, classID)
+	nextURL := fmt.Sprintf("/bookings/class/%s?limit=%d&page=%d&sort=%s", classID, fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/bookings/class/%s?limit=%d&page=%d&sort=%s", classID, fq.Limit, previousPage, fq.Sort)
+
+	bookings, total, err := h.services.BookingServices.GetBookingsByClass(ctx, classID, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -310,5 +338,12 @@ func (h *BookingHandlers) GetBookingsByClassHandler(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": response})
+	resp := pagination.PaginatedResponseTotal[*BookingWithUserInfoResponse]{
+		Data:     response,
+		Count:    int64(len(bookings)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+	c.JSON(http.StatusOK, resp)
 }

@@ -13,6 +13,7 @@ type WishlistRoutes interface {
 func (h *WishlistHandlers) SetupRoutes(router *gin.RouterGroup, m *auth.AuthMiddleware) {
 	wishlistRoutes := router.Group("/wishlist")
 	wishlistRoutes.Use(m.AuthJwtTokenMiddleware())
+	wishlistRoutes.Use(m.AuditLogMiddleware())
 	{
 		wishlistRoutes.POST("", h.AddToWishlistHandler)
 		wishlistRoutes.DELETE("/:id", h.RemoveFromWishlistHandler)

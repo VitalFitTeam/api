@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type BookingServiceInterface interface {
@@ -16,5 +17,5 @@ type BookingServiceInterface interface {
 	GetClientActualBook(ctx context.Context, userID, branchID uuid.UUID, startsAt time.Time, endsAt time.Time) (*Booking, error)
 	CanAccessService(ctx context.Context, userID, branchID, serviceID uuid.UUID) (bool, error)
 	CountBookingsForClass(ctx context.Context, classID uuid.UUID) (int64, error)
-	GetBookingsByClass(ctx context.Context, classID uuid.UUID) ([]*BookingWithUserInfo, error)
+	GetBookingsByClass(ctx context.Context, classID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*BookingWithUserInfo, int64, error)
 }

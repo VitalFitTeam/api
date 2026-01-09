@@ -12,13 +12,15 @@ import (
 // --------------------
 
 type CreateClassPayload struct {
-	ServiceID    string    `json:"service_id" binding:"required"`
-	InstructorID string    `json:"instructor_id" binding:"required"`
-	StartsAt     time.Time `json:"starts_at" binding:"required"`
-	EndsAt       time.Time `json:"ends_at" binding:"required"`
-	MaxCapacity  int       `json:"max_capacity" binding:"required,gte=1"`
-	IsVisible    bool      `json:"is_visible"`
-	Notes        string    `json:"notes"`
+	ServiceID       string    `json:"service_id" binding:"required"`
+	InstructorID    string    `json:"instructor_id" binding:"required"`
+	StartsAt        time.Time `json:"starts_at" binding:"required"`
+	EndsAt          time.Time `json:"ends_at" binding:"required"`
+	MaxCapacity     int       `json:"max_capacity" binding:"required,gte=1"`
+	IsVisible       bool      `json:"is_visible"`
+	Notes           string    `json:"notes"`
+	Recurrence      string    `json:"recurrence" binding:"omitempty,oneof=daily weekly none"`
+	RecurrenceUntil time.Time `json:"recurrence_until"`
 }
 
 func (p *CreateClassPayload) ToClass(branchID uuid.UUID) (*scheduledomain.Class, error) {

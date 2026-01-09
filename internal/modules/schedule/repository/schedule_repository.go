@@ -34,6 +34,19 @@ func (s *ScheduleStore) CreateClass(ctx context.Context, class *scheduledomain.C
 }
 
 // ----------------------------------------
+// CreateClasses (Batch)
+// ----------------------------------------
+
+func (s *ScheduleStore) CreateClasses(ctx context.Context, classes []scheduledomain.Class) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).Create(&classes).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// ----------------------------------------
 // GetClassesByBranch
 // ----------------------------------------
 
@@ -47,6 +60,35 @@ func (s *ScheduleStore) GetClassesByBranch(ctx context.Context, branchID uuid.UU
 			Preload("Instructor").
 			Preload("Branch").
 			Where("branch_id = ?", branchID).
+			Find(&classes).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return classes, nil
+}
+
+// ----------------------------------------
+// GetUpcomingClassesByBranch
+// ----------------------------------------
+
+func (s *ScheduleStore) GetUpcomingClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]scheduledomain.Class, error) {
+	var classes []scheduledomain.Class
+
+	err := db.WithTX(s.db, func(tx *gorm.DB) error {
+
+		if err := tx.WithContext(ctx).
+			Preload("Service").
+			Preload("Instructor").
+			Preload("Branch").
+			Where("branch_id = ?", branchID).
+			Where("ends_at > ?", time.Now()).
 			Find(&classes).Error; err != nil {
 			return err
 		}

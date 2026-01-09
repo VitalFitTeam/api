@@ -197,3 +197,34 @@ func (h *ReportHanlders) GetNewVsRecurringChartHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": data})
 }
+
+// @Summary		Get Sales By Demographics
+// @Description	Retrieves sales volume grouped by demographic dimension (age or gender).
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string									false	"Filter by Branch UUID"
+// @Param			start		query		string									false	"Start date (YYYY-MM-DD)"
+// @Param			end			query		string									false	"End date (YYYY-MM-DD)"
+// @Param			dimension	query		string									true	"Dimension: 'age' or 'gender'"
+// @Success		200			{object}	object{data=[]reportdomain.ChartData}	"Demographic sales data"
+// @Failure		500			{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/charts/sales-by-demographics [get]
+func (h *ReportHanlders) GetSalesByDemographicsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	start, end := parseTimeRange(c)
+	dimension := c.Query("dimension")
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	data, err := h.services.ReportServices.GetSalesByDemographics(ctx, branchID, start, end, dimension)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}

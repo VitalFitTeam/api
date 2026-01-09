@@ -53,6 +53,7 @@ func NewBillingHandlers(services appservices.Services) *BillingHandlers {
 func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	billingGroup := rg.Group("/billing")
 	billingGroup.Use(m.AuthJwtTokenMiddleware())
+	billingGroup.Use(m.AuditLogMiddleware())
 
 	billingGroup.GET("/rates", r.GetRates)
 	billingGroup.GET("/rates/:currency", r.GetSpecificCurrencyRates)
@@ -69,12 +70,13 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 
 	branchPaymentMethodsGroup := rg.Group("/branches/:id/payment-methods")
 	branchPaymentMethodsGroup.Use(m.AuthJwtTokenMiddleware())
+	branchPaymentMethodsGroup.Use(m.AuditLogMiddleware())
 	{
 		branchPaymentMethodsGroup.GET("", r.GetPaymentMethodsFromBranchHandler)
-		branchPaymentMethodsGroup.POST("", m.RBACPermission("billing:create"), r.AddPaymentMethodsToBranchHandler)
+		branchPaymentMethodsGroup.POST("", m.RBACPermission("branch_management"), r.AddPaymentMethodsToBranchHandler)
 		branchPaymentMethodsGroup.GET("/:method_id", r.GetBranchPaymentMethodByIDHandler)
-		branchPaymentMethodsGroup.PUT("/:method_id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodFromBranchHandler)
-		branchPaymentMethodsGroup.DELETE("/:method_id", m.RBACPermission("billing:delete"), r.DeletePaymentMethodsFromBranchHandler)
+		branchPaymentMethodsGroup.PUT("/:method_id", m.RBACPermission("branch_management"), r.UpdatePaymentMethodFromBranchHandler)
+		branchPaymentMethodsGroup.DELETE("/:method_id", m.RBACPermission("branch_management"), r.DeletePaymentMethodsFromBranchHandler)
 	}
 
 	fiscalDocumentTypesGroup := billingGroup.Group("/fiscal-document-types")

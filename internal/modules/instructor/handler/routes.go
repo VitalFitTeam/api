@@ -32,7 +32,9 @@ func NewInstructorHandlers(services appservices.Services) *InstructorHandlers {
 
 func (r *InstructorHandlers) InstructorRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
-	instructorGroup := rg.Group("/instructor").Use(m.AuthJwtTokenMiddleware())
+	instructorGroup := rg.Group("/instructor")
+	instructorGroup.Use(m.AuthJwtTokenMiddleware())
+	instructorGroup.Use(m.AuditLogMiddleware())
 	{
 		instructorGroup.POST("", m.RBACPermission("instructors:create"), r.CreateInstructorHandler)
 		instructorGroup.GET("", m.RBACPermission("instructors:list"), r.GetInstructorsHandler)
@@ -44,10 +46,12 @@ func (r *InstructorHandlers) InstructorRoutes(rg *gin.RouterGroup, m *auth.AuthM
 		instructorGroup.DELETE("/:id/specialty/:specialty_id", m.RBACPermission("instructors:update"), r.DeleteInstructorSpecialtyHandler)
 	}
 
-	branchInstructorGroup := rg.Group("/branches/:id/instructor").Use(m.AuthJwtTokenMiddleware())
+	branchInstructorGroup := rg.Group("/branches/:id/instructor")
+	branchInstructorGroup.Use(m.AuthJwtTokenMiddleware())
+	branchInstructorGroup.Use(m.AuditLogMiddleware())
 	{
-		branchInstructorGroup.POST("", m.RBACPermission("instructors:create"), r.AssignInstructorsToBranchHandler)
+		branchInstructorGroup.POST("", m.RBACPermission("branch_management"), r.AssignInstructorsToBranchHandler)
 		branchInstructorGroup.GET("", m.RBACPermission("instructors:list"), r.ListBranchInstructorsHandler)
-		branchInstructorGroup.DELETE("/:instructor_id", m.RBACPermission("instructors:delete"), r.RemoveInstructorFromBranchHandler)
+		branchInstructorGroup.DELETE("/:instructor_id", m.RBACPermission("branch_management"), r.RemoveInstructorFromBranchHandler)
 	}
 }

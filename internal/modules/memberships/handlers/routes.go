@@ -29,6 +29,7 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 	membershipPlansGroup := rg.Group("/membership-plans")
 	{
 		membershipPlansGroup.Use(m.AuthJwtTokenMiddleware())
+		membershipPlansGroup.Use(m.AuditLogMiddleware())
 
 		membershipPlansGroup.POST("", m.RBACPermission("memberships:create"), r.CreateMembershipHandler)
 		membershipPlansGroup.GET("", m.RBACPermission("memberships:list"), r.GetMembershipsHandler)
@@ -41,6 +42,7 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 	clientMembershipsGroup := rg.Group("/client-memberships")
 	{
 		clientMembershipsGroup.Use(m.AuthJwtTokenMiddleware())
+		clientMembershipsGroup.Use(m.AuditLogMiddleware())
 		clientMembershipsGroup.GET("", m.RBACPermission("members:list"), r.GetClientsMemberships)
 		clientMembershipsGroup.GET("/:clientMembershipId", m.RBACPermission("members:get"), r.GetClientMembershipByID)
 		clientMembershipsGroup.PUT("/:clientMembershipId", m.RBACPermission("members:update"), r.UpdateClientMembership)
@@ -51,6 +53,7 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 	cancellationReasonsGroup := rg.Group("/memberships/cancellation-reasons")
 	{
 		cancellationReasonsGroup.Use(m.AuthJwtTokenMiddleware())
+		cancellationReasonsGroup.Use(m.AuditLogMiddleware())
 		cancellationReasonsGroup.POST("", m.RBACPermission("cancellation-reasons:create"), r.CreateCancellationReasonHandler)
 		cancellationReasonsGroup.GET("", m.RBACPermission("cancellation-reasons:list"), r.GetCancellationReasonsHandler)
 		cancellationReasonsGroup.PUT("/:id", m.RBACPermission("cancellation-reasons:update"), r.UpdateCancellationReasonHandler)

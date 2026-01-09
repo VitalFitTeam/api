@@ -41,6 +41,13 @@ type AuthHandlersInterface interface {
 	GetPermissionsHandler(c *gin.Context)
 	AssignRolePermissionHandler(c *gin.Context)
 	DeleteRolePermissionHandler(c *gin.Context)
+	//Sessions
+	RenewAccessTokenHandler(c *gin.Context)
+	GetUserSessionsHandler(c *gin.Context)
+	GetUserSessionsByIDHandler(c *gin.Context)
+	RevokeSessionHandler(c *gin.Context)
+	RevokeAllSessionsHandler(c *gin.Context)
+	RevokeAllSessionsByIDHandler(c *gin.Context)
 }
 
 type AuthHandlers struct {
@@ -65,6 +72,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		authGroup.PUT("/activate/:token", r.ActivateStaffHanlder)
 		authGroup.POST("/login", r.LoginHandler)
 		authGroup.POST("/oauth-login", r.OAuthLoginHandler)
+		authGroup.POST("/refresh", r.RenewAccessTokenHandler)
 
 		passwordGroup := authGroup.Group("/password")
 		{
@@ -75,6 +83,7 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
 		protectedGroup := authGroup.Group("/").Use(
 			m.AuthJwtTokenMiddleware(),
+			m.AuditLogMiddleware(),
 			m.RBACPermission("users:create"),
 		)
 		{
@@ -86,10 +95,17 @@ func (r *AuthHandlers) AuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 
 func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	userGroup := rg.Group("/user").Use(m.AuthJwtTokenMiddleware())
+	userGroup.Use(m.AuditLogMiddleware())
 	{ //private routes
 		userGroup.GET("/whoami", r.WhoAmI)
 		userGroup.GET("/qr-token", r.GenerateQrJwtTokenHandler)
 		userGroup.POST("/change-password", r.ChangePasswordHandler)
+
+		userGroup.GET("/sessions", r.GetUserSessionsHandler)
+		userGroup.GET("/:id/sessions", r.GetUserSessionsByIDHandler)
+		userGroup.DELETE("/sessions/:id", r.RevokeSessionHandler)
+		userGroup.DELETE("/sessions", r.RevokeAllSessionsHandler)
+		userGroup.DELETE("/:id/sessions", r.RevokeAllSessionsByIDHandler)
 
 		userGroup.GET("/branch-admins",
 			m.RBACPermission("users:list"),
@@ -114,6 +130,7 @@ func (r *AuthHandlers) AdminRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) 
 	adminGroup := rg.Group("/admin")
 
 	adminGroup.Use(m.AuthJwtTokenMiddleware())
+	adminGroup.Use(m.AuditLogMiddleware())
 	{
 
 		adminGroup.GET("/permissions", m.RBACPermission("permissions:list"), r.GetPermissionsHandler)

@@ -27,9 +27,17 @@ func NewAccessServices(store store.Storage, bookingservice bookingservice.Bookin
 
 func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uuid.UUID) (*accessdomain.CheckInResponse, error) {
 	now := time.Now()
+	policy, err := s.store.Policies.GetPolicyByKey(ctx, "ACCESS_WINDOW_BEFORE_CLASS")
+	if err != nil {
+		return nil, err
+	}
+	accessWindowBeforeClass, err := policy.GetInt()
+	if err != nil {
+		return nil, err
+	}
 
-	bookingStartTime := now.Add(-15 * time.Minute)
-	bookingEndTime := now.Add(15 * time.Minute)
+	bookingStartTime := now.Add(-time.Duration(accessWindowBeforeClass) * time.Minute)
+	bookingEndTime := now.Add(time.Duration(accessWindowBeforeClass) * time.Minute)
 
 	booking, err := s.store.Booking.GetClientActualBook(ctx, userID, branchID, bookingStartTime, bookingEndTime)
 	if err != nil && !errors.Is(err, shared_errors.ErrNotFound) {
@@ -97,7 +105,16 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 		return nil, err
 	}
 
-	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID)
+	gracePolicy, err := s.store.Policies.GetPolicyByKey(ctx, "ACCESS_GRACE_PERIOD")
+	if err != nil {
+		return nil, err
+	}
+	accessGracePeriod, err := gracePolicy.GetInt()
+	if err != nil {
+		return nil, err
+	}
+
+	isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID, accessGracePeriod)
 	if err != nil {
 		return nil, err
 	}

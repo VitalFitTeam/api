@@ -268,6 +268,226 @@ func (h *AuthHandlers) ActivateStaffHanlder(c *gin.Context) {
 
 }
 
+// @Summary		Renew Access Token
+// @Description	Rotates the refresh token and issues a new access token.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		RenewTokenPayload		true	"Refresh Token Payload"
+// @Success		200		{object}	map[string]string		"tokens"
+// @Failure		400		{object}	map[string]interface{}	"Bad Request"
+// @Failure		401		{object}	map[string]interface{}	"Unauthorized"
+// @Failure		500		{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/auth/refresh [post]
+func (h *AuthHandlers) RenewAccessTokenHandler(c *gin.Context) {
+	var payload RenewTokenPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	ctx := c.Request.Context()
+	accessToken, refreshToken, err := h.services.AuthServices.RenewAccessToken(ctx, payload.RefreshToken)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrInvalidSession, shared_errors.ErrTokenReuse:
+			h.services.LogErrors.UnauthorizedErrorResponse(c, err)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"token":         accessToken,
+		"refresh_token": refreshToken,
+	})
+}
+
+// @Summary		Get User Sessions
+// @Description	Retrieves all active sessions for the authenticated user.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=[]authdomain.Session}
+// @Failure		500	{object}	object{error=string}
+// @Router			/user/sessions [get]
+func (h *AuthHandlers) GetUserSessionsHandler(c *gin.Context) {
+	user := h.services.UserServices.GetUserFromContext(c)
+	ctx := c.Request.Context()
+	sessions, err := h.services.AuthServices.GetUserSessions(ctx, user.UserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": sessions})
+}
+
+// @Summary		Get User Sessions by ID
+// @Description	Retrieves active sessions for a specific user. Clients can only see their own sessions.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id	path		string	true	"User ID"
+// @Success		200	{object}	object{data=[]authdomain.Session}
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		403	{object}	object{error=string}	"Forbidden"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/{id}/sessions [get]
+func (h *AuthHandlers) GetUserSessionsByIDHandler(c *gin.Context) {
+	user := h.services.UserServices.GetUserFromContext(c)
+	ctx := c.Request.Context()
+
+	var targetUserID uuid.UUID
+	var err error
+
+	if user.Role.Name == "client" {
+		targetUserID = user.UserID
+	} else {
+		targetUserID, err = uuid.Parse(c.Param("id"))
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+
+		if user.Role.Name != "super_admin" {
+			if user.UserID != targetUserID {
+				ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, "users:get")
+				if err != nil {
+					h.services.LogErrors.InternalServerError(c, err)
+					return
+				}
+				if !ok {
+					h.services.LogErrors.ForbiddenResponse(c)
+					return
+				}
+			}
+		}
+	}
+
+	sessions, err := h.services.AuthServices.GetUserSessions(ctx, targetUserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": sessions})
+}
+
+// @Summary		Revoke Session
+// @Description	Revokes a specific session by ID.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Param			id	path	string	true	"Session ID"
+// @Success		204	"No Content"
+// @Failure		400	"Bad Request"
+// @Failure		500	"Internal Server Error"
+// @Router			/user/sessions/{id} [delete]
+func (h *AuthHandlers) RevokeSessionHandler(c *gin.Context) {
+	sessionID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	ctx := c.Request.Context()
+
+	// 1. Obtener la sesión para verificar el dueño
+	session, err := h.services.AuthServices.GetSessionByID(ctx, sessionID)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	// 2. Verificar permisos
+	user := h.services.UserServices.GetUserFromContext(c)
+	if user.Role.Name != "super_admin" {
+		if session.UserID != user.UserID {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, "users:update")
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
+
+	if err := h.services.AuthServices.Revoke(ctx, sessionID); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Revoke All Sessions
+// @Description	Revokes all sessions for the authenticated user.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Success		204	"No Content"
+// @Failure		500	"Internal Server Error"
+// @Router			/user/sessions [delete]
+func (h *AuthHandlers) RevokeAllSessionsHandler(c *gin.Context) {
+	user := h.services.UserServices.GetUserFromContext(c)
+	ctx := c.Request.Context()
+	if err := h.services.AuthServices.RevokeAllForUser(ctx, user.UserID); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Revoke All Sessions by User ID
+// @Description	Revokes all sessions for a specific user. Clients can only revoke their own sessions.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Param			id	path	string	true	"User ID"
+// @Success		204	"No Content"
+// @Failure		400	"Bad Request"
+// @Failure		403	"Forbidden"
+// @Failure		500	"Internal Server Error"
+// @Router			/user/{id}/sessions [delete]
+func (h *AuthHandlers) RevokeAllSessionsByIDHandler(c *gin.Context) {
+	user := h.services.UserServices.GetUserFromContext(c)
+	ctx := c.Request.Context()
+
+	var targetUserID uuid.UUID
+	var err error
+
+	if user.Role.Name == "client" {
+		targetUserID = user.UserID
+	} else {
+		targetUserID, err = uuid.Parse(c.Param("id"))
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+
+		if user.Role.Name != "super_admin" {
+			if user.UserID != targetUserID {
+				ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, "users:update")
+				if err != nil {
+					h.services.LogErrors.InternalServerError(c, err)
+					return
+				}
+				if !ok {
+					h.services.LogErrors.ForbiddenResponse(c)
+					return
+				}
+			}
+		}
+	}
+
+	if err := h.services.AuthServices.RevokeAllForUser(ctx, targetUserID); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}
+
 // @Summary		Logs in a user and issues a JWT token
 // @Description	Authenticates the user with email and password, returning an access token upon success.
 // @Tags			Auth
@@ -316,14 +536,17 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := h.services.AuthServices.GenerateToken(user)
+	userAgent := c.Request.UserAgent()
+	clientIP := c.ClientIP()
+	token, refreshToken, err := h.services.AuthServices.GenerateToken(ctx, user, userAgent, clientIP)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": token,
+		"token":         token,
+		"refresh_token": refreshToken,
 	})
 
 }
@@ -404,14 +627,17 @@ func (h *AuthHandlers) OAuthLoginHandler(c *gin.Context) {
 		return
 	}
 
-	internalToken, err := h.services.AuthServices.GenerateToken(user)
+	userAgent := c.Request.UserAgent()
+	clientIP := c.ClientIP()
+	internalToken, refreshToken, err := h.services.AuthServices.GenerateToken(ctx, user, userAgent, clientIP)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"token": internalToken,
+		"token":         internalToken,
+		"refresh_token": refreshToken,
 	})
 }
 

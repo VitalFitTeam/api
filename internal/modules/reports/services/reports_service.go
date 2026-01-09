@@ -187,3 +187,7 @@ func (s *ReportService) GetCohortAnalysis(ctx context.Context, branchID *uuid.UU
 func (s *ReportService) GetMonthlyCashFlowChart(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.ChartData, error) {
 	return s.store.Reports.GetMonthlyCashFlowChart(ctx, branchID)
 }
+
+func (s *ReportService) GetSalesByDemographics(ctx context.Context, branchID *uuid.UUID, start, end time.Time, dimension string) ([]reportdomain.ChartData, error) {
+	return s.store.Reports.GetSalesByDemographics(ctx, branchID, start, end, dimension)
+}

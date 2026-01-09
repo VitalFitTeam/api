@@ -304,6 +304,10 @@
     "description": "Allows listing client schedules"
   },
   {
+    "name": "branch_management",
+    "description": "Allows management of branch operations"
+  },
+  {
     "name": "medical_info:create",
     "description": "Allows creating medical information for clients"
   },

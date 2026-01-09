@@ -21,5 +21,8 @@ func NewPoliciesHandler(services appservices.Services) *PoliciesHandler {
 }
 
 func (h *PoliciesHandler) PolicyRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
-
+	policies := rg.Group("/policies").Use(m.AuthJwtTokenMiddleware()).Use(m.AuditLogMiddleware())
+	policies.PUT("/:id", m.RBACPermission("policy"), h.UpdatePolicyHandler)
+	policies.GET("", m.RBACPermission("policy"), h.GetPoliciesListHandler)
+	policies.GET("/:id", m.RBACPermission("policy"), h.GetPolicyByIDHandler)
 }

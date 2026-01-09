@@ -38,7 +38,8 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	//  EQUIPMENT CATALOG
 	// ==============================
 	equipmentGroup := rg.Group("/equipment-types").
-		Use(m.AuthJwtTokenMiddleware())
+		Use(m.AuthJwtTokenMiddleware()).
+		Use(m.AuditLogMiddleware())
 
 	{
 		equipmentGroup.POST("", r.CreateEquipmentHandler)
@@ -52,13 +53,14 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	//  BRANCH INVENTORY
 	// ==============================
 	branchInventoryGroup := rg.Group("/branches/:id/equipment").
-		Use(m.AuthJwtTokenMiddleware())
+		Use(m.AuthJwtTokenMiddleware()).
+		Use(m.AuditLogMiddleware())
 
 	{
-		branchInventoryGroup.POST("", r.AddInventoryItemHandler)
-		branchInventoryGroup.GET("", r.ListBranchInventoryHandler)
-		branchInventoryGroup.GET("/:inventoryId", r.GetInventoryByID)
-		branchInventoryGroup.PATCH("/:inventoryId", r.UpdateInventoryItemHandler)
-		branchInventoryGroup.DELETE("/:inventoryId", r.DeleteInventoryItemHandler)
+		branchInventoryGroup.POST("", m.RBACPermission("branch_management"), r.AddInventoryItemHandler)
+		branchInventoryGroup.GET("", m.RBACPermission("branch_management"), r.ListBranchInventoryHandler)
+		branchInventoryGroup.GET("/:inventoryId", m.RBACPermission("branch_management"), r.GetInventoryByID)
+		branchInventoryGroup.PATCH("/:inventoryId", m.RBACPermission("branch_management"), r.UpdateInventoryItemHandler)
+		branchInventoryGroup.DELETE("/:inventoryId", m.RBACPermission("branch_management"), r.DeleteInventoryItemHandler)
 	}
 }
