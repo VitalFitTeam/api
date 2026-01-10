@@ -7,6 +7,7 @@ import (
 	appservices "github.com/vitalfit/api/internal/app/services"
 	authservices "github.com/vitalfit/api/internal/modules/auth/services"
 	"github.com/vitalfit/api/internal/shared/cronjobs"
+	"github.com/vitalfit/api/internal/shared/notifications"
 	"github.com/vitalfit/api/internal/store/cache"
 
 	"github.com/vitalfit/api/internal/store"
@@ -32,7 +33,12 @@ func BuildApplication(cfg *config.Config, db *gorm.DB, rdb *redis.Client) *appli
 	cache := cache.NewRedisStorage(rdb)
 	services := appservices.NewServices(store, logger, *cfg, auth, mailer, cache)
 	handlers := apphandlers.NewAppHandlers(services)
-	cronjob := cronjobs.NewManager(store, services, logger, cache)
+	notifications, err := notifications.NewPushService()
+	if err != nil {
+		logger.Errorw("error creating push service", "error", err.Error())
+	}
+
+	cronjob := cronjobs.NewManager(store, services, logger, cache, *notifications)
 	cronjob.Start()
 	defer logger.Sync()
 	return &application{

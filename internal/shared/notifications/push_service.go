@@ -1,0 +1,76 @@
+package notifications
+
+import (
+	"context"
+	"encoding/base64"
+	"fmt"
+	"log"
+
+	firebase "firebase.google.com/go/v4"
+	"firebase.google.com/go/v4/messaging"
+	env "github.com/vitalfit/api/pkg/Env"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
+)
+
+type PushService struct {
+	client *messaging.Client
+}
+
+func NewPushService() (*PushService, error) {
+	ctx := context.Background()
+
+	credsBase64 := env.GetString("FIREBASE_CREDENTIALS_BASE64", "")
+	if credsBase64 == "" {
+		return nil, fmt.Errorf("FIREBASE_CREDENTIALS_BASE64 está vacía")
+	}
+
+	// B. Decodificar de Base64 a []byte (JSON original)
+	credsJSON, err := base64.StdEncoding.DecodeString(credsBase64)
+	if err != nil {
+		return nil, fmt.Errorf("error decodificando credenciales base64: %w", err)
+	}
+	// C. Crear credenciales (igual que antes)
+	creds, err := google.CredentialsFromJSON(ctx, credsJSON, "https://www.googleapis.com/auth/firebase.messaging")
+	if err != nil {
+		return nil, fmt.Errorf("error parseando credenciales de firebase: %w", err)
+	}
+
+	opt := option.WithCredentials(creds)
+
+	app, err := firebase.NewApp(ctx, nil, opt)
+	if err != nil {
+		return nil, fmt.Errorf("error inicializando firebase app: %w", err)
+	}
+
+	// 4. Obtener el cliente de mensajería
+	client, err := app.Messaging(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error obteniendo cliente de mensajería: %w", err)
+	}
+
+	return &PushService{
+		client: client,
+	}, nil
+}
+
+// Enviar notificación a un token específico
+func (s *PushService) SendPush(ctx context.Context, deviceToken string, title string, body string, data map[string]string) error {
+	message := &messaging.Message{
+		Notification: &messaging.Notification{
+			Title: title,
+			Body:  body,
+		},
+		Token: deviceToken, // El token que guardaste en la DB
+
+		Data: data,
+	}
+
+	response, err := s.client.Send(ctx, message)
+	if err != nil {
+		return err
+	}
+
+	log.Println("Notification sent successfully. ID:", response)
+	return nil
+}
