@@ -46,7 +46,7 @@ func (m *Manager) Stop() {
 
 func (m *Manager) registerRoutes() {
 	var err error
-	_, err = m.cron.AddFunc("@every 2h", m.GetRatesCronjob)
+	_, err = m.cron.AddFunc("@every 2h2s", m.GetRatesCronjob)
 	if err != nil {
 		m.logger.Errorw("Error getting rates cronjob", "error", err)
 	}
