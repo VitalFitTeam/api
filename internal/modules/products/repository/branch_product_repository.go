@@ -53,7 +53,7 @@ func (s *ProductsStore) UpdateBranchService(ctx context.Context, branchService *
 	result := s.db.WithContext(ctx).
 		Model(&productsdomain.ServiceBranchDetail{}).
 		Where("branch_id = ? AND service_id = ?", branchService.BranchID, branchService.ServiceID).
-		Updates(branchService)
+		Save(branchService)
 
 	if result.Error != nil {
 		return result.Error
