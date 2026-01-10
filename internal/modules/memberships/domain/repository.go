@@ -33,4 +33,5 @@ type MembershipsRepository interface {
 	GetCancellationReasonByID(ctx context.Context, id uuid.UUID) (*CancellationReason, error)
 	GetCancellationReasons(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*CancellationReason, int64, error)
 	GetCancellationReasonByDescription(ctx context.Context, description string) (*CancellationReason, error)
+	UpdateExpiredMemberships(ctx context.Context) error
 }
