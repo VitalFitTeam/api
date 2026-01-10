@@ -115,12 +115,24 @@ type ClientChurnMetrics struct {
 	CurrentMonthVisits int64      `json:"current_month_visits"`
 	LastMonthVisits    int64      `json:"last_month_visits"`
 	MembershipEndDate  *time.Time `json:"membership_end_date"`
+	PreferredBranchID  *uuid.UUID `json:"preferred_branch_id"`
+	CurrentCategory    string     `json:"current_category"`
 }
 
 type ChurnRiskAnalysis struct {
-	UserID    uuid.UUID `json:"user_id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	RiskScore int       `json:"risk_score"`
-	Factors   []string  `json:"factors"`
+	UserID            uuid.UUID  `json:"user_id"`
+	Name              string     `json:"name"`
+	Email             string     `json:"email"`
+	RiskScore         int        `json:"risk_score"`
+	Factors           []string   `json:"factors"`
+	PreferredBranchID *uuid.UUID `json:"preferred_branch_id"`
+	ManagerID         *uuid.UUID `json:"manager_id"`
+	ManagerEmail      string     `json:"manager_email"`
+}
+
+type BranchManagerDetails struct {
+	BranchID uuid.UUID `json:"branch_id"`
+	UserID   uuid.UUID `json:"user_id"`
+	Email    string    `json:"email"`
+	Name     string    `json:"name"`
 }

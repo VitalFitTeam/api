@@ -43,3 +43,19 @@ func (m *Manager) TestPushNoti() {
 	}
 	m.push.SendPush(ctx, token, "test", "test", data)
 }
+
+func (m *Manager) TestChurn() {
+	m.logger.Info("running test churn cronjob")
+	token := "fdpe9i-OYersBulmuLxddC:APA91bE-udl2lAwKLein6h6nzjvDJbgzhRv_vzMLoJc8quPCAHU3tT95hP_1gP87aFBWLM6lzx_RNfrCqd5hjm6VjsLZGd_5MY4UdNRUxUx4wiZ_Ll2zhXU"
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+	xd, err := m.appservices.ReportServices.DetectAndFlagChurnRisk(ctx)
+	data, err := m.push.ConvertSliceToDataMap(xd, "churn_risk_data")
+	if err != nil {
+		m.logger.Errorw("failed to convert struct to data map", "error", err)
+		return
+	}
+	m.logger.Infow("xd", "xd", data)
+	m.push.SendPush(ctx, token, "test", "test", data)
+
+}

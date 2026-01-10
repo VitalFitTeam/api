@@ -1227,21 +1227,63 @@ func (rs *ReportStore) GetClientsChurnMetrics(ctx context.Context) ([]reportdoma
 	// Query to get Recency (Last Check-in), Frequency (Visits this month vs last), and Expiration
 	query := `
 		SELECT 
-			u.user_id, u.first_name, u.last_name, u.email,
+			u.user_id, u.first_name, u.last_name, u.email, COALESCE(cp.category, 'New') as current_category,
 			MAX(al.check_in_time) as last_check_in,
 			COUNT(CASE WHEN al.check_in_time >= DATE_TRUNC('month', NOW()) THEN 1 END) as current_month_visits,
 			COUNT(CASE WHEN al.check_in_time >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') AND al.check_in_time < DATE_TRUNC('month', NOW()) THEN 1 END) as last_month_visits,
-			MAX(cm.end_date) as membership_end_date
+			MAX(cm.end_date) as membership_end_date,
+			COALESCE(
+				(
+					SELECT c.branch_id
+					FROM attendance_log al2
+					JOIN classes c ON c.class_id = al2.schedule_id
+					WHERE al2.user_id = u.user_id
+					GROUP BY c.branch_id
+					ORDER BY COUNT(*) DESC
+					LIMIT 1
+				),
+				(
+					SELECT i.branch_id
+					FROM invoices i
+					JOIN client_memberships cm2 ON cm2.invoice_id = i.invoice_id
+					WHERE cm2.user_id = u.user_id
+					ORDER BY cm2.start_date DESC
+					LIMIT 1
+				)
+			) as preferred_branch_id
 		FROM users u
 		JOIN roles r ON r.role_id = u.role_id
 		LEFT JOIN attendance_log al ON al.user_id = u.user_id
+		LEFT JOIN client_profiles cp ON cp.user_id = u.user_id
 		LEFT JOIN client_memberships cm ON cm.user_id = u.user_id AND cm.status = 'Active'
 		WHERE r.name = 'client' AND u.status = 'Active' AND u.deleted_at IS NULL
-		GROUP BY u.user_id
+		GROUP BY u.user_id, cp.category
 	`
 
 	err := rs.db.WithContext(ctx).Raw(query).Scan(&metrics).Error
 	return metrics, err
+}
+
+func (rs *ReportStore) GetBranchManagers(ctx context.Context) (map[uuid.UUID]reportdomain.BranchManagerDetails, error) {
+	var results []reportdomain.BranchManagerDetails
+
+	// Fetch managers directly from the branch table as defined in the Branch struct (ManagerID -> user_id column)
+	query := `
+		SELECT 
+			b.branch_id, u.user_id, u.email, u.first_name || ' ' || u.last_name as name
+		FROM branch b
+		JOIN users u ON u.user_id = b.user_id
+		WHERE b.deleted_at IS NULL
+	`
+
+	if err := rs.db.WithContext(ctx).Raw(query).Scan(&results).Error; err != nil {
+		return nil, err
+	}
+	managersMap := make(map[uuid.UUID]reportdomain.BranchManagerDetails)
+	for _, m := range results {
+		managersMap[m.BranchID] = m
+	}
+	return managersMap, nil
 }
 
 func (rs *ReportStore) GetInstructorClassesToday(ctx context.Context, instructorID uuid.UUID) ([]reportdomain.ClassScheduleItem, error) {

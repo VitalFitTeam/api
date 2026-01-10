@@ -200,13 +200,18 @@ func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdom
 		return nil, err
 	}
 
+	// 2. Get Managers for all branches to identify who to notify
+	managersMap, err := s.store.Reports.GetBranchManagers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var atRiskUsers []reportdomain.ChurnRiskAnalysis
 
-	for _, m := range metrics {
+	calculateRisk := func(m reportdomain.ClientChurnMetrics) (int, []string) {
 		riskScore := 0
 		var factors []string
 
-		// A. Recency Factor: Days since last check-in
 		daysSinceCheckIn := 30.0 // Default high if never checked in
 		if m.LastCheckIn != nil {
 			daysSinceCheckIn = time.Since(*m.LastCheckIn).Hours() / 24
@@ -218,7 +223,6 @@ func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdom
 		}
 
 		// B. Trend Factor: Visits this month vs last month
-		// If visits dropped by 50% or more compared to last month
 		if m.LastMonthVisits > 0 {
 			if float64(m.CurrentMonthVisits) < float64(m.LastMonthVisits)*0.5 {
 				riskScore += 30
@@ -234,19 +238,48 @@ func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdom
 				factors = append(factors, "Membership expires < 5 days")
 			}
 		}
+		return riskScore, factors
+	}
 
-		// Action: If Risk Score is high, flag the user
+	for _, m := range metrics {
+		riskScore, factors := calculateRisk(m)
+
+		// Action 1: Flag High Risk Users
 		if riskScore >= 70 {
-			// Update user category to 'AtRisk'
-			_ = s.store.User.UpdateClientCategory(ctx, m.UserID, authdomain.ClientCategoryAtRisk)
+			// Only update if not already AtRisk to avoid redundant DB writes
+			if m.CurrentCategory != string(authdomain.ClientCategoryAtRisk) {
+				_ = s.store.Users.UpdateClientCategory(ctx, m.UserID, authdomain.ClientCategoryAtRisk)
+			}
 
-			atRiskUsers = append(atRiskUsers, reportdomain.ChurnRiskAnalysis{
-				UserID:    m.UserID,
-				Name:      m.FirstName + " " + m.LastName,
-				Email:     m.Email,
-				RiskScore: riskScore,
-				Factors:   factors,
-			})
+			analysis := reportdomain.ChurnRiskAnalysis{
+				UserID:            m.UserID,
+				Name:              m.FirstName + " " + m.LastName,
+				Email:             m.Email,
+				RiskScore:         riskScore,
+				Factors:           factors,
+				PreferredBranchID: m.PreferredBranchID,
+			}
+
+			if m.PreferredBranchID != nil {
+				if manager, ok := managersMap[*m.PreferredBranchID]; ok {
+					analysis.ManagerID = &manager.UserID
+					analysis.ManagerEmail = manager.Email
+				}
+			}
+
+			atRiskUsers = append(atRiskUsers, analysis)
+		} else {
+			if m.CurrentCategory == string(authdomain.ClientCategoryAtRisk) {
+				newCategory := authdomain.ClientCategoryRegular
+				ok, err := s.store.Membership.ClientHasActiveMembership(ctx, m.UserID, 0)
+				if err != nil {
+					return nil, err
+				}
+				if !ok {
+					newCategory = authdomain.ClientCategoryVIP
+				}
+				_ = s.store.Users.UpdateClientCategory(ctx, m.UserID, newCategory)
+			}
 		}
 	}
 

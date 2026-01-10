@@ -54,24 +54,24 @@ func NewSeedStruct() *SeedStruct {
 
 func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices.Services) {
 	ctx := context.Background()
-	s.CreateSuperAdmin(store, db, ctx)
-	s.SeedPermissions(store, db, ctx)
-	s.SeedRolePermissions(store, db, ctx)
-	s.SeedUsers(store, db, ctx)
-	s.SeedPolicies(store, db, ctx)
-	s.SeedServiceCategories(store, db, ctx)
-	s.SeedBanners(store, db, ctx)
-	s.SeedServices(store, db, ctx)
-	s.SeedInstructors(store, db, ctx)
-	s.SeedBranches(store, db, ctx)
-	s.SeedEquipment(store, db, ctx)
-	s.SeedMemberships(store, db, ctx)
-	s.SeedPackages(store, db, ctx)
-	s.SeedBranchRelations(store, db, ctx)
-	s.SeedClasses(store, db, ctx)
-	s.SeedInvoicesAndPayments(store, db, ctx, services)
+	// s.CreateSuperAdmin(store, db, ctx)
+	// s.SeedPermissions(store, db, ctx)
+	// s.SeedRolePermissions(store, db, ctx)
+	// s.SeedUsers(store, db, ctx)
+	// s.SeedPolicies(store, db, ctx)
+	// s.SeedServiceCategories(store, db, ctx)
+	// s.SeedBanners(store, db, ctx)
+	// s.SeedServices(store, db, ctx)
+	// s.SeedInstructors(store, db, ctx)
+	// s.SeedBranches(store, db, ctx)
+	// s.SeedEquipment(store, db, ctx)
+	// s.SeedMemberships(store, db, ctx)
+	// s.SeedPackages(store, db, ctx)
+	// s.SeedBranchRelations(store, db, ctx)
+	// s.SeedClasses(store, db, ctx)
+	// s.SeedInvoicesAndPayments(store, db, ctx, services)
 	s.SeedBookingsAndAttendance(store, db, ctx)
-	s.SeedStaffAssignment(store, db, ctx, services)
+	//s.SeedStaffAssignment(store, db, ctx, services)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -161,13 +161,33 @@ func (s *SeedStruct) SeedPermissions(store store.Storage, db *gorm.DB, ctx conte
 }
 
 func randomDateInLastSixMonths() time.Time {
-	now := time.Now().AddDate(0, 1, 0)
-	sixMonthsAgo := now.AddDate(0, -1, 0)
+	now := time.Now()
 
-	duration := now.Sub(sixMonthsAgo)
-	randomDuration := time.Duration(rand.Int63n(int64(duration)))
+	// 1. Definir el rango del "Mes Anterior"
+	firstDayCurrentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	startOfLastMonth := firstDayCurrentMonth.AddDate(0, -1, 0)
+	duration := firstDayCurrentMonth.Sub(startOfLastMonth)
 
-	return sixMonthsAgo.Add(randomDuration)
+	for {
+		// 2. Generar una fecha aleatoria dentro del mes anterior
+		randomDuration := time.Duration(rand.Int63n(int64(duration)))
+		candidate := startOfLastMonth.Add(randomDuration)
+
+		// 3. VALIDACIÓN: Verificar si cae en el rango prohibido (25 Dic - 10 Ene)
+		// Si es Diciembre y el día es 25 o mayor -> RECHAZAR
+		if candidate.Month() == time.December && candidate.Day() >= 25 {
+			continue // Intenta de nuevo
+		}
+
+		// Si es Enero y el día es 10 o menor -> RECHAZAR
+		// (Esto es por si el "mes anterior" llega a ser Enero en el futuro)
+		if candidate.Month() == time.January && candidate.Day() <= 10 {
+			continue // Intenta de nuevo
+		}
+
+		// Si pasa las validaciones, retornamos la fecha
+		return candidate
+	}
 }
 
 func (s *SeedStruct) SeedRolePermissions(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -1163,10 +1183,10 @@ func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB,
 		}
 	}
 
-	log.Printf("Generated %d bookings and %d attendance logs. Inserting into database...", len(bookingsToCreate), len(attendanceToCreate))
-	if err := db.CreateInBatches(&bookingsToCreate, 1000).Error; err != nil {
-		log.Fatalf("Fatal error during bookings batch insert: %v", err)
-	}
+	// log.Printf("Generated %d bookings and %d attendance logs. Inserting into database...", len(bookingsToCreate), len(attendanceToCreate))
+	// if err := db.CreateInBatches(&bookingsToCreate, 1000).Error; err != nil {
+	// 	log.Fatalf("Fatal error during bookings batch insert: %v", err)
+	// }
 	if err := db.CreateInBatches(&attendanceToCreate, 1000).Error; err != nil {
 		log.Fatalf("Fatal error during attendance logs batch insert: %v", err)
 	}

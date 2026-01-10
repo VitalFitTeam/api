@@ -3,6 +3,7 @@ package notifications
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -73,4 +74,37 @@ func (s *PushService) SendPush(ctx context.Context, deviceToken string, title st
 
 	log.Println("Notification sent successfully. ID:", response)
 	return nil
+}
+
+func (s *PushService) ConvertStructToDataMap(payload interface{}) (map[string]string, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	var temp map[string]interface{}
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]string)
+	for k, v := range temp {
+		if v == nil {
+			continue
+		}
+		result[k] = fmt.Sprintf("%v", v)
+	}
+
+	return result, nil
+}
+
+func (s *PushService) ConvertSliceToDataMap(payload interface{}, key string) (map[string]string, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]string{
+		key: string(data),
+	}, nil
 }
