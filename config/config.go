@@ -86,7 +86,7 @@ func LoadConfig() *Config {
 		Auth: AuthConfig{
 			Token: TokenConfig{
 				Secret:     env.GetString("JWT_SECRET", ""),
-				AccessExp:  time.Minute * 15,
+				AccessExp:  time.Minute * 99999,
 				RefreshExp: time.Hour * 24 * 7, //7 days
 				Iss:        env.GetString("JWT_ISS", ""),
 				Aud:        env.GetString("JWT_AUD", ""),
