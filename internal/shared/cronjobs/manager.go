@@ -3,19 +3,17 @@ package cronjobs
 import (
 	"github.com/robfig/cron/v3"
 	appservices "github.com/vitalfit/api/internal/app/services"
-	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
 	"go.uber.org/zap"
 )
 
 type Manager struct {
-	cron           *cron.Cron
-	store          store.Storage
-	appservices    appservices.Services
-	cache          cache.Storage
-	logger         *zap.SugaredLogger
-	billingService billingdomain.BillingServiceInterface
+	cron        *cron.Cron
+	store       store.Storage
+	appservices appservices.Services
+	cache       cache.Storage
+	logger      *zap.SugaredLogger
 }
 
 func NewManager(store store.Storage, appservices appservices.Services, logger *zap.SugaredLogger, cache cache.Storage) *Manager {
