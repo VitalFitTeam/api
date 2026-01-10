@@ -78,10 +78,11 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 		}
 
 		for {
-			if payload.Recurrence == "daily" {
+			switch payload.Recurrence {
+			case "daily":
 				nextStart = nextStart.AddDate(0, 0, 1)
 				nextEnd = nextEnd.AddDate(0, 0, 1)
-			} else if payload.Recurrence == "weekly" {
+			case "weekly":
 				nextStart = nextStart.AddDate(0, 0, 7)
 				nextEnd = nextEnd.AddDate(0, 0, 7)
 			}
