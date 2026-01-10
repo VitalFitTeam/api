@@ -56,7 +56,7 @@ func (m *Manager) registerRoutes() {
 		m.logger.Errorw("Error registering update expired memberships cronjob", "error", err)
 	}
 
-	_, err = m.cron.AddFunc("@every 10h", m.TestChurn)
+	_, err = m.cron.AddFunc("@every 2h", m.TestPushNoti)
 	if err != nil {
 		m.logger.Errorw("Error testing push noti cronjobs", "error", err)
 	}
