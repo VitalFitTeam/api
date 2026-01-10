@@ -5402,6 +5402,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/client-memberships/me": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the membership details for the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Get my membership",
+                "responses": {
+                    "200": {
+                        "description": "Client membership details",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/membershipsdomain.ClientMembership"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Client membership not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/client-memberships/{clientMembershipId}": {
             "get": {
                 "security": [

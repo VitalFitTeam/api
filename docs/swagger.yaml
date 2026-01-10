@@ -6100,6 +6100,34 @@ paths:
       summary: Update a client membership
       tags:
       - Memberships
+  /client-memberships/me:
+    get:
+      description: Retrieves the membership details for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client membership details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/membershipsdomain.ClientMembership'
+            type: object
+        "404":
+          description: 'Not Found: Client membership not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get my membership
+      tags:
+      - Memberships
   /equipment-types:
     get:
       description: Lists all available equipment types in the global catalog with
