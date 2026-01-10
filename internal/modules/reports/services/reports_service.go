@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	"github.com/vitalfit/api/internal/store"
 )
@@ -190,4 +191,64 @@ func (s *ReportService) GetMonthlyCashFlowChart(ctx context.Context, branchID *u
 
 func (s *ReportService) GetSalesByDemographics(ctx context.Context, branchID *uuid.UUID, start, end time.Time, dimension string) ([]reportdomain.ChartData, error) {
 	return s.store.Reports.GetSalesByDemographics(ctx, branchID, start, end, dimension)
+}
+
+func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdomain.ChurnRiskAnalysis, error) {
+	// 1. Get historical data for all active clients
+	metrics, err := s.store.Reports.GetClientsChurnMetrics(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var atRiskUsers []reportdomain.ChurnRiskAnalysis
+
+	for _, m := range metrics {
+		riskScore := 0
+		var factors []string
+
+		// A. Recency Factor: Days since last check-in
+		daysSinceCheckIn := 30.0 // Default high if never checked in
+		if m.LastCheckIn != nil {
+			daysSinceCheckIn = time.Since(*m.LastCheckIn).Hours() / 24
+		}
+
+		if daysSinceCheckIn > 14 {
+			riskScore += 40
+			factors = append(factors, "Absent > 14 days")
+		}
+
+		// B. Trend Factor: Visits this month vs last month
+		// If visits dropped by 50% or more compared to last month
+		if m.LastMonthVisits > 0 {
+			if float64(m.CurrentMonthVisits) < float64(m.LastMonthVisits)*0.5 {
+				riskScore += 30
+				factors = append(factors, "Attendance drop > 50%")
+			}
+		}
+
+		// C. Expiration Factor: Membership expiring soon
+		if m.MembershipEndDate != nil {
+			daysUntilExpiration := time.Until(*m.MembershipEndDate).Hours() / 24
+			if daysUntilExpiration > 0 && daysUntilExpiration < 5 {
+				riskScore += 30
+				factors = append(factors, "Membership expires < 5 days")
+			}
+		}
+
+		// Action: If Risk Score is high, flag the user
+		if riskScore >= 70 {
+			// Update user category to 'AtRisk'
+			_ = s.store.User.UpdateClientCategory(ctx, m.UserID, authdomain.ClientCategoryAtRisk)
+
+			atRiskUsers = append(atRiskUsers, reportdomain.ChurnRiskAnalysis{
+				UserID:    m.UserID,
+				Name:      m.FirstName + " " + m.LastName,
+				Email:     m.Email,
+				RiskScore: riskScore,
+				Factors:   factors,
+			})
+		}
+	}
+
+	return atRiskUsers, nil
 }

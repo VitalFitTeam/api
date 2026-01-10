@@ -105,3 +105,22 @@ type CohortRetention struct {
 	CohortSize  int64     `json:"cohort_size"`  // Total users in cohort
 	Retention   []float64 `json:"retention"`    // Percentage for Month 0, 1, 2...
 }
+
+type ClientChurnMetrics struct {
+	UserID             uuid.UUID  `json:"user_id"`
+	FirstName          string     `json:"first_name"`
+	LastName           string     `json:"last_name"`
+	Email              string     `json:"email"`
+	LastCheckIn        *time.Time `json:"last_check_in"`
+	CurrentMonthVisits int64      `json:"current_month_visits"`
+	LastMonthVisits    int64      `json:"last_month_visits"`
+	MembershipEndDate  *time.Time `json:"membership_end_date"`
+}
+
+type ChurnRiskAnalysis struct {
+	UserID    uuid.UUID `json:"user_id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	RiskScore int       `json:"risk_score"`
+	Factors   []string  `json:"factors"`
+}

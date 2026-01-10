@@ -50,4 +50,5 @@ type ReportRepository interface {
 	GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]CohortRetention, error)
 	GetMonthlyCashFlowChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 	GetSalesByDemographics(ctx context.Context, branchID *uuid.UUID, start, end time.Time, dimension string) ([]ChartData, error)
+	GetClientsChurnMetrics(ctx context.Context) ([]ClientChurnMetrics, error)
 }

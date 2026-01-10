@@ -1221,6 +1221,29 @@ func (rs *ReportStore) GetInstructorMonthlyClassesCount(ctx context.Context, ins
 	}, nil
 }
 
+func (rs *ReportStore) GetClientsChurnMetrics(ctx context.Context) ([]reportdomain.ClientChurnMetrics, error) {
+	var metrics []reportdomain.ClientChurnMetrics
+
+	// Query to get Recency (Last Check-in), Frequency (Visits this month vs last), and Expiration
+	query := `
+		SELECT 
+			u.user_id, u.first_name, u.last_name, u.email,
+			MAX(al.check_in_time) as last_check_in,
+			COUNT(CASE WHEN al.check_in_time >= DATE_TRUNC('month', NOW()) THEN 1 END) as current_month_visits,
+			COUNT(CASE WHEN al.check_in_time >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') AND al.check_in_time < DATE_TRUNC('month', NOW()) THEN 1 END) as last_month_visits,
+			MAX(cm.end_date) as membership_end_date
+		FROM users u
+		JOIN roles r ON r.role_id = u.role_id
+		LEFT JOIN attendance_log al ON al.user_id = u.user_id
+		LEFT JOIN client_memberships cm ON cm.user_id = u.user_id AND cm.status = 'Active'
+		WHERE r.name = 'client' AND u.status = 'Active' AND u.deleted_at IS NULL
+		GROUP BY u.user_id
+	`
+
+	err := rs.db.WithContext(ctx).Raw(query).Scan(&metrics).Error
+	return metrics, err
+}
+
 func (rs *ReportStore) GetInstructorClassesToday(ctx context.Context, instructorID uuid.UUID) ([]reportdomain.ClassScheduleItem, error) {
 	var results []reportdomain.ClassScheduleItem
 	now := time.Now()
