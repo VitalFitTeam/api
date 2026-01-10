@@ -25,6 +25,7 @@ import (
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	membershipsservice "github.com/vitalfit/api/internal/modules/memberships/service"
 	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
+	notiservice "github.com/vitalfit/api/internal/modules/notifications/service"
 	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
 	policiesservices "github.com/vitalfit/api/internal/modules/policies/services"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
@@ -75,27 +76,28 @@ type Services struct {
 func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage) Services {
 	bookingService := bookingservice.NewBookingService(store)
 	return Services{
-		AuthServices:       authservices.NewAuthServices(store, cfg, auth, mailer),
-		UserServices:       authservices.NewUserService(store),
-		BranchesServices:   branchservices.NewBranchServices(store, cfg),
-		LocationsServices:  branchservices.NewLocationsServices(store),
-		EquipmentServices:  inventoryservices.NewEquipmentServices(store, cfg),
-		InventoryServices:  inventoryservices.NewBranchInventoryServices(store, cfg),
-		InstructorServices: instructorservices.NewInstructorServices(store, cfg),
-		ProductsServices:   productsservice.NewProductsService(store),
-		MarketingServices:  marketingservice.NewMarketingService(store),
-		MembershipServices: membershipsservice.NewMembershipService(store),
-		BillingServices:    billingservice.NewBillingService(store, cache, cfg, mailer),
-		ScheduleServices:   scheduleservice.NewScheduleService(store),
-		CombosServices:     combosservices.NewCombosServices(store),
-		BookingServices:    bookingService,
-		AccessServices:     accessservice.NewAccessServices(store, *bookingService),
-		ReportServices:     reportservices.NewReportService(store),
-		Staff:              staffservice.NewStaffService(store),
-		Policies:           policiesservices.NewPoliciesServices(store),
-		WishlistServices:   wishlistservice.NewWishlistService(store),
-		AuditServices:      auditservice.NewAuditService(store),
-		LogErrors:          logs.NewLogErrors(logger),
-		Logger:             logger,
+		AuthServices:         authservices.NewAuthServices(store, cfg, auth, mailer),
+		UserServices:         authservices.NewUserService(store),
+		BranchesServices:     branchservices.NewBranchServices(store, cfg),
+		LocationsServices:    branchservices.NewLocationsServices(store),
+		EquipmentServices:    inventoryservices.NewEquipmentServices(store, cfg),
+		InventoryServices:    inventoryservices.NewBranchInventoryServices(store, cfg),
+		InstructorServices:   instructorservices.NewInstructorServices(store, cfg),
+		ProductsServices:     productsservice.NewProductsService(store),
+		MarketingServices:    marketingservice.NewMarketingService(store),
+		MembershipServices:   membershipsservice.NewMembershipService(store),
+		BillingServices:      billingservice.NewBillingService(store, cache, cfg, mailer),
+		ScheduleServices:     scheduleservice.NewScheduleService(store),
+		CombosServices:       combosservices.NewCombosServices(store),
+		BookingServices:      bookingService,
+		AccessServices:       accessservice.NewAccessServices(store, *bookingService),
+		ReportServices:       reportservices.NewReportService(store),
+		Staff:                staffservice.NewStaffService(store),
+		Policies:             policiesservices.NewPoliciesServices(store),
+		WishlistServices:     wishlistservice.NewWishlistService(store),
+		AuditServices:        auditservice.NewAuditService(store),
+		NotificationServices: notiservice.NewNotificationService(store),
+		LogErrors:            logs.NewLogErrors(logger),
+		Logger:               logger,
 	}
 }
