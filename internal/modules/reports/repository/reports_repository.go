@@ -1286,6 +1286,95 @@ func (rs *ReportStore) GetBranchManagers(ctx context.Context) (map[uuid.UUID]rep
 	return managersMap, nil
 }
 
+func (rs *ReportStore) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	// Helper to calculate churn rate in a date range
+	calcChurn := func(start, end time.Time) (float64, error) {
+		var startCount, retainedCount int64
+
+		// 1. Start Count (S): Users with active membership at 'start'
+		// We check for memberships that cover the 'start' date.
+		queryS := rs.db.WithContext(ctx).Table("client_memberships cm").
+			Joins("JOIN invoices i ON i.invoice_id = cm.invoice_id").
+			Where("cm.start_date <= ? AND cm.end_date >= ?", start, start).
+			Where("cm.status != ?", "Cancelled") // Exclude explicitly cancelled if necessary
+
+		if branchID != nil {
+			queryS = queryS.Where("i.branch_id = ?", *branchID)
+		}
+
+		if err := queryS.Distinct("cm.user_id").Count(&startCount).Error; err != nil {
+			return 0, err
+		}
+
+		if startCount == 0 {
+			return 0, nil
+		}
+
+		// 2. Retained Count (R): Users from S who are also active at 'end'
+		// We find users active at 'start' (SubQuery) AND check if they are active at 'end'.
+
+		// Subquery: IDs of users active at start
+		subQueryS := rs.db.Table("client_memberships cm_start").
+			Select("cm_start.user_id").
+			Joins("JOIN invoices i_start ON i_start.invoice_id = cm_start.invoice_id").
+			Where("cm_start.start_date <= ? AND cm_start.end_date >= ?", start, start).
+			Where("cm_start.status != ?", "Cancelled")
+
+		if branchID != nil {
+			subQueryS = subQueryS.Where("i_start.branch_id = ?", *branchID)
+		}
+
+		// Main Query: Count users from SubQuery who have valid membership at 'end'
+		queryR := rs.db.WithContext(ctx).Table("client_memberships cm_end").
+			Where("cm_end.start_date <= ? AND cm_end.end_date >= ?", end, end).
+			Where("cm_end.status != ?", "Cancelled").
+			Where("cm_end.user_id IN (?)", subQueryS)
+
+		if branchID != nil {
+			// If filtering by branch, we check if they are active IN THAT BRANCH at 'end'
+			queryR = queryR.Joins("JOIN invoices i_end ON i_end.invoice_id = cm_end.invoice_id").
+				Where("i_end.branch_id = ?", *branchID)
+		}
+
+		if err := queryR.Distinct("cm_end.user_id").Count(&retainedCount).Error; err != nil {
+			return 0, err
+		}
+
+		// Churn Rate = (Start - Retained) / Start
+		lost := startCount - retainedCount
+		if lost < 0 {
+			lost = 0
+		}
+
+		churnRate := (float64(lost) / float64(startCount)) * 100
+		return churnRate, nil
+	}
+
+	currentChurn, err := calcChurn(currentMonthStart, now)
+	if err != nil {
+		return nil, err
+	}
+
+	prevChurn, err := calcChurn(prevMonthStart, currentMonthStart)
+	if err != nil {
+		return nil, err
+	}
+
+	trend := currentChurn - prevChurn
+
+	return &reportdomain.KPICard{
+		Title:        "Churn Rate",
+		Value:        decimal.NewFromFloat(currentChurn).Round(2),
+		TrendPercent: decimal.NewFromFloat(trend).Round(2).InexactFloat64(),
+		TrendLabel:   "vs previous month (pts %)",
+		IsPositive:   trend <= 0, // Lower churn is better (Positive)
+	}, nil
+}
+
 func (rs *ReportStore) GetInstructorClassesToday(ctx context.Context, instructorID uuid.UUID) ([]reportdomain.ClassScheduleItem, error) {
 	var results []reportdomain.ClassScheduleItem
 	now := time.Now()

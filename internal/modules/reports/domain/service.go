@@ -51,4 +51,5 @@ type ReportServiceInterface interface {
 	GetMonthlyCashFlowChart(ctx context.Context, branchID *uuid.UUID) ([]ChartData, error)
 	GetSalesByDemographics(ctx context.Context, branchID *uuid.UUID, start, end time.Time, dimension string) ([]ChartData, error)
 	DetectAndFlagChurnRisk(ctx context.Context) ([]ChurnRiskAnalysis, error)
+	GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 }

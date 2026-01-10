@@ -285,3 +285,7 @@ func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdom
 
 	return atRiskUsers, nil
 }
+
+func (s *ReportService) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetChurnRateKPI(ctx, branchID)
+}

@@ -116,6 +116,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		attendanceGroup.GET("/kpi/active-members", r.GetActiveMembersKPIHandler)
 		attendanceGroup.GET("/kpi/new-clients", r.GetNewClientsKPIHandler)
 		attendanceGroup.GET("/kpi/retention-rate", r.GetRetentionRateKPIHandler)
+		attendanceGroup.GET("/kpi/churn-rate", r.GetChurnRateKPIHandler)
 		attendanceGroup.GET("/kpi/occupancy", r.GetOccupancyKPIHandler)
 		attendanceGroup.GET("/charts/top-instructors", r.GetTopInstructorsByAttendanceHandler)
 		attendanceGroup.GET("/charts/most-used-services", r.GetMostUsedServicesHandler)

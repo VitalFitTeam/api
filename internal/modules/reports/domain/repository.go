@@ -52,4 +52,5 @@ type ReportRepository interface {
 	GetSalesByDemographics(ctx context.Context, branchID *uuid.UUID, start, end time.Time, dimension string) ([]ChartData, error)
 	GetClientsChurnMetrics(ctx context.Context) ([]ClientChurnMetrics, error)
 	GetBranchManagers(ctx context.Context) (map[uuid.UUID]BranchManagerDetails, error)
+	GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 }
