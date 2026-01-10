@@ -1452,13 +1452,13 @@ func (rs *ReportStore) GetSalesByDemographics(ctx context.Context, branchID *uui
 	if branchID != nil {
 		query = query.Where("i.branch_id = ?", *branchID)
 	}
-
-	if dimension == "gender" {
+	switch dimension {
+	case "gender":
 		err := query.Select("u.gender as label, COALESCE(SUM(i.total_amount), 0) as value").
 			Group("u.gender").
 			Scan(&results).Error
 		return results, err
-	} else if dimension == "age" {
+	case "age":
 		ageCase := `CASE
 			WHEN u.birth_date IS NULL THEN 'Unknown'
 			WHEN EXTRACT(YEAR FROM age(u.birth_date)) < 18 THEN '< 18'

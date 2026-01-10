@@ -24,6 +24,7 @@ import (
 	marketingservice "github.com/vitalfit/api/internal/modules/marketing/service"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	membershipsservice "github.com/vitalfit/api/internal/modules/memberships/service"
+	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
 	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
 	policiesservices "github.com/vitalfit/api/internal/modules/policies/services"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
@@ -46,26 +47,27 @@ import (
 )
 
 type Services struct {
-	AuthServices       authdomain.AuthServicesInterface
-	UserServices       authdomain.UserServicesInterface
-	BranchesServices   branchdomain.BranchesServicesInterface
-	LocationsServices  branchdomain.LocationsServicesInterface
-	EquipmentServices  inventorydomain.EquipmentServicesInterface
-	InventoryServices  inventorydomain.BranchInventoryServicesInterface
-	InstructorServices instructordomain.InstructorServiceInterface
-	ProductsServices   productsdomain.ProductsServiceInterface
-	MarketingServices  marketingdomain.MarketingServiceInterface
-	MembershipServices membershipsdomain.MembershipsServiceInterface
-	BillingServices    billingdomain.BillingServiceInterface
-	ScheduleServices   scheduledomain.ScheduleServiceInterface
-	CombosServices     combosdomain.CombosServicesInterface
-	BookingServices    bookingdomain.BookingServiceInterface
-	AccessServices     accessdomain.AcessServiceInterface
-	ReportServices     reportdomain.ReportServiceInterface
-	Staff              staffdomain.StaffServiceInterface
-	Policies           policiesdomain.PoliciesServicesInterface
-	WishlistServices   wishlistdomain.WishlistService
-	AuditServices      auditdomain.AuditService
+	AuthServices         authdomain.AuthServicesInterface
+	UserServices         authdomain.UserServicesInterface
+	BranchesServices     branchdomain.BranchesServicesInterface
+	LocationsServices    branchdomain.LocationsServicesInterface
+	EquipmentServices    inventorydomain.EquipmentServicesInterface
+	InventoryServices    inventorydomain.BranchInventoryServicesInterface
+	InstructorServices   instructordomain.InstructorServiceInterface
+	ProductsServices     productsdomain.ProductsServiceInterface
+	MarketingServices    marketingdomain.MarketingServiceInterface
+	MembershipServices   membershipsdomain.MembershipsServiceInterface
+	BillingServices      billingdomain.BillingServiceInterface
+	ScheduleServices     scheduledomain.ScheduleServiceInterface
+	CombosServices       combosdomain.CombosServicesInterface
+	BookingServices      bookingdomain.BookingServiceInterface
+	AccessServices       accessdomain.AcessServiceInterface
+	ReportServices       reportdomain.ReportServiceInterface
+	Staff                staffdomain.StaffServiceInterface
+	Policies             policiesdomain.PoliciesServicesInterface
+	WishlistServices     wishlistdomain.WishlistService
+	AuditServices        auditdomain.AuditService
+	NotificationServices notidomain.NotificationServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
