@@ -92,7 +92,7 @@ func (h *AuthService) MailSenderStaff(ctx context.Context, user *authdomain.User
 		ActivationLink string
 	}{
 		Username:       user.FirstName,
-		ActivationLink: fmt.Sprintf("%s/activate/%s", h.config.FrontURL, token),
+		ActivationLink: fmt.Sprintf("%s/en/activate/%s", h.config.FrontURL, token),
 	}
 
 	// send mail
