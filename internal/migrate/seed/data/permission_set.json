@@ -19,6 +19,7 @@
     "schedule:get",
     "schedule:update",
     "schedule:delete",
+    "schedule:view_attendance",
     "equipments:create",
     "equipments:list",
     "equipments:get",

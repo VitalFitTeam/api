@@ -1,5 +1,15 @@
 basePath: /v1
 definitions:
+  accessdomain.AttendanceStatus:
+    enum:
+    - Attended
+    - NoShow
+    - Cancelled
+    type: string
+    x-enum-varnames:
+    - AttendanceStatusAttended
+    - AttendanceStatusNoShow
+    - AttendanceStatusCancelled
   accessdomain.CheckInResponse:
     properties:
       access_type:
@@ -2350,6 +2360,25 @@ definitions:
       starts_at:
         type: string
       updated_at:
+        type: string
+    type: object
+  schedulehandlers.AttendanceHistoryResponse:
+    properties:
+      attendance_id:
+        type: string
+      check_in_time:
+        type: string
+      service_id:
+        type: string
+      service_name:
+        type: string
+      status:
+        $ref: '#/definitions/accessdomain.AttendanceStatus'
+      user_email:
+        type: string
+      user_id:
+        type: string
+      user_name:
         type: string
     type: object
   schedulehandlers.ClassResponse:
@@ -5953,6 +5982,70 @@ paths:
       summary: Get a count data for each status branch
       tags:
       - Branches
+  /classes/{id}/attendance/history:
+    get:
+      description: Retrieves the attendance history for a specific class with optional
+        filtering by date and status
+      parameters:
+      - description: Class UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by start date (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      - description: Filter by status (Attended, NoShow, Cancelled)
+        enum:
+        - Attended
+        - NoShow
+        - Cancelled
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/schedulehandlers.AttendanceHistoryResponse'
+                type: array
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Class not found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get class attendance history
+      tags:
+      - Schedule
   /client-memberships:
     get:
       description: Retrieves a paginated list of all client memberships, with optional

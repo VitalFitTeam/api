@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 )
 
@@ -119,4 +120,15 @@ type ClassResponse struct {
 	MaxCapacity int       `json:"max_capacity"`
 	IsVisible   bool      `json:"is_visible"`
 	Notes       string    `json:"notes"`
+}
+
+type AttendanceHistoryResponse struct {
+	AttendanceID uuid.UUID                     `json:"attendance_id"`
+	UserID       uuid.UUID                     `json:"user_id"`
+	UserName     string                        `json:"user_name"`
+	UserEmail    string                        `json:"user_email"`
+	ServiceID    uuid.UUID                     `json:"service_id"`
+	ServiceName  string                        `json:"service_name"`
+	CheckInTime  time.Time                     `json:"check_in_time"`
+	Status       accessdomain.AttendanceStatus `json:"status"`
 }

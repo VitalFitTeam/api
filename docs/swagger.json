@@ -5303,6 +5303,104 @@
                 }
             }
         },
+        "/classes/{id}/attendance/history": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the attendance history for a specific class with optional filtering by date and status",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "Get class attendance history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Class UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by start date (RFC3339 format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by end date (RFC3339 format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Attended",
+                            "NoShow",
+                            "Cancelled"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status (Attended, NoShow, Cancelled)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/schedulehandlers.AttendanceHistoryResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Class not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/client-memberships": {
             "get": {
                 "security": [
@@ -12685,6 +12783,19 @@
         }
     },
     "definitions": {
+        "accessdomain.AttendanceStatus": {
+            "type": "string",
+            "enum": [
+                "Attended",
+                "NoShow",
+                "Cancelled"
+            ],
+            "x-enum-varnames": [
+                "AttendanceStatusAttended",
+                "AttendanceStatusNoShow",
+                "AttendanceStatusCancelled"
+            ]
+        },
         "accessdomain.CheckInResponse": {
             "type": "object",
             "properties": {
@@ -16173,6 +16284,35 @@
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "schedulehandlers.AttendanceHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "attendance_id": {
+                    "type": "string"
+                },
+                "check_in_time": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "service_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/accessdomain.AttendanceStatus"
+                },
+                "user_email": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_name": {
                     "type": "string"
                 }
             }

@@ -180,6 +180,10 @@
     "description": "Allows canceling or deleting a class"
   },
   {
+    "name": "schedule:view_attendance",
+    "description": "Allows viewing class attendance history"
+  },
+  {
     "name": "billing:list",
     "description": "Allows listing rates, payment methods, and fiscal types"
   },

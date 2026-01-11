@@ -14,6 +14,7 @@ type ScheduleHandlersInterface interface {
 	UpdateClassHandler(c *gin.Context)
 	DeleteClassHandler(c *gin.Context)
 	GetClassByIDHandler(c *gin.Context)
+	GetClassAttendanceHistoryHandler(c *gin.Context)
 }
 
 type ScheduleHandlers struct {
@@ -43,5 +44,15 @@ func (h *ScheduleHandlers) ScheduleRoutes(rg *gin.RouterGroup, m *auth.AuthMiddl
 		classRoutes.GET("/:classId", h.GetClassByIDHandler)
 		classRoutes.PUT("/:classId", m.RBACPermission("schedule:update"), h.UpdateClassHandler)
 		classRoutes.DELETE("/:classId", m.RBACPermission("schedule:delete"), h.DeleteClassHandler)
+	}
+
+	// Class-specific routes
+	classesGroup := rg.Group("/classes")
+	{
+		classesGroup.Use(m.AuthJwtTokenMiddleware())
+		classesGroup.Use(m.AuditLogMiddleware())
+
+		// Attendance history - accessible by branch admins
+		classesGroup.GET("/:id/attendance/history", m.RBACPermission("schedule:view_attendance"), h.GetClassAttendanceHistoryHandler)
 	}
 }
