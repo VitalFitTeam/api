@@ -480,9 +480,10 @@ func (s *MembershipStore) GetExpiringMemberships(ctx context.Context, days int) 
         SELECT 
             cm.user_id,
             CONCAT(u.first_name, ' ', u.last_name) as user_name,
+            u.email as user_email,
             mt.membership_type_id,
             mt.name as membership_name,
-            ? as days_remaining
+            ?::int as days_remaining
         FROM client_memberships cm
         JOIN users u ON cm.user_id = u.user_id
         JOIN membership_types mt ON cm.membership_type_id = mt.membership_type_id

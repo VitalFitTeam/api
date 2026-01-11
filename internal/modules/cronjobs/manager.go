@@ -2,23 +2,27 @@ package cronjobs
 
 import (
 	"github.com/robfig/cron/v3"
+	"github.com/vitalfit/api/config"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	noti "github.com/vitalfit/api/internal/shared/notifications"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
+	"github.com/vitalfit/api/pkg/mailer"
 	"go.uber.org/zap"
 )
 
 type Manager struct {
 	cron        *cron.Cron
 	store       store.Storage
+	config      config.Config
 	appservices appservices.Services
+	Mailer      mailer.Client
 	cache       cache.Storage
 	push        noti.PushService
 	logger      *zap.SugaredLogger
 }
 
-func NewManager(store store.Storage, appservices appservices.Services, logger *zap.SugaredLogger, cache cache.Storage, noti noti.PushService) *Manager {
+func NewManager(store store.Storage, appservices appservices.Services, Mailer mailer.Client, logger *zap.SugaredLogger, cache cache.Storage, noti noti.PushService, config config.Config) *Manager {
 	return &Manager{
 		cron:        cron.New(),
 		store:       store,
@@ -26,6 +30,7 @@ func NewManager(store store.Storage, appservices appservices.Services, logger *z
 		cache:       cache,
 		push:        noti,
 		logger:      logger,
+		Mailer:      Mailer,
 	}
 }
 
@@ -64,5 +69,9 @@ func (m *Manager) registerRoutes() {
 	// if err != nil {
 	// 	m.logger.Errorw("Error getting time", "error", err)
 	// }
+	_, err = m.cron.AddFunc("@daily", m.MembershipExpiringNotification)
+	if err != nil {
+		m.logger.Errorw("Error on membership expiring cronjob", "error", err)
+	}
 
 }

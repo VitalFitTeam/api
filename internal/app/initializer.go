@@ -38,7 +38,7 @@ func BuildApplication(cfg *config.Config, db *gorm.DB, rdb *redis.Client) *appli
 	services := appservices.NewServices(store, logger, *cfg, auth, mailer, cache, *notifications)
 	handlers := apphandlers.NewAppHandlers(services)
 
-	cronjob := cronjobs.NewManager(store, services, logger, cache, *notifications)
+	cronjob := cronjobs.NewManager(store, services, mailer, logger, cache, *notifications, *cfg)
 	defer logger.Sync()
 	return &application{
 		Config:      cfg,

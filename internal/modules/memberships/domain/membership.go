@@ -32,6 +32,7 @@ type MembershipSummary struct {
 type MembershipExpiringDetail struct {
 	UserID           uuid.UUID `json:"user_id"`
 	UserName         string    `json:"user_name"`
+	UserEmail        string    `json:"user_email"`
 	MembershipTypeID uuid.UUID `json:"membership_type_id"`
 	MembershipName   string    `json:"membership_name"`
 	DaysRemaining    int       `json:"days_remaining"`

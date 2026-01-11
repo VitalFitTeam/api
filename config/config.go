@@ -16,6 +16,7 @@ type Config struct {
 	Auth         AuthConfig
 	RateLimiter  ratelimiter.Config
 	FrontURL     string
+	FrontURLE    string
 	RedisCfg     redisConfig
 	OpenExchange OpenExchangeConfig
 	Clerk        ClerkConfig
@@ -97,7 +98,8 @@ func LoadConfig() *Config {
 			TimeFrame:            time.Minute * 1,
 			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
-		FrontURL: env.GetString("FRONT_URL", ""),
+		FrontURL:  env.GetString("FRONT_URL", ""),
+		FrontURLE: env.GetString("EXTERNAL_LINK_E", ""),
 		RedisCfg: redisConfig{
 			Addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
 			Username: env.GetString("REDIS_USERNAME", ""),

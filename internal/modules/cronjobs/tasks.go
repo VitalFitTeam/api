@@ -6,6 +6,7 @@ import (
 	"time"
 
 	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
+	"github.com/vitalfit/api/pkg/mailer"
 )
 
 func (m *Manager) GetRatesCronjob() {
@@ -82,14 +83,13 @@ func (m *Manager) NotifyClassReminder() {
 		m.logger.Warn("BookingRemind is empty")
 		return
 	}
-	var notifactions []notidomain.Notification
+	var notifications []notidomain.Notification
 	for _, booking := range BookingRemind {
 		var notification notidomain.Notification
 		notification.UserID = booking.UserID
 		notification.Title = fmt.Sprintf("Class Reminder %s", booking.ServiceName)
 		notification.Message = fmt.Sprintf("Your %s class starts in %v", booking.ServiceName, booking.TimeUntilStart)
 		notification.Type = string(notidomain.ClassReminder)
-		notifactions = append(notifactions, notification)
 		notification.IsRead = false
 		metadata, err := m.push.ConvertStructToDataMap(booking)
 		if err != nil {
@@ -112,12 +112,74 @@ func (m *Manager) NotifyClassReminder() {
 				}
 			}
 		}
-		notifactions = append(notifactions, notification)
+		notifications = append(notifications, notification)
 	}
-	if err := m.appservices.NotificationServices.CreateBatchNotifications(ctx, notifactions); err != nil {
+	if err := m.appservices.NotificationServices.CreateBatchNotifications(ctx, notifications); err != nil {
 		m.logger.Errorw("failed to create batch notifications", "error", err)
 		return
 	}
-	m.logger.Infow("notifactions", "notifactions", notifactions)
+	m.logger.Infow("notifications", "notifications", notifications)
 
+}
+
+func (m *Manager) MembershipExpiringNotification() {
+	m.logger.Info("running membership expiring cronjob")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	memberships, err := m.appservices.MembershipServices.GetExpiringMemberships(ctx, 3)
+	if err != nil {
+		m.logger.Errorw("failed to get expiring memberships", "error", err)
+		return
+	}
+	if len(memberships) == 0 {
+		m.logger.Warn("memberships is empty")
+		return
+	}
+	var notifications []notidomain.Notification
+	for _, membership := range memberships {
+		var notification notidomain.Notification
+		notification.UserID = membership.UserID
+		notification.Title = fmt.Sprintf("%s Expiring ", membership.MembershipName)
+		notification.Message = fmt.Sprintf("Your memberships %s is expiring in %d days", membership.MembershipName, membership.DaysRemaining)
+		notification.Type = string(notidomain.MembershipExpiring)
+		notification.IsRead = false
+		metadata, err := m.push.ConvertStructToDataMap(membership)
+		if err != nil {
+			m.logger.Errorw("error converting metadata")
+		}
+		metaInterface := make(map[string]interface{}, len(metadata))
+		for k, v := range metadata {
+			metaInterface[k] = v
+		}
+		notification.Metadata = metaInterface
+
+		mem := membership
+		go func() {
+			renewalURL := fmt.Sprintf("%s/en/memberships", m.config.FrontURLE)
+			isProdEnv := m.config.Env == "production"
+
+			data := struct {
+				UserName       string
+				MembershipName string
+				DaysRemaining  int
+				RenewalURL     string
+			}{
+				UserName:       mem.UserName,
+				MembershipName: mem.MembershipName,
+				DaysRemaining:  mem.DaysRemaining,
+				RenewalURL:     renewalURL,
+			}
+
+			if _, err := m.Mailer.Send(mailer.MembershipExpiring, mem.UserName, mem.UserEmail, data, !isProdEnv); err != nil {
+				m.logger.Errorw("failed to send membership expiring email", "error", err)
+			}
+		}()
+		notifications = append(notifications, notification)
+	}
+	if len(notifications) > 0 {
+		if err := m.appservices.NotificationServices.CreateBatchNotifications(ctx, notifications); err != nil {
+			m.logger.Errorw("failed to create batch notifications", "error", err)
+		}
+	}
+	m.logger.Infow("memberships", "memberships", memberships)
 }
