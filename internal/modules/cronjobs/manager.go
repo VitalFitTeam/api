@@ -55,20 +55,15 @@ func (m *Manager) registerRoutes() {
 	if err != nil {
 		m.logger.Errorw("Error getting rates cronjob", "error", err)
 	}
-
 	_, err = m.cron.AddFunc("@daily", m.UpdateExpiredMembershipsCronjob)
 	if err != nil {
 		m.logger.Errorw("Error registering update expired memberships cronjob", "error", err)
 	}
 	//todo modify to every 10(min) before merging to dev
-	_, err = m.cron.AddFunc("@every 30h", m.NotifyClassReminder)
+	_, err = m.cron.AddFunc("@every 10m", m.NotifyClassReminder)
 	if err != nil {
 		m.logger.Errorw("Error notifying class reminder ronjobs", "error", err)
 	}
-	// _, err = m.cron.AddFunc("@every 45s", m.TestBroadcast)
-	// if err != nil {
-	// 	m.logger.Errorw("Error getting time", "error", err)
-	// }
 	_, err = m.cron.AddFunc("@daily", m.MembershipExpiringNotification)
 	if err != nil {
 		m.logger.Errorw("Error on membership expiring cronjob", "error", err)
