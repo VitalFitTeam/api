@@ -310,5 +310,9 @@
   {
     "name": "branch_management",
     "description": "Allows management of branch operations"
+  },
+  {
+    "name": "access:view_client_history",
+    "description": "Allows viewing client attendance history and service usage"
   }
 ]

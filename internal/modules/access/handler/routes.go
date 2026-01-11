@@ -9,6 +9,8 @@ import (
 type AccessHandlerInterface interface {
 	AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	CheckInHandler(c *gin.Context)
+	GetClientAttendanceHistoryHandler(c *gin.Context)
+	GetClientServiceUsageHandler(c *gin.Context)
 }
 
 type AccessHandler struct {
@@ -27,4 +29,13 @@ func (r *AccessHandler) AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware
 	accessGroup.Use(m.AuditLogMiddleware())
 
 	accessGroup.POST("/check-in", m.RBACPermission("access:check_in"), r.CheckInHandler)
+
+	// Client attendance and service usage routes
+	clientsGroup := rg.Group("/clients")
+	clientsGroup.Use(m.AuthJwtTokenMiddleware())
+	clientsGroup.Use(m.AuditLogMiddleware())
+	{
+		clientsGroup.GET("/:id/attendance-history", m.RBACPermission("access:view_client_history"), r.GetClientAttendanceHistoryHandler)
+		clientsGroup.GET("/:id/service-usage", m.RBACPermission("access:view_client_history"), r.GetClientServiceUsageHandler)
+	}
 }

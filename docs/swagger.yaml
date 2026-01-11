@@ -21,12 +21,50 @@ definitions:
       service_name:
         type: string
     type: object
+  accesshandler.AttendanceHistoryResponse:
+    properties:
+      attendance_id:
+        type: string
+      check_in_time:
+        type: string
+      class_name:
+        type: string
+      class_time:
+        type: string
+      service_id:
+        type: string
+      service_name:
+        type: string
+      status:
+        $ref: '#/definitions/accessdomain.AttendanceStatus'
+      user_id:
+        type: string
+      user_name:
+        type: string
+    type: object
   accesshandler.CheckInPayload:
     properties:
       branch_id:
         type: string
       qr_jwt:
         type: string
+    type: object
+  accesshandler.ServiceUsageResponse:
+    properties:
+      attendance_id:
+        type: string
+      branch_id:
+        type: string
+      branch_name:
+        type: string
+      check_in_time:
+        type: string
+      service_id:
+        type: string
+      service_name:
+        type: string
+      status:
+        $ref: '#/definitions/accessdomain.AttendanceStatus'
     type: object
   auditdomain.AuditLog:
     properties:
@@ -6193,6 +6231,106 @@ paths:
       summary: Update a client membership
       tags:
       - Memberships
+  /clients/{id}/attendance-history:
+    get:
+      description: Retrieves the complete attendance history for a specific client,
+        ordered by date
+      parameters:
+      - description: Client UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date filter (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/accesshandler.AttendanceHistoryResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Client Attendance History
+      tags:
+      - Access
+  /clients/{id}/service-usage:
+    get:
+      description: Retrieves service usage history for a specific client including
+        branch and timestamp
+      parameters:
+      - description: Client UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date filter (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/accesshandler.ServiceUsageResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Client Service Usage
+      tags:
+      - Access
   /equipment-types:
     get:
       description: Lists all available equipment types in the global catalog with
