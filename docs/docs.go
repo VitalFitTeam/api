@@ -13250,6 +13250,9 @@ const docTemplate = `{
                 "context": {
                     "type": "string"
                 },
+                "device_token": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string",
                     "maxLength": 255
@@ -13328,6 +13331,9 @@ const docTemplate = `{
                 "session_token"
             ],
             "properties": {
+                "device_token": {
+                    "type": "string"
+                },
                 "session_token": {
                     "type": "string"
                 }

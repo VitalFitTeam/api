@@ -81,9 +81,10 @@ type ResendActivationCodePayload struct {
 }
 
 type CreateUserTokenPayload struct {
-	Email    string `json:"email" binding:"required,email,max=255"`
-	Password string `json:"password" binding:"required,min=3,max=72"`
-	Context  string `json:"context"`
+	Email       string `json:"email" binding:"required,email,max=255"`
+	Password    string `json:"password" binding:"required,min=3,max=72"`
+	Context     string `json:"context"`
+	DeviceToken string `json:"device_token,omitempty"`
 }
 
 type ForgotPasswordPayload struct {
@@ -254,6 +255,7 @@ type GetUserResponse struct {
 
 type OAuthLoginPayload struct {
 	SessionToken string `json:"session_token" binding:"required"`
+	DeviceToken  string `json:"device_token,omitempty"`
 }
 
 type RenewTokenPayload struct {
