@@ -13081,6 +13081,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "device_token": {
+                    "type": "string"
+                },
                 "expires_at": {
                     "type": "string"
                 },
