@@ -6,6 +6,17 @@ import (
 	"github.com/google/uuid"
 )
 
+type NotificationType string
+
+const (
+	ClassReminder      NotificationType = "class_reminder"
+	BookingConfirmed   NotificationType = "booking_confirmed"
+	WaitlistAvailable  NotificationType = "waitlist_available"
+	MembershipExpiring NotificationType = "membership_expiring"
+	PaymentFailed      NotificationType = "payment_failed"
+	SystemBroadcast    NotificationType = "system_broadcast"
+)
+
 type Notification struct {
 	ID uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
 

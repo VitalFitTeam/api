@@ -2,7 +2,10 @@ package cronjobs
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
 )
 
 func (m *Manager) GetRatesCronjob() {
@@ -60,13 +63,61 @@ func (m *Manager) TestChurn() {
 
 }
 
-func (m *Manager) testBroadcast() {
-	m.logger.Info("running test broadcast cronjob")
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-	if err := m.appservices.NotificationServices.SendBroadcast(ctx, "que onda papu", "qlq"); err != nil {
-		m.logger.Errorw("failed to send broadcast", "error", err)
-		return
+func (m *Manager) TestBroadcast() {
+	now := time.Now()
+	m.logger.Infof("running test broadcast cronjob %v", now)
 
+}
+
+func (m *Manager) NotifyClassReminder() {
+	m.logger.Info("running notify class reminder cronjob")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	BookingRemind, err := m.appservices.BookingServices.GetUpcomingClassReminders(ctx)
+	if err != nil {
+		m.logger.Errorw("failed to get upcoming class reminders", "error", err)
+		return
 	}
+	if len(BookingRemind) == 0 {
+		m.logger.Warn("BookingRemind is empty")
+		return
+	}
+	var notifactions []notidomain.Notification
+	for _, booking := range BookingRemind {
+		var notification notidomain.Notification
+		notification.UserID = booking.UserID
+		notification.Title = fmt.Sprintf("Class Reminder %s", booking.ServiceName)
+		notification.Message = fmt.Sprintf("Your %s class starts in %v", booking.ServiceName, booking.TimeUntilStart)
+		notification.Type = string(notidomain.ClassReminder)
+		notifactions = append(notifactions, notification)
+		notification.IsRead = false
+		metadata, err := m.push.ConvertStructToDataMap(booking)
+		if err != nil {
+			m.logger.Errorw("error converting metadata")
+		}
+		metaInterface := make(map[string]interface{}, len(metadata))
+		for k, v := range metadata {
+			metaInterface[k] = v
+		}
+		notification.Metadata = metaInterface
+		session, err := m.store.Session.GetUserSessions(ctx, booking.UserID)
+		if err != nil {
+			m.logger.Errorw("failed to get user sessions")
+		}
+		for _, ses := range session {
+			if ses.DeviceToken != "" {
+				err := m.push.SendPush(ctx, ses.DeviceToken, fmt.Sprintf("Class Reminder %s", booking.ServiceName), fmt.Sprintf("Your %s class starts in %v", booking.ServiceName, booking.TimeUntilStart), metadata)
+				if err != nil {
+					m.logger.Errorw("failed to send push notification", "error", err)
+				}
+			}
+		}
+		notifactions = append(notifactions, notification)
+	}
+	if err := m.appservices.NotificationServices.CreateBatchNotifications(ctx, notifactions); err != nil {
+		m.logger.Errorw("failed to create batch notifications", "error", err)
+		return
+	}
+	m.logger.Infow("notifactions", "notifactions", notifactions)
+
 }
