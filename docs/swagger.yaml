@@ -1586,6 +1586,13 @@ definitions:
       updated_at:
         type: string
     type: object
+  marketinghandlers.RandomBannerResponse:
+    properties:
+      image_url:
+        type: string
+      service_id:
+        type: string
+    type: object
   marketinghandlers.UpdateBannerPayload:
     properties:
       image_url:
@@ -6871,6 +6878,37 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a banner
+      tags:
+      - Marketing
+  /marketing/banners/random:
+    get:
+      description: Retrieves a random active banner with its associated service ID.
+        This endpoint is public and does not require authentication.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/marketinghandlers.RandomBannerResponse'
+            type: object
+        "404":
+          description: 'error: Not Found - No active banners with services available'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Get random banner with service
       tags:
       - Marketing
   /marketing/promotions:

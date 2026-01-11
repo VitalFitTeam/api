@@ -465,3 +465,33 @@ func (h *MarketingHandler) GetPromotionsHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+// @Summary		Get random banner with service
+// @Description	Retrieves a random active banner with its associated service ID. This endpoint is public and does not require authentication.
+// @Tags			Marketing
+// @Produce		json
+// @Success		200	{object}	object{data=RandomBannerResponse}
+// @Failure		404	{object}	object{error=string}	"error: Not Found - No active banners with services available"
+// @Failure		500	{object}	object{error=string}	"error: Internal Server Error"
+// @Router			/marketing/banners/random [get]
+func (h *MarketingHandler) GetRandomBannerHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	banner, serviceID, err := h.services.MarketingServices.GetRandomBannerWithService(ctx)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	resp := &RandomBannerResponse{
+		ImageURL:  banner.ImageURL,
+		ServiceID: serviceID,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
