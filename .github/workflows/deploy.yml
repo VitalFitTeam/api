@@ -74,6 +74,8 @@ jobs:
           echo "REDIS_USERNAME=\"${{ secrets.REDIS_USERNAME }}\"" >> .env
           echo "REDIS_ENABLED=\"${{ secrets.REDIS_ENABLED }}\"" >> .env
           echo "OPEN_EXCHANGE_APP_ID=\"${{ secrets.OPEN_EXCHANGE_APP_ID }}\"" >> .env
+          echo "FIREBASE_CREDENTIALS_BASE64=\"${{ secrets.FIREBASE_CREDENTIALS_BASE64 }}\"" >> .env
+          echo "FRONT_URL_E=\"${{ secrets.FRONT_URL_E }}\"" >> .env
 
       - name: 4. Pull the new image
         run: |
