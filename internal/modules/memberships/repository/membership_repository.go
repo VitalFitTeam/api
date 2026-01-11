@@ -470,3 +470,29 @@ func (s *MembershipStore) GetCancellationReasonByDescription(ctx context.Context
 	}
 	return reason, nil
 }
+
+func (s *MembershipStore) GetExpiringMemberships(ctx context.Context, days int) ([]membershipsdomain.MembershipExpiringDetail, error) {
+	var results []membershipsdomain.MembershipExpiringDetail
+
+	targetDate := time.Now().AddDate(0, 0, days).Format("2006-01-02")
+
+	err := s.db.WithContext(ctx).Raw(`
+        SELECT 
+            cm.user_id,
+            CONCAT(u.first_name, ' ', u.last_name) as user_name,
+            mt.membership_type_id,
+            mt.name as membership_name,
+            ? as days_remaining
+        FROM client_memberships cm
+        JOIN users u ON cm.user_id = u.user_id
+        JOIN membership_types mt ON cm.membership_type_id = mt.membership_type_id
+        WHERE cm.status = ? 
+        AND DATE(cm.end_date) = ? 
+    `, days, membershipsdomain.StatusActive, targetDate).Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
