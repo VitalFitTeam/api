@@ -20,7 +20,7 @@ import (
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
-	"github.com/vitalfit/api/internal/shared/cronjobs"
+	"github.com/vitalfit/api/internal/modules/cronjobs"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	ratelimiterm "github.com/vitalfit/api/internal/shared/middleware/ratelimiter"
 	"github.com/vitalfit/api/internal/store"

@@ -6,7 +6,7 @@ import (
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
 	authservices "github.com/vitalfit/api/internal/modules/auth/services"
-	"github.com/vitalfit/api/internal/shared/cronjobs"
+	"github.com/vitalfit/api/internal/modules/cronjobs"
 	"github.com/vitalfit/api/internal/shared/notifications"
 	"github.com/vitalfit/api/internal/store/cache"
 
@@ -39,7 +39,6 @@ func BuildApplication(cfg *config.Config, db *gorm.DB, rdb *redis.Client) *appli
 	}
 
 	cronjob := cronjobs.NewManager(store, services, logger, cache, *notifications)
-	cronjob.Start()
 	defer logger.Sync()
 	return &application{
 		Config:      cfg,
@@ -49,5 +48,6 @@ func BuildApplication(cfg *config.Config, db *gorm.DB, rdb *redis.Client) *appli
 		Services:    services,
 		Handlers:    handlers,
 		ratelimiter: rateLimiter,
+		Cronjob:     cronjob,
 	}
 }
