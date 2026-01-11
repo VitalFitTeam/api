@@ -124,3 +124,28 @@ func (h *NotificationHandlers) MarkAllAsReadHandler(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 }
+
+// @Summary		Send broadcast notification
+// @Description	Sends a push notification to all users.
+// @Tags			Notifications
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		BroadcastRequest		true	"Broadcast payload"
+// @Success		200		{object}	map[string]interface{}	"Notification sent"
+// @Failure		400		{object}	map[string]interface{}	"Bad Request"
+// @Failure		500		{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/notifications/broadcast [post]
+func (h *NotificationHandlers) SendBroadcastHandler(c *gin.Context) {
+	var payload BroadcastRequest
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	ctx := c.Request.Context()
+	if err := h.services.NotificationServices.SendBroadcast(ctx, payload.Title, payload.Message); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Notification sent"})
+}

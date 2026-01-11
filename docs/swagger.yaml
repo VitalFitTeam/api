@@ -1821,6 +1821,16 @@ definitions:
       price:
         type: number
     type: object
+  notihandlers.BroadcastRequest:
+    properties:
+      message:
+        type: string
+      title:
+        type: string
+    required:
+    - message
+    - title
+    type: object
   notihandlers.NotificationResponse:
     properties:
       created_at:
@@ -7679,6 +7689,41 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Mark notification as read
+      tags:
+      - Notifications
+  /notifications/broadcast:
+    post:
+      consumes:
+      - application/json
+      description: Sends a push notification to all users.
+      parameters:
+      - description: Broadcast payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/notihandlers.BroadcastRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notification sent
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Send broadcast notification
       tags:
       - Notifications
   /notifications/read-all:

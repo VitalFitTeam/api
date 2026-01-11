@@ -46,6 +46,26 @@ func (s *NotificationService) MarkAllAsRead(ctx context.Context, userID uuid.UUI
 	return s.store.Notification.MarkAllAsRead(ctx, userID)
 }
 
-// func (s *NotificationService) SendBroadcast(ctx context.Context, title, message string) error {
-// 	s.noti.SendPush(ctx,)
-// }
+func (s *NotificationService) SendBroadcast(ctx context.Context, title, message string) error {
+	users, err := s.store.Users.GetAllClients(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, user := range users {
+		session, err := s.store.Session.GetUserSessions(ctx, user.UserID)
+		if err != nil {
+			return err
+		}
+		for _, ses := range session {
+			if ses.DeviceToken != "" {
+				err := s.noti.SendPush(ctx, ses.DeviceToken, title, message, nil)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+
+}

@@ -15,7 +15,8 @@ type NotificationStore struct {
 
 func NewNotificationStore(db *gorm.DB) *NotificationStore {
 	return &NotificationStore{
-		db: db}
+		db: db,
+	}
 }
 
 func (s *NotificationStore) CreateNotification(ctx context.Context, n *notidomain.Notification) error {

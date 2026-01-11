@@ -28,5 +28,6 @@ func (r *NotificationHandlers) NotificationsRoutes(rg *gin.RouterGroup, m *auth.
 		notificationsGroup.GET("/unread-count", r.GetUnreadCountHandler)
 		notificationsGroup.PATCH("/:id/read", r.MarkAsReadHandler)
 		notificationsGroup.PATCH("/read-all", r.MarkAllAsReadHandler)
+		notificationsGroup.POST("/broadcast", m.RBACPermission("notifications:send"), r.SendBroadcastHandler)
 	}
 }

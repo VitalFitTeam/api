@@ -59,3 +59,14 @@ func (m *Manager) TestChurn() {
 	m.push.SendPush(ctx, token, "test", "test", data)
 
 }
+
+func (m *Manager) testBroadcast() {
+	m.logger.Info("running test broadcast cronjob")
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+	if err := m.appservices.NotificationServices.SendBroadcast(ctx, "que onda papu", "qlq"); err != nil {
+		m.logger.Errorw("failed to send broadcast", "error", err)
+		return
+
+	}
+}
