@@ -41,6 +41,7 @@ import (
 	"github.com/vitalfit/api/internal/store/cache"
 
 	logs "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/internal/shared/notifications"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
 
@@ -73,7 +74,7 @@ type Services struct {
 	Logger *zap.SugaredLogger
 }
 
-func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage) Services {
+func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage, pushNoti notifications.PushService) Services {
 	bookingService := bookingservice.NewBookingService(store)
 	return Services{
 		AuthServices:         authservices.NewAuthServices(store, cfg, auth, mailer),
@@ -96,7 +97,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		Policies:             policiesservices.NewPoliciesServices(store),
 		WishlistServices:     wishlistservice.NewWishlistService(store),
 		AuditServices:        auditservice.NewAuditService(store),
-		NotificationServices: notiservice.NewNotificationService(store),
+		NotificationServices: notiservice.NewNotificationService(store, pushNoti),
 		LogErrors:            logs.NewLogErrors(logger),
 		Logger:               logger,
 	}

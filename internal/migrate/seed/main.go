@@ -11,6 +11,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
 	appservices "github.com/vitalfit/api/internal/app/services"
+	"github.com/vitalfit/api/internal/shared/notifications"
 	"go.uber.org/zap"
 
 	"log"
@@ -1494,8 +1495,9 @@ func main() {
 	cache := cache.NewRedisStorage(rdb)
 
 	mailer.On("Send", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(200, nil)
+	pushNoti := notifications.NewMockPushService()
 
-	service := appservices.NewServices(appStore, sugaredLogger, *cfg, testAuth, mailer, cache)
+	service := appservices.NewServices(appStore, sugaredLogger, *cfg, testAuth, mailer, cache, *pushNoti)
 	s := NewSeedStruct()
 	s.Seed(appStore, conn, service)
 

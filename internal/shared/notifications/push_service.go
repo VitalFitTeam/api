@@ -18,6 +18,10 @@ type PushService struct {
 	client *messaging.Client
 }
 
+func NewMockPushService() *PushService {
+	return &PushService{}
+}
+
 func NewPushService() (*PushService, error) {
 	ctx := context.Background()
 

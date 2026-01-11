@@ -32,3 +32,7 @@ func NewNotificationResponse(n notidomain.Notification) NotificationResponse {
 type UnreadCountResponse struct {
 	Count int64 `json:"count"`
 }
+type BroadcastRequest struct {
+	Title   string `json:"title" binding:"required"`
+	Message string `json:"message" binding:"required"`
+}

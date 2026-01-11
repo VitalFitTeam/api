@@ -5,17 +5,20 @@ import (
 
 	"github.com/google/uuid"
 	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
+	"github.com/vitalfit/api/internal/shared/notifications"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type NotificationService struct {
 	store store.Storage
+	noti  notifications.PushService
 }
 
-func NewNotificationService(store store.Storage) *NotificationService {
+func NewNotificationService(store store.Storage, noti notifications.PushService) *NotificationService {
 	return &NotificationService{
 		store: store,
+		noti:  noti,
 	}
 }
 
@@ -42,3 +45,7 @@ func (s *NotificationService) MarkAsRead(ctx context.Context, notificationID uui
 func (s *NotificationService) MarkAllAsRead(ctx context.Context, userID uuid.UUID) error {
 	return s.store.Notification.MarkAllAsRead(ctx, userID)
 }
+
+// func (s *NotificationService) SendBroadcast(ctx context.Context, title, message string) error {
+// 	s.noti.SendPush(ctx,)
+// }

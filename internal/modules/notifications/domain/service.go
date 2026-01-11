@@ -14,4 +14,5 @@ type NotificationServiceInterface interface {
 	CountUnread(ctx context.Context, userID uuid.UUID) (int64, error)
 	MarkAsRead(ctx context.Context, notificationID uuid.UUID) error
 	MarkAllAsRead(ctx context.Context, userID uuid.UUID) error
+	//SendBroadcast(ctx context.Context, title, message string) error
 }
