@@ -99,7 +99,7 @@ func LoadConfig() *Config {
 			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
 		FrontURL:  env.GetString("FRONT_URL", ""),
-		FrontURLE: env.GetString("EXTERNAL_LINK_E", ""),
+		FrontURLE: env.GetString("FRONT_URL_E", ""),
 		RedisCfg: redisConfig{
 			Addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
 			Username: env.GetString("REDIS_USERNAME", ""),
