@@ -314,7 +314,8 @@
   {
     "name": "access:view_client_history",
     "description": "Allows viewing client attendance history and service usage"
-  },{
+  },
+  {
     "name": "medical_info:create",
     "description": "Allows creating medical information for clients"
   },
