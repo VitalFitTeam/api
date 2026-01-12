@@ -6204,7 +6204,34 @@ paths:
       summary: Update a client membership
       tags:
       - Memberships
-<<<<<<< HEAD
+  /client-memberships/me:
+    get:
+      description: Retrieves the membership details for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client membership details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/membershipsdomain.ClientMembership'
+            type: object
+        "404":
+          description: 'Not Found: Client membership not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get my membership
+      tags:
+      - Memberships
   /clients/{id}/medical-info:
     get:
       consumes:
@@ -6217,16 +6244,10 @@ paths:
         name: id
         required: true
         type: string
-=======
-  /client-memberships/me:
-    get:
-      description: Retrieves the membership details for the authenticated user.
->>>>>>> dev
       produces:
       - application/json
       responses:
         "200":
-<<<<<<< HEAD
           description: Medical information retrieved successfully
           schema:
             $ref: '#/definitions/clientshandler.MedicalInfoResponse'
@@ -6247,16 +6268,6 @@ paths:
             type: object
         "404":
           description: Not Found
-=======
-          description: Client membership details
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/membershipsdomain.ClientMembership'
-            type: object
-        "404":
-          description: 'Not Found: Client membership not found'
->>>>>>> dev
           schema:
             additionalProperties: true
             type: object
@@ -6267,7 +6278,6 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-<<<<<<< HEAD
       summary: Get Medical Information
       tags:
       - Clients
@@ -6380,11 +6390,6 @@ paths:
       summary: Update Medical Information
       tags:
       - Clients
-=======
-      summary: Get my membership
-      tags:
-      - Memberships
->>>>>>> dev
   /equipment-types:
     get:
       description: Lists all available equipment types in the global catalog with

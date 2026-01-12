@@ -26,20 +26,17 @@ func NewClientHandler(services appservices.Services) *ClientHandler {
 func (h *ClientHandler) ClientRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	clientsGroup := rg.Group("/clients")
 	clientsGroup.Use(m.AuthJwtTokenMiddleware())
+	clientsGroup.Use(m.AuditLogMiddleware()))
 
-	// Medical info routes - all require authentication and specific permissions
 	clientsGroup.POST("/:id/medical-info",
-		m.RBACPermission("medical_info:create"),
 		h.CreateMedicalInfoHandler,
 	)
 
 	clientsGroup.GET("/:id/medical-info",
-		m.RBACPermission("medical_info:read"),
 		h.GetMedicalInfoHandler,
 	)
 
 	clientsGroup.PUT("/:id/medical-info",
-		m.RBACPermission("medical_info:update"),
 		h.UpdateMedicalInfoHandler,
 	)
 }

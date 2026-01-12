@@ -101,7 +101,7 @@ func (s *ClientService) decrypt(ciphertext string) (string, error) {
 }
 
 // CreateMedicalInfo creates new medical information for a client
-func (s *ClientService) CreateMedicalInfo(ctx context.Context, userID, modifiedBy uuid.UUID, data *clientsdomain.MedicalInfoData, ipAddress, userAgent string) (*clientsdomain.ClientMedicalInfo, error) {
+func (s *ClientService) CreateMedicalInfo(ctx context.Context, userID, modifiedBy uuid.UUID, userRole string, data *clientsdomain.MedicalInfoData, ipAddress, userAgent string) (*clientsdomain.ClientMedicalInfo, error) {
 	// Check if medical info already exists
 	existing, err := s.store.Client.GetMedicalInfoByUserID(ctx, userID)
 	if err == nil && existing != nil {
@@ -156,26 +156,28 @@ func (s *ClientService) CreateMedicalInfo(ctx context.Context, userID, modifiedB
 	}
 
 	// Create audit log
-	auditLog := &clientsdomain.MedicalInfoAuditLog{
-		MedicalInfoID: medicalInfo.MedicalInfoID,
-		UserID:        userID,
-		ModifiedBy:    modifiedBy,
-		Action:        "CREATE",
-		FieldsChanged: "all fields",
-		IPAddress:     ipAddress,
-		UserAgent:     userAgent,
-	}
+	if userRole == "client" {
+		auditLog := &clientsdomain.MedicalInfoAuditLog{
+			MedicalInfoID: medicalInfo.MedicalInfoID,
+			UserID:        userID,
+			ModifiedBy:    modifiedBy,
+			Action:        "POST",
+			FieldsChanged: "all fields",
+			IPAddress:     ipAddress,
+			UserAgent:     userAgent,
+		}
 
-	if err := s.store.Client.CreateAuditLog(ctx, auditLog); err != nil {
-		// Log error but don't fail the request
-		fmt.Printf("Failed to create audit log: %v\n", err)
+		if err := s.store.Client.CreateAuditLog(ctx, auditLog); err != nil {
+			// Log error but don't fail the request
+			fmt.Printf("Failed to create audit log: %v\n", err)
+		}
 	}
 
 	return medicalInfo, nil
 }
 
 // GetMedicalInfo retrieves and decrypts medical information
-func (s *ClientService) GetMedicalInfo(ctx context.Context, userID, requestedBy uuid.UUID, ipAddress, userAgent string) (*clientsdomain.MedicalInfoData, error) {
+func (s *ClientService) GetMedicalInfo(ctx context.Context, userID, requestedBy uuid.UUID, userRole string, ipAddress, userAgent string) (*clientsdomain.MedicalInfoData, error) {
 	medicalInfo, err := s.store.Client.GetMedicalInfoByUserID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, shared_errors.ErrNotFound) {
@@ -215,21 +217,6 @@ func (s *ClientService) GetMedicalInfo(ctx context.Context, userID, requestedBy 
 		return nil, fmt.Errorf("failed to decrypt emergency contact: %w", err)
 	}
 
-	// Create audit log for viewing
-	auditLog := &clientsdomain.MedicalInfoAuditLog{
-		MedicalInfoID: medicalInfo.MedicalInfoID,
-		UserID:        userID,
-		ModifiedBy:    requestedBy,
-		Action:        "VIEW",
-		IPAddress:     ipAddress,
-		UserAgent:     userAgent,
-	}
-
-	if err := s.store.Client.CreateAuditLog(ctx, auditLog); err != nil {
-		// Log error but don't fail the request
-		fmt.Printf("Failed to create audit log: %v\n", err)
-	}
-
 	return &clientsdomain.MedicalInfoData{
 		MedicalConditions: decryptedConditions,
 		MedicalRisks:      decryptedRisks,
@@ -242,7 +229,7 @@ func (s *ClientService) GetMedicalInfo(ctx context.Context, userID, requestedBy 
 }
 
 // UpdateMedicalInfo updates existing medical information
-func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedBy uuid.UUID, data *clientsdomain.MedicalInfoData, ipAddress, userAgent string) (*clientsdomain.ClientMedicalInfo, error) {
+func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedBy uuid.UUID, userRole string, data *clientsdomain.MedicalInfoData, ipAddress, userAgent string) (*clientsdomain.ClientMedicalInfo, error) {
 	// Check if medical info exists
 	existing, err := s.store.Client.GetMedicalInfoByUserID(ctx, userID)
 	if err != nil {
@@ -323,19 +310,21 @@ func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedB
 	}
 
 	// Create audit log
-	auditLog := &clientsdomain.MedicalInfoAuditLog{
-		MedicalInfoID: existing.MedicalInfoID,
-		UserID:        userID,
-		ModifiedBy:    modifiedBy,
-		Action:        "UPDATE",
-		FieldsChanged: strings.Join(changedFields, ", "),
-		IPAddress:     ipAddress,
-		UserAgent:     userAgent,
-	}
+	if userRole == "client" {
+		auditLog := &clientsdomain.MedicalInfoAuditLog{
+			MedicalInfoID: existing.MedicalInfoID,
+			UserID:        userID,
+			ModifiedBy:    modifiedBy,
+			Action:        "PUT",
+			FieldsChanged: strings.Join(changedFields, ", "),
+			IPAddress:     ipAddress,
+			UserAgent:     userAgent,
+		}
 
-	if err := s.store.Client.CreateAuditLog(ctx, auditLog); err != nil {
-		// Log error but don't fail the request
-		fmt.Printf("Failed to create audit log: %v\n", err)
+		if err := s.store.Client.CreateAuditLog(ctx, auditLog); err != nil {
+			// Log error but don't fail the request
+			fmt.Printf("Failed to create audit log: %v\n", err)
+		}
 	}
 
 	return existing, nil

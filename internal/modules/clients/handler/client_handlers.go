@@ -42,7 +42,23 @@ func (h *ClientHandler) CreateMedicalInfoHandler(c *gin.Context) {
 		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("user not authenticated"))
 		return
 	}
+
+	if user.Role.Name != "client" {
+		permission := "medical_info:create"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
 	modifiedByUUID := user.UserID
+	userRole := user.Role.Name
 
 	// Parse request payload
 	var payload CreateMedicalInfoPayload
@@ -67,7 +83,7 @@ func (h *ClientHandler) CreateMedicalInfoHandler(c *gin.Context) {
 	}
 
 	// Create medical info
-	_, err = h.services.ClientServices.CreateMedicalInfo(ctx, clientID, modifiedByUUID, data, ipAddress, userAgent)
+	_, err = h.services.ClientServices.CreateMedicalInfo(ctx, clientID, modifiedByUUID, userRole, data, ipAddress, userAgent)
 	if err != nil {
 		if err.Error() == "medical information already exists for this user" {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
@@ -113,14 +129,30 @@ func (h *ClientHandler) GetMedicalInfoHandler(c *gin.Context) {
 		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("user not authenticated"))
 		return
 	}
+
+	if user.Role.Name != "client" {
+		permission := "medical_info:read"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
 	requestedByUUID := user.UserID
+	userRole := user.Role.Name
 
 	// Get IP and User-Agent for audit
 	ipAddress := c.ClientIP()
 	userAgent := c.Request.UserAgent()
 
 	// Get medical info
-	medicalInfo, err := h.services.ClientServices.GetMedicalInfo(ctx, clientID, requestedByUUID, ipAddress, userAgent)
+	medicalInfo, err := h.services.ClientServices.GetMedicalInfo(ctx, clientID, requestedByUUID, userRole, ipAddress, userAgent)
 	if err != nil {
 		if errors.Is(err, shared_errors.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "medical information not found"})
@@ -175,7 +207,23 @@ func (h *ClientHandler) UpdateMedicalInfoHandler(c *gin.Context) {
 		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("user not authenticated"))
 		return
 	}
+
+	if user.Role.Name != "client" {
+		permission := "medical_info:update"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
 	modifiedByUUID := user.UserID
+	userRole := user.Role.Name
 
 	// Parse request payload
 	var payload UpdateMedicalInfoPayload
@@ -200,7 +248,7 @@ func (h *ClientHandler) UpdateMedicalInfoHandler(c *gin.Context) {
 	}
 
 	// Update medical info
-	_, err = h.services.ClientServices.UpdateMedicalInfo(ctx, clientID, modifiedByUUID, data, ipAddress, userAgent)
+	_, err = h.services.ClientServices.UpdateMedicalInfo(ctx, clientID, modifiedByUUID, userRole, data, ipAddress, userAgent)
 	if err != nil {
 		if errors.Is(err, shared_errors.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "medical information not found"})
