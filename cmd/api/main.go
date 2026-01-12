@@ -9,7 +9,7 @@ import (
 	"github.com/vitalfit/api/internal/store/cache"
 	"github.com/vitalfit/api/pkg/db"
 
-	_ "github.com/lib/pq" // Importa el driver de PostgreSQL
+	_ "github.com/lib/pq"
 )
 
 //	@title			VitalFit API
