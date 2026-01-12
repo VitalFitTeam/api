@@ -1,5 +1,15 @@
 basePath: /v1
 definitions:
+  accessdomain.AttendanceStatus:
+    enum:
+    - Attended
+    - NoShow
+    - Cancelled
+    type: string
+    x-enum-varnames:
+    - AttendanceStatusAttended
+    - AttendanceStatusNoShow
+    - AttendanceStatusCancelled
   accessdomain.CheckInResponse:
     properties:
       access_type:
@@ -11,12 +21,50 @@ definitions:
       service_name:
         type: string
     type: object
+  accesshandler.AttendanceHistoryResponse:
+    properties:
+      attendance_id:
+        type: string
+      check_in_time:
+        type: string
+      class_name:
+        type: string
+      class_time:
+        type: string
+      service_id:
+        type: string
+      service_name:
+        type: string
+      status:
+        $ref: '#/definitions/accessdomain.AttendanceStatus'
+      user_id:
+        type: string
+      user_name:
+        type: string
+    type: object
   accesshandler.CheckInPayload:
     properties:
       branch_id:
         type: string
       qr_jwt:
         type: string
+    type: object
+  accesshandler.ServiceUsageResponse:
+    properties:
+      attendance_id:
+        type: string
+      branch_id:
+        type: string
+      branch_name:
+        type: string
+      check_in_time:
+        type: string
+      service_id:
+        type: string
+      service_name:
+        type: string
+      status:
+        $ref: '#/definitions/accessdomain.AttendanceStatus'
     type: object
   auditdomain.AuditLog:
     properties:
@@ -2461,6 +2509,25 @@ definitions:
       starts_at:
         type: string
       updated_at:
+        type: string
+    type: object
+  schedulehandlers.AttendanceHistoryResponse:
+    properties:
+      attendance_id:
+        type: string
+      check_in_time:
+        type: string
+      service_id:
+        type: string
+      service_name:
+        type: string
+      status:
+        $ref: '#/definitions/accessdomain.AttendanceStatus'
+      user_email:
+        type: string
+      user_id:
+        type: string
+      user_name:
         type: string
     type: object
   schedulehandlers.ClassResponse:
@@ -6064,6 +6131,70 @@ paths:
       summary: Get a count data for each status branch
       tags:
       - Branches
+  /classes/{id}/attendance/history:
+    get:
+      description: Retrieves the attendance history for a specific class with optional
+        filtering by date and status
+      parameters:
+      - description: Class UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by start date (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      - description: Filter by status (Attended, NoShow, Cancelled)
+        enum:
+        - Attended
+        - NoShow
+        - Cancelled
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/schedulehandlers.AttendanceHistoryResponse'
+                type: array
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Class not found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Server error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get class attendance history
+      tags:
+      - Schedule
   /client-memberships:
     get:
       description: Retrieves a paginated list of all client memberships, with optional
@@ -6239,6 +6370,64 @@ paths:
       summary: Get my membership
       tags:
       - Memberships
+  /clients/{id}/attendance-history:
+    get:
+      description: Retrieves the complete attendance history for a specific client,
+        ordered by date with pagination
+      parameters:
+      - description: Client UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date filter (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 20)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/accesshandler.AttendanceHistoryResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Client Attendance History
+      tags:
+      - Access
   /clients/{id}/medical-info:
     get:
       consumes:
@@ -6429,6 +6618,64 @@ paths:
       summary: Update Medical Information
       tags:
       - Clients
+  /clients/{id}/service-usage:
+    get:
+      description: Retrieves service usage history for a specific client including
+        branch and timestamp with pagination
+      parameters:
+      - description: Client UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date filter (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 20)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/accesshandler.ServiceUsageResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Client Service Usage
+      tags:
+      - Access
   /equipment-types:
     get:
       description: Lists all available equipment types in the global catalog with

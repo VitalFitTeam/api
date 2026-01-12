@@ -180,6 +180,10 @@
     "description": "Allows canceling or deleting a class"
   },
   {
+    "name": "schedule:view_attendance",
+    "description": "Allows viewing class attendance history"
+  },
+  {
     "name": "billing:list",
     "description": "Allows listing rates, payment methods, and fiscal types"
   },
@@ -308,6 +312,9 @@
     "description": "Allows management of branch operations"
   },
   {
+    "name": "access:view_client_history",
+    "description": "Allows viewing client attendance history and service usage"
+  },{
     "name": "medical_info:create",
     "description": "Allows creating medical information for clients"
   },

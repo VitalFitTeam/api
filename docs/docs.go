@@ -5311,6 +5311,104 @@ const docTemplate = `{
                 }
             }
         },
+        "/classes/{id}/attendance/history": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the attendance history for a specific class with optional filtering by date and status",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "Get class attendance history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Class UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by start date (RFC3339 format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by end date (RFC3339 format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "Attended",
+                            "NoShow",
+                            "Cancelled"
+                        ],
+                        "type": "string",
+                        "description": "Filter by status (Attended, NoShow, Cancelled)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/schedulehandlers.AttendanceHistoryResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Class not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/client-memberships": {
             "get": {
                 "security": [
@@ -5561,6 +5659,93 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found: Client membership not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/attendance-history": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the complete attendance history for a specific client, ordered by date with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access"
+                ],
+                "summary": "Get Client Attendance History",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date filter (RFC3339 format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (RFC3339 format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/accesshandler.AttendanceHistoryResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -5866,6 +6051,93 @@ const docTemplate = `{
                                     "type": "string"
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/service-usage": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves service usage history for a specific client including branch and timestamp with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access"
+                ],
+                "summary": "Get Client Service Usage",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date filter (RFC3339 format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (RFC3339 format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/accesshandler.ServiceUsageResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -13362,6 +13634,19 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "accessdomain.AttendanceStatus": {
+            "type": "string",
+            "enum": [
+                "Attended",
+                "NoShow",
+                "Cancelled"
+            ],
+            "x-enum-varnames": [
+                "AttendanceStatusAttended",
+                "AttendanceStatusNoShow",
+                "AttendanceStatusCancelled"
+            ]
+        },
         "accessdomain.CheckInResponse": {
             "type": "object",
             "properties": {
@@ -13379,6 +13664,38 @@ const docTemplate = `{
                 }
             }
         },
+        "accesshandler.AttendanceHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "attendance_id": {
+                    "type": "string"
+                },
+                "check_in_time": {
+                    "type": "string"
+                },
+                "class_name": {
+                    "type": "string"
+                },
+                "class_time": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "service_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/accessdomain.AttendanceStatus"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_name": {
+                    "type": "string"
+                }
+            }
+        },
         "accesshandler.CheckInPayload": {
             "type": "object",
             "properties": {
@@ -13387,6 +13704,32 @@ const docTemplate = `{
                 },
                 "qr_jwt": {
                     "type": "string"
+                }
+            }
+        },
+        "accesshandler.ServiceUsageResponse": {
+            "type": "object",
+            "properties": {
+                "attendance_id": {
+                    "type": "string"
+                },
+                "branch_id": {
+                    "type": "string"
+                },
+                "branch_name": {
+                    "type": "string"
+                },
+                "check_in_time": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "service_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/accessdomain.AttendanceStatus"
                 }
             }
         },
@@ -17012,6 +17355,35 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "schedulehandlers.AttendanceHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "attendance_id": {
+                    "type": "string"
+                },
+                "check_in_time": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "service_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/accessdomain.AttendanceStatus"
+                },
+                "user_email": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_name": {
                     "type": "string"
                 }
             }

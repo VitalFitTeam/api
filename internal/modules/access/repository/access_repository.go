@@ -3,7 +3,9 @@ package accessrepository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -23,4 +25,114 @@ func (r *AccessStore) LogAttendance(ctx context.Context, attendance *accessdomai
 
 func (r *AccessStore) UpdateLogAttendance(ctx context.Context, attendance *accessdomain.AttendanceLog) error {
 	return r.db.WithContext(ctx).Save(attendance).Error
+}
+
+func (r *AccessStore) GetClassAttendanceHistory(ctx context.Context, classID uuid.UUID, startDate, endDate, status *string) ([]*accessdomain.AttendanceLog, error) {
+	var attendances []*accessdomain.AttendanceLog
+
+	query := r.db.WithContext(ctx).
+		Preload("User").
+		Preload("Service").
+		Where("schedule_id = ?", classID)
+
+	// Apply date filters
+	if startDate != nil {
+		query = query.Where("check_in_time >= ?", startDate)
+	}
+	if endDate != nil {
+		query = query.Where("check_in_time <= ?", endDate)
+	}
+
+	// Apply status filter
+	if status != nil {
+		query = query.Where("status = ?", status)
+	}
+
+	// Order by check-in time descending (most recent first)
+	query = query.Order("check_in_time DESC")
+
+	err := query.Find(&attendances).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return attendances, nil
+}
+
+func (r *AccessStore) GetClientAttendanceHistory(ctx context.Context, clientID uuid.UUID, startDate, endDate *string, fq pagination.PaginatedFeedQuery) ([]*accessdomain.AttendanceLog, int64, error) {
+	var attendances []*accessdomain.AttendanceLog
+	var total int64
+
+	query := r.db.WithContext(ctx).
+		Model(&accessdomain.AttendanceLog{}).
+		Where("user_id = ?", clientID)
+
+	// Apply date filters
+	if startDate != nil {
+		query = query.Where("check_in_time >= ?", startDate)
+	}
+	if endDate != nil {
+		query = query.Where("check_in_time <= ?", endDate)
+	}
+
+	// Get total count before pagination
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Apply pagination
+	offset := (fq.Page - 1) * fq.Limit
+	query = query.
+		Preload("User").
+		Preload("Service").
+		Preload("Class").
+		Order("check_in_time DESC").
+		Limit(fq.Limit).
+		Offset(offset)
+
+	err := query.Find(&attendances).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return attendances, total, nil
+}
+
+func (r *AccessStore) GetClientServiceUsage(ctx context.Context, clientID uuid.UUID, startDate, endDate *string, fq pagination.PaginatedFeedQuery) ([]*accessdomain.AttendanceLog, int64, error) {
+	var serviceUsage []*accessdomain.AttendanceLog
+	var total int64
+
+	query := r.db.WithContext(ctx).
+		Model(&accessdomain.AttendanceLog{}).
+		Where("user_id = ?", clientID)
+
+	// Apply date filters
+	if startDate != nil {
+		query = query.Where("check_in_time >= ?", startDate)
+	}
+	if endDate != nil {
+		query = query.Where("check_in_time <= ?", endDate)
+	}
+
+	// Get total count before pagination
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Apply pagination
+	offset := (fq.Page - 1) * fq.Limit
+	query = query.
+		Preload("Service").
+		Preload("Class").
+		Preload("Class.Branch").
+		Order("check_in_time DESC").
+		Limit(fq.Limit).
+		Offset(offset)
+
+	err := query.Find(&serviceUsage).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return serviceUsage, total, nil
 }

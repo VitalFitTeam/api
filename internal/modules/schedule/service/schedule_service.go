@@ -91,3 +91,39 @@ func (s *ScheduleService) UpdateClass(ctx context.Context, class *scheduledomain
 func (s *ScheduleService) DeleteClass(ctx context.Context, classID uuid.UUID) error {
 	return s.store.Schedule.DeleteClass(ctx, classID)
 }
+
+// ----------------------------------------
+// GetClassAttendanceHistory
+// ----------------------------------------
+
+func (s *ScheduleService) GetClassAttendanceHistory(ctx context.Context, filter scheduledomain.AttendanceHistoryFilter) ([]interface{}, error) {
+	// Verify the class exists first
+	_, err := s.store.Schedule.GetClassByID(ctx, filter.ClassID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert time.Time pointers to string pointers for repository
+	var startDate, endDate *string
+	if filter.StartDate != nil {
+		start := filter.StartDate.Format("2006-01-02T15:04:05Z07:00")
+		startDate = &start
+	}
+	if filter.EndDate != nil {
+		end := filter.EndDate.Format("2006-01-02T15:04:05Z07:00")
+		endDate = &end
+	}
+
+	// Get attendance history from access repository
+	attendances, err := s.store.Access.GetClassAttendanceHistory(ctx, filter.ClassID, startDate, endDate, filter.Status)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to []interface{} to avoid circular dependency
+	result := make([]interface{}, len(attendances))
+	for i, attendance := range attendances {
+		result[i] = attendance
+	}
+	return result, nil
+}

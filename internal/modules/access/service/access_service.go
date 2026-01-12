@@ -11,6 +11,7 @@ import (
 	bookingservice "github.com/vitalfit/api/internal/modules/booking/services"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 type AccessService struct {
@@ -163,4 +164,24 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 	}
 
 	return nil, shared_errors.ErrPayment
+}
+
+func (s *AccessService) GetClientAttendanceHistory(ctx context.Context, clientID uuid.UUID, startDate, endDate *string, fq pagination.PaginatedFeedQuery) ([]*accessdomain.AttendanceLog, int64, error) {
+	// Verify client exists by checking if user exists
+	_, err := s.store.Users.GetByID(ctx, clientID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return s.store.Access.GetClientAttendanceHistory(ctx, clientID, startDate, endDate, fq)
+}
+
+func (s *AccessService) GetClientServiceUsage(ctx context.Context, clientID uuid.UUID, startDate, endDate *string, fq pagination.PaginatedFeedQuery) ([]*accessdomain.AttendanceLog, int64, error) {
+	// Verify client exists by checking if user exists
+	_, err := s.store.Users.GetByID(ctx, clientID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return s.store.Access.GetClientServiceUsage(ctx, clientID, startDate, endDate, fq)
 }

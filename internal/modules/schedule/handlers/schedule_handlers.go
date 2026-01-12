@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"gorm.io/gorm"
@@ -378,4 +379,109 @@ func (h *ScheduleHandlers) DeleteClassHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, nil)
+}
+
+// ------------------------------
+// GET /classes/:id/attendance/history
+// ------------------------------
+
+// @Summary		Get class attendance history
+// @Description	Retrieves the attendance history for a specific class with optional filtering by date and status
+// @Tags			Schedule
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id			path		string	true	"Class UUID"
+// @Param			start_date	query		string	false	"Filter by start date (RFC3339 format)"
+// @Param			end_date	query		string	false	"Filter by end date (RFC3339 format)"
+// @Param			status		query		string	false	"Filter by status (Attended, NoShow, Cancelled)"	Enums(Attended, NoShow, Cancelled)
+// @Success		200			{object}	object{data=[]AttendanceHistoryResponse}
+// @Failure		400			{object}	object{error=string}	"Invalid input"
+// @Failure		404			{object}	object{error=string}	"Class not found"
+// @Failure		500			{object}	object{error=string}	"Server error"
+// @Router			/classes/{id}/attendance/history [get]
+func (h *ScheduleHandlers) GetClassAttendanceHistoryHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	classID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	// Build filter from query parameters
+	filter := scheduledomain.AttendanceHistoryFilter{
+		ClassID: classID,
+	}
+
+	// Parse optional date filters
+	if startDateStr := c.Query("start_date"); startDateStr != "" {
+		startDate, err := time.Parse(time.RFC3339, startDateStr)
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+		filter.StartDate = &startDate
+	}
+
+	if endDateStr := c.Query("end_date"); endDateStr != "" {
+		endDate, err := time.Parse(time.RFC3339, endDateStr)
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+		filter.EndDate = &endDate
+	}
+
+	// Parse optional status filter
+	if statusStr := c.Query("status"); statusStr != "" {
+		// Validate status
+		status := accessdomain.AttendanceStatus(statusStr)
+		if status != accessdomain.AttendanceStatusAttended &&
+			status != accessdomain.AttendanceStatusNoShow &&
+			status != accessdomain.AttendanceStatusCancelled {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+		filter.Status = &statusStr
+	}
+
+	// Get attendance history
+	attendancesRaw, err := h.services.ScheduleServices.GetClassAttendanceHistory(ctx, filter)
+	if err != nil {
+		switch err {
+		case gorm.ErrRecordNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+
+	// Build response
+	resp := make([]*AttendanceHistoryResponse, 0, len(attendancesRaw))
+	for _, attendanceRaw := range attendancesRaw {
+		attendance := attendanceRaw.(*accessdomain.AttendanceLog)
+		item := &AttendanceHistoryResponse{
+			AttendanceID: attendance.AttendanceID,
+			UserID:       attendance.UserID,
+			ServiceID:    attendance.ServiceID,
+			CheckInTime:  attendance.CheckInTime,
+			Status:       attendance.Status,
+		}
+
+		// Add user info if preloaded
+		if attendance.User.UserID != uuid.Nil {
+			item.UserName = attendance.User.FirstName + " " + attendance.User.LastName
+			item.UserEmail = attendance.User.Email
+		}
+
+		// Add service info if preloaded
+		if attendance.Service.ServiceID != uuid.Nil {
+			item.ServiceName = attendance.Service.Name
+		}
+
+		resp = append(resp, item)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
 }
