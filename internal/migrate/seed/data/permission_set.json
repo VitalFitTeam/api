@@ -70,7 +70,8 @@
     "checkins:create",
     "checkins:list",
     "cancellation-reasons:list",
-    "access:check_in"
+    "access:check_in",
+    "view"
   ],
   "instructor": [
     "schedule:list",
