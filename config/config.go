@@ -8,18 +8,19 @@ import (
 )
 
 type Config struct {
-	Addrs        string
-	ApiUrl       string
-	Db           dbConfig
-	Env          string
-	Mail         MailConfig
-	Auth         AuthConfig
-	RateLimiter  ratelimiter.Config
-	FrontURL     string
-	FrontURLE    string
-	RedisCfg     redisConfig
-	OpenExchange OpenExchangeConfig
-	Clerk        ClerkConfig
+	Addrs         string
+	ApiUrl        string
+	Db            dbConfig
+	Env           string
+	Mail          MailConfig
+	Auth          AuthConfig
+	RateLimiter   ratelimiter.Config
+	FrontURL      string
+	FrontURLE     string
+	RedisCfg      redisConfig
+	OpenExchange  OpenExchangeConfig
+	Clerk         ClerkConfig
+	EncryptionKey string
 }
 
 type redisConfig struct {
@@ -113,5 +114,6 @@ func LoadConfig() *Config {
 		Clerk: ClerkConfig{
 			JwksURL: env.GetString("CLERK_JWKS_URL", ""),
 		},
+		EncryptionKey: env.GetString("ENCRYPTION_KEY", "vitalfit-medical-encrypt-key1234"),
 	}
 }

@@ -57,7 +57,7 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 		cancellationReasonsGroup.Use(m.AuthJwtTokenMiddleware())
 		cancellationReasonsGroup.Use(m.AuditLogMiddleware())
 		cancellationReasonsGroup.POST("", m.RBACPermission("cancellation-reasons:create"), r.CreateCancellationReasonHandler)
-		cancellationReasonsGroup.GET("", m.RBACPermission("cancellation-reasons:list"), r.GetCancellationReasonsHandler)
+		cancellationReasonsGroup.GET("", r.GetCancellationReasonsHandler)
 		cancellationReasonsGroup.PUT("/:id", m.RBACPermission("cancellation-reasons:update"), r.UpdateCancellationReasonHandler)
 		cancellationReasonsGroup.DELETE("/:id", m.RBACPermission("cancellation-reasons:delete"), r.DeleteCancellationReasonHandler)
 	}
