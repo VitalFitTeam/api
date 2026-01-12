@@ -220,9 +220,6 @@ func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedB
 		return nil, err
 	}
 
-	// Track changed fields
-	var changedFields []string
-
 	// Encrypt and update fields
 	if data.MedicalConditions != "" {
 		encryptedConditions, err := s.encrypt(data.MedicalConditions)
@@ -230,7 +227,6 @@ func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedB
 			return nil, fmt.Errorf("failed to encrypt medical conditions: %w", err)
 		}
 		existing.MedicalConditions = encryptedConditions
-		changedFields = append(changedFields, "medical_conditions")
 	}
 
 	if data.MedicalRisks != "" {
@@ -239,7 +235,6 @@ func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedB
 			return nil, fmt.Errorf("failed to encrypt medical risks: %w", err)
 		}
 		existing.MedicalRisks = encryptedRisks
-		changedFields = append(changedFields, "medical_risks")
 	}
 
 	if data.Warnings != "" {
@@ -248,7 +243,6 @@ func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedB
 			return nil, fmt.Errorf("failed to encrypt warnings: %w", err)
 		}
 		existing.Warnings = encryptedWarnings
-		changedFields = append(changedFields, "warnings")
 	}
 
 	if data.Allergies != "" {
@@ -257,7 +251,6 @@ func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedB
 			return nil, fmt.Errorf("failed to encrypt allergies: %w", err)
 		}
 		existing.Allergies = encryptedAllergies
-		changedFields = append(changedFields, "allergies")
 	}
 
 	if data.Medications != "" {
@@ -266,7 +259,6 @@ func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedB
 			return nil, fmt.Errorf("failed to encrypt medications: %w", err)
 		}
 		existing.Medications = encryptedMedications
-		changedFields = append(changedFields, "medications")
 	}
 
 	if data.EmergencyContact != "" {
@@ -275,12 +267,10 @@ func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedB
 			return nil, fmt.Errorf("failed to encrypt emergency contact: %w", err)
 		}
 		existing.EmergencyContact = encryptedEmergencyContact
-		changedFields = append(changedFields, "emergency_contact")
 	}
 
 	if data.BloodType != "" {
 		existing.BloodType = data.BloodType
-		changedFields = append(changedFields, "blood_type")
 	}
 
 	existing.LastUpdatedBy = modifiedBy
