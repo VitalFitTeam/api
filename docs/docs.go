@@ -5500,6 +5500,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/client-memberships/me": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the membership details for the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Get my membership",
+                "responses": {
+                    "200": {
+                        "description": "Client membership details",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/membershipsdomain.ClientMembership"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found: Client membership not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/client-memberships/{clientMembershipId}": {
             "get": {
                 "security": [
@@ -5630,18 +5674,30 @@ const docTemplate = `{
                 }
             }
         },
+<<<<<<< HEAD
         "/clients/{id}/attendance-history": {
+=======
+        "/clients/{id}/medical-info": {
+>>>>>>> dev
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
+<<<<<<< HEAD
                 "description": "Retrieves the complete attendance history for a specific client, ordered by date",
+=======
+                "description": "Retrieves medical information for a specific client. Only authorized roles can view medical info.",
+                "consumes": [
+                    "application/json"
+                ],
+>>>>>>> dev
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
+<<<<<<< HEAD
                     "Access"
                 ],
                 "summary": "Get Client Attendance History",
@@ -5649,11 +5705,111 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client UUID",
+=======
+                    "Clients"
+                ],
+                "summary": "Get Medical Information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Medical information retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/clientshandler.MedicalInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Updates existing medical information for a client. Only authorized roles can update medical info.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "Update Medical Information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client User ID",
+>>>>>>> dev
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
+<<<<<<< HEAD
                         "type": "string",
                         "description": "Start date filter (RFC3339 format)",
                         "name": "start_date",
@@ -5664,10 +5820,20 @@ const docTemplate = `{
                         "description": "End date filter (RFC3339 format)",
                         "name": "end_date",
                         "in": "query"
+=======
+                        "description": "Medical Information Update Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientshandler.UpdateMedicalInfoPayload"
+                        }
+>>>>>>> dev
                     }
                 ],
                 "responses": {
                     "200": {
+<<<<<<< HEAD
                         "description": "OK",
                         "schema": {
                             "type": "object",
@@ -5677,6 +5843,14 @@ const docTemplate = `{
                                     "items": {
                                         "$ref": "#/definitions/accesshandler.AttendanceHistoryResponse"
                                     }
+=======
+                        "description": "Medical information updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+>>>>>>> dev
                                 }
                             }
                         }
@@ -5685,20 +5859,59 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
+<<<<<<< HEAD
                             "additionalProperties": true
+=======
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+>>>>>>> dev
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
                             "type": "object",
+<<<<<<< HEAD
                             "additionalProperties": true
+=======
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+>>>>>>> dev
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
+<<<<<<< HEAD
                             "additionalProperties": true
                         }
                     }
@@ -5707,16 +5920,36 @@ const docTemplate = `{
         },
         "/clients/{id}/service-usage": {
             "get": {
+=======
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+>>>>>>> dev
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
+<<<<<<< HEAD
                 "description": "Retrieves service usage history for a specific client including branch and timestamp",
+=======
+                "description": "Creates new medical information for a client. Only authorized roles can create medical info.",
+                "consumes": [
+                    "application/json"
+                ],
+>>>>>>> dev
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
+<<<<<<< HEAD
                     "Access"
                 ],
                 "summary": "Get Client Service Usage",
@@ -5724,11 +5957,21 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client UUID",
+=======
+                    "Clients"
+                ],
+                "summary": "Create Medical Information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client User ID",
+>>>>>>> dev
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
+<<<<<<< HEAD
                         "type": "string",
                         "description": "Start date filter (RFC3339 format)",
                         "name": "start_date",
@@ -5754,12 +5997,29 @@ const docTemplate = `{
                                     }
                                 }
                             }
+=======
+                        "description": "Medical Information Payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientshandler.CreateMedicalInfoPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Medical information created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/clientshandler.MedicalInfoResponse"
+>>>>>>> dev
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
+<<<<<<< HEAD
                             "additionalProperties": true
                         }
                     },
@@ -5768,13 +6028,61 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+=======
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict - Medical info already exists",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+>>>>>>> dev
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
+<<<<<<< HEAD
                             "additionalProperties": true
+=======
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+>>>>>>> dev
                         }
                     }
                 }
@@ -6742,6 +7050,53 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "error: Conflict",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/marketing/banners/random": {
+            "get": {
+                "description": "Retrieves a random active banner with its associated service ID. This endpoint is public and does not require authentication.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Marketing"
+                ],
+                "summary": "Get random banner with service",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/marketinghandlers.RandomBannerResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "error: Not Found - No active banners with services available",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -8027,6 +8382,240 @@ const docTemplate = `{
                                     "type": "string"
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of notifications for the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get user notifications",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number for pagination",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "desc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of notifications",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/notihandlers.NotificationResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/broadcast": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Sends a push notification to all users.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Send broadcast notification",
+                "parameters": [
+                    {
+                        "description": "Broadcast payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/notihandlers.BroadcastRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification sent",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/read-all": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Marks all notifications for the authenticated user as read.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark all notifications as read",
+                "responses": {
+                    "204": {
+                        "description": "All notifications marked as read"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/unread-count": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the count of unread notifications for the authenticated user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Get unread notifications count",
+                "responses": {
+                    "200": {
+                        "description": "Count of unread notifications",
+                        "schema": {
+                            "$ref": "#/definitions/notihandlers.UnreadCountResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/notifications/{id}/read": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Marks a specific notification as read.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Mark notification as read",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Notification UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Notification marked as read"
+                    },
+                    "400": {
+                        "description": "Bad Request: Invalid UUID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -10026,6 +10615,55 @@ const docTemplate = `{
                             "properties": {
                                 "data": {
                                     "$ref": "#/definitions/reportdomain.BillingMatrix"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/kpi/churn-rate": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the percentage of clients who left (churned) during the current month compared to the start of the month. Formula: ((Lost Clients) / Start Clients) * 100.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get Churn Rate KPI",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Churn Rate KPI",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/reportdomain.KPICard"
                                 }
                             }
                         }
@@ -13127,6 +13765,9 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "device_token": {
+                    "type": "string"
+                },
                 "expires_at": {
                     "type": "string"
                 },
@@ -13293,6 +13934,9 @@ const docTemplate = `{
                 "context": {
                     "type": "string"
                 },
+                "device_token": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string",
                     "maxLength": 255
@@ -13371,6 +14015,9 @@ const docTemplate = `{
                 "session_token"
             ],
             "properties": {
+                "device_token": {
+                    "type": "string"
+                },
                 "session_token": {
                     "type": "string"
                 }
@@ -14497,6 +15144,98 @@ const docTemplate = `{
                 }
             }
         },
+        "clientshandler.CreateMedicalInfoPayload": {
+            "type": "object",
+            "properties": {
+                "allergies": {
+                    "type": "string",
+                    "example": "Penicillin, Peanuts"
+                },
+                "blood_type": {
+                    "type": "string",
+                    "example": "O+"
+                },
+                "emergency_contact": {
+                    "type": "string",
+                    "example": "Jane Doe - +1234567890 (Wife)"
+                },
+                "medical_conditions": {
+                    "type": "string",
+                    "example": "Diabetes Type 2, Hypertension"
+                },
+                "medical_risks": {
+                    "type": "string",
+                    "example": "High blood pressure, family history of heart disease"
+                },
+                "medications": {
+                    "type": "string",
+                    "example": "Metformin 500mg daily"
+                },
+                "warnings": {
+                    "type": "string",
+                    "example": "Avoid high-intensity exercises"
+                }
+            }
+        },
+        "clientshandler.MedicalInfoResponse": {
+            "type": "object",
+            "properties": {
+                "allergies": {
+                    "type": "string"
+                },
+                "blood_type": {
+                    "type": "string"
+                },
+                "emergency_contact": {
+                    "type": "string"
+                },
+                "medical_conditions": {
+                    "type": "string"
+                },
+                "medical_risks": {
+                    "type": "string"
+                },
+                "medications": {
+                    "type": "string"
+                },
+                "warnings": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientshandler.UpdateMedicalInfoPayload": {
+            "type": "object",
+            "properties": {
+                "allergies": {
+                    "type": "string",
+                    "example": "Penicillin, Peanuts"
+                },
+                "blood_type": {
+                    "type": "string",
+                    "example": "O+"
+                },
+                "emergency_contact": {
+                    "type": "string",
+                    "example": "Jane Doe - +1234567890 (Wife)"
+                },
+                "medical_conditions": {
+                    "type": "string",
+                    "example": "Diabetes Type 2, Hypertension"
+                },
+                "medical_risks": {
+                    "type": "string",
+                    "example": "High blood pressure, family history of heart disease"
+                },
+                "medications": {
+                    "type": "string",
+                    "example": "Metformin 500mg daily"
+                },
+                "warnings": {
+                    "type": "string",
+                    "example": "Avoid high-intensity exercises"
+                }
+            }
+        },
         "comboshandler.CreatePackageItemRequest": {
             "type": "object",
             "required": [
@@ -15349,6 +16088,17 @@ const docTemplate = `{
                 }
             }
         },
+        "marketinghandlers.RandomBannerResponse": {
+            "type": "object",
+            "properties": {
+                "image_url": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                }
+            }
+        },
         "marketinghandlers.UpdateBannerPayload": {
             "type": "object",
             "properties": {
@@ -15695,6 +16445,56 @@ const docTemplate = `{
                 },
                 "price": {
                     "type": "number"
+                }
+            }
+        },
+        "notihandlers.BroadcastRequest": {
+            "type": "object",
+            "required": [
+                "message",
+                "title"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "notihandlers.NotificationResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "notihandlers.UnreadCountResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
                 }
             }
         },

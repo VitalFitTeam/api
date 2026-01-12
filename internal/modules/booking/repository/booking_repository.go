@@ -254,3 +254,40 @@ func (s *BookingStore) GetBookingsByClass(ctx context.Context, classID uuid.UUID
 
 	return bookings, total, nil
 }
+
+//
+// ------------------------------------------------------------
+// GetBookingsInTimeRange
+// ------------------------------------------------------------
+//
+
+func (s *BookingStore) GetBookingsInTimeRange(ctx context.Context, startTime, endTime time.Time) ([]bookingdomain.BookingReminder, error) {
+	var results []bookingdomain.BookingReminder
+
+	query := `
+		SELECT 
+			b.booking_id,
+			b.user_id,
+			u.first_name,
+			u.last_name,
+			u.email,
+			c.class_id,
+			s.service_id,
+			s.name AS service_name,
+			c.starts_at
+		FROM bookings b
+		JOIN classes c ON b.class_id = c.class_id
+		JOIN services s ON c.service_id = s.service_id
+		JOIN users u ON b.user_id = u.user_id
+		WHERE c.starts_at BETWEEN ? AND ?
+		  AND b.status = ?
+		  AND b.deleted_at IS NULL
+	`
+
+	err := s.db.WithContext(ctx).Raw(query, startTime, endTime, bookingdomain.BookingStatusConfirmed).Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}

@@ -12,6 +12,7 @@ import (
 	appservices "github.com/vitalfit/api/internal/app/services"
 	auditmocks "github.com/vitalfit/api/internal/modules/audit/mocks"
 	authmocks "github.com/vitalfit/api/internal/modules/auth/mocks"
+	"github.com/vitalfit/api/internal/shared/notifications"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
 	mailermocks "github.com/vitalfit/api/pkg/mailer/mocks"
@@ -49,8 +50,9 @@ func NewTestApplication(t *testing.T, cfg *config.Config) *application {
 	}
 
 	cache := cache.NewRedisStorage(rdb)
+	pushNoti := notifications.NewMockPushService()
 
-	mockServices := appservices.NewServices(mockStore, logger, *cfg, testAuth, mailer, cache)
+	mockServices := appservices.NewServices(mockStore, logger, *cfg, testAuth, mailer, cache, *pushNoti)
 	mockHandlers := apphandlers.NewAppHandlers(mockServices)
 
 	return &application{

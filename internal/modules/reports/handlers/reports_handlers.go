@@ -259,6 +259,33 @@ func (h *ReportHanlders) GetNewClientsKPIHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": kpi})
 }
 
+// @Summary		Get Churn Rate KPI
+// @Description	Retrieves the percentage of clients who left (churned) during the current month compared to the start of the month. Formula: ((Lost Clients) / Start Clients) * 100.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string								false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=reportdomain.KPICard}	"Churn Rate KPI"
+// @Failure		500			{object}	object{error=string}				"Internal Server Error"
+// @Router			/reports/kpi/churn-rate [get]
+func (h *ReportHanlders) GetChurnRateKPIHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	kpi, err := h.services.ReportServices.GetChurnRateKPI(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": kpi})
+}
+
 // @Summary		Get Retention Rate KPI
 // @Description	Retrieves the percentage of existing clients who remained active during the current month. Formula: ((End Clients - New Clients) / Start Clients) * 100.
 // @Tags			Reports

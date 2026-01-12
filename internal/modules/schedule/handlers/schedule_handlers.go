@@ -1,6 +1,7 @@
 package schedulehandlers
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -55,6 +56,40 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 		return
 	}
 
+	// Map operational days for quick lookup
+	operationalDays := make(map[branchdomain.DayOfWeekEnum]bool)
+	hasOperatingHours := len(branch.OperatingHours) > 0
+	if hasOperatingHours {
+		for _, oh := range branch.OperatingHours {
+			if !oh.IsClosed {
+				operationalDays[oh.DayOfWeek] = true
+			}
+		}
+
+		var dayEnum branchdomain.DayOfWeekEnum
+		switch class.StartsAt.Weekday() {
+		case time.Monday:
+			dayEnum = branchdomain.DayMonday
+		case time.Tuesday:
+			dayEnum = branchdomain.DayTuesday
+		case time.Wednesday:
+			dayEnum = branchdomain.DayWednesday
+		case time.Thursday:
+			dayEnum = branchdomain.DayThursday
+		case time.Friday:
+			dayEnum = branchdomain.DayFriday
+		case time.Saturday:
+			dayEnum = branchdomain.DaySaturday
+		case time.Sunday:
+			dayEnum = branchdomain.DaySunday
+		}
+
+		if !operationalDays[dayEnum] {
+			h.services.LogErrors.BadRequestResponse(c, errors.New("the branch is closed on the selected start date"))
+			return
+		}
+	}
+
 	// Logic for recurrence
 	var classes []scheduledomain.Class
 	classes = append(classes, *class)
@@ -70,19 +105,12 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 		nextStart := class.StartsAt
 		nextEnd := class.EndsAt
 
-		// Map operational days for quick lookup
-		operationalDays := make(map[branchdomain.DayOfWeekEnum]bool)
-		for _, oh := range branch.OperatingHours {
-			if !oh.IsClosed {
-				operationalDays[oh.DayOfWeek] = true
-			}
-		}
-
 		for {
-			if payload.Recurrence == "daily" {
+			switch payload.Recurrence {
+			case "daily":
 				nextStart = nextStart.AddDate(0, 0, 1)
 				nextEnd = nextEnd.AddDate(0, 0, 1)
-			} else if payload.Recurrence == "weekly" {
+			case "weekly":
 				nextStart = nextStart.AddDate(0, 0, 7)
 				nextEnd = nextEnd.AddDate(0, 0, 7)
 			}
@@ -92,7 +120,7 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 			}
 
 			// Skip non-operational days if operating hours are defined
-			if len(branch.OperatingHours) > 0 {
+			if hasOperatingHours {
 				var dayEnum branchdomain.DayOfWeekEnum
 				switch nextStart.Weekday() {
 				case time.Monday:

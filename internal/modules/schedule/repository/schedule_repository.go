@@ -56,10 +56,12 @@ func (s *ScheduleStore) GetClassesByBranch(ctx context.Context, branchID uuid.UU
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
 
 		if err := tx.WithContext(ctx).
+			Joins("JOIN services ON services.service_id = classes.service_id").
+			Where("services.deleted_at IS NULL").
 			Preload("Service").
 			Preload("Instructor").
 			Preload("Branch").
-			Where("branch_id = ?", branchID).
+			Where("classes.branch_id = ?", branchID).
 			Find(&classes).Error; err != nil {
 			return err
 		}
@@ -84,10 +86,12 @@ func (s *ScheduleStore) GetUpcomingClassesByBranch(ctx context.Context, branchID
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
 
 		if err := tx.WithContext(ctx).
+			Joins("JOIN services ON services.service_id = classes.service_id").
+			Where("services.deleted_at IS NULL").
 			Preload("Service").
 			Preload("Instructor").
 			Preload("Branch").
-			Where("branch_id = ?", branchID).
+			Where("classes.branch_id = ?", branchID).
 			Where("ends_at > ?", time.Now()).
 			Find(&classes).Error; err != nil {
 			return err

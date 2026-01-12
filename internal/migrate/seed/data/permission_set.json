@@ -49,7 +49,10 @@
     "cancellation-reasons:delete",
     "access:check_in",
     "access:view_client_history",
-    "branch_management"
+    "branch_management",
+    "medical_info:create",
+    "medical_info:read",
+    "medical_info:update"
   ],
   "recepcionist": [
     "users:create",
@@ -72,7 +75,8 @@
     "checkins:create",
     "checkins:list",
     "cancellation-reasons:list",
-    "access:check_in"
+    "access:check_in",
+    "view"
   ],
   "instructor": [
     "schedule:list",

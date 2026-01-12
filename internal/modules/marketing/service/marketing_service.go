@@ -59,6 +59,14 @@ func (s *MarketingService) GetBanners(ctx context.Context) ([]*marketingdomain.B
 	return banners, nil
 }
 
+func (s *MarketingService) GetRandomBannerWithService(ctx context.Context) (*marketingdomain.Banner, uuid.UUID, error) {
+	banner, serviceID, err := s.store.Marketing.GetRandomBannerWithService(ctx)
+	if err != nil {
+		return nil, uuid.Nil, err
+	}
+	return banner, serviceID, nil
+}
+
 // Promotion operations
 
 func (s *MarketingService) CreatePromotion(ctx context.Context, promotion *marketingdomain.Promotion) error {

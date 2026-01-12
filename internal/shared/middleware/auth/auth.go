@@ -67,7 +67,7 @@ func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-func (j *AuthMiddleware) RBACPermission(permissionName string) gin.HandlerFunc {
+func (j *AuthMiddleware) RBACPermission(permissions ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := j.services.UserServices.GetUserFromContext(c)
 
@@ -77,14 +77,21 @@ func (j *AuthMiddleware) RBACPermission(permissionName string) gin.HandlerFunc {
 			return
 		}
 
-		allowed, err := j.CheckRolePermission(c.Request.Context(), user, permissionName)
-		if err != nil {
-			j.services.LogErrors.UnauthorizedErrorResponse(c, err)
-			c.Abort()
-			return
+		hasPermission := false
+		for _, perm := range permissions {
+			allowed, err := j.CheckRolePermission(c.Request.Context(), user, perm)
+			if err != nil {
+				j.services.LogErrors.UnauthorizedErrorResponse(c, err)
+				c.Abort()
+				return
+			}
+			if allowed {
+				hasPermission = true
+				break
+			}
 		}
 
-		if !allowed {
+		if !hasPermission {
 			j.services.LogErrors.ForbiddenResponse(c)
 			c.Abort()
 			return

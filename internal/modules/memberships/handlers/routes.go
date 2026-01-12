@@ -13,6 +13,7 @@ type MembershipsHandlerInterface interface {
 	GetClientsMemberships(c *gin.Context)
 	GetClientMembershipByID(c *gin.Context)
 	UpdateClientMembership(c *gin.Context)
+	GetMyMembershipHandler(c *gin.Context)
 }
 
 type MembershipHandler struct {
@@ -43,6 +44,7 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 	{
 		clientMembershipsGroup.Use(m.AuthJwtTokenMiddleware())
 		clientMembershipsGroup.Use(m.AuditLogMiddleware())
+		clientMembershipsGroup.GET("/me", r.GetMyMembershipHandler)
 		clientMembershipsGroup.GET("", m.RBACPermission("members:list"), r.GetClientsMemberships)
 		clientMembershipsGroup.GET("/:clientMembershipId", m.RBACPermission("members:get"), r.GetClientMembershipByID)
 		clientMembershipsGroup.PUT("/:clientMembershipId", r.UpdateClientMembership)
@@ -55,7 +57,7 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 		cancellationReasonsGroup.Use(m.AuthJwtTokenMiddleware())
 		cancellationReasonsGroup.Use(m.AuditLogMiddleware())
 		cancellationReasonsGroup.POST("", m.RBACPermission("cancellation-reasons:create"), r.CreateCancellationReasonHandler)
-		cancellationReasonsGroup.GET("", m.RBACPermission("cancellation-reasons:list"), r.GetCancellationReasonsHandler)
+		cancellationReasonsGroup.GET("", r.GetCancellationReasonsHandler)
 		cancellationReasonsGroup.PUT("/:id", m.RBACPermission("cancellation-reasons:update"), r.UpdateCancellationReasonHandler)
 		cancellationReasonsGroup.DELETE("/:id", m.RBACPermission("cancellation-reasons:delete"), r.DeleteCancellationReasonHandler)
 	}

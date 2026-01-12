@@ -50,6 +50,19 @@ type BookingWithUserInfo struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type BookingReminder struct {
+	BookingID      uuid.UUID     `json:"booking_id"`
+	UserID         uuid.UUID     `json:"user_id"`
+	FirstName      string        `json:"first_name"`
+	LastName       string        `json:"last_name"`
+	Email          string        `json:"email"`
+	ClassID        uuid.UUID     `json:"class_id"`
+	ServiceID      uuid.UUID     `json:"service_id"`
+	ServiceName    string        `json:"service_name"`
+	StartsAt       time.Time     `json:"starts_at"`
+	TimeUntilStart time.Duration `json:"time_until_start"`
+}
+
 func (Booking) TableName() string {
 	return "bookings"
 }

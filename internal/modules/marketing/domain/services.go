@@ -14,6 +14,7 @@ type MarketingServiceInterface interface {
 	DeleteBanner(context.Context, uuid.UUID) error
 	GetBannerByID(context.Context, uuid.UUID) (*Banner, error)
 	GetBanners(context.Context) ([]*Banner, error)
+	GetRandomBannerWithService(context.Context) (*Banner, uuid.UUID, error)
 
 	// Promotion operations
 	CreatePromotion(context.Context, *Promotion) error

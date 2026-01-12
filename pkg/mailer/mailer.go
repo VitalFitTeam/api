@@ -10,6 +10,7 @@ const (
 	UserStaffActivate       = "user_staff_activate.tmpl"
 	InvoiceCreationTemplate = "invoice.tmpl"
 	InvoicePaidTemplate     = "paid_invoice.tmpl"
+	MembershipExpiring      = "membership_expiring.tmpl"
 )
 
 //go:embed "templates"

@@ -17,6 +17,9 @@ type MarketingRepository interface {
 	GetBannerByID(context.Context, uuid.UUID) (*Banner, error)
 	GetBanners(context.Context) ([]*Banner, error)
 
+	// Banner-Service operations
+	GetRandomBannerWithService(context.Context) (*Banner, uuid.UUID, error)
+
 	// Promotion operations
 	CreatePromotion(context.Context, *Promotion) error
 	UpdatePromotion(context.Context, *Promotion) error

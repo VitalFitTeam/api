@@ -348,6 +348,31 @@ func (h *MembershipHandler) PublicGetMembershipsTypeHandler(c *gin.Context) {
 
 }
 
+// @Summary		Get my membership
+// @Description	Retrieves the membership details for the authenticated user.
+// @Tags			Memberships
+// @Produce		json
+// @Security		ApiKeyAuth
+// @Success		200	{object}	object{data=membershipsdomain.ClientMembership}	"Client membership details"
+// @Failure		404	{object}	map[string]interface{}							"Not Found: Client membership not found"
+// @Failure		500	{object}	map[string]interface{}							"Internal Server Error"
+// @Router			/client-memberships/me [get]
+func (h *MembershipHandler) GetMyMembershipHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	clientMembership, err := h.services.MembershipServices.GetClientMembership(ctx, user.UserID)
+	if err != nil {
+		if err == shared_errors.ErrNotFound {
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": clientMembership})
+}
+
 // @Summary		List client memberships
 // @Description	Retrieves a paginated list of all client memberships, with optional searching and filtering.
 // @Tags			Memberships
@@ -654,7 +679,6 @@ func (h *MembershipHandler) UpdateCancellationReasonHandler(c *gin.Context) {
 		return
 	}
 
-	// Get existing reason
 	existingReason, err := h.services.MembershipServices.GetCancellationReasonByID(ctx, reasonID)
 	if err != nil {
 		switch err {
@@ -666,7 +690,6 @@ func (h *MembershipHandler) UpdateCancellationReasonHandler(c *gin.Context) {
 		return
 	}
 
-	// Update only provided fields
 	if payload.Description != "" {
 		existingReason.Description = payload.Description
 	}

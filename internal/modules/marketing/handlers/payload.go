@@ -49,6 +49,11 @@ type BannerResponse struct {
 	IsActive bool      `json:"is_active"`
 }
 
+type RandomBannerResponse struct {
+	ImageURL  string    `json:"image_url"`
+	ServiceID uuid.UUID `json:"service_id"`
+}
+
 // Promotion payloads
 
 type CreatePromotionPayload struct {

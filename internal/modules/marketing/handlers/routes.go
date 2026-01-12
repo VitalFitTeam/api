@@ -13,6 +13,7 @@ type MarketingHandlerInterface interface {
 	DeleteBannerHandler(c *gin.Context)
 	GetBannerByIDHandler(c *gin.Context)
 	GetBannersHandler(c *gin.Context)
+	GetRandomBannerHandler(c *gin.Context)
 	CreatePromotionHandler(c *gin.Context)
 	UpdatePromotionHandler(c *gin.Context)
 	DeletePromotionHandler(c *gin.Context)
@@ -31,6 +32,10 @@ func NewMarketingHandler(services appservices.Services) *MarketingHandler {
 func (r *MarketingHandler) MarketingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	marketingGroup := rg.Group("/marketing")
 	{
+		// Public routes (no authentication required)
+		marketingGroup.GET("/banners/random", r.GetRandomBannerHandler)
+
+		// Protected routes
 		marketingGroup.Use(m.AuthJwtTokenMiddleware())
 		marketingGroup.Use(m.AuditLogMiddleware())
 

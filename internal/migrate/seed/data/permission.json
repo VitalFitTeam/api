@@ -314,5 +314,20 @@
   {
     "name": "access:view_client_history",
     "description": "Allows viewing client attendance history and service usage"
+  },{
+    "name": "medical_info:create",
+    "description": "Allows creating medical information for clients"
+  },
+  {
+    "name": "medical_info:read",
+    "description": "Allows viewing medical information for clients"
+  },
+  {
+    "name": "medical_info:update",
+    "description": "Allows updating medical information for clients"
+  },
+  {
+    "name": "view",
+    "description": "Allows viewing specific branch information"
   }
 ]

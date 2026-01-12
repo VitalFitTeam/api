@@ -133,3 +133,7 @@ func (s *MembershipService) GetCancellationReasons(ctx context.Context, fq pagin
 func (s *MembershipService) UpdateExpiredMemberships(ctx context.Context) error {
 	return s.store.Membership.UpdateExpiredMemberships(ctx)
 }
+
+func (s *MembershipService) GetExpiringMemberships(ctx context.Context, days int) ([]membershipsdomain.MembershipExpiringDetail, error) {
+	return s.store.Membership.GetExpiringMemberships(ctx, days)
+}
