@@ -306,5 +306,9 @@
   {
     "name": "branch_management",
     "description": "Allows management of branch operations"
+  },
+  {
+    "name": "view",
+    "description": "Allows to view specific branch information"
   }
 ]

@@ -49,6 +49,7 @@ func main() {
 
 	app := app.BuildApplication(config, db, rdb)
 	mux := app.Mount()
+	app.Cronjob.Start()
 	if err := app.Run(mux); err != nil {
 		log.Fatal(err)
 	}

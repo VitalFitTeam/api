@@ -13,6 +13,7 @@ import (
 	inventoryhandlers "github.com/vitalfit/api/internal/modules/inventory/handlers"
 	marketinghandlers "github.com/vitalfit/api/internal/modules/marketing/handlers"
 	membershipshandlers "github.com/vitalfit/api/internal/modules/memberships/handlers"
+	notihandlers "github.com/vitalfit/api/internal/modules/notifications/handlers"
 	policieshandler "github.com/vitalfit/api/internal/modules/policies/handler"
 	productshandler "github.com/vitalfit/api/internal/modules/products/handler"
 	reporthandlers "github.com/vitalfit/api/internal/modules/reports/handlers"
@@ -22,43 +23,45 @@ import (
 )
 
 type Handlers struct {
-	AuthHandlers       authhandlers.AuthHandlersInterface
-	BranchHandlers     branchhandlers.BranchHandlersInterface
-	InventoryHandlers  inventoryhandlers.InventoryHandlersInterface
-	InstructorHandlers instructorhandler.InstructorHandlersInterface
-	ProductsHandlers   productshandler.ProductsHandlerInterface
-	MarketingHandlers  marketinghandlers.MarketingHandlerInterface
-	MembershipHandlers membershipshandlers.MembershipsHandlerInterface
-	BillingHandlers    billinghandlers.BillingHandlersInterface
-	ScheduleHandlers   schedulehandlers.ScheduleHandlersInterface
-	CombosHandlers     comboshandler.CombosHandlerInterface
-	BookingHandlers    bookinghandlers.BookingHandlersInterface
-	AccessHandlers     accesshandler.AccessHandlerInterface
-	ReportHandlers     reporthandlers.ReportHandlersInterface
-	StaffHandlers      staffhandlers.StaffHandlersInterface
-	PoliciesHandlers   policieshandler.PoliciesHandlerInterface
-	WishlistHandlers   wishlisthandlers.WishlistRoutes
-	AuditHandlers      audithandlers.AuditHandlersInterface
+	AuthHandlers         authhandlers.AuthHandlersInterface
+	BranchHandlers       branchhandlers.BranchHandlersInterface
+	InventoryHandlers    inventoryhandlers.InventoryHandlersInterface
+	InstructorHandlers   instructorhandler.InstructorHandlersInterface
+	ProductsHandlers     productshandler.ProductsHandlerInterface
+	MarketingHandlers    marketinghandlers.MarketingHandlerInterface
+	MembershipHandlers   membershipshandlers.MembershipsHandlerInterface
+	BillingHandlers      billinghandlers.BillingHandlersInterface
+	ScheduleHandlers     schedulehandlers.ScheduleHandlersInterface
+	CombosHandlers       comboshandler.CombosHandlerInterface
+	BookingHandlers      bookinghandlers.BookingHandlersInterface
+	AccessHandlers       accesshandler.AccessHandlerInterface
+	ReportHandlers       reporthandlers.ReportHandlersInterface
+	StaffHandlers        staffhandlers.StaffHandlersInterface
+	PoliciesHandlers     policieshandler.PoliciesHandlerInterface
+	WishlistHandlers     wishlisthandlers.WishlistRoutes
+	AuditHandlers        audithandlers.AuditHandlersInterface
+	NotificationHandlers notihandlers.NotificationHandlersInterface
 }
 
 func NewAppHandlers(services appservices.Services) Handlers {
 	return Handlers{
-		AuthHandlers:       authhandlers.NewAuthHandlers(services),
-		BranchHandlers:     branchhandlers.NewBranchHandlers(services),
-		InventoryHandlers:  inventoryhandlers.NewInventoryHandlers(services),
-		InstructorHandlers: instructorhandler.NewInstructorHandlers(services),
-		ProductsHandlers:   productshandler.NewProductsHandler(services),
-		MarketingHandlers:  marketinghandlers.NewMarketingHandler(services),
-		MembershipHandlers: membershipshandlers.NewMembershipHandler(services),
-		BillingHandlers:    billinghandlers.NewBillingHandlers(services),
-		ScheduleHandlers:   schedulehandlers.NewScheduleHandlers(services),
-		CombosHandlers:     comboshandler.NewCombosHandler(services),
-		BookingHandlers:    bookinghandlers.NewBookingHandlers(services),
-		AccessHandlers:     accesshandler.NewAccessHandler(services),
-		ReportHandlers:     reporthandlers.NewReportHandlers(services),
-		StaffHandlers:      staffhandlers.NewStaffHandlers(services),
-		PoliciesHandlers:   policieshandler.NewPoliciesHandler(services),
-		WishlistHandlers:   wishlisthandlers.NewWishlistRoutes(services),
-		AuditHandlers:      audithandlers.NewAuditHandlers(services),
+		AuthHandlers:         authhandlers.NewAuthHandlers(services),
+		BranchHandlers:       branchhandlers.NewBranchHandlers(services),
+		InventoryHandlers:    inventoryhandlers.NewInventoryHandlers(services),
+		InstructorHandlers:   instructorhandler.NewInstructorHandlers(services),
+		ProductsHandlers:     productshandler.NewProductsHandler(services),
+		MarketingHandlers:    marketinghandlers.NewMarketingHandler(services),
+		MembershipHandlers:   membershipshandlers.NewMembershipHandler(services),
+		BillingHandlers:      billinghandlers.NewBillingHandlers(services),
+		ScheduleHandlers:     schedulehandlers.NewScheduleHandlers(services),
+		CombosHandlers:       comboshandler.NewCombosHandler(services),
+		BookingHandlers:      bookinghandlers.NewBookingHandlers(services),
+		AccessHandlers:       accesshandler.NewAccessHandler(services),
+		ReportHandlers:       reporthandlers.NewReportHandlers(services),
+		StaffHandlers:        staffhandlers.NewStaffHandlers(services),
+		PoliciesHandlers:     policieshandler.NewPoliciesHandler(services),
+		WishlistHandlers:     wishlisthandlers.NewWishlistRoutes(services),
+		AuditHandlers:        audithandlers.NewAuditHandlers(services),
+		NotificationHandlers: notihandlers.NewNotificationHandlers(services),
 	}
 }

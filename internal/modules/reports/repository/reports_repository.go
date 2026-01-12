@@ -1221,6 +1221,160 @@ func (rs *ReportStore) GetInstructorMonthlyClassesCount(ctx context.Context, ins
 	}, nil
 }
 
+func (rs *ReportStore) GetClientsChurnMetrics(ctx context.Context) ([]reportdomain.ClientChurnMetrics, error) {
+	var metrics []reportdomain.ClientChurnMetrics
+
+	// Query to get Recency (Last Check-in), Frequency (Visits this month vs last), and Expiration
+	query := `
+		SELECT 
+			u.user_id, u.first_name, u.last_name, u.email, COALESCE(cp.category, 'New') as current_category,
+			MAX(al.check_in_time) as last_check_in,
+			COUNT(CASE WHEN al.check_in_time >= DATE_TRUNC('month', NOW()) THEN 1 END) as current_month_visits,
+			COUNT(CASE WHEN al.check_in_time >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') AND al.check_in_time < DATE_TRUNC('month', NOW()) THEN 1 END) as last_month_visits,
+			MAX(cm.end_date) as membership_end_date,
+			COALESCE(
+				(
+					SELECT c.branch_id
+					FROM attendance_log al2
+					JOIN classes c ON c.class_id = al2.schedule_id
+					WHERE al2.user_id = u.user_id
+					GROUP BY c.branch_id
+					ORDER BY COUNT(*) DESC
+					LIMIT 1
+				),
+				(
+					SELECT i.branch_id
+					FROM invoices i
+					JOIN client_memberships cm2 ON cm2.invoice_id = i.invoice_id
+					WHERE cm2.user_id = u.user_id
+					ORDER BY cm2.start_date DESC
+					LIMIT 1
+				)
+			) as preferred_branch_id
+		FROM users u
+		JOIN roles r ON r.role_id = u.role_id
+		LEFT JOIN attendance_log al ON al.user_id = u.user_id
+		LEFT JOIN client_profiles cp ON cp.user_id = u.user_id
+		LEFT JOIN client_memberships cm ON cm.user_id = u.user_id AND cm.status = 'Active'
+		WHERE r.name = 'client' AND u.status = 'Active' AND u.deleted_at IS NULL
+		GROUP BY u.user_id, cp.category
+	`
+
+	err := rs.db.WithContext(ctx).Raw(query).Scan(&metrics).Error
+	return metrics, err
+}
+
+func (rs *ReportStore) GetBranchManagers(ctx context.Context) (map[uuid.UUID]reportdomain.BranchManagerDetails, error) {
+	var results []reportdomain.BranchManagerDetails
+
+	// Fetch managers directly from the branch table as defined in the Branch struct (ManagerID -> user_id column)
+	query := `
+		SELECT 
+			b.branch_id, u.user_id, u.email, u.first_name || ' ' || u.last_name as name
+		FROM branch b
+		JOIN users u ON u.user_id = b.user_id
+		WHERE b.deleted_at IS NULL
+	`
+
+	if err := rs.db.WithContext(ctx).Raw(query).Scan(&results).Error; err != nil {
+		return nil, err
+	}
+	managersMap := make(map[uuid.UUID]reportdomain.BranchManagerDetails)
+	for _, m := range results {
+		managersMap[m.BranchID] = m
+	}
+	return managersMap, nil
+}
+
+func (rs *ReportStore) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
+
+	// Helper to calculate churn rate in a date range
+	calcChurn := func(start, end time.Time) (float64, error) {
+		var startCount, retainedCount int64
+
+		// 1. Start Count (S): Users with active membership at 'start'
+		// We check for memberships that cover the 'start' date.
+		queryS := rs.db.WithContext(ctx).Table("client_memberships cm").
+			Joins("JOIN invoices i ON i.invoice_id = cm.invoice_id").
+			Where("cm.start_date <= ? AND cm.end_date >= ?", start, start).
+			Where("cm.status != ?", "Cancelled") // Exclude explicitly cancelled if necessary
+
+		if branchID != nil {
+			queryS = queryS.Where("i.branch_id = ?", *branchID)
+		}
+
+		if err := queryS.Distinct("cm.user_id").Count(&startCount).Error; err != nil {
+			return 0, err
+		}
+
+		if startCount == 0 {
+			return 0, nil
+		}
+
+		// 2. Retained Count (R): Users from S who are also active at 'end'
+		// We find users active at 'start' (SubQuery) AND check if they are active at 'end'.
+
+		// Subquery: IDs of users active at start
+		subQueryS := rs.db.Table("client_memberships cm_start").
+			Select("cm_start.user_id").
+			Joins("JOIN invoices i_start ON i_start.invoice_id = cm_start.invoice_id").
+			Where("cm_start.start_date <= ? AND cm_start.end_date >= ?", start, start).
+			Where("cm_start.status != ?", "Cancelled")
+
+		if branchID != nil {
+			subQueryS = subQueryS.Where("i_start.branch_id = ?", *branchID)
+		}
+
+		// Main Query: Count users from SubQuery who have valid membership at 'end'
+		queryR := rs.db.WithContext(ctx).Table("client_memberships cm_end").
+			Where("cm_end.start_date <= ? AND cm_end.end_date >= ?", end, end).
+			Where("cm_end.status != ?", "Cancelled").
+			Where("cm_end.user_id IN (?)", subQueryS)
+
+		if branchID != nil {
+			// If filtering by branch, we check if they are active IN THAT BRANCH at 'end'
+			queryR = queryR.Joins("JOIN invoices i_end ON i_end.invoice_id = cm_end.invoice_id").
+				Where("i_end.branch_id = ?", *branchID)
+		}
+
+		if err := queryR.Distinct("cm_end.user_id").Count(&retainedCount).Error; err != nil {
+			return 0, err
+		}
+
+		// Churn Rate = (Start - Retained) / Start
+		lost := startCount - retainedCount
+		if lost < 0 {
+			lost = 0
+		}
+
+		churnRate := (float64(lost) / float64(startCount)) * 100
+		return churnRate, nil
+	}
+
+	currentChurn, err := calcChurn(currentMonthStart, now)
+	if err != nil {
+		return nil, err
+	}
+
+	prevChurn, err := calcChurn(prevMonthStart, currentMonthStart)
+	if err != nil {
+		return nil, err
+	}
+
+	trend := currentChurn - prevChurn
+
+	return &reportdomain.KPICard{
+		Title:        "Churn Rate",
+		Value:        decimal.NewFromFloat(currentChurn).Round(2),
+		TrendPercent: decimal.NewFromFloat(trend).Round(2).InexactFloat64(),
+		TrendLabel:   "vs previous month (pts %)",
+		IsPositive:   trend <= 0, // Lower churn is better (Positive)
+	}, nil
+}
+
 func (rs *ReportStore) GetInstructorClassesToday(ctx context.Context, instructorID uuid.UUID) ([]reportdomain.ClassScheduleItem, error) {
 	var results []reportdomain.ClassScheduleItem
 	now := time.Now()
@@ -1298,13 +1452,13 @@ func (rs *ReportStore) GetSalesByDemographics(ctx context.Context, branchID *uui
 	if branchID != nil {
 		query = query.Where("i.branch_id = ?", *branchID)
 	}
-
-	if dimension == "gender" {
+	switch dimension {
+	case "gender":
 		err := query.Select("u.gender as label, COALESCE(SUM(i.total_amount), 0) as value").
 			Group("u.gender").
 			Scan(&results).Error
 		return results, err
-	} else if dimension == "age" {
+	case "age":
 		ageCase := `CASE
 			WHEN u.birth_date IS NULL THEN 'Unknown'
 			WHEN EXTRACT(YEAR FROM age(u.birth_date)) < 18 THEN '< 18'

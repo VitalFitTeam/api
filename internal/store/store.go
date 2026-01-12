@@ -23,6 +23,8 @@ import (
 	marketingrepository "github.com/vitalfit/api/internal/modules/marketing/repository"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	membershipsrepository "github.com/vitalfit/api/internal/modules/memberships/repository"
+	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
+	notirepository "github.com/vitalfit/api/internal/modules/notifications/repository"
 	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
 	policiesrepository "github.com/vitalfit/api/internal/modules/policies/repository"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
@@ -63,6 +65,7 @@ type Storage struct {
 	Wishlist        wishlistdomain.WishlistRepository
 	Audit           auditdomain.AuditRepository
 	Session         authdomain.SessionRepository
+	Notification    notidomain.NotificationRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -90,5 +93,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Wishlist:        wishlistrepository.NewWishlistStore(db),
 		Audit:           auditrepository.NewAuditStore(db),
 		Session:         authrepository.NewSessionStore(db),
+		Notification:    notirepository.NewNotificationStore(db),
 	}
 }
