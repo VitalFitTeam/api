@@ -12,8 +12,4 @@ type ClientRepository interface {
 	GetMedicalInfoByUserID(ctx context.Context, userID uuid.UUID) (*ClientMedicalInfo, error)
 	UpdateMedicalInfo(ctx context.Context, medicalInfo *ClientMedicalInfo) error
 	DeleteMedicalInfo(ctx context.Context, userID uuid.UUID) error
-
-	// Audit Log Operations
-	CreateAuditLog(ctx context.Context, auditLog *MedicalInfoAuditLog) error
-	GetAuditLogsByUserID(ctx context.Context, userID uuid.UUID, limit, offset int) ([]MedicalInfoAuditLog, error)
 }

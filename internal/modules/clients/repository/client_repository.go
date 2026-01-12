@@ -54,23 +54,3 @@ func (r *ClientStore) DeleteMedicalInfo(ctx context.Context, userID uuid.UUID) e
 		Where("user_id = ?", userID).
 		Delete(&clientsdomain.ClientMedicalInfo{}).Error
 }
-
-// CreateAuditLog creates an audit log entry
-func (r *ClientStore) CreateAuditLog(ctx context.Context, auditLog *clientsdomain.MedicalInfoAuditLog) error {
-	return r.db.WithContext(ctx).Create(auditLog).Error
-}
-
-// GetAuditLogsByUserID retrieves audit logs for a specific user with pagination
-func (r *ClientStore) GetAuditLogsByUserID(ctx context.Context, userID uuid.UUID, limit, offset int) ([]clientsdomain.MedicalInfoAuditLog, error) {
-	var auditLogs []clientsdomain.MedicalInfoAuditLog
-	err := r.db.WithContext(ctx).
-		Where("user_id = ?", userID).
-		Order("created_at DESC").
-		Limit(limit).
-		Offset(offset).
-		Find(&auditLogs).Error
-	if err != nil {
-		return nil, err
-	}
-	return auditLogs, nil
-}

@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -155,24 +154,6 @@ func (s *ClientService) CreateMedicalInfo(ctx context.Context, userID, modifiedB
 		return nil, err
 	}
 
-	// Create audit log
-	if userRole == "client" {
-		auditLog := &clientsdomain.MedicalInfoAuditLog{
-			MedicalInfoID: medicalInfo.MedicalInfoID,
-			UserID:        userID,
-			ModifiedBy:    modifiedBy,
-			Action:        "POST",
-			FieldsChanged: "all fields",
-			IPAddress:     ipAddress,
-			UserAgent:     userAgent,
-		}
-
-		if err := s.store.Client.CreateAuditLog(ctx, auditLog); err != nil {
-			// Log error but don't fail the request
-			fmt.Printf("Failed to create audit log: %v\n", err)
-		}
-	}
-
 	return medicalInfo, nil
 }
 
@@ -307,24 +288,6 @@ func (s *ClientService) UpdateMedicalInfo(ctx context.Context, userID, modifiedB
 
 	if err := s.store.Client.UpdateMedicalInfo(ctx, existing); err != nil {
 		return nil, err
-	}
-
-	// Create audit log
-	if userRole == "client" {
-		auditLog := &clientsdomain.MedicalInfoAuditLog{
-			MedicalInfoID: existing.MedicalInfoID,
-			UserID:        userID,
-			ModifiedBy:    modifiedBy,
-			Action:        "PUT",
-			FieldsChanged: strings.Join(changedFields, ", "),
-			IPAddress:     ipAddress,
-			UserAgent:     userAgent,
-		}
-
-		if err := s.store.Client.CreateAuditLog(ctx, auditLog); err != nil {
-			// Log error but don't fail the request
-			fmt.Printf("Failed to create audit log: %v\n", err)
-		}
 	}
 
 	return existing, nil

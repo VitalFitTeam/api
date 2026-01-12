@@ -30,23 +30,3 @@ type ClientMedicalInfo struct {
 func (ClientMedicalInfo) TableName() string {
 	return "client_medical_info"
 }
-
-// MedicalInfoAuditLog stores audit trail for medical info changes
-type MedicalInfoAuditLog struct {
-	AuditID       uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"audit_id"`
-	MedicalInfoID uuid.UUID `gorm:"type:uuid;not null;index" json:"medical_info_id"`
-	UserID        uuid.UUID `gorm:"type:uuid;not null;index" json:"user_id"`
-	ModifiedBy    uuid.UUID `gorm:"type:uuid;not null" json:"modified_by"`
-
-	Action        string    `gorm:"type:varchar(50);not null" json:"action"` // CREATE, UPDATE, DELETE, VIEW
-	FieldsChanged string    `gorm:"type:text" json:"fields_changed,omitempty"`
-	IPAddress     string    `gorm:"type:varchar(45)" json:"ip_address,omitempty"`
-	UserAgent     string    `gorm:"type:text" json:"user_agent,omitempty"`
-	CreatedAt     time.Time `gorm:"default:now()" json:"created_at"`
-
-	ClientMedicalInfo ClientMedicalInfo `gorm:"foreignKey:MedicalInfoID;references:MedicalInfoID" json:"-"`
-}
-
-func (MedicalInfoAuditLog) TableName() string {
-	return "medical_info_audit_log"
-}
