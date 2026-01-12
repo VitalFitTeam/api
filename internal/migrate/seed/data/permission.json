@@ -318,5 +318,9 @@
   {
     "name": "medical_info:update",
     "description": "Allows updating medical information for clients"
+  },
+  {
+    "name": "view",
+    "description": "Allows viewing specific branch information"
   }
 ]

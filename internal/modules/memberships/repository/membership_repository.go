@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
@@ -400,6 +401,33 @@ func (s *MembershipStore) GetCancellationReasonByID(ctx context.Context, id uuid
 	return reason, nil
 }
 
+func (s *MembershipStore) UpdateExpiredMemberships(ctx context.Context) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var expiredUserIDs []uuid.UUID
+		now := time.Now()
+
+		if err := tx.Model(&membershipsdomain.ClientMembership{}).
+			Where("status = ? AND end_date < ?", membershipsdomain.StatusActive, now).
+			Pluck("user_id", &expiredUserIDs).Error; err != nil {
+			return err
+		}
+
+		if len(expiredUserIDs) == 0 {
+			return nil
+		}
+
+		if err := tx.Model(&membershipsdomain.ClientMembership{}).
+			Where("user_id IN ? AND status = ?", expiredUserIDs, membershipsdomain.StatusActive).
+			Update("status", membershipsdomain.StatusExpired).Error; err != nil {
+			return err
+		}
+
+		return tx.Table("client_profiles").
+			Where("user_id IN ?", expiredUserIDs).
+			Update("category", authdomain.ClientCategoryRegular).Error
+	})
+}
+
 func (s *MembershipStore) GetCancellationReasons(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.CancellationReason, int64, error) {
 	var reasons []*membershipsdomain.CancellationReason
 	var total int64
@@ -441,4 +469,31 @@ func (s *MembershipStore) GetCancellationReasonByDescription(ctx context.Context
 		}
 	}
 	return reason, nil
+}
+
+func (s *MembershipStore) GetExpiringMemberships(ctx context.Context, days int) ([]membershipsdomain.MembershipExpiringDetail, error) {
+	var results []membershipsdomain.MembershipExpiringDetail
+
+	targetDate := time.Now().AddDate(0, 0, days).Format("2006-01-02")
+
+	err := s.db.WithContext(ctx).Raw(`
+        SELECT 
+            cm.user_id,
+            CONCAT(u.first_name, ' ', u.last_name) as user_name,
+            u.email as user_email,
+            mt.membership_type_id,
+            mt.name as membership_name,
+            ?::int as days_remaining
+        FROM client_memberships cm
+        JOIN users u ON cm.user_id = u.user_id
+        JOIN membership_types mt ON cm.membership_type_id = mt.membership_type_id
+        WHERE cm.status = ? 
+        AND DATE(cm.end_date) = ? 
+    `, days, membershipsdomain.StatusActive, targetDate).Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }

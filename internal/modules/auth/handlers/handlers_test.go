@@ -60,7 +60,7 @@ func TestWhoAmI(t *testing.T) {
 	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
 	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
 
-	testToken, _, err := testApp.Services.AuthServices.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1")
+	testToken, _, err := testApp.Services.AuthServices.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -330,14 +330,14 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 		Email:  "admin@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "super_admin"},
 	}
-	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1")
+	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1", "")
 
 	authorizedUser := &authdomain.Users{
 		UserID: uuid.New(),
 		Email:  "authorized@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "branch_admin"},
 	}
-	authorizedToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), authorizedUser, "test-agent", "127.0.0.1")
+	authorizedToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), authorizedUser, "test-agent", "127.0.0.1", "")
 
 	// User without specific permission
 	unauthorizedUser := &authdomain.Users{
@@ -345,7 +345,7 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 		Email:  "unauthorized@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "instructor"},
 	}
-	unauthorizedToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), unauthorizedUser, "test-agent", "127.0.0.1")
+	unauthorizedToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), unauthorizedUser, "test-agent", "127.0.0.1", "")
 
 	t.Run("should fail when unauthenticated", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodPost, "/v1/auth/register-staff", nil)
@@ -481,7 +481,7 @@ func TestAdminRoleRoutes(t *testing.T) {
 		Email:  "roleadmin@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "role_administrator"},
 	}
-	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1")
+	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1", "")
 
 	// User without permissions
 	basicUser := &authdomain.Users{
@@ -489,7 +489,7 @@ func TestAdminRoleRoutes(t *testing.T) {
 		Email:  "basic@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "client"},
 	}
-	basicToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), basicUser, "test-agent", "127.0.0.1")
+	basicToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), basicUser, "test-agent", "127.0.0.1", "")
 
 	// Common setup for middleware checks
 	setupAdminMiddleware := func() {
@@ -659,7 +659,7 @@ func TestUserListHandlers(t *testing.T) {
 		Email:  "listadmin@example.com",
 		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "admin"},
 	}
-	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1")
+	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1", "")
 
 	setupMiddleware := func() {
 		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
@@ -728,7 +728,7 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 		RoleID: adminRoleID,
 		Role:   authdomain.Roles{RoleID: adminRoleID, Name: "admin"},
 	}
-	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1")
+	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1", "")
 
 	targetUserID := uuid.New()
 	mockUser := &authdomain.Users{UserID: targetUserID, FirstName: "Target", LastName: "User", Email: "target@example.com"}

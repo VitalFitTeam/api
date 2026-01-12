@@ -278,7 +278,7 @@ func (s *ProductsStore) UpdateService(ctx context.Context, service *productsdoma
 			return err
 		}
 
-		result := tx.Session(&gorm.Session{FullSaveAssociations: true}).Updates(service)
+		result := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(service)
 		if result.Error != nil {
 			return result.Error
 		}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	"github.com/vitalfit/api/internal/store"
 )
@@ -190,4 +191,101 @@ func (s *ReportService) GetMonthlyCashFlowChart(ctx context.Context, branchID *u
 
 func (s *ReportService) GetSalesByDemographics(ctx context.Context, branchID *uuid.UUID, start, end time.Time, dimension string) ([]reportdomain.ChartData, error) {
 	return s.store.Reports.GetSalesByDemographics(ctx, branchID, start, end, dimension)
+}
+
+func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdomain.ChurnRiskAnalysis, error) {
+	// 1. Get historical data for all active clients
+	metrics, err := s.store.Reports.GetClientsChurnMetrics(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Get Managers for all branches to identify who to notify
+	managersMap, err := s.store.Reports.GetBranchManagers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var atRiskUsers []reportdomain.ChurnRiskAnalysis
+
+	calculateRisk := func(m reportdomain.ClientChurnMetrics) (int, []string) {
+		riskScore := 0
+		var factors []string
+
+		daysSinceCheckIn := 30.0 // Default high if never checked in
+		if m.LastCheckIn != nil {
+			daysSinceCheckIn = time.Since(*m.LastCheckIn).Hours() / 24
+		}
+
+		if daysSinceCheckIn > 14 {
+			riskScore += 40
+			factors = append(factors, "Absent > 14 days")
+		}
+
+		// B. Trend Factor: Visits this month vs last month
+		if m.LastMonthVisits > 0 {
+			if float64(m.CurrentMonthVisits) < float64(m.LastMonthVisits)*0.5 {
+				riskScore += 30
+				factors = append(factors, "Attendance drop > 50%")
+			}
+		}
+
+		// C. Expiration Factor: Membership expiring soon
+		if m.MembershipEndDate != nil {
+			daysUntilExpiration := time.Until(*m.MembershipEndDate).Hours() / 24
+			if daysUntilExpiration > 0 && daysUntilExpiration < 5 {
+				riskScore += 30
+				factors = append(factors, "Membership expires < 5 days")
+			}
+		}
+		return riskScore, factors
+	}
+
+	for _, m := range metrics {
+		riskScore, factors := calculateRisk(m)
+
+		// Action 1: Flag High Risk Users
+		if riskScore >= 70 {
+			// Only update if not already AtRisk to avoid redundant DB writes
+			if m.CurrentCategory != string(authdomain.ClientCategoryAtRisk) {
+				_ = s.store.Users.UpdateClientCategory(ctx, m.UserID, authdomain.ClientCategoryAtRisk)
+			}
+
+			analysis := reportdomain.ChurnRiskAnalysis{
+				UserID:            m.UserID,
+				Name:              m.FirstName + " " + m.LastName,
+				Email:             m.Email,
+				RiskScore:         riskScore,
+				Factors:           factors,
+				PreferredBranchID: m.PreferredBranchID,
+			}
+
+			if m.PreferredBranchID != nil {
+				if manager, ok := managersMap[*m.PreferredBranchID]; ok {
+					analysis.ManagerID = &manager.UserID
+					analysis.ManagerEmail = manager.Email
+				}
+			}
+
+			atRiskUsers = append(atRiskUsers, analysis)
+		} else {
+			if m.CurrentCategory == string(authdomain.ClientCategoryAtRisk) {
+				newCategory := authdomain.ClientCategoryRegular
+				ok, err := s.store.Membership.ClientHasActiveMembership(ctx, m.UserID, 0)
+				if err != nil {
+					return nil, err
+				}
+				if !ok {
+					newCategory = authdomain.ClientCategoryVIP
+				}
+				_ = s.store.Users.UpdateClientCategory(ctx, m.UserID, newCategory)
+			}
+		}
+	}
+
+	return atRiskUsers, nil
+}
+
+func (s *ReportService) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
+	return s.store.Reports.GetChurnRateKPI(ctx, branchID)
 }

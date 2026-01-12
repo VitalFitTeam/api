@@ -34,4 +34,7 @@ type BookingRepository interface {
 
 	// GetBookingsByClass obtiene todas las reservas de una clase con información del cliente
 	GetBookingsByClass(ctx context.Context, classID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*BookingWithUserInfo, int64, error)
+
+	// GetBookingsInTimeRange obtiene las reservas de clases que inician en un rango de tiempo específico.
+	GetBookingsInTimeRange(ctx context.Context, startTime, endTime time.Time) ([]BookingReminder, error)
 }

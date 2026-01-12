@@ -92,7 +92,7 @@ func (h *AuthService) MailSenderStaff(ctx context.Context, user *authdomain.User
 		ActivationLink string
 	}{
 		Username:       user.FirstName,
-		ActivationLink: fmt.Sprintf("%s/activate/%s", h.config.FrontURL, token),
+		ActivationLink: fmt.Sprintf("%s/en/activate/%s", h.config.FrontURL, token),
 	}
 
 	// send mail
@@ -162,7 +162,7 @@ func (h *AuthService) DeleteResetToken(ctx context.Context, userID uuid.UUID) er
 
 }
 
-func (h *AuthService) GenerateToken(ctx context.Context, user *authdomain.Users, userAgent string, clientIP string) (string, string, error) {
+func (h *AuthService) GenerateToken(ctx context.Context, user *authdomain.Users, userAgent string, clientIP string, deviceToken string) (string, string, error) {
 	claims := jwt.MapClaims{
 		"sub": user.UserID,
 		"exp": time.Now().Add(h.config.Auth.Token.AccessExp).Unix(), // Usar config de Access Token
@@ -184,6 +184,7 @@ func (h *AuthService) GenerateToken(ctx context.Context, user *authdomain.Users,
 
 	session := &authdomain.Session{
 		UserID:       user.UserID,
+		DeviceToken:  deviceToken,
 		RefreshToken: refreshToken,
 		UserAgent:    userAgent,
 		ClientIP:     clientIP,

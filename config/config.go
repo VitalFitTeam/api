@@ -16,6 +16,7 @@ type Config struct {
 	Auth          AuthConfig
 	RateLimiter   ratelimiter.Config
 	FrontURL      string
+	FrontURLE     string
 	RedisCfg      redisConfig
 	OpenExchange  OpenExchangeConfig
 	Clerk         ClerkConfig
@@ -87,7 +88,7 @@ func LoadConfig() *Config {
 		Auth: AuthConfig{
 			Token: TokenConfig{
 				Secret:     env.GetString("JWT_SECRET", ""),
-				AccessExp:  time.Minute * 15,
+				AccessExp:  time.Minute * 3,
 				RefreshExp: time.Hour * 24 * 7, //7 days
 				Iss:        env.GetString("JWT_ISS", ""),
 				Aud:        env.GetString("JWT_AUD", ""),
@@ -98,7 +99,8 @@ func LoadConfig() *Config {
 			TimeFrame:            time.Minute * 1,
 			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
-		FrontURL: env.GetString("FRONT_URL", ""),
+		FrontURL:  env.GetString("FRONT_URL", ""),
+		FrontURLE: env.GetString("FRONT_URL_E", ""),
 		RedisCfg: redisConfig{
 			Addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
 			Username: env.GetString("REDIS_USERNAME", ""),

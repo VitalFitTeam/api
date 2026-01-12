@@ -11,6 +11,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
 	appservices "github.com/vitalfit/api/internal/app/services"
+	"github.com/vitalfit/api/internal/shared/notifications"
 	"go.uber.org/zap"
 
 	"log"
@@ -54,24 +55,24 @@ func NewSeedStruct() *SeedStruct {
 
 func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices.Services) {
 	ctx := context.Background()
-	s.CreateSuperAdmin(store, db, ctx)
-	s.SeedPermissions(store, db, ctx)
-	s.SeedRolePermissions(store, db, ctx)
-	s.SeedUsers(store, db, ctx)
-	s.SeedPolicies(store, db, ctx)
-	s.SeedServiceCategories(store, db, ctx)
-	s.SeedBanners(store, db, ctx)
-	s.SeedServices(store, db, ctx)
-	s.SeedInstructors(store, db, ctx)
-	s.SeedBranches(store, db, ctx)
-	s.SeedEquipment(store, db, ctx)
-	s.SeedMemberships(store, db, ctx)
-	s.SeedPackages(store, db, ctx)
-	s.SeedBranchRelations(store, db, ctx)
-	s.SeedClasses(store, db, ctx)
-	s.SeedInvoicesAndPayments(store, db, ctx, services)
+	// s.CreateSuperAdmin(store, db, ctx)
+	// s.SeedPermissions(store, db, ctx)
+	// s.SeedRolePermissions(store, db, ctx)
+	// s.SeedUsers(store, db, ctx)
+	// s.SeedPolicies(store, db, ctx)
+	// s.SeedServiceCategories(store, db, ctx)
+	// s.SeedBanners(store, db, ctx)
+	// s.SeedServices(store, db, ctx)
+	// s.SeedInstructors(store, db, ctx)
+	// s.SeedBranches(store, db, ctx)
+	// s.SeedEquipment(store, db, ctx)
+	// s.SeedMemberships(store, db, ctx)
+	// s.SeedPackages(store, db, ctx)
+	// s.SeedBranchRelations(store, db, ctx)
+	// s.SeedClasses(store, db, ctx)
+	// s.SeedInvoicesAndPayments(store, db, ctx, services)
 	s.SeedBookingsAndAttendance(store, db, ctx)
-	s.SeedStaffAssignment(store, db, ctx, services)
+	//s.SeedStaffAssignment(store, db, ctx, services)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
@@ -1474,8 +1475,9 @@ func main() {
 	cache := cache.NewRedisStorage(rdb)
 
 	mailer.On("Send", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(200, nil)
+	pushNoti := notifications.NewMockPushService()
 
-	service := appservices.NewServices(appStore, sugaredLogger, *cfg, testAuth, mailer, cache)
+	service := appservices.NewServices(appStore, sugaredLogger, *cfg, testAuth, mailer, cache, *pushNoti)
 	s := NewSeedStruct()
 	s.Seed(appStore, conn, service)
 

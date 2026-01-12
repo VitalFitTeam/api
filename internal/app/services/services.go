@@ -26,6 +26,8 @@ import (
 	marketingservice "github.com/vitalfit/api/internal/modules/marketing/service"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	membershipsservice "github.com/vitalfit/api/internal/modules/memberships/service"
+	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
+	notiservice "github.com/vitalfit/api/internal/modules/notifications/service"
 	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
 	policiesservices "github.com/vitalfit/api/internal/modules/policies/services"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
@@ -41,6 +43,7 @@ import (
 	"github.com/vitalfit/api/internal/store/cache"
 
 	logs "github.com/vitalfit/api/internal/shared/errors"
+	"github.com/vitalfit/api/internal/shared/notifications"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/mailer"
 
@@ -48,56 +51,58 @@ import (
 )
 
 type Services struct {
-	AuthServices       authdomain.AuthServicesInterface
-	UserServices       authdomain.UserServicesInterface
-	BranchesServices   branchdomain.BranchesServicesInterface
-	LocationsServices  branchdomain.LocationsServicesInterface
-	EquipmentServices  inventorydomain.EquipmentServicesInterface
-	InventoryServices  inventorydomain.BranchInventoryServicesInterface
-	InstructorServices instructordomain.InstructorServiceInterface
-	ProductsServices   productsdomain.ProductsServiceInterface
-	MarketingServices  marketingdomain.MarketingServiceInterface
-	MembershipServices membershipsdomain.MembershipsServiceInterface
-	BillingServices    billingdomain.BillingServiceInterface
-	ScheduleServices   scheduledomain.ScheduleServiceInterface
-	CombosServices     combosdomain.CombosServicesInterface
-	BookingServices    bookingdomain.BookingServiceInterface
-	AccessServices     accessdomain.AcessServiceInterface
-	ReportServices     reportdomain.ReportServiceInterface
-	Staff              staffdomain.StaffServiceInterface
-	Policies           policiesdomain.PoliciesServicesInterface
-	WishlistServices   wishlistdomain.WishlistService
-	AuditServices      auditdomain.AuditService
-	ClientServices     clientsdomain.ClientServiceInterface
+	AuthServices         authdomain.AuthServicesInterface
+	UserServices         authdomain.UserServicesInterface
+	BranchesServices     branchdomain.BranchesServicesInterface
+	LocationsServices    branchdomain.LocationsServicesInterface
+	EquipmentServices    inventorydomain.EquipmentServicesInterface
+	InventoryServices    inventorydomain.BranchInventoryServicesInterface
+	InstructorServices   instructordomain.InstructorServiceInterface
+	ProductsServices     productsdomain.ProductsServiceInterface
+	MarketingServices    marketingdomain.MarketingServiceInterface
+	MembershipServices   membershipsdomain.MembershipsServiceInterface
+	BillingServices      billingdomain.BillingServiceInterface
+	ScheduleServices     scheduledomain.ScheduleServiceInterface
+	CombosServices       combosdomain.CombosServicesInterface
+	BookingServices      bookingdomain.BookingServiceInterface
+	AccessServices       accessdomain.AcessServiceInterface
+	ReportServices       reportdomain.ReportServiceInterface
+	Staff                staffdomain.StaffServiceInterface
+	Policies             policiesdomain.PoliciesServicesInterface
+	WishlistServices     wishlistdomain.WishlistService
+	AuditServices        auditdomain.AuditService
+	ClientServices       clientsdomain.ClientServiceInterface
+	NotificationServices notidomain.NotificationServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
 
-func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage) Services {
+func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage, pushNoti notifications.PushService) Services {
 	bookingService := bookingservice.NewBookingService(store)
 	return Services{
-		AuthServices:       authservices.NewAuthServices(store, cfg, auth, mailer),
-		UserServices:       authservices.NewUserService(store),
-		BranchesServices:   branchservices.NewBranchServices(store, cfg),
-		LocationsServices:  branchservices.NewLocationsServices(store),
-		EquipmentServices:  inventoryservices.NewEquipmentServices(store, cfg),
-		InventoryServices:  inventoryservices.NewBranchInventoryServices(store, cfg),
-		InstructorServices: instructorservices.NewInstructorServices(store, cfg),
-		ProductsServices:   productsservice.NewProductsService(store),
-		MarketingServices:  marketingservice.NewMarketingService(store),
-		MembershipServices: membershipsservice.NewMembershipService(store),
-		BillingServices:    billingservice.NewBillingService(store, cache, cfg, mailer),
-		ScheduleServices:   scheduleservice.NewScheduleService(store),
-		CombosServices:     combosservices.NewCombosServices(store),
-		BookingServices:    bookingService,
-		AccessServices:     accessservice.NewAccessServices(store, *bookingService),
-		ReportServices:     reportservices.NewReportService(store),
-		Staff:              staffservice.NewStaffService(store),
-		Policies:           policiesservices.NewPoliciesServices(store),
-		WishlistServices:   wishlistservice.NewWishlistService(store),
-		AuditServices:      auditservice.NewAuditService(store),
-		ClientServices:     clientsservice.NewClientService(store, cfg.EncryptionKey),
-		LogErrors:          logs.NewLogErrors(logger),
-		Logger:             logger,
+		AuthServices:         authservices.NewAuthServices(store, cfg, auth, mailer),
+		UserServices:         authservices.NewUserService(store),
+		BranchesServices:     branchservices.NewBranchServices(store, cfg),
+		LocationsServices:    branchservices.NewLocationsServices(store),
+		EquipmentServices:    inventoryservices.NewEquipmentServices(store, cfg),
+		InventoryServices:    inventoryservices.NewBranchInventoryServices(store, cfg),
+		InstructorServices:   instructorservices.NewInstructorServices(store, cfg),
+		ProductsServices:     productsservice.NewProductsService(store),
+		MarketingServices:    marketingservice.NewMarketingService(store),
+		MembershipServices:   membershipsservice.NewMembershipService(store),
+		BillingServices:      billingservice.NewBillingService(store, cache, cfg, mailer),
+		ScheduleServices:     scheduleservice.NewScheduleService(store),
+		CombosServices:       combosservices.NewCombosServices(store),
+		BookingServices:      bookingService,
+		AccessServices:       accessservice.NewAccessServices(store, *bookingService),
+		ReportServices:       reportservices.NewReportService(store),
+		Staff:                staffservice.NewStaffService(store),
+		Policies:             policiesservices.NewPoliciesServices(store),
+		WishlistServices:     wishlistservice.NewWishlistService(store),
+		AuditServices:        auditservice.NewAuditService(store),
+		ClientServices:       clientsservice.NewClientService(store, cfg.EncryptionKey),
+		NotificationServices: notiservice.NewNotificationService(store, pushNoti),
+		LogErrors:            logs.NewLogErrors(logger),
+		Logger:               logger,
 	}
 }

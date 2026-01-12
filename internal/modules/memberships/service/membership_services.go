@@ -129,3 +129,11 @@ func (s *MembershipService) GetCancellationReasonByID(ctx context.Context, id uu
 func (s *MembershipService) GetCancellationReasons(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*membershipsdomain.CancellationReason, int64, error) {
 	return s.store.Membership.GetCancellationReasons(ctx, fq)
 }
+
+func (s *MembershipService) UpdateExpiredMemberships(ctx context.Context) error {
+	return s.store.Membership.UpdateExpiredMemberships(ctx)
+}
+
+func (s *MembershipService) GetExpiringMemberships(ctx context.Context, days int) ([]membershipsdomain.MembershipExpiringDetail, error) {
+	return s.store.Membership.GetExpiringMemberships(ctx, days)
+}

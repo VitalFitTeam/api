@@ -13,6 +13,7 @@ type MembershipsHandlerInterface interface {
 	GetClientsMemberships(c *gin.Context)
 	GetClientMembershipByID(c *gin.Context)
 	UpdateClientMembership(c *gin.Context)
+	GetMyMembershipHandler(c *gin.Context)
 }
 
 type MembershipHandler struct {
@@ -43,9 +44,10 @@ func (r *MembershipHandler) MembershipRoutes(rg *gin.RouterGroup, m *auth.AuthMi
 	{
 		clientMembershipsGroup.Use(m.AuthJwtTokenMiddleware())
 		clientMembershipsGroup.Use(m.AuditLogMiddleware())
+		clientMembershipsGroup.GET("/me", r.GetMyMembershipHandler)
 		clientMembershipsGroup.GET("", m.RBACPermission("members:list"), r.GetClientsMemberships)
 		clientMembershipsGroup.GET("/:clientMembershipId", m.RBACPermission("members:get"), r.GetClientMembershipByID)
-		clientMembershipsGroup.PUT("/:clientMembershipId", m.RBACPermission("members:update"), r.UpdateClientMembership)
+		clientMembershipsGroup.PUT("/:clientMembershipId", r.UpdateClientMembership)
 	}
 
 	// Cancellation Reasons routes
