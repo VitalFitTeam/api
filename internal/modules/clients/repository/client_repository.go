@@ -2,9 +2,11 @@ package clientsrepository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	clientsdomain "github.com/vitalfit/api/internal/modules/clients/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"gorm.io/gorm"
 )
 
@@ -30,6 +32,9 @@ func (r *ClientStore) GetMedicalInfoByUserID(ctx context.Context, userID uuid.UU
 		Where("user_id = ?", userID).
 		First(&medicalInfo).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
 		return nil, err
 	}
 	return &medicalInfo, nil
