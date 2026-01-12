@@ -19,11 +19,11 @@ import (
 // @Param			id		path		string						true	"Client User ID"
 // @Param			payload	body		CreateMedicalInfoPayload	true	"Medical Information Payload"
 // @Success		201		{object}	MedicalInfoResponse			"Medical information created successfully"
-// @Failure		400		{object}	map[string]interface{}		"Bad Request"
-// @Failure		401		{object}	map[string]interface{}		"Unauthorized"
-// @Failure		403		{object}	map[string]interface{}		"Forbidden"
-// @Failure		409		{object}	map[string]interface{}		"Conflict - Medical info already exists"
-// @Failure		500		{object}	map[string]interface{}		"Internal Server Error"
+// @Failure		400		{object}	object{error=string}		"Bad Request"
+// @Failure		401		{object}	object{error=string}		"Unauthorized"
+// @Failure		403		{object}	object{error=string}		"Forbidden"
+// @Failure		409		{object}	object{error=string}		"Conflict - Medical info already exists"
+// @Failure		500		{object}	object{error=string}		"Internal Server Error"
 // @Router			/clients/{id}/medical-info [post]
 func (h *ClientHandler) CreateMedicalInfoHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -106,11 +106,11 @@ func (h *ClientHandler) CreateMedicalInfoHandler(c *gin.Context) {
 // @Produce		json
 // @Param			id	path		string					true	"Client User ID"
 // @Success		200	{object}	MedicalInfoResponse		"Medical information retrieved successfully"
-// @Failure		400	{object}	map[string]interface{}	"Bad Request"
-// @Failure		401	{object}	map[string]interface{}	"Unauthorized"
-// @Failure		403	{object}	map[string]interface{}	"Forbidden"
-// @Failure		404	{object}	map[string]interface{}	"Not Found"
-// @Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		401	{object}	object{error=string}	"Unauthorized"
+// @Failure		403	{object}	object{error=string}	"Forbidden"
+// @Failure		404	{object}	object{error=string}	"Not Found"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
 // @Router			/clients/{id}/medical-info [get]
 func (h *ClientHandler) GetMedicalInfoHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -183,12 +183,12 @@ func (h *ClientHandler) GetMedicalInfoHandler(c *gin.Context) {
 // @Produce		json
 // @Param			id		path		string						true	"Client User ID"
 // @Param			payload	body		UpdateMedicalInfoPayload	true	"Medical Information Update Payload"
-// @Success		200		{object}	map[string]interface{}		"Medical information updated successfully"
-// @Failure		400		{object}	map[string]interface{}		"Bad Request"
-// @Failure		401		{object}	map[string]interface{}		"Unauthorized"
-// @Failure		403		{object}	map[string]interface{}		"Forbidden"
-// @Failure		404		{object}	map[string]interface{}		"Not Found"
-// @Failure		500		{object}	map[string]interface{}		"Internal Server Error"
+// @Success		200		{object}	object{error=string}		"Medical information updated successfully"
+// @Failure		400		{object}	object{error=string}		"Bad Request"
+// @Failure		401		{object}	object{error=string}		"Unauthorized"
+// @Failure		403		{object}	object{error=string}		"Forbidden"
+// @Failure		404		{object}	object{error=string}		"Not Found"
+// @Failure		500		{object}	object{error=string}		"Internal Server Error"
 // @Router			/clients/{id}/medical-info [put]
 func (h *ClientHandler) UpdateMedicalInfoHandler(c *gin.Context) {
 	ctx := c.Request.Context()

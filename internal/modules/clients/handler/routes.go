@@ -26,7 +26,7 @@ func NewClientHandler(services appservices.Services) *ClientHandler {
 func (h *ClientHandler) ClientRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	clientsGroup := rg.Group("/clients")
 	clientsGroup.Use(m.AuthJwtTokenMiddleware())
-	clientsGroup.Use(m.AuditLogMiddleware()))
+	clientsGroup.Use(m.AuditLogMiddleware())
 
 	clientsGroup.POST("/:id/medical-info",
 		h.CreateMedicalInfoHandler,

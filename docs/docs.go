@@ -5614,35 +5614,55 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 }
@@ -5687,42 +5707,66 @@ const docTemplate = `{
                         "description": "Medical information updated successfully",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 }
@@ -5773,35 +5817,55 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "409": {
                         "description": "Conflict - Medical info already exists",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 }

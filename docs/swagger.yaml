@@ -6254,27 +6254,37 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "401":
           description: Unauthorized
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "403":
           description: Forbidden
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "404":
           description: Not Found
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
       security:
       - ApiKeyAuth: []
@@ -6308,27 +6318,37 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "401":
           description: Unauthorized
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "403":
           description: Forbidden
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "409":
           description: Conflict - Medical info already exists
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
       security:
       - ApiKeyAuth: []
@@ -6358,32 +6378,44 @@ paths:
         "200":
           description: Medical information updated successfully
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "401":
           description: Unauthorized
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "403":
           description: Forbidden
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "404":
           description: Not Found
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties: true
+            properties:
+              error:
+                type: string
             type: object
       security:
       - ApiKeyAuth: []
