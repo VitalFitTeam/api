@@ -75,6 +75,8 @@ definitions:
         type: string
       created_at:
         type: string
+      device_token:
+        type: string
       expires_at:
         type: string
       id:
@@ -186,6 +188,8 @@ definitions:
     properties:
       context:
         type: string
+      device_token:
+        type: string
       email:
         maxLength: 255
         type: string
@@ -239,6 +243,8 @@ definitions:
     type: object
   authhandlers.OAuthLoginPayload:
     properties:
+      device_token:
+        type: string
       session_token:
         type: string
     required:
@@ -1011,6 +1017,71 @@ definitions:
     - name
     - state
     - tax_id
+    type: object
+  clientshandler.CreateMedicalInfoPayload:
+    properties:
+      allergies:
+        example: Penicillin, Peanuts
+        type: string
+      blood_type:
+        example: O+
+        type: string
+      emergency_contact:
+        example: Jane Doe - +1234567890 (Wife)
+        type: string
+      medical_conditions:
+        example: Diabetes Type 2, Hypertension
+        type: string
+      medical_risks:
+        example: High blood pressure, family history of heart disease
+        type: string
+      medications:
+        example: Metformin 500mg daily
+        type: string
+      warnings:
+        example: Avoid high-intensity exercises
+        type: string
+    type: object
+  clientshandler.MedicalInfoResponse:
+    properties:
+      allergies:
+        type: string
+      blood_type:
+        type: string
+      emergency_contact:
+        type: string
+      medical_conditions:
+        type: string
+      medical_risks:
+        type: string
+      medications:
+        type: string
+      warnings:
+        type: string
+    type: object
+  clientshandler.UpdateMedicalInfoPayload:
+    properties:
+      allergies:
+        example: Penicillin, Peanuts
+        type: string
+      blood_type:
+        example: O+
+        type: string
+      emergency_contact:
+        example: Jane Doe - +1234567890 (Wife)
+        type: string
+      medical_conditions:
+        example: Diabetes Type 2, Hypertension
+        type: string
+      medical_risks:
+        example: High blood pressure, family history of heart disease
+        type: string
+      medications:
+        example: Metformin 500mg daily
+        type: string
+      warnings:
+        example: Avoid high-intensity exercises
+        type: string
     type: object
   comboshandler.CreatePackageItemRequest:
     properties:
@@ -1821,6 +1892,39 @@ definitions:
         type: string
       price:
         type: number
+    type: object
+  notihandlers.BroadcastRequest:
+    properties:
+      message:
+        type: string
+      title:
+        type: string
+    required:
+    - message
+    - title
+    type: object
+  notihandlers.NotificationResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      is_read:
+        type: boolean
+      message:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  notihandlers.UnreadCountResponse:
+    properties:
+      count:
+        type: integer
     type: object
   policieshandler.PolicyResponse:
     properties:
@@ -6107,6 +6211,224 @@ paths:
       summary: Update a client membership
       tags:
       - Memberships
+  /client-memberships/me:
+    get:
+      description: Retrieves the membership details for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client membership details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/membershipsdomain.ClientMembership'
+            type: object
+        "404":
+          description: 'Not Found: Client membership not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get my membership
+      tags:
+      - Memberships
+  /clients/{id}/medical-info:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves medical information for a specific client. Only authorized
+        roles can view medical info.
+      parameters:
+      - description: Client User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Medical information retrieved successfully
+          schema:
+            $ref: '#/definitions/clientshandler.MedicalInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Medical Information
+      tags:
+      - Clients
+    post:
+      consumes:
+      - application/json
+      description: Creates new medical information for a client. Only authorized roles
+        can create medical info.
+      parameters:
+      - description: Client User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Medical Information Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/clientshandler.CreateMedicalInfoPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Medical information created successfully
+          schema:
+            $ref: '#/definitions/clientshandler.MedicalInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: Conflict - Medical info already exists
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create Medical Information
+      tags:
+      - Clients
+    put:
+      consumes:
+      - application/json
+      description: Updates existing medical information for a client. Only authorized
+        roles can update medical info.
+      parameters:
+      - description: Client User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Medical Information Update Payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/clientshandler.UpdateMedicalInfoPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Medical information updated successfully
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update Medical Information
+      tags:
+      - Clients
   /equipment-types:
     get:
       description: Lists all available equipment types in the global catalog with
@@ -7583,6 +7905,159 @@ paths:
       summary: Update a cancellation reason
       tags:
       - Memberships
+  /notifications:
+    get:
+      description: Retrieves a paginated list of notifications for the authenticated
+        user.
+      parameters:
+      - default: 10
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: desc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of notifications
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/notihandlers.NotificationResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user notifications
+      tags:
+      - Notifications
+  /notifications/{id}/read:
+    patch:
+      description: Marks a specific notification as read.
+      parameters:
+      - description: Notification UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Notification marked as read
+        "400":
+          description: 'Bad Request: Invalid UUID'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mark notification as read
+      tags:
+      - Notifications
+  /notifications/broadcast:
+    post:
+      consumes:
+      - application/json
+      description: Sends a push notification to all users.
+      parameters:
+      - description: Broadcast payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/notihandlers.BroadcastRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notification sent
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Send broadcast notification
+      tags:
+      - Notifications
+  /notifications/read-all:
+    patch:
+      description: Marks all notifications for the authenticated user as read.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: All notifications marked as read
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mark all notifications as read
+      tags:
+      - Notifications
+  /notifications/unread-count:
+    get:
+      description: Retrieves the count of unread notifications for the authenticated
+        user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Count of unread notifications
+          schema:
+            $ref: '#/definitions/notihandlers.UnreadCountResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get unread notifications count
+      tags:
+      - Notifications
   /packages:
     get:
       description: Retrieves a paginated list of all available packages, with optional
@@ -8893,6 +9368,38 @@ paths:
       summary: Get Billing Detail by Branch Matrix
       tags:
       - Reports Financial
+  /reports/kpi/churn-rate:
+    get:
+      description: 'Retrieves the percentage of clients who left (churned) during
+        the current month compared to the start of the month. Formula: ((Lost Clients)
+        / Start Clients) * 100.'
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Churn Rate KPI
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/reportdomain.KPICard'
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Churn Rate KPI
+      tags:
+      - Reports
   /reports/kpi/clv:
     get:
       description: Retrieves the average revenue generated per customer (Historical

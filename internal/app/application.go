@@ -20,6 +20,7 @@ import (
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
+	"github.com/vitalfit/api/internal/modules/cronjobs"
 	"github.com/vitalfit/api/internal/shared/middleware/auth"
 	ratelimiterm "github.com/vitalfit/api/internal/shared/middleware/ratelimiter"
 	"github.com/vitalfit/api/internal/store"
@@ -39,6 +40,7 @@ type application struct {
 	Services    appservices.Services
 	Handlers    apphandlers.Handlers
 	ratelimiter ratelimiter.Limiter
+	Cronjob     *cronjobs.Manager
 }
 
 // Mount config and return router
@@ -108,9 +110,14 @@ func (app *application) Mount() http.Handler {
 
 		//wishlist
 		app.Handlers.WishlistHandlers.SetupRoutes(v1, m)
+		//clients
+		app.Handlers.ClientHandlers.ClientRoutes(v1, m)
 
 		//audit
 		app.Handlers.AuditHandlers.SetupRoutes(v1, m)
+
+		//notifications
+		app.Handlers.NotificationHandlers.NotificationsRoutes(v1, m)
 
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -152,7 +159,7 @@ func (app *application) Run(mux http.Handler) error {
 	if !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
-
+	app.Cronjob.Stop()
 	err = <-shutdown
 	if err != nil {
 		return err

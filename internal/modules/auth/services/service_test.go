@@ -154,7 +154,7 @@ func TestAuthService(t *testing.T) {
 
 	t.Run("GenerateToken", func(t *testing.T) {
 		sessionStoreMock.On("Create", mock.Anything, mock.AnythingOfType("*authdomain.Session")).Return(nil).Once()
-		token, _, err := authService.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1")
+		token, _, err := authService.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1", "")
 		assert.NoError(t, err)
 		assert.NotEmpty(t, token)
 
@@ -169,7 +169,7 @@ func TestAuthService(t *testing.T) {
 
 	t.Run("ValidateToken", func(t *testing.T) {
 		sessionStoreMock.On("Create", mock.Anything, mock.AnythingOfType("*authdomain.Session")).Return(nil).Once()
-		validToken, _, _ := authService.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1")
+		validToken, _, _ := authService.GenerateToken(context.Background(), mockUser, "test-agent", "127.0.0.1", "")
 
 		parsedToken, err := authService.ValidateToken(validToken)
 		assert.NoError(t, err)

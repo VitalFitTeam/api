@@ -13,6 +13,8 @@ import (
 	bookingrepository "github.com/vitalfit/api/internal/modules/booking/repository"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	branchrepository "github.com/vitalfit/api/internal/modules/branches/repository"
+	clientsdomain "github.com/vitalfit/api/internal/modules/clients/domain"
+	clientsrepository "github.com/vitalfit/api/internal/modules/clients/repository"
 	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
 	combosrepository "github.com/vitalfit/api/internal/modules/combos/repository"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
@@ -23,6 +25,8 @@ import (
 	marketingrepository "github.com/vitalfit/api/internal/modules/marketing/repository"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	membershipsrepository "github.com/vitalfit/api/internal/modules/memberships/repository"
+	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
+	notirepository "github.com/vitalfit/api/internal/modules/notifications/repository"
 	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
 	policiesrepository "github.com/vitalfit/api/internal/modules/policies/repository"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
@@ -63,6 +67,8 @@ type Storage struct {
 	Wishlist        wishlistdomain.WishlistRepository
 	Audit           auditdomain.AuditRepository
 	Session         authdomain.SessionRepository
+	Client          clientsdomain.ClientRepository
+	Notification    notidomain.NotificationRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -90,5 +96,7 @@ func NewStorage(db *gorm.DB) Storage {
 		Wishlist:        wishlistrepository.NewWishlistStore(db),
 		Audit:           auditrepository.NewAuditStore(db),
 		Session:         authrepository.NewSessionStore(db),
+		Client:          clientsrepository.NewClientStore(db),
+		Notification:    notirepository.NewNotificationStore(db),
 	}
 }

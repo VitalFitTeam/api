@@ -11,6 +11,7 @@ type Session struct {
 
 	UserID uuid.UUID `gorm:"type:uuid;not null;index" json:"user_id"`
 
+	DeviceToken  string `gorm:"type:text" json:"device_token"`
 	RefreshToken string `gorm:"type:text;index" json:"refresh_token"`
 	UserAgent    string `gorm:"type:text" json:"user_agent"`
 	ClientIP     string `gorm:"size:45" json:"client_ip"`

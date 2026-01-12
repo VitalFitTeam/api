@@ -18,4 +18,5 @@ type BookingServiceInterface interface {
 	CanAccessService(ctx context.Context, userID, branchID, serviceID uuid.UUID) (bool, error)
 	CountBookingsForClass(ctx context.Context, classID uuid.UUID) (int64, error)
 	GetBookingsByClass(ctx context.Context, classID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*BookingWithUserInfo, int64, error)
+	GetUpcomingClassReminders(ctx context.Context) ([]BookingReminder, error)
 }

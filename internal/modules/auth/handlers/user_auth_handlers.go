@@ -538,7 +538,7 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 
 	userAgent := c.Request.UserAgent()
 	clientIP := c.ClientIP()
-	token, refreshToken, err := h.services.AuthServices.GenerateToken(ctx, user, userAgent, clientIP)
+	token, refreshToken, err := h.services.AuthServices.GenerateToken(ctx, user, userAgent, clientIP, payload.DeviceToken)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -629,7 +629,7 @@ func (h *AuthHandlers) OAuthLoginHandler(c *gin.Context) {
 
 	userAgent := c.Request.UserAgent()
 	clientIP := c.ClientIP()
-	internalToken, refreshToken, err := h.services.AuthServices.GenerateToken(ctx, user, userAgent, clientIP)
+	internalToken, refreshToken, err := h.services.AuthServices.GenerateToken(ctx, user, userAgent, clientIP, payload.DeviceToken)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return

@@ -306,5 +306,21 @@
   {
     "name": "branch_management",
     "description": "Allows management of branch operations"
+  },
+  {
+    "name": "medical_info:create",
+    "description": "Allows creating medical information for clients"
+  },
+  {
+    "name": "medical_info:read",
+    "description": "Allows viewing medical information for clients"
+  },
+  {
+    "name": "medical_info:update",
+    "description": "Allows updating medical information for clients"
+  },
+  {
+    "name": "view",
+    "description": "Allows viewing specific branch information"
   }
 ]

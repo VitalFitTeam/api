@@ -51,7 +51,7 @@ func (r *InstructorHandlers) InstructorRoutes(rg *gin.RouterGroup, m *auth.AuthM
 	branchInstructorGroup.Use(m.AuditLogMiddleware())
 	{
 		branchInstructorGroup.POST("", m.RBACPermission("branch_management"), r.AssignInstructorsToBranchHandler)
-		branchInstructorGroup.GET("", m.RBACPermission("instructors:list"), r.ListBranchInstructorsHandler)
+		branchInstructorGroup.GET("", m.RBACPermission("instructors:list", "branch_management", "view"), r.ListBranchInstructorsHandler)
 		branchInstructorGroup.DELETE("/:instructor_id", m.RBACPermission("branch_management"), r.RemoveInstructorFromBranchHandler)
 	}
 }

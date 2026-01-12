@@ -202,3 +202,26 @@ func (s *BookingService) CountBookingsForClass(ctx context.Context, classID uuid
 func (s *BookingService) GetBookingsByClass(ctx context.Context, classID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*bookingdomain.BookingWithUserInfo, int64, error) {
 	return s.store.Booking.GetBookingsByClass(ctx, classID, fq)
 }
+
+//
+// ------------------------------------------------------------
+// GetUpcomingClassReminders
+// ------------------------------------------------------------
+//
+
+func (s *BookingService) GetUpcomingClassReminders(ctx context.Context) ([]bookingdomain.BookingReminder, error) {
+	now := time.Now()
+	startTime := now.Add(55 * time.Minute)
+	endTime := now.Add(65 * time.Minute)
+
+	bookings, err := s.store.Booking.GetBookingsInTimeRange(ctx, startTime, endTime)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range bookings {
+		bookings[i].TimeUntilStart = bookings[i].StartsAt.Sub(now)
+	}
+
+	return bookings, nil
+}
