@@ -162,7 +162,7 @@ func (h *AccessHandler) GetClientAttendanceHistoryHandler(c *gin.Context) {
 // @Param			end_date	query		string	false	"End date filter (RFC3339 format)"
 // @Param			page		query		int		false	"Page number (default: 1)"
 // @Param			limit		query		int		false	"Items per page (default: 10, max: 20)"
-// @Success		200			{object}	pagination.PaginatedResponseTotal[ServiceUsageResponse]
+// @Success		200			{object}	object{data=[]ServiceUsageResponse}
 // @Failure		400			{object}	map[string]interface{}
 // @Failure		404			{object}	map[string]interface{}
 // @Failure		500			{object}	map[string]interface{}

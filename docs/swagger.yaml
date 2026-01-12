@@ -6342,11 +6342,38 @@ paths:
       summary: Update a client membership
       tags:
       - Memberships
-<<<<<<< HEAD
+  /client-memberships/me:
+    get:
+      description: Retrieves the membership details for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Client membership details
+          schema:
+            properties:
+              data:
+                $ref: '#/definitions/membershipsdomain.ClientMembership'
+            type: object
+        "404":
+          description: 'Not Found: Client membership not found'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get my membership
+      tags:
+      - Memberships
   /clients/{id}/attendance-history:
     get:
       description: Retrieves the complete attendance history for a specific client,
-        ordered by date
+        ordered by date with pagination
       parameters:
       - description: Client UUID
         in: path
@@ -6361,16 +6388,18 @@ paths:
         in: query
         name: end_date
         type: string
-=======
-  /client-memberships/me:
-    get:
-      description: Retrieves the membership details for the authenticated user.
->>>>>>> dev
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 20)'
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-<<<<<<< HEAD
           description: OK
           schema:
             properties:
@@ -6386,16 +6415,6 @@ paths:
             type: object
         "404":
           description: Not Found
-=======
-          description: Client membership details
-          schema:
-            properties:
-              data:
-                $ref: '#/definitions/membershipsdomain.ClientMembership'
-            type: object
-        "404":
-          description: 'Not Found: Client membership not found'
->>>>>>> dev
           schema:
             additionalProperties: true
             type: object
@@ -6406,20 +6425,9 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-<<<<<<< HEAD
       summary: Get Client Attendance History
       tags:
       - Access
-  /clients/{id}/service-usage:
-    get:
-      description: Retrieves service usage history for a specific client including
-        branch and timestamp
-      parameters:
-      - description: Client UUID
-=======
-      summary: Get my membership
-      tags:
-      - Memberships
   /clients/{id}/medical-info:
     get:
       consumes:
@@ -6428,40 +6436,14 @@ paths:
         roles can view medical info.
       parameters:
       - description: Client User ID
->>>>>>> dev
         in: path
         name: id
         required: true
         type: string
-<<<<<<< HEAD
-      - description: Start date filter (RFC3339 format)
-        in: query
-        name: start_date
-        type: string
-      - description: End date filter (RFC3339 format)
-        in: query
-        name: end_date
-        type: string
-=======
->>>>>>> dev
       produces:
       - application/json
       responses:
         "200":
-<<<<<<< HEAD
-          description: OK
-          schema:
-            properties:
-              data:
-                items:
-                  $ref: '#/definitions/accesshandler.ServiceUsageResponse'
-                type: array
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-=======
           description: Medical information retrieved successfully
           schema:
             $ref: '#/definitions/clientshandler.MedicalInfoResponse'
@@ -6485,31 +6467,17 @@ paths:
             properties:
               error:
                 type: string
->>>>>>> dev
             type: object
         "404":
           description: Not Found
           schema:
-<<<<<<< HEAD
-            additionalProperties: true
-=======
             properties:
               error:
                 type: string
->>>>>>> dev
             type: object
         "500":
           description: Internal Server Error
           schema:
-<<<<<<< HEAD
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get Client Service Usage
-      tags:
-      - Access
-=======
             properties:
               error:
                 type: string
@@ -6650,7 +6618,64 @@ paths:
       summary: Update Medical Information
       tags:
       - Clients
->>>>>>> dev
+  /clients/{id}/service-usage:
+    get:
+      description: Retrieves service usage history for a specific client including
+        branch and timestamp with pagination
+      parameters:
+      - description: Client UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date filter (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 10, max: 20)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/accesshandler.ServiceUsageResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Client Service Usage
+      tags:
+      - Access
   /equipment-types:
     get:
       description: Lists all available equipment types in the global catalog with
