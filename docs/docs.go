@@ -6856,6 +6856,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/marketing/banners/random": {
+            "get": {
+                "description": "Retrieves a random active banner with its associated service ID. This endpoint is public and does not require authentication.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Marketing"
+                ],
+                "summary": "Get random banner with service",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "$ref": "#/definitions/marketinghandlers.RandomBannerResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "error: Not Found - No active banners with services available",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/marketing/banners/{id}": {
             "get": {
                 "security": [
@@ -15749,6 +15796,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "marketinghandlers.RandomBannerResponse": {
+            "type": "object",
+            "properties": {
+                "image_url": {
+                    "type": "string"
+                },
+                "service_id": {
                     "type": "string"
                 }
             }

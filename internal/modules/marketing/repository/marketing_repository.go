@@ -99,6 +99,50 @@ func (s *MarketingStore) GetBanners(ctx context.Context) ([]*marketingdomain.Ban
 	return banners, nil
 }
 
+func (s *MarketingStore) GetRandomBannerWithService(ctx context.Context) (*marketingdomain.Banner, uuid.UUID, error) {
+	type Result struct {
+		BannerID  uuid.UUID `gorm:"column:banner_id"`
+		Name      string    `gorm:"column:name"`
+		ImageURL  string    `gorm:"column:image_url"`
+		LinkURL   string    `gorm:"column:link_url"`
+		IsActive  bool      `gorm:"column:is_active"`
+		ServiceID uuid.UUID `gorm:"column:service_id"`
+	}
+
+	var result Result
+
+	// Query to get a random active banner that has at least one associated service
+	err := s.db.WithContext(ctx).
+		Table("banners").
+		Select("banners.banner_id, banners.name, banners.image_url, banners.link_url, banners.is_active, banner_services.service_id").
+		Joins("INNER JOIN banner_services ON banners.banner_id = banner_services.banner_id").
+		Where("banners.is_active = ?", true).
+		Order("RANDOM()").
+		Limit(1).
+		Scan(&result).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, uuid.Nil, shared_errors.ErrNotFound
+		}
+		return nil, uuid.Nil, err
+	}
+
+	if result.BannerID == uuid.Nil {
+		return nil, uuid.Nil, shared_errors.ErrNotFound
+	}
+
+	banner := &marketingdomain.Banner{
+		BannerID: result.BannerID,
+		Name:     result.Name,
+		ImageURL: result.ImageURL,
+		LinkURL:  result.LinkURL,
+		IsActive: result.IsActive,
+	}
+
+	return banner, result.ServiceID, nil
+}
+
 // Promotion operations
 
 func (s *MarketingStore) CreatePromotion(ctx context.Context, promotion *marketingdomain.Promotion) error {
