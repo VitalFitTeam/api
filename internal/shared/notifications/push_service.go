@@ -30,12 +30,10 @@ func NewPushService() (*PushService, error) {
 		return nil, fmt.Errorf("FIREBASE_CREDENTIALS_BASE64 está vacía")
 	}
 
-	// B. Decodificar de Base64 a []byte (JSON original)
 	credsJSON, err := base64.StdEncoding.DecodeString(credsBase64)
 	if err != nil {
 		return nil, fmt.Errorf("error decodificando credenciales base64: %w", err)
 	}
-	// C. Crear credenciales (igual que antes)
 	creds, err := google.CredentialsFromJSON(ctx, credsJSON, "https://www.googleapis.com/auth/firebase.messaging")
 	if err != nil {
 		return nil, fmt.Errorf("error parseando credenciales de firebase: %w", err)
@@ -59,14 +57,13 @@ func NewPushService() (*PushService, error) {
 	}, nil
 }
 
-// Enviar notificación a un token específico
 func (s *PushService) SendPush(ctx context.Context, deviceToken string, title string, body string, data map[string]string) error {
 	message := &messaging.Message{
 		Notification: &messaging.Notification{
 			Title: title,
 			Body:  body,
 		},
-		Token: deviceToken, // El token que guardaste en la DB
+		Token: deviceToken,
 
 		Data: data,
 	}

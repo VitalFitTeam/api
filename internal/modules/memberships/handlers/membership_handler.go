@@ -679,7 +679,6 @@ func (h *MembershipHandler) UpdateCancellationReasonHandler(c *gin.Context) {
 		return
 	}
 
-	// Get existing reason
 	existingReason, err := h.services.MembershipServices.GetCancellationReasonByID(ctx, reasonID)
 	if err != nil {
 		switch err {
@@ -691,7 +690,6 @@ func (h *MembershipHandler) UpdateCancellationReasonHandler(c *gin.Context) {
 		return
 	}
 
-	// Update only provided fields
 	if payload.Description != "" {
 		existingReason.Description = payload.Description
 	}
