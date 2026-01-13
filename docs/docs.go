@@ -5674,30 +5674,18 @@ const docTemplate = `{
                 }
             }
         },
-<<<<<<< HEAD
         "/clients/{id}/attendance-history": {
-=======
-        "/clients/{id}/medical-info": {
->>>>>>> dev
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-<<<<<<< HEAD
-                "description": "Retrieves the complete attendance history for a specific client, ordered by date",
-=======
-                "description": "Retrieves medical information for a specific client. Only authorized roles can view medical info.",
-                "consumes": [
-                    "application/json"
-                ],
->>>>>>> dev
+                "description": "Retrieves the complete attendance history for a specific client, ordered by date with pagination",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-<<<<<<< HEAD
                     "Access"
                 ],
                 "summary": "Get Client Attendance History",
@@ -5705,7 +5693,89 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client UUID",
-=======
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date filter (RFC3339 format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (RFC3339 format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/accesshandler.AttendanceHistoryResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/medical-info": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves medical information for a specific client. Only authorized roles can view medical info.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
                     "Clients"
                 ],
                 "summary": "Get Medical Information",
@@ -5803,7 +5873,6 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client User ID",
->>>>>>> dev
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -5867,31 +5936,17 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "type": "object",
-<<<<<<< HEAD
-                            "additionalProperties": true
-=======
                             "properties": {
                                 "error": {
                                     "type": "string"
                                 }
                             }
->>>>>>> dev
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-<<<<<<< HEAD
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/clients/{id}/service-usage": {
-            "get": {
-=======
                             "properties": {
                                 "error": {
                                     "type": "string"
@@ -5902,33 +5957,19 @@ const docTemplate = `{
                 }
             },
             "post": {
->>>>>>> dev
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-<<<<<<< HEAD
-                "description": "Retrieves service usage history for a specific client including branch and timestamp",
-=======
                 "description": "Creates new medical information for a client. Only authorized roles can create medical info.",
                 "consumes": [
                     "application/json"
                 ],
->>>>>>> dev
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-<<<<<<< HEAD
-                    "Access"
-                ],
-                "summary": "Get Client Service Usage",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Client UUID",
-=======
                     "Clients"
                 ],
                 "summary": "Create Medical Information",
@@ -5936,39 +5977,11 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Client User ID",
->>>>>>> dev
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-<<<<<<< HEAD
-                        "type": "string",
-                        "description": "Start date filter (RFC3339 format)",
-                        "name": "start_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "End date filter (RFC3339 format)",
-                        "name": "end_date",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/accesshandler.ServiceUsageResponse"
-                                    }
-                                }
-                            }
-=======
                         "description": "Medical Information Payload",
                         "name": "payload",
                         "in": "body",
@@ -5983,23 +5996,12 @@ const docTemplate = `{
                         "description": "Medical information created successfully",
                         "schema": {
                             "$ref": "#/definitions/clientshandler.MedicalInfoResponse"
->>>>>>> dev
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
-<<<<<<< HEAD
-                            "additionalProperties": true
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-=======
                             "properties": {
                                 "error": {
                                     "type": "string"
@@ -6038,22 +6040,104 @@ const docTemplate = `{
                                     "type": "string"
                                 }
                             }
->>>>>>> dev
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-<<<<<<< HEAD
-                            "additionalProperties": true
-=======
                             "properties": {
                                 "error": {
                                     "type": "string"
                                 }
                             }
->>>>>>> dev
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/service-usage": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves service usage history for a specific client including branch and timestamp with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access"
+                ],
+                "summary": "Get Client Service Usage",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date filter (RFC3339 format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (RFC3339 format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default: 10, max: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/accesshandler.ServiceUsageResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
