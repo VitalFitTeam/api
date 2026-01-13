@@ -29,9 +29,9 @@ type AttendanceLog struct {
 
 	CreatedAt time.Time `gorm:"default:now()" json:"created_at"`
 
-	User    authdomain.Users       `gorm:"foreignKey:UserID" json:"-"`
-	Service productsdomain.Service `gorm:"foreignKey:ServiceID" json:"-"`
-	Class   *scheduledomain.Class  `gorm:"foreignKey:ClassID" json:"-"`
+	User    authdomain.Users       `gorm:"foreignKey:UserID;references:UserID" json:"-"`
+	Service productsdomain.Service `gorm:"foreignKey:ServiceID;references:ServiceID" json:"-"`
+	Class   *scheduledomain.Class  `gorm:"foreignKey:ClassID;references:ClassID" json:"-"`
 }
 
 func (AttendanceLog) TableName() string {

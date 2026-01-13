@@ -56,8 +56,8 @@ func NewSeedStruct() *SeedStruct {
 func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices.Services) {
 	ctx := context.Background()
 	// s.CreateSuperAdmin(store, db, ctx)
-	// s.SeedPermissions(store, db, ctx)
-	// s.SeedRolePermissions(store, db, ctx)
+	s.SeedPermissions(store, db, ctx)
+	s.SeedRolePermissions(store, db, ctx)
 	// s.SeedUsers(store, db, ctx)
 	// s.SeedPolicies(store, db, ctx)
 	// s.SeedServiceCategories(store, db, ctx)
@@ -71,8 +71,8 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices
 	// s.SeedBranchRelations(store, db, ctx)
 	// s.SeedClasses(store, db, ctx)
 	// s.SeedInvoicesAndPayments(store, db, ctx, services)
-	s.SeedBookingsAndAttendance(store, db, ctx)
-	//s.SeedStaffAssignment(store, db, ctx, services)
+	// s.SeedBookingsAndAttendance(store, db, ctx)
+	// s.SeedStaffAssignment(store, db, ctx, services)
 }
 
 func (s *SeedStruct) CreateSuperAdmin(store store.Storage, db *gorm.DB, ctx context.Context) {
