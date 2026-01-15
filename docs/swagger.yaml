@@ -5704,6 +5704,14 @@ paths:
         name: id
         required: true
         type: string
+      - description: Month (1-12)
+        in: query
+        name: month
+        type: integer
+      - description: Year
+        in: query
+        name: year
+        type: integer
       produces:
       - application/json
       responses:

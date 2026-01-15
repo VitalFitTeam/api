@@ -3,6 +3,7 @@ package schedulehandlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -173,10 +174,12 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 // @Tags			Schedule
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			id	path		string	true	"Branch UUID"
-// @Success		200	{object}	object{data=[]ClassResponse}
-// @Failure		400	{object}	map[string]interface{}
-// @Failure		500	{object}	map[string]interface{}
+// @Param			id		path		string	true	"Branch UUID"
+// @Param			month	query		int		false	"Month (1-12)"
+// @Param			year	query		int		false	"Year"
+// @Success		200		{object}	object{data=[]ClassResponse}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
 // @Router			/branches/{id}/schedule [get]
 func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -203,11 +206,26 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 		return
 	}
 
+	var startDate, endDate *time.Time
+	monthStr := c.Query("month")
+	yearStr := c.Query("year")
+
+	if monthStr != "" && yearStr != "" {
+		m, errM := strconv.Atoi(monthStr)
+		y, errY := strconv.Atoi(yearStr)
+		if errM == nil && errY == nil {
+			start := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 1, 0).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	}
+
 	var classes []scheduledomain.Class
 	if user.Role.Name == "client" {
 		classes, err = h.services.ScheduleServices.GetUpcomingClassesByBranch(ctx, branchID)
 	} else {
-		classes, err = h.services.ScheduleServices.GetClassesByBranch(ctx, branchID)
+		classes, err = h.services.ScheduleServices.GetClassesByBranch(ctx, branchID, startDate, endDate)
 	}
 
 	if err != nil {

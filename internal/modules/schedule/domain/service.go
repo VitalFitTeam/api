@@ -17,7 +17,7 @@ type AttendanceHistoryFilter struct {
 type ScheduleServiceInterface interface {
 	CreateClass(ctx context.Context, class *Class) error
 	CreateClasses(ctx context.Context, classes []Class) error
-	GetClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]Class, error)
+	GetClassesByBranch(ctx context.Context, branchID uuid.UUID, startDate, endDate *time.Time) ([]Class, error)
 	GetClassByID(ctx context.Context, classID uuid.UUID) (*Class, error)
 	UpdateClass(ctx context.Context, class *Class) error
 	DeleteClass(ctx context.Context, classID uuid.UUID) error

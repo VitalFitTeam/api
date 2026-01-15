@@ -17,7 +17,7 @@ type ScheduleRepository interface {
 	CreateClasses(ctx context.Context, classes []Class) error
 
 	// GetClassesByBranch obtiene todas las clases programadas de una sucursal.
-	GetClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]Class, error)
+	GetClassesByBranch(ctx context.Context, branchID uuid.UUID, startDate, endDate *time.Time) ([]Class, error)
 
 	// GetClassByID obtiene una clase programada específica por su ID.
 	GetClassByID(ctx context.Context, classID uuid.UUID) (*Class, error)

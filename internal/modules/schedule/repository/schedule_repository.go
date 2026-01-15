@@ -50,19 +50,27 @@ func (s *ScheduleStore) CreateClasses(ctx context.Context, classes []scheduledom
 // GetClassesByBranch
 // ----------------------------------------
 
-func (s *ScheduleStore) GetClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]scheduledomain.Class, error) {
+func (s *ScheduleStore) GetClassesByBranch(ctx context.Context, branchID uuid.UUID, startDate, endDate *time.Time) ([]scheduledomain.Class, error) {
 	var classes []scheduledomain.Class
 
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
 
-		if err := tx.WithContext(ctx).
+		query := tx.WithContext(ctx).
 			Joins("JOIN services ON services.service_id = classes.service_id").
 			Where("services.deleted_at IS NULL").
 			Preload("Service").
 			Preload("Instructor").
 			Preload("Branch").
-			Where("classes.branch_id = ?", branchID).
-			Find(&classes).Error; err != nil {
+			Where("classes.branch_id = ?", branchID)
+
+		if startDate != nil {
+			query = query.Where("classes.starts_at >= ?", startDate)
+		}
+		if endDate != nil {
+			query = query.Where("classes.starts_at <= ?", endDate)
+		}
+
+		if err := query.Find(&classes).Error; err != nil {
 			return err
 		}
 
