@@ -2,6 +2,8 @@ package notiservice
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
@@ -47,25 +49,40 @@ func (s *NotificationService) MarkAllAsRead(ctx context.Context, userID uuid.UUI
 }
 
 func (s *NotificationService) SendBroadcast(ctx context.Context, title, message string) error {
-	users, err := s.store.Users.GetAllClients(ctx)
+	jobCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	users, err := s.store.Users.GetAllClients(jobCtx)
 	if err != nil {
 		return err
 	}
 
+	jobs := make(chan string, 100)
+	var wg sync.WaitGroup
+
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for token := range jobs {
+				_ = s.noti.SendPush(jobCtx, token, title, message, nil)
+			}
+		}()
+	}
+
 	for _, user := range users {
-		session, err := s.store.Session.GetUserSessions(ctx, user.UserID)
+		session, err := s.store.Session.GetUserSessions(jobCtx, user.UserID)
 		if err != nil {
-			return err
+			continue
 		}
 		for _, ses := range session {
 			if ses.DeviceToken != "" {
-				err := s.noti.SendPush(ctx, ses.DeviceToken, title, message, nil)
-				if err != nil {
-					return err
-				}
+				jobs <- ses.DeviceToken
 			}
 		}
 	}
+	close(jobs)
+	wg.Wait()
 	return nil
 
 }
