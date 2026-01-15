@@ -57,7 +57,12 @@ func (s *ScheduleStore) GetClassesByBranch(ctx context.Context, branchID uuid.UU
 
 		query := tx.WithContext(ctx).
 			Joins("JOIN services ON services.service_id = classes.service_id").
+			Joins("JOIN instructors ON instructors.instructor_id = classes.instructor_id").
+			Joins("JOIN users ON users.user_id = instructors.user_id").
 			Where("services.deleted_at IS NULL").
+			Where("instructors.deleted_at IS NULL").
+			Where("users.deleted_at IS NULL").
+			Where("users.status != ?", "Blocked").
 			Preload("Service").
 			Preload("Instructor").
 			Preload("Branch").
