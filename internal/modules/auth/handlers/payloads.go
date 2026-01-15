@@ -251,6 +251,7 @@ type GetUserResponse struct {
 	Gender            string    `json:"gender"`
 	Phone             string    `json:"phone"`
 	ProfilePictureURL string    `json:"profile_picture_url"`
+	Category          string    `json:"category,omitempty"`
 }
 
 type OAuthLoginPayload struct {

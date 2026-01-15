@@ -14044,6 +14044,9 @@ const docTemplate = `{
                 "birth_date": {
                     "type": "string"
                 },
+                "category": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
