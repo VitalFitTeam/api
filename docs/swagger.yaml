@@ -10455,6 +10455,50 @@ paths:
       summary: Get client schedule for a branch
       tags:
       - Booking
+  /schedule/instructor:
+    get:
+      description: Returns the scheduled classes for a specific instructor (by user
+        ID)
+      parameters:
+      - description: User UUID (if not instructor)
+        in: query
+        name: user_id
+        type: string
+      - description: Month (1-12)
+        in: query
+        name: month
+        type: integer
+      - description: Year
+        in: query
+        name: year
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/schedulehandlers.ClassResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List classes for an instructor
+      tags:
+      - Schedule
   /services:
     post:
       consumes:

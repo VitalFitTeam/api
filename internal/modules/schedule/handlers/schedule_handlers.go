@@ -295,6 +295,83 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 }
 
 // ------------------------------
+// GET /schedule/instructor
+// ------------------------------
+
+// @Summary		List classes for an instructor
+// @Description	Returns the scheduled classes for a specific instructor (by user ID)
+// @Tags			Schedule
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			user_id	query		string	false	"User UUID (if not instructor)"
+// @Param			month	query		int		false	"Month (1-12)"
+// @Param			year	query		int		false	"Year"
+// @Success		200		{object}	object{data=[]ClassResponse}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/schedule/instructor [get]
+func (h *ScheduleHandlers) GetClassesByInstructorHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	var targetUserID uuid.UUID
+	var err error
+
+	if user.Role.Name == "instructor" {
+		targetUserID = user.UserID
+	} else {
+		userIDStr := c.Query("user_id")
+		if userIDStr == "" {
+			h.services.LogErrors.BadRequestResponse(c, errors.New("user_id is required"))
+			return
+		}
+		targetUserID, err = uuid.Parse(userIDStr)
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+	}
+
+	var startDate, endDate *time.Time
+	monthStr := c.Query("month")
+	yearStr := c.Query("year")
+
+	if monthStr != "" && yearStr != "" {
+		m, errM := strconv.Atoi(monthStr)
+		y, errY := strconv.Atoi(yearStr)
+		if errM == nil && errY == nil {
+			start := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 1, 0).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	}
+
+	classes, err := h.services.ScheduleServices.GetClassesByInstructor(ctx, targetUserID, startDate, endDate)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	resp := make([]ClassResponse, 0, len(classes))
+	for _, class := range classes {
+		resp = append(resp, ClassResponse{
+			ClassID:      class.ClassID,
+			BranchID:     class.BranchID,
+			ServiceID:    class.ServiceID,
+			InstructorID: class.InstructorID,
+			StartsAt:     class.StartsAt,
+			EndsAt:       class.EndsAt,
+			MaxCapacity:  class.MaxCapacity,
+			IsVisible:    class.IsVisible,
+			Notes:        class.Notes,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+// ------------------------------
 // GET /schedule/:classId
 // ------------------------------
 

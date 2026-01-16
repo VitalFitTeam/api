@@ -11727,6 +11727,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/schedule/instructor": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns the scheduled classes for a specific instructor (by user ID)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "List classes for an instructor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User UUID (if not instructor)",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Month (1-12)",
+                        "name": "month",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Year",
+                        "name": "year",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/schedulehandlers.ClassResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/schedule/{classId}": {
             "get": {
                 "security": [

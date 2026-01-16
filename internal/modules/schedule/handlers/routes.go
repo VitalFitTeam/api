@@ -14,6 +14,7 @@ type ScheduleHandlersInterface interface {
 	UpdateClassHandler(c *gin.Context)
 	DeleteClassHandler(c *gin.Context)
 	GetClassByIDHandler(c *gin.Context)
+	GetClassesByInstructorHandler(c *gin.Context)
 	GetClassAttendanceHistoryHandler(c *gin.Context)
 }
 
@@ -41,6 +42,7 @@ func (h *ScheduleHandlers) ScheduleRoutes(rg *gin.RouterGroup, m *auth.AuthMiddl
 		classRoutes.Use(m.AuthJwtTokenMiddleware())
 		classRoutes.Use(m.AuditLogMiddleware())
 
+		classRoutes.GET("/instructor", h.GetClassesByInstructorHandler)
 		classRoutes.GET("/:classId", h.GetClassByIDHandler)
 		classRoutes.PUT("/:classId", m.RBACPermission("schedule:update"), h.UpdateClassHandler)
 		classRoutes.DELETE("/:classId", m.RBACPermission("schedule:delete"), h.DeleteClassHandler)
