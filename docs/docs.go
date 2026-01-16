@@ -14056,6 +14056,9 @@ const docTemplate = `{
                 "gender": {
                     "type": "string"
                 },
+                "has_active_membership": {
+                    "type": "boolean"
+                },
                 "identity_document": {
                     "type": "string"
                 },

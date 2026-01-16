@@ -976,18 +976,19 @@ func (h *AuthHandlers) GetUserByIDHandler(c *gin.Context) {
 		return
 	}
 	resp := GetUserResponse{
-		UserID:            user.UserID,
-		FirstName:         user.FirstName,
-		LastName:          user.LastName,
-		Email:             user.Email,
-		IdentityDocument:  user.IdentityDocument,
-		BirthDate:         user.BirthDate.Format("2006-01-02"),
-		Gender:            string(user.Gender),
-		Phone:             user.Phone,
-		ProfilePictureURL: user.ProfilePictureURL,
-		RoleID:            user.RoleID,
-		RoleName:          user.Role.Name,
-		Category:          string(user.ClientProfile.Category),
+		UserID:              user.UserID,
+		FirstName:           user.FirstName,
+		LastName:            user.LastName,
+		Email:               user.Email,
+		IdentityDocument:    user.IdentityDocument,
+		BirthDate:           user.BirthDate.Format("2006-01-02"),
+		Gender:              string(user.Gender),
+		Phone:               user.Phone,
+		ProfilePictureURL:   user.ProfilePictureURL,
+		RoleID:              user.RoleID,
+		RoleName:            user.Role.Name,
+		Category:            string(user.ClientProfile.Category),
+		HasActiveMembership: user.HasActiveMembership(),
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"data": resp,
@@ -1167,17 +1168,19 @@ func (h *AuthHandlers) GetUserByEmailHandler(c *gin.Context) {
 		}
 	}
 	resp := GetUserResponse{
-		UserID:            user.UserID,
-		FirstName:         user.FirstName,
-		LastName:          user.LastName,
-		Email:             user.Email,
-		IdentityDocument:  user.IdentityDocument,
-		RoleID:            user.RoleID,
-		RoleName:          user.Role.Name,
-		BirthDate:         user.BirthDate.Format("2006-01-02"),
-		Gender:            string(user.Gender),
-		Phone:             user.Phone,
-		ProfilePictureURL: user.ProfilePictureURL,
+		UserID:              user.UserID,
+		FirstName:           user.FirstName,
+		LastName:            user.LastName,
+		Email:               user.Email,
+		IdentityDocument:    user.IdentityDocument,
+		BirthDate:           user.BirthDate.Format("2006-01-02"),
+		Gender:              string(user.Gender),
+		Phone:               user.Phone,
+		ProfilePictureURL:   user.ProfilePictureURL,
+		RoleID:              user.RoleID,
+		RoleName:            user.Role.Name,
+		Category:            string(user.ClientProfile.Category),
+		HasActiveMembership: user.HasActiveMembership(),
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"data": resp,
