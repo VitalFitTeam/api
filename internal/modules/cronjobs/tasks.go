@@ -36,18 +36,6 @@ func (m *Manager) UpdateExpiredMembershipsCronjob() {
 	}
 }
 
-func (m *Manager) TestPushNoti() {
-	m.logger.Info("running test push noti cronjob")
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-	defer cancel()
-	token := "fdpe9i-OYersBulmuLxddC:APA91bE-udl2lAwKLein6h6nzjvDJbgzhRv_vzMLoJc8quPCAHU3tT95hP_1gP87aFBWLM6lzx_RNfrCqd5hjm6VjsLZGd_5MY4UdNRUxUx4wiZ_Ll2zhXU"
-	m.logger.Infow("token", "token", token)
-	data := map[string]string{
-		"test_data": "test data",
-	}
-	m.push.SendPush(ctx, token, "test", "test", data)
-}
-
 // func (m *Manager) NotifChurn() {
 // 	m.logger.Info("running test churn cronjob")
 // 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
@@ -98,11 +86,13 @@ func (m *Manager) NotifyClassReminder() {
 			m.logger.Errorw("failed to get user sessions")
 		}
 		for _, ses := range session {
-			if ses.DeviceToken != "" {
-				err := m.push.SendPush(ctx, ses.DeviceToken, fmt.Sprintf("Class Reminder %s", booking.ServiceName), fmt.Sprintf("Your %s class starts in %v", booking.ServiceName, booking.TimeUntilStart), metadata)
-				if err != nil {
-					m.logger.Errorw("failed to send push notification", "error", err)
-				}
+			if ses.DeviceToken == "" {
+				continue
+			}
+			err := m.push.SendPush(ctx, ses.DeviceToken, fmt.Sprintf("Class Reminder %s", booking.ServiceName), fmt.Sprintf("Your %s class starts in %v", booking.ServiceName, booking.TimeUntilStart), metadata)
+			if err != nil {
+				m.logger.Errorw("failed to send push notification", "error", err)
+				continue
 			}
 		}
 		notifications = append(notifications, notification)

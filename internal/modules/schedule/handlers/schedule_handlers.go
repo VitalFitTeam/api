@@ -1,7 +1,9 @@
 package schedulehandlers
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
+	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"gorm.io/gorm"
 )
@@ -52,6 +55,12 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 	}
 
 	class, err := payload.ToClass(branchID)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	instructorUser, err := h.services.InstructorServices.GetInstructorByID(ctx, class.InstructorID)
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -158,6 +167,34 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
+
+	// Notification to instructor
+	go func() {
+		notiCtx := context.Background()
+		timeFormat := "15:04"
+		dateFormat := "2006-01-02"
+
+		var message string
+		switch payload.Recurrence {
+		case "daily":
+			message = fmt.Sprintf("You have been assigned to a class starting on %s at %s. This class repeats daily.", class.StartsAt.Format(dateFormat), class.StartsAt.Format(timeFormat))
+		case "weekly":
+			weekday := class.StartsAt.Weekday().String()
+			message = fmt.Sprintf("You have been assigned to a class starting on %s at %s. This class repeats every %s.", class.StartsAt.Format(dateFormat), class.StartsAt.Format(timeFormat), weekday)
+		default:
+			message = fmt.Sprintf("You have been assigned to a class on %s at %s.", class.StartsAt.Format(dateFormat), class.StartsAt.Format(timeFormat))
+		}
+
+		notification := &notidomain.Notification{
+			UserID:  instructorUser.User.UserID,
+			Title:   "New Class Assignment",
+			Message: message,
+			Type:    "info",
+		}
+
+		_ = h.services.NotificationServices.CreateNotification(notiCtx, notification)
+		_ = h.services.NotificationServices.SendPushNotification(notiCtx, "New Class Assignment", message, instructorUser.User.UserID)
+	}()
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message":  "Class created successfully",

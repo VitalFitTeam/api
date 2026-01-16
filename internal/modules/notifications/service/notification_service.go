@@ -86,3 +86,20 @@ func (s *NotificationService) SendBroadcast(ctx context.Context, title, message 
 	return nil
 
 }
+
+func (s *NotificationService) SendPushNotification(ctx context.Context, title, message string, userID uuid.UUID) error {
+	jobCtx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
+	sessions, err := s.store.Session.GetUserSessions(jobCtx, userID)
+	if err != nil {
+		return err
+	}
+
+	for _, ses := range sessions {
+		if ses.DeviceToken != "" {
+			_ = s.noti.SendPush(jobCtx, ses.DeviceToken, title, message, nil)
+		}
+	}
+	return nil
+}
