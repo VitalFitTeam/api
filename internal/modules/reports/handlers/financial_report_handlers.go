@@ -1,6 +1,7 @@
 package reporthandlers
 
 import (
+	"encoding/csv"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -30,6 +31,55 @@ func (h *ReportHanlders) GetWeeklyRevenueKPIHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": kpi})
+}
+
+// @Summary		Export Financial Report (CSV)
+// @Description	Exports a detailed financial report as a CSV file.
+// @Tags			Reports Financial
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Param			branch_id	query		string					false	"Filter by Branch UUID"
+// @Param			start		query		string					false	"Start date (YYYY-MM-DD)"
+// @Param			end			query		string					false	"End date (YYYY-MM-DD)"
+// @Success		200			{file}		file					"financial_report.csv"
+// @Failure		500			{object}	object{error=string}	"Internal Server Error"
+// @Router			/reports/export/financial [get]
+func (h *ReportHanlders) ExportFinancialReportHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	start, end := parseTimeRange(c)
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	data, err := h.services.ReportServices.GetFinancialReportData(ctx, branchID, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=financial_report.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	// Header
+	writer.Write([]string{"Date", "Branch", "Client", "Category", "Concept", "Amount", "Status"})
+
+	for _, row := range data {
+		writer.Write([]string{
+			row.Date.Format("2006-01-02"),
+			row.BranchName,
+			row.ClientName,
+			row.Category,
+			row.Concept,
+			row.Amount.StringFixed(2),
+			row.Status,
+		})
+	}
 }
 
 // @Summary		Get Monthly Recurring Revenue (MRR) KPI

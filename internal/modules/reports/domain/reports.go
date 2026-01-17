@@ -138,3 +138,13 @@ type BranchManagerDetails struct {
 	Email    string    `json:"email"`
 	Name     string    `json:"name"`
 }
+
+type FinancialReportRow struct {
+	Date       time.Time       `json:"date"`
+	BranchName string          `json:"branch_name"`
+	ClientName string          `json:"client_name"`
+	Category   string          `json:"category"`
+	Concept    string          `json:"concept"`
+	Amount     decimal.Decimal `json:"amount"`
+	Status     string          `json:"status"`
+}

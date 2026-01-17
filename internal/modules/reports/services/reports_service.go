@@ -285,3 +285,7 @@ func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdom
 func (s *ReportService) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetChurnRateKPI(ctx, branchID)
 }
+
+func (s *ReportService) GetFinancialReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.FinancialReportRow, error) {
+	return s.store.Reports.GetFinancialReportData(ctx, branchID, start, end)
+}

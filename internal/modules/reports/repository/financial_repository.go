@@ -395,3 +395,37 @@ func calculateTrend(current, prev decimal.Decimal, title, label string) (*report
 		IsPositive:   percentageChange >= 0,
 	}, nil
 }
+
+func (rs *ReportStore) GetFinancialReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.FinancialReportRow, error) {
+	var results []reportdomain.FinancialReportRow
+
+	query := rs.db.WithContext(ctx).Table("invoice_items ii").
+		Select(`
+			i.issue_date as date,
+			b.name as branch_name,
+			CONCAT(u.first_name, ' ', u.last_name) as client_name,
+			CASE 
+				WHEN ii.membership_type_id IS NOT NULL THEN 'Memberships'
+				WHEN ii.service_id IS NOT NULL THEN 'Services'
+				WHEN ii.package_id IS NOT NULL THEN 'Combos'
+				ELSE 'Other'
+			END as category,
+			COALESCE(mt.name, s.name, p.name, 'Item') as concept,
+			ii.total_line as amount,
+			i.status as status
+		`).
+		Joins("JOIN invoices i ON i.invoice_id = ii.invoice_id").
+		Joins("JOIN branch b ON b.branch_id = i.branch_id").
+		Joins("JOIN users u ON u.user_id = i.user_id").
+		Joins("LEFT JOIN membership_types mt ON mt.membership_type_id = ii.membership_type_id").
+		Joins("LEFT JOIN services s ON s.service_id = ii.service_id").
+		Joins("LEFT JOIN packages p ON p.package_id = ii.package_id").
+		Where("i.issue_date BETWEEN ? AND ?", start, end)
+
+	if branchID != nil {
+		query = query.Where("i.branch_id = ?", *branchID)
+	}
+
+	err := query.Order("i.issue_date DESC").Scan(&results).Error
+	return results, err
+}

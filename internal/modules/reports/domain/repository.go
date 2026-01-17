@@ -53,4 +53,5 @@ type ReportRepository interface {
 	GetClientsChurnMetrics(ctx context.Context) ([]ClientChurnMetrics, error)
 	GetBranchManagers(ctx context.Context) (map[uuid.UUID]BranchManagerDetails, error)
 	GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
+	GetFinancialReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]FinancialReportRow, error)
 }
