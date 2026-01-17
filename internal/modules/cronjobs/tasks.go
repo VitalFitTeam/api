@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
+	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	"github.com/vitalfit/api/pkg/mailer"
 )
 
@@ -36,20 +38,85 @@ func (m *Manager) UpdateExpiredMembershipsCronjob() {
 	}
 }
 
-// func (m *Manager) NotifChurn() {
-// 	m.logger.Info("running test churn cronjob")
-// 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-// 	defer cancel()
-// 	xd, err := m.appservices.ReportServices.DetectAndFlagChurnRisk(ctx)
-// 	data, err := m.push.ConvertSliceToDataMap(xd, "churn_risk_data")
-// 	if err != nil {
-// 		m.logger.Errorw("failed to convert struct to data map", "error", err)
-// 		return
-// 	}
-// 	m.logger.Infow("xd", "xd", data)
-// 	m.push.SendPush(ctx, token, "test", "test", data)
+func (m *Manager) NotifChurn() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
 
-// }
+	newRisks, allRisks, err := m.appservices.ReportServices.DetectAndFlagChurnRisk(ctx)
+	if err != nil {
+		m.logger.Errorw("failed to detect and flag churn risk", "error", err)
+		return
+	}
+	m.logger.Infow("new risks", "new risks", newRisks)
+	m.logger.Infow("all risks", "all risks", allRisks)
+
+	var usersToNotify []reportdomain.ChurnRiskAnalysis
+	isMonday := time.Now().Weekday() == time.Monday
+
+	if isMonday {
+		usersToNotify = allRisks
+	} else {
+		usersToNotify = allRisks
+	}
+
+	if len(usersToNotify) == 0 {
+		return
+	}
+
+	managerPackages := make(map[string][]reportdomain.ChurnRiskAnalysis)
+	managerIDs := make(map[string]uuid.UUID)
+
+	for _, user := range usersToNotify {
+		if user.ManagerEmail == "" {
+			continue
+		}
+		managerPackages[user.ManagerEmail] = append(managerPackages[user.ManagerEmail], user)
+		if user.ManagerID != nil {
+			managerIDs[user.ManagerEmail] = *user.ManagerID
+		}
+	}
+
+	var notifications []notidomain.Notification
+
+	for email, users := range managerPackages {
+		data := struct {
+			ManagerName string
+			Count       int
+			Date        string
+			Users       []reportdomain.ChurnRiskAnalysis
+		}{
+			ManagerName: "Manager",
+			Count:       len(users),
+			Date:        time.Now().Format("02 Jan 2006"),
+			Users:       users,
+		}
+
+		isProdEnv := m.config.Env == "production"
+		if _, err := m.Mailer.Send("churn_risk_alert.tmpl", "Manager", email, data, !isProdEnv); err != nil {
+			m.logger.Errorw("failed to send churn risk email", "email", email, "error", err)
+		} else {
+			if managerID, ok := managerIDs[email]; ok {
+				pushTitle := "Alerta de Riesgo"
+				pushBody := fmt.Sprintf("Detectamos %d clientes en riesgo hoy. Revisa tu correo.", len(users))
+
+				notifications = append(notifications, notidomain.Notification{
+					UserID:  managerID,
+					Title:   pushTitle,
+					Message: pushBody,
+					Type:    "churn_risk",
+					IsRead:  false,
+				})
+
+			}
+		}
+	}
+
+	if len(notifications) > 0 {
+		if err := m.appservices.NotificationServices.CreateBatchNotifications(ctx, notifications); err != nil {
+			m.logger.Errorw("failed to create batch notifications", "error", err)
+		}
+	}
+}
 
 func (m *Manager) NotifyClassReminder() {
 	m.logger.Info("running notify class reminder cronjob")

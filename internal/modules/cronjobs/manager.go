@@ -69,4 +69,9 @@ func (m *Manager) registerRoutes() {
 		m.logger.Errorw("Error on membership expiring cronjob", "error", err)
 	}
 
+	_, err = m.cron.AddFunc("@daily", m.NotifChurn)
+	if err != nil {
+		m.logger.Errorw("Error on churn risk cronjob", "error", err)
+	}
+	m.NotifChurn()
 }
