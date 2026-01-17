@@ -74,8 +74,8 @@ func (h *AccessHandler) CheckInHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
-// @Param			id		path		string					true	"User UUID"
-// @Param			payload	body		CheckInPayload			true	"Check-In Payload with Branch ID"
+// @Param			id		path		string							true	"User UUID"
+// @Param			payload	body		CheckInPayload					true	"Check-In Payload with Branch ID"
 // @Success		200		{object}	accessdomain.CheckInResponse	"Access Granted"
 // @Failure		400		{object}	map[string]interface{}			"Bad Request"
 // @Failure		401		{object}	map[string]interface{}			"Unauthorized"
@@ -356,8 +356,8 @@ func (h *AccessHandler) GetClassAttendanceHistoryHandler(c *gin.Context) {
 // @Tags			Access
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Success		200		{object}	[]accessdomain.ClientScore
-// @Failure		500		{object}	map[string]interface{}
+// @Success		200	{object}	[]accessdomain.ClientScore
+// @Failure		500	{object}	map[string]interface{}
 // @Router			/access/scores [get]
 func (h *AccessHandler) GetClientScoresHandler(c *gin.Context) {
 	ctx := c.Request.Context()

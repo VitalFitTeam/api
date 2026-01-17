@@ -73,4 +73,10 @@ func (m *Manager) registerRoutes() {
 	if err != nil {
 		m.logger.Errorw("Error on churn risk cronjob", "error", err)
 	}
+
+	_, err = m.cron.AddFunc("@daily", m.UpdateClientScoresCronjob)
+	if err != nil {
+		m.logger.Errorw("Error on update client scores cronjob", "error", err)
+	}
+	m.UpdateClientScoresCronjob()
 }
