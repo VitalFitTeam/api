@@ -2,6 +2,7 @@ package instructorhandler
 
 import (
 	"crypto/sha256"
+	"encoding/csv"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -310,6 +311,49 @@ func (h *InstructorHandlers) UpdateInstructorHandler(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 
+}
+
+// @Summary		Export Instructors (CSV)
+// @Description	Exports all instructors as a CSV file.
+// @Tags			Instructors
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"instructors.csv"
+// @Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/instructor/export [get]
+func (h *InstructorHandlers) ExportInstructorsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit: 1000000,
+		Page:  1,
+		Sort:  "desc",
+	}
+
+	instructors, err := h.services.InstructorServices.GetInstructors(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=instructors.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "First Name", "Last Name", "Email", "Phone", "Identity Document", "Gender", "Biography"})
+	for _, i := range instructors {
+		writer.Write([]string{
+			i.InstructorID.String(),
+			i.User.FirstName,
+			i.User.LastName,
+			i.User.Email,
+			i.User.Phone,
+			i.User.IdentityDocument,
+			string(i.User.Gender),
+			i.Biography,
+		})
+	}
 }
 
 // @Summary		Assign instructors to a branch

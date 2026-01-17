@@ -14,6 +14,7 @@ type InstructorHandlersInterface interface {
 	DeleteInstructorHandler(c *gin.Context)
 	GetInstructorByIDHandler(c *gin.Context)
 	UpdateInstructorHandler(c *gin.Context)
+	ExportInstructorsHandler(c *gin.Context)
 
 	AssignInstructorsToBranchHandler(c *gin.Context)
 	ListBranchInstructorsHandler(c *gin.Context)
@@ -39,6 +40,7 @@ func (r *InstructorHandlers) InstructorRoutes(rg *gin.RouterGroup, m *auth.AuthM
 		instructorGroup.POST("", m.RBACPermission("instructors:create"), r.CreateInstructorHandler)
 		instructorGroup.GET("", m.RBACPermission("instructors:list"), r.GetInstructorsHandler)
 		instructorGroup.GET("/summary", m.RBACPermission("instructors:list"), r.GetSummaryHandler)
+		instructorGroup.GET("/export", m.RBACPermission("instructors:list"), r.ExportInstructorsHandler)
 		instructorGroup.GET("/:id", r.GetInstructorByIDHandler)
 		instructorGroup.PUT("/:id", m.RBACPermission("instructors:update"), r.UpdateInstructorHandler)
 		instructorGroup.DELETE("/:id", m.RBACPermission("instructors:delete"), r.DeleteInstructorHandler)

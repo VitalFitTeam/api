@@ -7289,6 +7289,26 @@ paths:
       summary: Remove a specialty from an instructor
       tags:
       - Instructors
+  /instructor/export:
+    get:
+      description: Exports all instructors as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: instructors.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Instructors (CSV)
+      tags:
+      - Instructors
   /instructor/summary:
     get:
       description: Retrieves a count of total, active, and blocked instructors.

@@ -6775,6 +6775,38 @@ const docTemplate = `{
                 }
             }
         },
+        "/instructor/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all instructors as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Export Instructors (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "instructors.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/instructor/summary": {
             "get": {
                 "security": [
