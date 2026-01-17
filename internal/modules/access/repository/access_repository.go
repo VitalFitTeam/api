@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
@@ -137,4 +138,22 @@ func (r *AccessStore) GetClientServiceUsage(ctx context.Context, clientID uuid.U
 	}
 
 	return serviceUsage, total, nil
+}
+
+func (r *AccessStore) GetAttendanceCounts(ctx context.Context) ([]accessdomain.ClientScore, error) {
+	var results []accessdomain.ClientScore
+	err := r.db.WithContext(ctx).
+		Model(&accessdomain.AttendanceLog{}).
+		Select("user_id, count(*) as attendance_count").
+		Group("user_id").
+		Scan(&results).Error
+
+	return results, err
+}
+
+func (r *AccessStore) UpdateClientScore(ctx context.Context, userID uuid.UUID, score int) error {
+	return r.db.WithContext(ctx).
+		Model(&authdomain.ClientProfiles{}).
+		Where("user_id = ?", userID).
+		Update("scoring", score).Error
 }

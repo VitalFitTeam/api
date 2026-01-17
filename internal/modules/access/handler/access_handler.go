@@ -350,3 +350,22 @@ func (h *AccessHandler) GetClassAttendanceHistoryHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": resp})
 }
+
+// @Summary		Get Client Scores
+// @Description	Calculates and retrieves scores for all clients based on their attendance history
+// @Tags			Access
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200		{object}	[]accessdomain.ClientScore
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/access/scores [get]
+func (h *AccessHandler) GetClientScoresHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	scores, err := h.services.AccessServices.CalculateClientScores(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, scores)
+}
