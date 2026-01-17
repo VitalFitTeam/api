@@ -8153,6 +8153,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/membership-plans/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all membership types as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Export Membership Types (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "membership_plans.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/membership-plans/summary": {
             "get": {
                 "security": [
