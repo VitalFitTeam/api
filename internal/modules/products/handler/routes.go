@@ -15,6 +15,7 @@ type ProductsHandlerInterface interface {
 	GetServicesHandler(c *gin.Context)
 	GetSummaryServicesHandler(c *gin.Context)
 	DeleteServiceHandler(c *gin.Context)
+	ExportServicesHandler(c *gin.Context)
 	GetServiceByIDHandler(c *gin.Context)
 	UpdateServiceHandler(c *gin.Context)
 
@@ -23,6 +24,7 @@ type ProductsHandlerInterface interface {
 	UpdateBranchServiceHandler(c *gin.Context)
 	DeleteBranchServiceHandler(c *gin.Context)
 	GetBranchServiceByIDHandler(c *gin.Context)
+	ExportBranchServicesHandler(c *gin.Context)
 
 	PublicGetServicesHandler(c *gin.Context)
 	PublicGetBranchServicesHandler(c *gin.Context)
@@ -44,6 +46,7 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 		ProductGroup.GET("/categories", m.RBACPermission("services:list"), r.ListServiceCategoriesHandler)
 		ProductGroup.GET("/all", m.RBACPermission("services:list"), r.GetServicesHandler)
 		ProductGroup.GET("/summary", m.RBACPermission("services:list"), r.GetSummaryServicesHandler)
+		ProductGroup.GET("/export", m.RBACPermission("services:list"), r.ExportServicesHandler)
 
 		ProductGroup.POST("", m.RBACPermission("services:create"), r.CreateServiceHandler)
 		ProductGroup.GET("/:id", r.GetServiceByIDHandler)
@@ -57,6 +60,7 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 		BranchServicesGroup.Use(m.AuditLogMiddleware())
 		BranchServicesGroup.POST("", m.RBACPermission("branch_management"), r.AssignBranchServiceHandler)
 		BranchServicesGroup.GET("", m.RBACPermission("branch_management", "view"), r.GetBranchServiceHandler)
+		BranchServicesGroup.GET("/export", m.RBACPermission("branch_management", "view"), r.ExportBranchServicesHandler)
 		BranchServicesGroup.GET("/:service_id", m.RBACPermission("branch_management", "view"), r.GetBranchServiceByIDHandler)
 		BranchServicesGroup.PUT("/:service_id", m.RBACPermission("branch_management"), r.UpdateBranchServiceHandler)
 		BranchServicesGroup.DELETE("/:service_id", m.RBACPermission("branch_management"), r.DeleteBranchServiceHandler)

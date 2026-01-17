@@ -6076,6 +6076,37 @@ paths:
       summary: Update a branch service
       tags:
       - Branch Services
+  /branches/{id}/services/export:
+    get:
+      description: Exports all services assigned to a branch as a CSV file.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: branch_services.csv
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Branch Services (CSV)
+      tags:
+      - Branch Services
   /branches/{id}/staff:
     get:
       consumes:
@@ -10903,6 +10934,26 @@ paths:
       summary: List service categories
       tags:
       - Services Categories
+  /services/export:
+    get:
+      description: Exports all services as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: services.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Services (CSV)
+      tags:
+      - Services
   /services/summary:
     get:
       description: Retrieves a count of total, active, and featured services.
