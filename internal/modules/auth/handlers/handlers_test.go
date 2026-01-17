@@ -947,3 +947,54 @@ func TestForgotPasswordHandler(t *testing.T) {
 		mailerMock.AssertExpectations(t)
 	})
 }
+
+func TestExportHandlers(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	testApp := app.NewTestApplication(t, config.LoadConfig())
+	mux := testApp.Mount()
+
+	userStoreMock := testApp.Store.Users.(*authmocks.UserStoreMock)
+	roleStoreMock := testApp.Store.Roles.(*authmocks.RoleStoreMock)
+	sessionStoreMock := testApp.Store.Session.(*authmocks.SessionStoreMock)
+	sessionStoreMock.On("Create", mock.Anything, mock.Anything).Return(nil)
+
+	adminUser := &authdomain.Users{
+		UserID: uuid.New(),
+		Email:  "admin@example.com",
+		Role:   authdomain.Roles{RoleID: uuid.New(), Name: "admin"},
+	}
+	adminToken, _, _ := testApp.Services.AuthServices.GenerateToken(context.Background(), adminUser, "test-agent", "127.0.0.1", "")
+
+	setupMiddleware := func() {
+		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "users:list").Return(true, nil).Once()
+	}
+
+	t.Run("ExportClientsHandler", func(t *testing.T) {
+		setupMiddleware()
+		mockClients := []*authdomain.Users{{UserID: uuid.New(), FirstName: "Client", LastName: "One", Email: "c1@test.com"}}
+		userStoreMock.On("GetAllClients", mock.Anything).Return(mockClients, nil).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/v1/user/export/clients", nil)
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Equal(t, "text/csv", rr.Header().Get("Content-Type"))
+		userStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("ExportUsersHandler", func(t *testing.T) {
+		setupMiddleware()
+		mockStaff := []*authdomain.Users{{UserID: uuid.New(), FirstName: "Staff", LastName: "One", Email: "s1@test.com", Role: authdomain.Roles{Name: "instructor"}}}
+		userStoreMock.On("GetAllStaffUsers", mock.Anything).Return(mockStaff, nil).Once()
+
+		req, _ := http.NewRequest(http.MethodGet, "/v1/user/export/users", nil)
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Equal(t, "text/csv", rr.Header().Get("Content-Type"))
+		userStoreMock.AssertExpectations(t)
+	})
+}

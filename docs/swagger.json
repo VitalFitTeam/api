@@ -12987,6 +12987,78 @@
                 }
             }
         },
+        "/user/export/clients": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all clients as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Export Clients (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "clients.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/export/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all staff users as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Export Staff Users (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "staff_users.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user/qr-token": {
             "get": {
                 "security": [

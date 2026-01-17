@@ -493,7 +493,22 @@ func (s *UserStore) UpdateClientCategory(ctx context.Context, userID uuid.UUID, 
 
 func (s *UserStore) GetAllClients(ctx context.Context) ([]*authdomain.Users, error) {
 	var users []*authdomain.Users
-	err := s.db.WithContext(ctx).Find(&users).Error
+	err := s.db.WithContext(ctx).
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Where("roles.name = ?", "client").Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (s *UserStore) GetAllStaffUsers(ctx context.Context) ([]*authdomain.Users, error) {
+	var users []*authdomain.Users
+	err := s.db.WithContext(ctx).
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Preload("Role").
+		Where("roles.name <> ?", "client").
+		Find(&users).Error
 	if err != nil {
 		return nil, err
 	}

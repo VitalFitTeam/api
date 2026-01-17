@@ -3,6 +3,7 @@ package authhandlers
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/csv"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -421,6 +422,79 @@ func (h *AuthHandlers) RevokeSessionHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Export Clients (CSV)
+// @Description	Exports all clients as a CSV file.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"clients.csv"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/export/clients [get]
+func (h *AuthHandlers) ExportClientsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	users, err := h.services.UserServices.GetAllClients(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=clients.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "First Name", "Last Name", "Email", "Phone", "Identity Document", "Status"})
+	for _, u := range users {
+		writer.Write([]string{
+			u.UserID.String(),
+			u.FirstName,
+			u.LastName,
+			u.Email,
+			u.Phone,
+			u.IdentityDocument,
+			string(u.Status),
+		})
+	}
+}
+
+// @Summary		Export Staff Users (CSV)
+// @Description	Exports all staff users as a CSV file.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"staff_users.csv"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/export/users [get]
+func (h *AuthHandlers) ExportUsersHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	users, err := h.services.UserServices.GetAllStaffUsers(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=staff_users.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "First Name", "Last Name", "Email", "Role", "Phone", "Identity Document", "Status"})
+	for _, u := range users {
+		writer.Write([]string{
+			u.UserID.String(),
+			u.FirstName,
+			u.LastName,
+			u.Email,
+			u.Role.Name,
+			u.Phone,
+			u.IdentityDocument,
+			string(u.Status),
+		})
+	}
 }
 
 // @Summary		Revoke All Sessions
