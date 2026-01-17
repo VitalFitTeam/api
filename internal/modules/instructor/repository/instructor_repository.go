@@ -296,3 +296,80 @@ func (s *InstructorStore) GetAllInstructors(ctx context.Context) ([]*instructord
 	}
 	return instructors, nil
 }
+
+func (s *InstructorStore) GetAssignedClients(ctx context.Context, instructorID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*instructordomain.AssignedClient, error) {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
+	var clients []*instructordomain.AssignedClient
+
+	query := `
+		SELECT
+			u.user_id,
+			u.first_name,
+			u.last_name,
+			u.email,
+			u.phone,
+			COUNT(b.booking_id) as total_bookings
+		FROM bookings b
+		JOIN classes c ON b.class_id = c.class_id
+		JOIN users u ON b.user_id = u.user_id
+		WHERE c.instructor_id = ?
+			AND b.status = 'Confirmed'
+			AND b.deleted_at IS NULL
+			AND c.deleted_at IS NULL
+	`
+
+	args := []interface{}{instructorID}
+
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		query += ` AND (u.first_name ILIKE ? OR u.last_name ILIKE ? OR u.email ILIKE ? OR CONCAT(u.first_name, ' ', u.last_name) ILIKE ?)`
+		args = append(args, searchQuery, searchQuery, searchQuery, searchQuery)
+	}
+
+	query += ` GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone`
+	query += ` ORDER BY total_bookings ` + fq.Sort
+	query += ` LIMIT ? OFFSET ?`
+	args = append(args, fq.Limit, (fq.Page-1)*fq.Limit)
+
+	err := s.db.WithContext(ctx).Raw(query, args...).Scan(&clients).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return clients, nil
+}
+
+func (s *InstructorStore) GetAssignedClientsTotal(ctx context.Context, instructorID uuid.UUID, fq pagination.PaginatedFeedQuery) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, db.QueryTimeoutDuration)
+	defer cancel()
+
+	var count int64
+
+	query := `
+		SELECT COUNT(DISTINCT u.user_id)
+		FROM bookings b
+		JOIN classes c ON b.class_id = c.class_id
+		JOIN users u ON b.user_id = u.user_id
+		WHERE c.instructor_id = ?
+			AND b.status = 'Confirmed'
+			AND b.deleted_at IS NULL
+			AND c.deleted_at IS NULL
+	`
+
+	args := []interface{}{instructorID}
+
+	if fq.Search != "" {
+		searchQuery := "%" + fq.Search + "%"
+		query += ` AND (u.first_name ILIKE ? OR u.last_name ILIKE ? OR u.email ILIKE ? OR CONCAT(u.first_name, ' ', u.last_name) ILIKE ?)`
+		args = append(args, searchQuery, searchQuery, searchQuery, searchQuery)
+	}
+
+	err := s.db.WithContext(ctx).Raw(query, args...).Scan(&count).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}

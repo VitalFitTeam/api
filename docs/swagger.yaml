@@ -1280,6 +1280,21 @@ definitions:
     required:
     - instructor
     type: object
+  instructorhandler.AssignedClientResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      total_bookings:
+        type: integer
+      user_id:
+        type: string
+    type: object
   instructorhandler.BranchInstructorResponse:
     properties:
       email:
@@ -7319,6 +7334,72 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update an instructor
+      tags:
+      - Instructors
+  /instructor/{id}/clients:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a paginated list of clients who have had at least one
+        confirmed booking with this instructor. Clients are sorted by total bookings
+        count.
+      parameters:
+      - description: Instructor UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'Number of results per page (default: 10)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Sort order by total_bookings (asc/desc, default: desc)'
+        in: query
+        name: sort
+        type: string
+      - description: Search term for first name, last name, or email
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paginated list of assigned clients
+          schema:
+            properties:
+              count:
+                format: int64
+                type: integer
+              data:
+                items:
+                  $ref: '#/definitions/instructorhandler.AssignedClientResponse'
+                type: array
+              next:
+                type: string
+              previous:
+                type: string
+              total:
+                format: int64
+                type: integer
+            type: object
+        "400":
+          description: 'Bad Request: Invalid UUID or query parameters'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get assigned clients for an instructor
       tags:
       - Instructors
   /instructor/{id}/specialty:

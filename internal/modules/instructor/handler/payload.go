@@ -153,3 +153,12 @@ type SpecialtyResponse struct {
 	SpecialtyID   uuid.UUID `json:"specialty_id"`
 	SpecialtyName string    `json:"specialty_name"`
 }
+
+type AssignedClientResponse struct {
+	UserID        uuid.UUID `json:"user_id"`
+	FirstName     string    `json:"first_name"`
+	LastName      string    `json:"last_name"`
+	Email         string    `json:"email"`
+	Phone         string    `json:"phone"`
+	TotalBookings int64     `json:"total_bookings"`
+}
