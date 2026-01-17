@@ -4477,6 +4477,28 @@ paths:
       summary: Update a payment method
       tags:
       - Billing
+  /billing/payment-methods/export:
+    get:
+      description: Exports all payment methods as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: payment_methods.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Payment Methods (CSV)
+      tags:
+      - Billing
   /billing/payments/{payment_id}:
     get:
       description: Retrieves the details of a specific payment by its UUID. The user

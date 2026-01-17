@@ -13,6 +13,7 @@ type BillingHandlersInterface interface {
 	BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	GetPaymentMethodsHandler(c *gin.Context)
 	GetPaymentMethodByIDHandler(c *gin.Context)
+	ExportPaymentMethodsHandler(c *gin.Context)
 
 	CreatePaymentMethodHandler(c *gin.Context)
 	UpdatePaymentMethodHandler(c *gin.Context)
@@ -62,6 +63,7 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	paymentMethodsGroup := billingGroup.Group("/payment-methods")
 	{
 		paymentMethodsGroup.GET("", m.RBACPermission("billing:list"), r.GetPaymentMethodsHandler)
+		paymentMethodsGroup.GET("/export", m.RBACPermission("billing:list"), r.ExportPaymentMethodsHandler)
 		paymentMethodsGroup.POST("", m.RBACPermission("billing:create"), r.CreatePaymentMethodHandler)
 		paymentMethodsGroup.GET("/:id", r.GetPaymentMethodByIDHandler)
 		paymentMethodsGroup.PUT("/:id", m.RBACPermission("billing:update"), r.UpdatePaymentMethodHandler)

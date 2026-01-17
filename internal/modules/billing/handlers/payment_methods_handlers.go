@@ -1,7 +1,9 @@
 package billinghandlers
 
 import (
+	"encoding/csv"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -30,6 +32,45 @@ func (h *BillingHandlers) GetPaymentMethodsHandler(c *gin.Context) {
 		"data": paymentMethods,
 	})
 
+}
+
+// @Summary		Export Payment Methods (CSV)
+// @Description	Exports all payment methods as a CSV file.
+// @Tags			Billing
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"payment_methods.csv"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/billing/payment-methods/export [get]
+func (h *BillingHandlers) ExportPaymentMethodsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	paymentMethods, err := h.services.BillingServices.GetPaymentMethods(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=payment_methods.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "Name", "Type", "Display Name", "Processing Type", "Visibility", "Surcharge Fixed", "Surcharge Percentage", "Global Status"})
+
+	for _, pm := range paymentMethods {
+		writer.Write([]string{
+			pm.MethodID.String(),
+			pm.Name,
+			string(pm.Type),
+			pm.DisplayName,
+			string(pm.ProcessingType),
+			string(pm.Visibility),
+			strconv.FormatInt(pm.SurchargeFixed, 10),
+			fmt.Sprintf("%.2f", pm.SurchargePercentage),
+			strconv.FormatBool(pm.GlobalStatus),
+		})
+	}
 }
 
 // @Summary		Create a new payment method

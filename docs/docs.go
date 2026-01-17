@@ -2539,6 +2539,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/payment-methods/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all payment methods as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Export Payment Methods (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "payment_methods.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/billing/payment-methods/{id}": {
             "get": {
                 "security": [
