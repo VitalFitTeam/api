@@ -3,6 +3,7 @@ package reporthandlers
 import (
 	"encoding/csv"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -78,6 +79,104 @@ func (h *ReportHanlders) ExportFinancialReportHandler(c *gin.Context) {
 			row.Concept,
 			row.Amount.StringFixed(2),
 			row.Status,
+		})
+	}
+}
+
+// @Summary		Export Client Report (CSV)
+// @Description	Exports a detailed client report including retention metrics, last activity, and risk status.
+// @Tags			Reports Financial
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"client_report.csv"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/reports/export/clients [get]
+func (h *ReportHanlders) ExportClientReportHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	data, err := h.services.ReportServices.GetClientReportData(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=client_report.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	// Header
+	writer.Write([]string{"Client Name", "Email", "Phone", "Category", "Last Check-In", "Visits (Current Month)", "Visits (Last Month)", "Membership End Date"})
+
+	for _, row := range data {
+		lastCheckIn := "Never"
+		if row.LastCheckIn != nil {
+			lastCheckIn = row.LastCheckIn.Format("2006-01-02 15:04")
+		}
+		memEndDate := "N/A"
+		if row.MembershipEndDate != nil {
+			memEndDate = row.MembershipEndDate.Format("2006-01-02")
+		}
+
+		writer.Write([]string{
+			row.FirstName + " " + row.LastName,
+			row.Email,
+			row.Phone,
+			row.CurrentCategory,
+			lastCheckIn,
+			strconv.FormatInt(row.CurrentMonthVisits, 10),
+			strconv.FormatInt(row.LastMonthVisits, 10),
+			memEndDate,
+		})
+	}
+}
+
+// @Summary		Export Sales Report (CSV)
+// @Description	Exports a detailed sales report including commercial performance, payment methods, and branch productivity.
+// @Tags			Reports Financial
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Param			branch_id	query		string					false	"Filter by Branch UUID"
+// @Param			start		query		string					false	"Start date (YYYY-MM-DD)"
+// @Param			end			query		string					false	"End date (YYYY-MM-DD)"
+// @Success		200			{file}		file					"sales_report.csv"
+// @Failure		500			{object}	object{error=string}	"Internal Server Error"
+// @Router			/reports/export/sales [get]
+func (h *ReportHanlders) ExportSalesReportHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	start, end := parseTimeRange(c)
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+
+	data, err := h.services.ReportServices.GetSalesReportData(ctx, branchID, start, end)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=sales_report.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	// Header
+	writer.Write([]string{"Date", "Branch", "Item", "Category", "Quantity", "Total", "Payment Method"})
+
+	for _, row := range data {
+		writer.Write([]string{
+			row.Date.Format("2006-01-02"),
+			row.BranchName,
+			row.ItemName,
+			row.Category,
+			strconv.Itoa(row.Quantity),
+			row.Total.StringFixed(2),
+			row.PaymentMethod,
 		})
 	}
 }

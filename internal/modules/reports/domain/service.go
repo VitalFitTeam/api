@@ -53,4 +53,6 @@ type ReportServiceInterface interface {
 	DetectAndFlagChurnRisk(ctx context.Context) ([]ChurnRiskAnalysis, []ChurnRiskAnalysis, error)
 	GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetFinancialReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]FinancialReportRow, error)
+	GetClientReportData(ctx context.Context) ([]ClientChurnMetrics, error)
+	GetSalesReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]SalesReportRow, error)
 }

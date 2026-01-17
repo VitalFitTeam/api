@@ -10637,6 +10637,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/export/clients": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports a detailed client report including retention metrics, last activity, and risk status.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Export Client Report (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "client_report.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/export/financial": {
             "get": {
                 "security": [
@@ -10675,6 +10711,62 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "financial_report.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/export/sales": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports a detailed sales report including commercial performance, payment methods, and branch productivity.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Export Sales Report (CSV)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "sales_report.csv",
                         "schema": {
                             "type": "file"
                         }

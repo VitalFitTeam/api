@@ -289,3 +289,11 @@ func (s *ReportService) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID
 func (s *ReportService) GetFinancialReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.FinancialReportRow, error) {
 	return s.store.Reports.GetFinancialReportData(ctx, branchID, start, end)
 }
+
+func (s *ReportService) GetClientReportData(ctx context.Context) ([]reportdomain.ClientChurnMetrics, error) {
+	return s.store.Reports.GetClientsChurnMetrics(ctx)
+}
+
+func (s *ReportService) GetSalesReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.SalesReportRow, error) {
+	return s.store.Reports.GetSalesReportData(ctx, branchID, start, end)
+}

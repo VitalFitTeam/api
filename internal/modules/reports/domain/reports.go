@@ -148,3 +148,13 @@ type FinancialReportRow struct {
 	Amount     decimal.Decimal `json:"amount"`
 	Status     string          `json:"status"`
 }
+
+type SalesReportRow struct {
+	Date          time.Time       `json:"date"`
+	BranchName    string          `json:"branch_name"`
+	ItemName      string          `json:"item_name"`
+	Category      string          `json:"category"`
+	Quantity      int             `json:"quantity"`
+	Total         decimal.Decimal `json:"total"`
+	PaymentMethod string          `json:"payment_method"`
+}
