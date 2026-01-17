@@ -30,8 +30,11 @@ type AuthHandlersInterface interface {
 	UpdateUserClientHandler(c *gin.Context)
 	GetUserByEmailHandler(c *gin.Context)
 	DeleteUserHandler(c *gin.Context)
+	BlockUserHandler(c *gin.Context)
 	GenerateQrJwtTokenHandler(c *gin.Context)
 	ChangePasswordHandler(c *gin.Context)
+	ExportClientsHandler(c *gin.Context)
+	ExportUsersHandler(c *gin.Context)
 	//Roles
 	GetRolesHandler(c *gin.Context)
 	CreateRoleHandler(c *gin.Context)
@@ -115,12 +118,16 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		userGroup.GET("/users", m.RBACPermission("users:list"), r.GetUsersHandler)
 		userGroup.GET("/clients", m.RBACPermission("users:list"), r.GetClientsHandler)
 
+		userGroup.GET("/export/clients", m.RBACPermission("users:list"), r.ExportClientsHandler)
+		userGroup.GET("/export/users", m.RBACPermission("users:list"), r.ExportUsersHandler)
+
 		// Nuevas rutas para obtener y actualizar usuarios
 		userGroup.GET("/:id", m.RBACPermission("users:get"), r.GetUserByIDHandler)
 		userGroup.PUT("/:id/staff", r.UpdateUserStaffHandler)
 		userGroup.PUT("/:id/client", r.UpdateUserClientHandler)
 		userGroup.POST("/by-email", m.RBACPermission("users:get"), r.GetUserByEmailHandler)
 		userGroup.DELETE("/:id", m.RBACPermission("users:delete"), r.DeleteUserHandler)
+		userGroup.PUT("/:id/block", m.RBACPermission("users:update"), r.BlockUserHandler)
 
 	}
 }

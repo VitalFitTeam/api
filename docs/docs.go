@@ -98,6 +98,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/access/classes/{id}/attendance": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the attendance history for a specific class",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access"
+                ],
+                "summary": "Get Class Attendance History",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Class UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date filter (RFC3339 format)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (RFC3339 format)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status (Attended, NoShow, Cancelled)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/accesshandler.AttendanceHistoryResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/admin/permissions": {
             "get": {
                 "security": [
@@ -2465,6 +2539,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/payment-methods/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all payment methods as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Export Payment Methods (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "payment_methods.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/billing/payment-methods/{id}": {
             "get": {
                 "security": [
@@ -3858,6 +3968,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/branches/{id}/equipment/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all equipment items for a given branch as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Branch Inventory"
+                ],
+                "summary": "Export Branch Inventory (CSV)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "branch_inventory.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/branches/{id}/equipment/{inventoryId}": {
             "get": {
                 "security": [
@@ -4713,6 +4879,18 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Month (1-12)",
+                        "name": "month",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Year",
+                        "name": "year",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -4913,6 +5091,54 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request: Invalid UUID or payload",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/branches/{id}/services/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all services assigned to a branch as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Branch Services"
+                ],
+                "summary": "Export Branch Services (CSV)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "branch_services.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -6308,6 +6534,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/equipment-types/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all equipment types in the global catalog as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Export Equipment Types (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "equipment_catalog.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/equipment-types/{id}": {
             "get": {
                 "security": [
@@ -6677,6 +6939,38 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/instructor/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all instructors as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Instructors"
+                ],
+                "summary": "Export Instructors (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "instructors.csv",
+                        "schema": {
+                            "type": "file"
                         }
                     },
                     "500": {
@@ -7895,6 +8189,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/membership-plans/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all membership types as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Memberships"
+                ],
+                "summary": "Export Membership Types (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "membership_plans.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/membership-plans/summary": {
             "get": {
                 "security": [
@@ -8793,6 +9123,38 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/packages/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all packages as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Packages"
+                ],
+                "summary": "Export Packages (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "packages.csv",
+                        "schema": {
+                            "type": "file"
                         }
                     },
                     "500": {
@@ -10275,6 +10637,154 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/export/clients": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports a detailed client report including retention metrics, last activity, and risk status.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Export Client Report (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "client_report.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/export/financial": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports a detailed financial report as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Export Financial Report (CSV)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "financial_report.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/export/sales": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports a detailed sales report including commercial performance, payment methods, and branch productivity.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Reports Financial"
+                ],
+                "summary": "Export Sales Report (CSV)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "sales_report.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/instructors/classes-count": {
             "get": {
                 "security": [
@@ -11715,6 +12225,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/schedule/instructor": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns the scheduled classes for a specific instructor (by user ID)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Schedule"
+                ],
+                "summary": "List classes for an instructor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User UUID (if not instructor)",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Month (1-12)",
+                        "name": "month",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Year",
+                        "name": "year",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/schedulehandlers.ClassResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/schedule/{classId}": {
             "get": {
                 "security": [
@@ -12161,6 +12738,38 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/services/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all services as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Export Services (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "services.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -12786,6 +13395,78 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/export/clients": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all clients as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Export Clients (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "clients.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/export/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all staff users as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Export Staff Users (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "staff_users.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user/qr-token": {
             "get": {
                 "security": [
@@ -13194,6 +13875,82 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Error: Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{id}/block": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Blocks a user and provides a justification.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Block a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Block justification",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/authhandlers.BlockUserPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User blocked successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -13843,6 +14600,17 @@ const docTemplate = `{
                 }
             }
         },
+        "authhandlers.BlockUserPayload": {
+            "type": "object",
+            "required": [
+                "block_justification"
+            ],
+            "properties": {
+                "block_justification": {
+                    "type": "string"
+                }
+            }
+        },
         "authhandlers.BranchAdminResponse": {
             "type": "object",
             "properties": {
@@ -14032,6 +14800,9 @@ const docTemplate = `{
                 "birth_date": {
                     "type": "string"
                 },
+                "category": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -14040,6 +14811,9 @@ const docTemplate = `{
                 },
                 "gender": {
                     "type": "string"
+                },
+                "has_active_membership": {
+                    "type": "boolean"
                 },
                 "identity_document": {
                     "type": "string"

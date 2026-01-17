@@ -3,6 +3,7 @@ package authhandlers
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/csv"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -421,6 +422,79 @@ func (h *AuthHandlers) RevokeSessionHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Export Clients (CSV)
+// @Description	Exports all clients as a CSV file.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"clients.csv"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/export/clients [get]
+func (h *AuthHandlers) ExportClientsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	users, err := h.services.UserServices.GetAllClients(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=clients.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "First Name", "Last Name", "Email", "Phone", "Identity Document", "Status"})
+	for _, u := range users {
+		writer.Write([]string{
+			u.UserID.String(),
+			u.FirstName,
+			u.LastName,
+			u.Email,
+			u.Phone,
+			u.IdentityDocument,
+			string(u.Status),
+		})
+	}
+}
+
+// @Summary		Export Staff Users (CSV)
+// @Description	Exports all staff users as a CSV file.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"staff_users.csv"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/export/users [get]
+func (h *AuthHandlers) ExportUsersHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	users, err := h.services.UserServices.GetAllStaffUsers(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=staff_users.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "First Name", "Last Name", "Email", "Role", "Phone", "Identity Document", "Status"})
+	for _, u := range users {
+		writer.Write([]string{
+			u.UserID.String(),
+			u.FirstName,
+			u.LastName,
+			u.Email,
+			u.Role.Name,
+			u.Phone,
+			u.IdentityDocument,
+			string(u.Status),
+		})
+	}
 }
 
 // @Summary		Revoke All Sessions
@@ -976,17 +1050,19 @@ func (h *AuthHandlers) GetUserByIDHandler(c *gin.Context) {
 		return
 	}
 	resp := GetUserResponse{
-		UserID:            user.UserID,
-		FirstName:         user.FirstName,
-		LastName:          user.LastName,
-		Email:             user.Email,
-		IdentityDocument:  user.IdentityDocument,
-		BirthDate:         user.BirthDate.Format("2006-01-02"),
-		Gender:            string(user.Gender),
-		Phone:             user.Phone,
-		ProfilePictureURL: user.ProfilePictureURL,
-		RoleID:            user.RoleID,
-		RoleName:          user.Role.Name,
+		UserID:              user.UserID,
+		FirstName:           user.FirstName,
+		LastName:            user.LastName,
+		Email:               user.Email,
+		IdentityDocument:    user.IdentityDocument,
+		BirthDate:           user.BirthDate.Format("2006-01-02"),
+		Gender:              string(user.Gender),
+		Phone:               user.Phone,
+		ProfilePictureURL:   user.ProfilePictureURL,
+		RoleID:              user.RoleID,
+		RoleName:            user.Role.Name,
+		Category:            string(user.ClientProfile.Category),
+		HasActiveMembership: user.HasActiveMembership(),
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"data": resp,
@@ -1166,17 +1242,19 @@ func (h *AuthHandlers) GetUserByEmailHandler(c *gin.Context) {
 		}
 	}
 	resp := GetUserResponse{
-		UserID:            user.UserID,
-		FirstName:         user.FirstName,
-		LastName:          user.LastName,
-		Email:             user.Email,
-		IdentityDocument:  user.IdentityDocument,
-		RoleID:            user.RoleID,
-		RoleName:          user.Role.Name,
-		BirthDate:         user.BirthDate.Format("2006-01-02"),
-		Gender:            string(user.Gender),
-		Phone:             user.Phone,
-		ProfilePictureURL: user.ProfilePictureURL,
+		UserID:              user.UserID,
+		FirstName:           user.FirstName,
+		LastName:            user.LastName,
+		Email:               user.Email,
+		IdentityDocument:    user.IdentityDocument,
+		BirthDate:           user.BirthDate.Format("2006-01-02"),
+		Gender:              string(user.Gender),
+		Phone:               user.Phone,
+		ProfilePictureURL:   user.ProfilePictureURL,
+		RoleID:              user.RoleID,
+		RoleName:            user.Role.Name,
+		Category:            string(user.ClientProfile.Category),
+		HasActiveMembership: user.HasActiveMembership(),
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"data": resp,
@@ -1278,4 +1356,41 @@ func (h *AuthHandlers) ChangePasswordHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusNoContent, nil)
 
+}
+
+// @Summary		Block a user
+// @Description	Blocks a user and provides a justification.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string					true	"User ID (UUID)"
+// @Param			payload	body		BlockUserPayload		true	"Block justification"
+// @Success		204		{object}	nil						"User blocked successfully"
+// @Failure		400		{object}	object{error=string}	"Bad Request"
+// @Failure		404		{object}	object{error=string}	"Not Found"
+// @Failure		500		{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/{id}/block [put]
+func (h *AuthHandlers) BlockUserHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	var payload BlockUserPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	if err := h.services.UserServices.BlockUser(ctx, id, payload.BlockJustification); err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
 }

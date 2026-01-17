@@ -231,3 +231,71 @@ func (h *AccessHandler) GetClientServiceUsageHandler(c *gin.Context) {
 		Total: total,
 	})
 }
+
+// @Summary		Get Class Attendance History
+// @Description	Retrieves the attendance history for a specific class
+// @Tags			Access
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id			path		string	true	"Class UUID"
+// @Param			start_date	query		string	false	"Start date filter (RFC3339 format)"
+// @Param			end_date	query		string	false	"End date filter (RFC3339 format)"
+// @Param			status		query		string	false	"Filter by status (Attended, NoShow, Cancelled)"
+// @Success		200			{object}	object{data=[]AttendanceHistoryResponse}
+// @Failure		400			{object}	map[string]interface{}
+// @Failure		500			{object}	map[string]interface{}
+// @Router			/access/classes/{id}/attendance [get]
+func (h *AccessHandler) GetClassAttendanceHistoryHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	classID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	var startDate, endDate, status *string
+	if s := c.Query("start_date"); s != "" {
+		startDate = &s
+	}
+	if s := c.Query("end_date"); s != "" {
+		endDate = &s
+	}
+	if s := c.Query("status"); s != "" {
+		status = &s
+	}
+
+	attendances, err := h.services.AccessServices.GetClassAttendanceHistory(ctx, classID, startDate, endDate, status)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	resp := make([]*AttendanceHistoryResponse, 0, len(attendances))
+	for _, attendance := range attendances {
+		item := &AttendanceHistoryResponse{
+			AttendanceID: attendance.AttendanceID,
+			UserID:       attendance.UserID,
+			ServiceID:    attendance.ServiceID,
+			CheckInTime:  attendance.CheckInTime,
+			Status:       attendance.Status,
+		}
+
+		if attendance.User.UserID != uuid.Nil {
+			item.UserName = attendance.User.FirstName + " " + attendance.User.LastName
+		}
+
+		if attendance.Service.ServiceID != uuid.Nil {
+			item.ServiceName = attendance.Service.Name
+		}
+
+		if attendance.Class != nil && attendance.Class.ClassID != uuid.Nil {
+			item.ClassName = attendance.Service.Name + " Class"
+			item.ClassTime = &attendance.Class.StartsAt
+		}
+
+		resp = append(resp, item)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}

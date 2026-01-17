@@ -1,6 +1,7 @@
 package membershipshandlers
 
 import (
+	"encoding/csv"
 	"fmt"
 	"net/http"
 
@@ -243,6 +244,48 @@ func (h *MembershipHandler) GetMembershipsHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary		Export Membership Types (CSV)
+// @Description	Exports all membership types as a CSV file.
+// @Tags			Memberships
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"membership_plans.csv"
+// @Failure		500	{object}	object{error=string}	"error: Internal Server Error"
+// @Router			/membership-plans/export [get]
+func (h *MembershipHandler) ExportMembershipTypesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit: 1000000,
+		Page:  1,
+		Sort:  "desc",
+	}
+
+	memberships, err := h.services.MembershipServices.GetMembershipTypes(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=membership_plans.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "Name", "Description", "Duration (Days)", "Price", "Active"})
+
+	for _, m := range memberships {
+		writer.Write([]string{
+			m.MembershipTypeID.String(),
+			m.Name,
+			m.Description,
+			fmt.Sprintf("%d", m.DurationDays),
+			fmt.Sprintf("%.2f", m.Price),
+			fmt.Sprintf("%t", m.IsActive),
+		})
+	}
 }
 
 // @Summary		Get a summary of membership types

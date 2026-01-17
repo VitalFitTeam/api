@@ -193,20 +193,21 @@ func (s *ReportService) GetSalesByDemographics(ctx context.Context, branchID *uu
 	return s.store.Reports.GetSalesByDemographics(ctx, branchID, start, end, dimension)
 }
 
-func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdomain.ChurnRiskAnalysis, error) {
+func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdomain.ChurnRiskAnalysis, []reportdomain.ChurnRiskAnalysis, error) {
 	// 1. Get historical data for all active clients
 	metrics, err := s.store.Reports.GetClientsChurnMetrics(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// 2. Get Managers for all branches to identify who to notify
 	managersMap, err := s.store.Reports.GetBranchManagers(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	var atRiskUsers []reportdomain.ChurnRiskAnalysis
+	var newlyDetected []reportdomain.ChurnRiskAnalysis
+	var allAtRisk []reportdomain.ChurnRiskAnalysis
 
 	calculateRisk := func(m reportdomain.ClientChurnMetrics) (int, []string) {
 		riskScore := 0
@@ -246,15 +247,11 @@ func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdom
 
 		// Action 1: Flag High Risk Users
 		if riskScore >= 70 {
-			// Only update if not already AtRisk to avoid redundant DB writes
-			if m.CurrentCategory != string(authdomain.ClientCategoryAtRisk) {
-				_ = s.store.Users.UpdateClientCategory(ctx, m.UserID, authdomain.ClientCategoryAtRisk)
-			}
-
 			analysis := reportdomain.ChurnRiskAnalysis{
 				UserID:            m.UserID,
 				Name:              m.FirstName + " " + m.LastName,
 				Email:             m.Email,
+				Phone:             m.Phone,
 				RiskScore:         riskScore,
 				Factors:           factors,
 				PreferredBranchID: m.PreferredBranchID,
@@ -267,25 +264,36 @@ func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdom
 				}
 			}
 
-			atRiskUsers = append(atRiskUsers, analysis)
+			// Only update if not already AtRisk to avoid redundant DB writes
+			if m.CurrentCategory != string(authdomain.ClientCategoryAtRisk) {
+				_ = s.store.Users.UpdateClientCategory(ctx, m.UserID, authdomain.ClientCategoryAtRisk)
+				newlyDetected = append(newlyDetected, analysis)
+			}
+
+			allAtRisk = append(allAtRisk, analysis)
 		} else {
 			if m.CurrentCategory == string(authdomain.ClientCategoryAtRisk) {
 				newCategory := authdomain.ClientCategoryRegular
-				ok, err := s.store.Membership.ClientHasActiveMembership(ctx, m.UserID, 0)
-				if err != nil {
-					return nil, err
-				}
-				if !ok {
-					newCategory = authdomain.ClientCategoryVIP
-				}
 				_ = s.store.Users.UpdateClientCategory(ctx, m.UserID, newCategory)
 			}
 		}
 	}
 
-	return atRiskUsers, nil
+	return newlyDetected, allAtRisk, nil
 }
 
 func (s *ReportService) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*reportdomain.KPICard, error) {
 	return s.store.Reports.GetChurnRateKPI(ctx, branchID)
+}
+
+func (s *ReportService) GetFinancialReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.FinancialReportRow, error) {
+	return s.store.Reports.GetFinancialReportData(ctx, branchID, start, end)
+}
+
+func (s *ReportService) GetClientReportData(ctx context.Context) ([]reportdomain.ClientChurnMetrics, error) {
+	return s.store.Reports.GetClientsChurnMetrics(ctx)
+}
+
+func (s *ReportService) GetSalesReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.SalesReportRow, error) {
+	return s.store.Reports.GetSalesReportData(ctx, branchID, start, end)
 }

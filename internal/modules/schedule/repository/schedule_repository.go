@@ -50,19 +50,32 @@ func (s *ScheduleStore) CreateClasses(ctx context.Context, classes []scheduledom
 // GetClassesByBranch
 // ----------------------------------------
 
-func (s *ScheduleStore) GetClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]scheduledomain.Class, error) {
+func (s *ScheduleStore) GetClassesByBranch(ctx context.Context, branchID uuid.UUID, startDate, endDate *time.Time) ([]scheduledomain.Class, error) {
 	var classes []scheduledomain.Class
 
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
 
-		if err := tx.WithContext(ctx).
+		query := tx.WithContext(ctx).
 			Joins("JOIN services ON services.service_id = classes.service_id").
+			Joins("JOIN instructors ON instructors.instructor_id = classes.instructor_id").
+			Joins("JOIN users ON users.user_id = instructors.user_id").
 			Where("services.deleted_at IS NULL").
+			Where("instructors.deleted_at IS NULL").
+			Where("users.deleted_at IS NULL").
+			Where("users.status != ?", "Blocked").
 			Preload("Service").
 			Preload("Instructor").
 			Preload("Branch").
-			Where("classes.branch_id = ?", branchID).
-			Find(&classes).Error; err != nil {
+			Where("classes.branch_id = ?", branchID)
+
+		if startDate != nil {
+			query = query.Where("classes.starts_at >= ?", startDate)
+		}
+		if endDate != nil {
+			query = query.Where("classes.starts_at <= ?", endDate)
+		}
+
+		if err := query.Find(&classes).Error; err != nil {
 			return err
 		}
 
@@ -94,6 +107,49 @@ func (s *ScheduleStore) GetUpcomingClassesByBranch(ctx context.Context, branchID
 			Where("classes.branch_id = ?", branchID).
 			Where("ends_at > ?", time.Now()).
 			Find(&classes).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return classes, nil
+}
+
+// ----------------------------------------
+// GetClassesByInstructor
+// ----------------------------------------
+
+func (s *ScheduleStore) GetClassesByInstructor(ctx context.Context, userID uuid.UUID, startDate, endDate *time.Time) ([]scheduledomain.Class, error) {
+	var classes []scheduledomain.Class
+
+	err := db.WithTX(s.db, func(tx *gorm.DB) error {
+
+		query := tx.WithContext(ctx).
+			Joins("JOIN services ON services.service_id = classes.service_id").
+			Joins("JOIN instructors ON instructors.instructor_id = classes.instructor_id").
+			Joins("JOIN users ON users.user_id = instructors.user_id").
+			Where("services.deleted_at IS NULL").
+			Where("instructors.deleted_at IS NULL").
+			Where("users.deleted_at IS NULL").
+			Where("users.status != ?", "Blocked").
+			Preload("Service").
+			Preload("Instructor").
+			Preload("Branch").
+			Where("instructors.user_id = ?", userID)
+
+		if startDate != nil {
+			query = query.Where("classes.starts_at >= ?", startDate)
+		}
+		if endDate != nil {
+			query = query.Where("classes.starts_at <= ?", endDate)
+		}
+
+		if err := query.Find(&classes).Error; err != nil {
 			return err
 		}
 

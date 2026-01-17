@@ -395,3 +395,80 @@ func calculateTrend(current, prev decimal.Decimal, title, label string) (*report
 		IsPositive:   percentageChange >= 0,
 	}, nil
 }
+
+func (rs *ReportStore) GetFinancialReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.FinancialReportRow, error) {
+	var results []reportdomain.FinancialReportRow
+
+	query := rs.db.WithContext(ctx).Table("invoice_items ii").
+		Select(`
+			i.issue_date as date,
+			b.name as branch_name,
+			CONCAT(u.first_name, ' ', u.last_name) as client_name,
+			CASE 
+				WHEN ii.membership_type_id IS NOT NULL THEN 'Memberships'
+				WHEN ii.service_id IS NOT NULL THEN 'Services'
+				WHEN ii.package_id IS NOT NULL THEN 'Combos'
+				ELSE 'Other'
+			END as category,
+			COALESCE(mt.name, s.name, p.name, 'Item') as concept,
+			ii.total_line as amount,
+			i.status as status
+		`).
+		Joins("JOIN invoices i ON i.invoice_id = ii.invoice_id").
+		Joins("JOIN branch b ON b.branch_id = i.branch_id").
+		Joins("JOIN users u ON u.user_id = i.user_id").
+		Joins("LEFT JOIN membership_types mt ON mt.membership_type_id = ii.membership_type_id").
+		Joins("LEFT JOIN services s ON s.service_id = ii.service_id").
+		Joins("LEFT JOIN packages p ON p.package_id = ii.package_id").
+		Where("i.issue_date BETWEEN ? AND ?", start, end)
+
+	if branchID != nil {
+		query = query.Where("i.branch_id = ?", *branchID)
+	}
+
+	err := query.Order("i.issue_date DESC").Scan(&results).Error
+	return results, err
+}
+
+func (rs *ReportStore) GetSalesReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.SalesReportRow, error) {
+	var results []reportdomain.SalesReportRow
+
+	// CTE to aggregate payment methods per invoice
+	query := rs.db.WithContext(ctx).Table("invoice_items ii").
+		Select(`
+			i.issue_date as date,
+			b.name as branch_name,
+			COALESCE(s.name, p.name, mt.name, 'Other') as item_name,
+			CASE 
+				WHEN ii.membership_type_id IS NOT NULL THEN 'Memberships'
+				WHEN ii.service_id IS NOT NULL THEN 'Services'
+				WHEN ii.package_id IS NOT NULL THEN 'Combos'
+				ELSE 'Other'
+			END as category,
+			ii.quantity,
+			ii.total_line as total,
+			COALESCE(pm_agg.methods, 'Pending/Unpaid') as payment_method
+		`).
+		Joins("JOIN invoices i ON i.invoice_id = ii.invoice_id").
+		Joins("JOIN branch b ON b.branch_id = i.branch_id").
+		Joins("LEFT JOIN services s ON s.service_id = ii.service_id").
+		Joins("LEFT JOIN packages p ON p.package_id = ii.package_id").
+		Joins("LEFT JOIN membership_types mt ON mt.membership_type_id = ii.membership_type_id").
+		Joins(`LEFT JOIN (
+			SELECT 
+				p.invoice_id, 
+				STRING_AGG(DISTINCT pm.name, ', ') as methods
+			FROM payments p
+			JOIN payment_methods pm ON p.payment_method_id = pm.method_id
+			WHERE p.status = 'Completed'
+			GROUP BY p.invoice_id
+		) pm_agg ON pm_agg.invoice_id = i.invoice_id`).
+		Where("i.issue_date BETWEEN ? AND ?", start, end)
+
+	if branchID != nil {
+		query = query.Where("i.branch_id = ?", *branchID)
+	}
+
+	err := query.Order("i.issue_date DESC").Scan(&results).Error
+	return results, err
+}

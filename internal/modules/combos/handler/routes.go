@@ -15,6 +15,7 @@ type CombosHandlerInterface interface {
 	GetPackageByIDHandler(c *gin.Context)
 	UpdatePackageHandler(c *gin.Context)
 	DeletePackageHandler(c *gin.Context)
+	ExportPackagesHandler(c *gin.Context)
 
 	PublicGetPackagesHandler(c *gin.Context)
 }
@@ -34,6 +35,7 @@ func (r *CombosHandler) CombosRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware
 		packagesGroup.Use(m.AuditLogMiddleware())
 		packagesGroup.POST("", m.RBACPermission("packages:create"), r.CreatePackageHandler)
 		packagesGroup.GET("", m.RBACPermission("packages:list"), r.GetPackageHandler)
+		packagesGroup.GET("/export", m.RBACPermission("packages:list"), r.ExportPackagesHandler)
 		packagesGroup.GET("/:id", m.RBACPermission("packages:get"), r.GetPackageByIDHandler)
 		packagesGroup.PUT("/:id", m.RBACPermission("packages:update"), r.UpdatePackageHandler)
 		packagesGroup.DELETE("/:id", m.RBACPermission("packages:delete"), r.DeletePackageHandler)

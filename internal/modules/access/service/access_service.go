@@ -185,3 +185,7 @@ func (s *AccessService) GetClientServiceUsage(ctx context.Context, clientID uuid
 
 	return s.store.Access.GetClientServiceUsage(ctx, clientID, startDate, endDate, fq)
 }
+
+func (s *AccessService) GetClassAttendanceHistory(ctx context.Context, classID uuid.UUID, startDate, endDate, status *string) ([]*accessdomain.AttendanceLog, error) {
+	return s.store.Access.GetClassAttendanceHistory(ctx, classID, startDate, endDate, status)
+}

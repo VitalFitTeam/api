@@ -77,6 +77,7 @@
     "cancellation-reasons:list",
     "access:check_in",
     "access:view_client_history",
+    "instructors:list",
     "view"
   ],
   "instructor": [

@@ -12,6 +12,7 @@ type InventoryHandlersInterface interface {
 	// Equipment
 	CreateEquipmentHandler(c *gin.Context)
 	GetEquipmentsHandler(c *gin.Context)
+	ExportEquipmentsHandler(c *gin.Context)
 	UpdateEquipmentHandler(c *gin.Context)
 	DeleteEquipmentHandler(c *gin.Context)
 	GetEquipmentByID(c *gin.Context)
@@ -19,6 +20,7 @@ type InventoryHandlersInterface interface {
 	// Branch inventory
 	AddInventoryItemHandler(c *gin.Context)
 	ListBranchInventoryHandler(c *gin.Context)
+	ExportBranchInventoryHandler(c *gin.Context)
 	UpdateInventoryItemHandler(c *gin.Context)
 	DeleteInventoryItemHandler(c *gin.Context)
 	GetInventoryByID(c *gin.Context)
@@ -44,6 +46,7 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	{
 		equipmentGroup.POST("", r.CreateEquipmentHandler)
 		equipmentGroup.GET("", r.GetEquipmentsHandler)
+		equipmentGroup.GET("/export", r.ExportEquipmentsHandler)
 		equipmentGroup.PUT("/:id", r.UpdateEquipmentHandler)
 		equipmentGroup.GET("/:id", r.GetEquipmentByID)
 		equipmentGroup.DELETE("/:id", r.DeleteEquipmentHandler)
@@ -59,6 +62,7 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	{
 		branchInventoryGroup.POST("", m.RBACPermission("branch_management"), r.AddInventoryItemHandler)
 		branchInventoryGroup.GET("", m.RBACPermission("branch_management"), r.ListBranchInventoryHandler)
+		branchInventoryGroup.GET("/export", m.RBACPermission("branch_management"), r.ExportBranchInventoryHandler)
 		branchInventoryGroup.GET("/:inventoryId", m.RBACPermission("branch_management"), r.GetInventoryByID)
 		branchInventoryGroup.PATCH("/:inventoryId", m.RBACPermission("branch_management"), r.UpdateInventoryItemHandler)
 		branchInventoryGroup.DELETE("/:inventoryId", m.RBACPermission("branch_management"), r.DeleteInventoryItemHandler)

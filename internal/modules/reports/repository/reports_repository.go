@@ -1227,7 +1227,7 @@ func (rs *ReportStore) GetClientsChurnMetrics(ctx context.Context) ([]reportdoma
 	// Query to get Recency (Last Check-in), Frequency (Visits this month vs last), and Expiration
 	query := `
 		SELECT 
-			u.user_id, u.first_name, u.last_name, u.email, COALESCE(cp.category, 'New') as current_category,
+			u.user_id, u.first_name, u.last_name, u.email, u.phone, COALESCE(cp.category, 'New') as current_category,
 			MAX(al.check_in_time) as last_check_in,
 			COUNT(CASE WHEN al.check_in_time >= DATE_TRUNC('month', NOW()) THEN 1 END) as current_month_visits,
 			COUNT(CASE WHEN al.check_in_time >= DATE_TRUNC('month', NOW() - INTERVAL '1 month') AND al.check_in_time < DATE_TRUNC('month', NOW()) THEN 1 END) as last_month_visits,

@@ -1,6 +1,8 @@
 package productshandler
 
 import (
+	"encoding/csv"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -88,6 +90,50 @@ func (h *ProductsHandler) GetBranchServiceHandler(c *gin.Context) {
 		})
 	}
 	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+// @Summary		Export Branch Services (CSV)
+// @Description	Exports all services assigned to a branch as a CSV file.
+// @Tags			Branch Services
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Param			id	path		string					true	"Branch UUID"
+// @Success		200	{file}		file					"branch_services.csv"
+// @Failure		400	{object}	map[string]interface{}	"Bad Request"
+// @Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/branches/{id}/services/export [get]
+func (h *ProductsHandler) ExportBranchServicesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	branchID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	services, err := h.services.ProductsServices.GetBranchService(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=branch_services.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"Service ID", "Service Name", "Visible", "Max Capacity", "Price Member", "Price Non-Member"})
+
+	for _, s := range services {
+		writer.Write([]string{
+			s.ServiceID.String(),
+			s.Service.Name,
+			fmt.Sprintf("%t", s.IsVisible),
+			fmt.Sprintf("%d", s.MaxCapacity),
+			fmt.Sprintf("%.2f", s.PriceForMember),
+			fmt.Sprintf("%.2f", s.PriceForNonMember),
+		})
+	}
 }
 
 // @Summary		Update a branch service

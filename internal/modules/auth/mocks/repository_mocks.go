@@ -156,12 +156,26 @@ func (m *UserStoreMock) GetAllClients(ctx context.Context) ([]*authdomain.Users,
 	}
 	return args.Get(0).([]*authdomain.Users), args.Error(1)
 }
+
+func (m *UserStoreMock) GetAllStaffUsers(ctx context.Context) ([]*authdomain.Users, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*authdomain.Users), args.Error(1)
+}
+
 func (m *UserStoreMock) UpgradePassword(ctx context.Context, user *authdomain.Users) error {
 	args := m.Called(ctx, user)
 	return args.Error(0)
 }
 func (m *UserStoreMock) UpdateActivationCode(ctx context.Context, userID uuid.UUID, token string, invitationExp time.Duration) error {
 	args := m.Called(ctx, userID, token, invitationExp)
+	return args.Error(0)
+}
+
+func (m *UserStoreMock) BlockUser(ctx context.Context, userID uuid.UUID, justification string) error {
+	args := m.Called(ctx, userID, justification)
 	return args.Error(0)
 }
 

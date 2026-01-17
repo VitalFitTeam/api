@@ -141,3 +141,15 @@ func (h *UserService) UpdateStaff(ctx context.Context, user *authdomain.Users, r
 func (h *UserService) GetRolesFTotal(ctx context.Context, fq pagination.PaginatedFeedQuery) (int64, error) {
 	return h.store.Roles.GetRolesFTotal(ctx, fq)
 }
+
+func (h *UserService) BlockUser(ctx context.Context, userID uuid.UUID, justification string) error {
+	return h.store.Users.BlockUser(ctx, userID, justification)
+}
+
+func (h *UserService) GetAllClients(ctx context.Context) ([]*authdomain.Users, error) {
+	return h.store.Users.GetAllClients(ctx)
+}
+
+func (h *UserService) GetAllStaffUsers(ctx context.Context) ([]*authdomain.Users, error) {
+	return h.store.Users.GetAllStaffUsers(ctx)
+}

@@ -15,4 +15,5 @@ type NotificationServiceInterface interface {
 	MarkAsRead(ctx context.Context, notificationID uuid.UUID) error
 	MarkAllAsRead(ctx context.Context, userID uuid.UUID) error
 	SendBroadcast(ctx context.Context, title, message string) error
+	SendPushNotification(ctx context.Context, title, message string, userID uuid.UUID) error
 }

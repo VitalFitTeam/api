@@ -1,6 +1,7 @@
 package comboshandler
 
 import (
+	"encoding/csv"
 	"fmt"
 	"net/http"
 
@@ -213,6 +214,57 @@ func (h *CombosHandler) UpdatePackageHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Export Packages (CSV)
+// @Description	Exports all packages as a CSV file.
+// @Tags			Packages
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"packages.csv"
+// @Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/packages/export [get]
+func (h *CombosHandler) ExportPackagesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit: 1000000,
+		Page:  1,
+		Sort:  "desc",
+	}
+
+	packages, err := h.services.CombosServices.GetPackages(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=packages.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "Name", "Description", "Price", "Active", "Start Date", "End Date"})
+
+	for _, p := range packages {
+		startAt := ""
+		if p.StartAt != nil {
+			startAt = p.StartAt.Format("2006-01-02")
+		}
+		endAt := ""
+		if p.EndAt != nil {
+			endAt = p.EndAt.Format("2006-01-02")
+		}
+		writer.Write([]string{
+			p.PackageID.String(),
+			p.Name,
+			p.Description,
+			fmt.Sprintf("%.2f", p.Price),
+			fmt.Sprintf("%t", p.IsActive),
+			startAt,
+			endAt,
+		})
+	}
 }
 
 // @Summary		Delete a package

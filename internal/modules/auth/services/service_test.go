@@ -441,6 +441,24 @@ func TestUserService(t *testing.T) {
 			roleStoreMock.AssertExpectations(t)
 		})
 	})
+
+	t.Run("BlockUser", func(t *testing.T) {
+		justification := "Violation of terms"
+
+		t.Run("success", func(t *testing.T) {
+			userStoreMock.On("BlockUser", mock.Anything, mockUser.UserID, justification).Return(nil).Once()
+			err := userService.BlockUser(context.Background(), mockUser.UserID, justification)
+			assert.NoError(t, err)
+			userStoreMock.AssertExpectations(t)
+		})
+
+		t.Run("not found", func(t *testing.T) {
+			userStoreMock.On("BlockUser", mock.Anything, mockUser.UserID, justification).Return(shared_errors.ErrNotFound).Once()
+			err := userService.BlockUser(context.Background(), mockUser.UserID, justification)
+			assert.ErrorIs(t, err, shared_errors.ErrNotFound)
+			userStoreMock.AssertExpectations(t)
+		})
+	})
 }
 
 func TestJWTAuthenticator(t *testing.T) {

@@ -138,6 +138,13 @@ definitions:
       user_id:
         type: string
     type: object
+  authhandlers.BlockUserPayload:
+    properties:
+      block_justification:
+        type: string
+    required:
+    - block_justification
+    type: object
   authhandlers.BranchAdminResponse:
     properties:
       first_name:
@@ -268,12 +275,16 @@ definitions:
     properties:
       birth_date:
         type: string
+      category:
+        type: string
       email:
         type: string
       first_name:
         type: string
       gender:
         type: string
+      has_active_membership:
+        type: boolean
       identity_document:
         type: string
       last_name:
@@ -2726,6 +2737,54 @@ paths:
       summary: Process User Check-In
       tags:
       - Access
+  /access/classes/{id}/attendance:
+    get:
+      description: Retrieves the attendance history for a specific class
+      parameters:
+      - description: Class UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date filter (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      - description: Filter by status (Attended, NoShow, Cancelled)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/accesshandler.AttendanceHistoryResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Class Attendance History
+      tags:
+      - Access
   /admin/permissions:
     get:
       description: Lists all permissions defined in the system (from the seeder) that
@@ -4418,6 +4477,28 @@ paths:
       summary: Update a payment method
       tags:
       - Billing
+  /billing/payment-methods/export:
+    get:
+      description: Exports all payment methods as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: payment_methods.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Payment Methods (CSV)
+      tags:
+      - Billing
   /billing/payments/{payment_id}:
     get:
       description: Retrieves the details of a specific payment by its UUID. The user
@@ -5306,6 +5387,41 @@ paths:
       summary: Update branch inventory item
       tags:
       - Branch Inventory
+  /branches/{id}/equipment/export:
+    get:
+      description: Exports all equipment items for a given branch as a CSV file.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: branch_inventory.csv
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Branch Inventory (CSV)
+      tags:
+      - Branch Inventory
   /branches/{id}/instructor:
     get:
       consumes:
@@ -5704,6 +5820,14 @@ paths:
         name: id
         required: true
         type: string
+      - description: Month (1-12)
+        in: query
+        name: month
+        type: integer
+      - description: Year
+        in: query
+        name: year
+        type: integer
       produces:
       - application/json
       responses:
@@ -5972,6 +6096,37 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a branch service
+      tags:
+      - Branch Services
+  /branches/{id}/services/export:
+    get:
+      description: Exports all services assigned to a branch as a CSV file.
+      parameters:
+      - description: Branch UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: branch_services.csv
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Branch Services (CSV)
       tags:
       - Branch Services
   /branches/{id}/staff:
@@ -6921,6 +7076,28 @@ paths:
       summary: Update equipment type
       tags:
       - Equipment
+  /equipment-types/export:
+    get:
+      description: Exports all equipment types in the global catalog as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: equipment_catalog.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Equipment Types (CSV)
+      tags:
+      - Equipment
   /health:
     get:
       consumes:
@@ -7220,6 +7397,26 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Remove a specialty from an instructor
+      tags:
+      - Instructors
+  /instructor/export:
+    get:
+      description: Exports all instructors as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: instructors.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Instructors (CSV)
       tags:
       - Instructors
   /instructor/summary:
@@ -7938,6 +8135,28 @@ paths:
       summary: Update a membership type
       tags:
       - Memberships
+  /membership-plans/export:
+    get:
+      description: Exports all membership types as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: membership_plans.csv
+          schema:
+            type: file
+        "500":
+          description: 'error: Internal Server Error'
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Membership Types (CSV)
+      tags:
+      - Memberships
   /membership-plans/summary:
     get:
       description: Retrieves a count of total, active, and inactive membership types.
@@ -8503,6 +8722,26 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a package
+      tags:
+      - Packages
+  /packages/export:
+    get:
+      description: Exports all packages as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: packages.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Packages (CSV)
       tags:
       - Packages
   /policies:
@@ -9352,6 +9591,100 @@ paths:
       summary: Get Weekly Sales Chart
       tags:
       - Reports Branch
+  /reports/export/clients:
+    get:
+      description: Exports a detailed client report including retention metrics, last
+        activity, and risk status.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: client_report.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Client Report (CSV)
+      tags:
+      - Reports Financial
+  /reports/export/financial:
+    get:
+      description: Exports a detailed financial report as a CSV file.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: financial_report.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Financial Report (CSV)
+      tags:
+      - Reports Financial
+  /reports/export/sales:
+    get:
+      description: Exports a detailed sales report including commercial performance,
+        payment methods, and branch productivity.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: sales_report.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Sales Report (CSV)
+      tags:
+      - Reports Financial
   /reports/instructors/classes-count:
     get:
       description: Retrieves the total number of classes assigned to the instructor
@@ -10443,6 +10776,50 @@ paths:
       summary: Get client schedule for a branch
       tags:
       - Booking
+  /schedule/instructor:
+    get:
+      description: Returns the scheduled classes for a specific instructor (by user
+        ID)
+      parameters:
+      - description: User UUID (if not instructor)
+        in: query
+        name: user_id
+        type: string
+      - description: Month (1-12)
+        in: query
+        name: month
+        type: integer
+      - description: Year
+        in: query
+        name: year
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/schedulehandlers.ClassResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List classes for an instructor
+      tags:
+      - Schedule
   /services:
     post:
       consumes:
@@ -10680,6 +11057,26 @@ paths:
       summary: List service categories
       tags:
       - Services Categories
+  /services/export:
+    get:
+      description: Exports all services as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: services.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Services (CSV)
+      tags:
+      - Services
   /services/summary:
     get:
       description: Retrieves a count of total, active, and featured services.
@@ -10869,6 +11266,54 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get user by ID
+      tags:
+      - User
+  /user/{id}/block:
+    put:
+      consumes:
+      - application/json
+      description: Blocks a user and provides a justification.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Block justification
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.BlockUserPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User blocked successfully
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Block a user
       tags:
       - User
   /user/{id}/client:
@@ -11204,6 +11649,50 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: List client users
+      tags:
+      - User
+  /user/export/clients:
+    get:
+      description: Exports all clients as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: clients.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Clients (CSV)
+      tags:
+      - User
+  /user/export/users:
+    get:
+      description: Exports all staff users as a CSV file.
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: staff_users.csv
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Export Staff Users (CSV)
       tags:
       - User
   /user/qr-token:

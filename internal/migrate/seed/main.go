@@ -1098,7 +1098,7 @@ func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB,
 	for _, branch := range allBranches {
 		log.Printf("Processing bookings for branch: %s", branch.Name)
 
-		branchClasses, err := store.Schedule.GetClassesByBranch(ctx, branch.BranchID)
+		branchClasses, err := store.Schedule.GetClassesByBranch(ctx, branch.BranchID, nil, nil)
 		if err != nil || len(branchClasses) == 0 {
 			log.Printf("Warning: No classes found for branch %s. Skipping.", branch.Name)
 			continue

@@ -240,17 +240,19 @@ type UserResponse struct {
 }
 
 type GetUserResponse struct {
-	UserID            uuid.UUID `json:"user_id"`
-	FirstName         string    `json:"first_name"`
-	LastName          string    `json:"last_name"`
-	RoleID            uuid.UUID `json:"role_id"`
-	RoleName          string    `json:"role_name"`
-	Email             string    `json:"email"`
-	IdentityDocument  string    `json:"identity_document"`
-	BirthDate         string    `json:"birth_date"`
-	Gender            string    `json:"gender"`
-	Phone             string    `json:"phone"`
-	ProfilePictureURL string    `json:"profile_picture_url"`
+	UserID              uuid.UUID `json:"user_id"`
+	FirstName           string    `json:"first_name"`
+	LastName            string    `json:"last_name"`
+	RoleID              uuid.UUID `json:"role_id"`
+	RoleName            string    `json:"role_name"`
+	Email               string    `json:"email"`
+	IdentityDocument    string    `json:"identity_document"`
+	BirthDate           string    `json:"birth_date"`
+	Gender              string    `json:"gender"`
+	Phone               string    `json:"phone"`
+	ProfilePictureURL   string    `json:"profile_picture_url"`
+	Category            string    `json:"category,omitempty"`
+	HasActiveMembership bool      `json:"has_active_membership"`
 }
 
 type OAuthLoginPayload struct {
@@ -260,4 +262,8 @@ type OAuthLoginPayload struct {
 
 type RenewTokenPayload struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type BlockUserPayload struct {
+	BlockJustification string `json:"block_justification" binding:"required"`
 }

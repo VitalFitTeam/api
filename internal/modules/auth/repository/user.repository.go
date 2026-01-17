@@ -493,9 +493,41 @@ func (s *UserStore) UpdateClientCategory(ctx context.Context, userID uuid.UUID, 
 
 func (s *UserStore) GetAllClients(ctx context.Context) ([]*authdomain.Users, error) {
 	var users []*authdomain.Users
-	err := s.db.WithContext(ctx).Find(&users).Error
+	err := s.db.WithContext(ctx).
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Where("roles.name = ?", "client").Find(&users).Error
 	if err != nil {
 		return nil, err
 	}
 	return users, nil
+}
+
+func (s *UserStore) GetAllStaffUsers(ctx context.Context) ([]*authdomain.Users, error) {
+	var users []*authdomain.Users
+	err := s.db.WithContext(ctx).
+		Joins("JOIN roles ON roles.role_id = users.role_id").
+		Preload("Role").
+		Where("roles.name <> ?", "client").
+		Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (s *UserStore) BlockUser(ctx context.Context, userID uuid.UUID, justification string) error {
+	result := s.db.WithContext(ctx).Model(&authdomain.Users{}).
+		Where("user_id = ?", userID).
+		Updates(map[string]interface{}{
+			"status":              authdomain.UserStatusBlocked,
+			"block_justification": justification,
+		})
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return shared_errors.ErrNotFound
+	}
+	return nil
 }

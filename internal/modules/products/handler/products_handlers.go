@@ -1,6 +1,7 @@
 package productshandler
 
 import (
+	"encoding/csv"
 	"fmt"
 	"net/http"
 
@@ -228,6 +229,49 @@ func (h *ProductsHandler) DeleteServiceHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusNoContent, nil)
+}
+
+// @Summary		Export Services (CSV)
+// @Description	Exports all services as a CSV file.
+// @Tags			Services
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file					"services.csv"
+// @Failure		500	{object}	map[string]interface{}	"Internal Server Error"
+// @Router			/services/export [get]
+func (h *ProductsHandler) ExportServicesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit: 1000000,
+		Page:  1,
+		Sort:  "desc",
+	}
+
+	services, err := h.services.ProductsServices.GetServices(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=services.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "Name", "Category", "Description", "Duration (min)", "Priority", "Featured"})
+
+	for _, s := range services {
+		writer.Write([]string{
+			s.ServiceID.String(),
+			s.Name,
+			s.Category.Name,
+			s.Description,
+			fmt.Sprintf("%d", s.DurationMinutes),
+			fmt.Sprintf("%d", s.PriorityScore),
+			fmt.Sprintf("%t", s.IsFeatured),
+		})
+	}
 }
 
 // @Summary		Get service by ID

@@ -1,6 +1,7 @@
 package inventoryhandlers
 
 import (
+	"encoding/csv"
 	"fmt"
 	"net/http"
 
@@ -103,6 +104,48 @@ func (h *InventoryHandlers) GetEquipmentsHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary		Export Equipment Types (CSV)
+// @Description	Exports all equipment types in the global catalog as a CSV file.
+// @Tags			Equipment
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file	"equipment_catalog.csv"
+// @Failure		500	{object}	object{error=string}
+// @Router			/equipment-types/export [get]
+func (h *InventoryHandlers) ExportEquipmentsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit: 1000000,
+		Page:  1,
+		Sort:  "desc",
+	}
+
+	equipments, err := h.services.EquipmentServices.GetEquipments(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=equipment_catalog.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "Name", "Category", "Brand", "Model", "Description"})
+
+	for _, e := range equipments.Equipments {
+		writer.Write([]string{
+			e.EquipmentID.String(),
+			e.Name,
+			string(e.Category),
+			e.Brand,
+			e.Model,
+			e.Description,
+		})
+	}
 }
 
 // @Summary		Get equipment type by ID
@@ -375,6 +418,63 @@ func (h *InventoryHandlers) ListBranchInventoryHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+// @Summary		Export Branch Inventory (CSV)
+// @Description	Exports all equipment items for a given branch as a CSV file.
+// @Tags			Branch Inventory
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Param			id	path		string	true	"Branch UUID"
+// @Success		200	{file}		file	"branch_inventory.csv"
+// @Failure		400	{object}	object{error=string}
+// @Failure		500	{object}	object{error=string}
+// @Router			/branches/{id}/equipment/export [get]
+func (h *InventoryHandlers) ExportBranchInventoryHandler(c *gin.Context) {
+	branchID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	inventory, err := h.services.InventoryServices.ListBranchInventory(c, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=branch_inventory.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"Inventory ID", "Equipment Name", "Serial Number", "Status", "Acquisition Date", "Last Maintenance", "Notes"})
+
+	for _, item := range inventory {
+		acqDate := ""
+		if item.AcquisitionDate != nil {
+			acqDate = item.AcquisitionDate.Format("2006-01-02")
+		}
+		lastMaint := ""
+		if item.LastMaintenanceDate != nil {
+			lastMaint = item.LastMaintenanceDate.Format("2006-01-02")
+		}
+		eqName := ""
+		if item.Equipment != nil {
+			eqName = item.Equipment.Name
+		}
+
+		writer.Write([]string{
+			item.InventoryID.String(),
+			eqName,
+			item.SerialNumber,
+			string(item.Status),
+			acqDate,
+			lastMaint,
+			item.Notes,
+		})
+	}
 }
 
 // @Summary		Update branch inventory item

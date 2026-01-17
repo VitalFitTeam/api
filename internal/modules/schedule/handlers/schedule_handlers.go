@@ -1,14 +1,18 @@
 package schedulehandlers
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
+	notidomain "github.com/vitalfit/api/internal/modules/notifications/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"gorm.io/gorm"
 )
@@ -51,6 +55,12 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 	}
 
 	class, err := payload.ToClass(branchID)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	instructorUser, err := h.services.InstructorServices.GetInstructorByID(ctx, class.InstructorID)
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
@@ -158,6 +168,34 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 		return
 	}
 
+	// Notification to instructor
+	go func() {
+		notiCtx := context.Background()
+		timeFormat := "15:04"
+		dateFormat := "2006-01-02"
+
+		var message string
+		switch payload.Recurrence {
+		case "daily":
+			message = fmt.Sprintf("You have been assigned to a class starting on %s at %s. This class repeats daily.", class.StartsAt.Format(dateFormat), class.StartsAt.Format(timeFormat))
+		case "weekly":
+			weekday := class.StartsAt.Weekday().String()
+			message = fmt.Sprintf("You have been assigned to a class starting on %s at %s. This class repeats every %s.", class.StartsAt.Format(dateFormat), class.StartsAt.Format(timeFormat), weekday)
+		default:
+			message = fmt.Sprintf("You have been assigned to a class on %s at %s.", class.StartsAt.Format(dateFormat), class.StartsAt.Format(timeFormat))
+		}
+
+		notification := &notidomain.Notification{
+			UserID:  instructorUser.User.UserID,
+			Title:   "New Class Assignment",
+			Message: message,
+			Type:    "info",
+		}
+
+		_ = h.services.NotificationServices.CreateNotification(notiCtx, notification)
+		_ = h.services.NotificationServices.SendPushNotification(notiCtx, "New Class Assignment", message, instructorUser.User.UserID)
+	}()
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message":  "Class created successfully",
 		"class_id": class.ClassID,
@@ -173,10 +211,12 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 // @Tags			Schedule
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			id	path		string	true	"Branch UUID"
-// @Success		200	{object}	object{data=[]ClassResponse}
-// @Failure		400	{object}	map[string]interface{}
-// @Failure		500	{object}	map[string]interface{}
+// @Param			id		path		string	true	"Branch UUID"
+// @Param			month	query		int		false	"Month (1-12)"
+// @Param			year	query		int		false	"Year"
+// @Success		200		{object}	object{data=[]ClassResponse}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
 // @Router			/branches/{id}/schedule [get]
 func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -203,11 +243,26 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 		return
 	}
 
+	var startDate, endDate *time.Time
+	monthStr := c.Query("month")
+	yearStr := c.Query("year")
+
+	if monthStr != "" && yearStr != "" {
+		m, errM := strconv.Atoi(monthStr)
+		y, errY := strconv.Atoi(yearStr)
+		if errM == nil && errY == nil {
+			start := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 1, 0).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	}
+
 	var classes []scheduledomain.Class
 	if user.Role.Name == "client" {
 		classes, err = h.services.ScheduleServices.GetUpcomingClassesByBranch(ctx, branchID)
 	} else {
-		classes, err = h.services.ScheduleServices.GetClassesByBranch(ctx, branchID)
+		classes, err = h.services.ScheduleServices.GetClassesByBranch(ctx, branchID, startDate, endDate)
 	}
 
 	if err != nil {
@@ -219,6 +274,83 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 			h.services.LogErrors.InternalServerError(c, err)
 			return
 		}
+	}
+
+	resp := make([]ClassResponse, 0, len(classes))
+	for _, class := range classes {
+		resp = append(resp, ClassResponse{
+			ClassID:      class.ClassID,
+			BranchID:     class.BranchID,
+			ServiceID:    class.ServiceID,
+			InstructorID: class.InstructorID,
+			StartsAt:     class.StartsAt,
+			EndsAt:       class.EndsAt,
+			MaxCapacity:  class.MaxCapacity,
+			IsVisible:    class.IsVisible,
+			Notes:        class.Notes,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+// ------------------------------
+// GET /schedule/instructor
+// ------------------------------
+
+// @Summary		List classes for an instructor
+// @Description	Returns the scheduled classes for a specific instructor (by user ID)
+// @Tags			Schedule
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			user_id	query		string	false	"User UUID (if not instructor)"
+// @Param			month	query		int		false	"Month (1-12)"
+// @Param			year	query		int		false	"Year"
+// @Success		200		{object}	object{data=[]ClassResponse}
+// @Failure		400		{object}	map[string]interface{}
+// @Failure		500		{object}	map[string]interface{}
+// @Router			/schedule/instructor [get]
+func (h *ScheduleHandlers) GetClassesByInstructorHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	var targetUserID uuid.UUID
+	var err error
+
+	if user.Role.Name == "instructor" {
+		targetUserID = user.UserID
+	} else {
+		userIDStr := c.Query("user_id")
+		if userIDStr == "" {
+			h.services.LogErrors.BadRequestResponse(c, errors.New("user_id is required"))
+			return
+		}
+		targetUserID, err = uuid.Parse(userIDStr)
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+	}
+
+	var startDate, endDate *time.Time
+	monthStr := c.Query("month")
+	yearStr := c.Query("year")
+
+	if monthStr != "" && yearStr != "" {
+		m, errM := strconv.Atoi(monthStr)
+		y, errY := strconv.Atoi(yearStr)
+		if errM == nil && errY == nil {
+			start := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 1, 0).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	}
+
+	classes, err := h.services.ScheduleServices.GetClassesByInstructor(ctx, targetUserID, startDate, endDate)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
 	}
 
 	resp := make([]ClassResponse, 0, len(classes))
