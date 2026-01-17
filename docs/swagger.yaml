@@ -138,6 +138,13 @@ definitions:
       user_id:
         type: string
     type: object
+  authhandlers.BlockUserPayload:
+    properties:
+      block_justification:
+        type: string
+    required:
+    - block_justification
+    type: object
   authhandlers.BranchAdminResponse:
     properties:
       first_name:
@@ -10973,6 +10980,54 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get user by ID
+      tags:
+      - User
+  /user/{id}/block:
+    put:
+      consumes:
+      - application/json
+      description: Blocks a user and provides a justification.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Block justification
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/authhandlers.BlockUserPayload'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User blocked successfully
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Block a user
       tags:
       - User
   /user/{id}/client:

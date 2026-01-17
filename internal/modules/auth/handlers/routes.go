@@ -30,6 +30,7 @@ type AuthHandlersInterface interface {
 	UpdateUserClientHandler(c *gin.Context)
 	GetUserByEmailHandler(c *gin.Context)
 	DeleteUserHandler(c *gin.Context)
+	BlockUserHandler(c *gin.Context)
 	GenerateQrJwtTokenHandler(c *gin.Context)
 	ChangePasswordHandler(c *gin.Context)
 	//Roles
@@ -121,6 +122,7 @@ func (r *AuthHandlers) UserRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 		userGroup.PUT("/:id/client", r.UpdateUserClientHandler)
 		userGroup.POST("/by-email", m.RBACPermission("users:get"), r.GetUserByEmailHandler)
 		userGroup.DELETE("/:id", m.RBACPermission("users:delete"), r.DeleteUserHandler)
+		userGroup.PUT("/:id/block", m.RBACPermission("users:update"), r.BlockUserHandler)
 
 	}
 }

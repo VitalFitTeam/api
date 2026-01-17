@@ -798,6 +798,48 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 		userStoreMock.AssertExpectations(t)
 		roleStoreMock.AssertExpectations(t)
 	})
+
+	t.Run("BlockUserHandler", func(t *testing.T) {
+		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminRoleID, "users:update").Return(true, nil).Once()
+
+		justification := "Violation of terms"
+		userStoreMock.On("BlockUser", mock.Anything, targetUserID, justification).Return(nil).Once()
+
+		payload := map[string]string{
+			"block_justification": justification,
+		}
+		body, _ := json.Marshal(payload)
+
+		req, _ := http.NewRequest(http.MethodPut, "/v1/user/"+targetUserID.String()+"/block", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusNoContent, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("BlockUserHandler_NotFound", func(t *testing.T) {
+		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminRoleID, "users:update").Return(true, nil).Once()
+
+		justification := "Violation of terms"
+		userStoreMock.On("BlockUser", mock.Anything, targetUserID, justification).Return(shared_errors.ErrNotFound).Once()
+
+		payload := map[string]string{"block_justification": justification}
+		body, _ := json.Marshal(payload)
+
+		req, _ := http.NewRequest(http.MethodPut, "/v1/user/"+targetUserID.String()+"/block", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusNotFound, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
 }
 
 func TestResetPasswordHandler(t *testing.T) {

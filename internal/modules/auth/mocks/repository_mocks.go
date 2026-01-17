@@ -165,6 +165,11 @@ func (m *UserStoreMock) UpdateActivationCode(ctx context.Context, userID uuid.UU
 	return args.Error(0)
 }
 
+func (m *UserStoreMock) BlockUser(ctx context.Context, userID uuid.UUID, justification string) error {
+	args := m.Called(ctx, userID, justification)
+	return args.Error(0)
+}
+
 // ROLE MOCK FUNCTIONS
 func (m *RoleStoreMock) GetByName(ctx context.Context, name string) (*authdomain.Roles, error) {
 	args := m.Called(ctx, name)

@@ -1283,3 +1283,40 @@ func (h *AuthHandlers) ChangePasswordHandler(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 
 }
+
+// @Summary		Block a user
+// @Description	Blocks a user and provides a justification.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string					true	"User ID (UUID)"
+// @Param			payload	body		BlockUserPayload		true	"Block justification"
+// @Success		204		{object}	nil						"User blocked successfully"
+// @Failure		400		{object}	object{error=string}	"Bad Request"
+// @Failure		404		{object}	object{error=string}	"Not Found"
+// @Failure		500		{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/{id}/block [put]
+func (h *AuthHandlers) BlockUserHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	var payload BlockUserPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	if err := h.services.UserServices.BlockUser(ctx, id, payload.BlockJustification); err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}

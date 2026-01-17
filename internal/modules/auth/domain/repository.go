@@ -33,6 +33,7 @@ type UserRepository interface {
 	GetAllClients(ctx context.Context) ([]*Users, error)
 	UpgradePassword(ctx context.Context, user *Users) error
 	UpdateActivationCode(ctx context.Context, userID uuid.UUID, token string, invitationExp time.Duration) error
+	BlockUser(ctx context.Context, userID uuid.UUID, justification string) error
 }
 
 type RolesRepository interface {

@@ -263,3 +263,7 @@ type OAuthLoginPayload struct {
 type RenewTokenPayload struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
+
+type BlockUserPayload struct {
+	BlockJustification string `json:"block_justification" binding:"required"`
+}
