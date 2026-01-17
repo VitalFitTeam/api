@@ -85,3 +85,7 @@ func (s *ProductsService) GetPublicBranchServices(ctx context.Context, branchID 
 func (s *ProductsService) GetServiceImagesAndBanners(ctx context.Context, serviceID uuid.UUID) (*productsdomain.Service, error) {
 	return s.store.Products.GetServiceImagesAndBanners(ctx, serviceID)
 }
+
+func (s *ProductsService) GetClientBalances(ctx context.Context, userID uuid.UUID) ([]productsdomain.ClientServiceBalance, error) {
+	return s.store.Products.GetClientBalances(ctx, userID)
+}

@@ -36,6 +36,16 @@ func (s *ProductsStore) GetClientBalance(ctx context.Context, userID uuid.UUID, 
 	return &clientBalance, nil
 }
 
+func (s *ProductsStore) GetClientBalances(ctx context.Context, userID uuid.UUID) ([]productsdomain.ClientServiceBalance, error) {
+	var clientBalances []productsdomain.ClientServiceBalance
+	err := s.db.WithContext(ctx).
+		Preload("Service").
+		Where("user_id = ?", userID).
+		Find(&clientBalances).Error
+
+	return clientBalances, err
+}
+
 func (s *ProductsStore) SpendClientBalance(ctx context.Context, userID uuid.UUID, serviceID uuid.UUID) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		result := tx.Model(&productsdomain.ClientServiceBalance{}).

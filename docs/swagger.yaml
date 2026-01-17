@@ -2018,6 +2018,19 @@ definitions:
       value:
         type: string
     type: object
+  productsdomain.ClientServiceBalance:
+    properties:
+      balance:
+        type: integer
+      service:
+        $ref: '#/definitions/productsdomain.Service'
+      service_id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
   productsdomain.Service:
     properties:
       banners:
@@ -11113,6 +11126,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: List all services
+      tags:
+      - Services
+  /services/balances:
+    get:
+      description: Retrieves all service balances for a specific user.
+      parameters:
+      - description: User UUID (Required for non-clients)
+        in: query
+        name: user_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of client service balances
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/productsdomain.ClientServiceBalance'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Client Balances
       tags:
       - Services
   /services/categories:
