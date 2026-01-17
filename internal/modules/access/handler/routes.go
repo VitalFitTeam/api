@@ -9,6 +9,7 @@ import (
 type AccessHandlerInterface interface {
 	AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	CheckInHandler(c *gin.Context)
+	CheckInByUserIDHandler(c *gin.Context)
 	GetClientAttendanceHistoryHandler(c *gin.Context)
 	GetClientServiceUsageHandler(c *gin.Context)
 	GetClassAttendanceHistoryHandler(c *gin.Context)
@@ -30,6 +31,7 @@ func (r *AccessHandler) AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware
 	accessGroup.Use(m.AuditLogMiddleware())
 
 	accessGroup.POST("/check-in", m.RBACPermission("access:check_in"), r.CheckInHandler)
+	accessGroup.POST("/check-in/:id", m.RBACPermission("access:check_in"), r.CheckInByUserIDHandler)
 
 	accessGroup.GET("/classes/:id/attendance", m.RBACPermission("access:view_class_history"), r.GetClassAttendanceHistoryHandler)
 

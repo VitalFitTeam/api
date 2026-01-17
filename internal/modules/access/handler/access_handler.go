@@ -68,6 +68,57 @@ func (h *AccessHandler) CheckInHandler(c *gin.Context) {
 
 }
 
+// @Summary		Process User Check-In by ID
+// @Description	Processes a user's check-in attempt via User ID (param) and branch ID (body).
+// @Tags			Access
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string					true	"User UUID"
+// @Param			payload	body		CheckInPayload			true	"Check-In Payload with Branch ID"
+// @Success		200		{object}	accessdomain.CheckInResponse	"Access Granted"
+// @Failure		400		{object}	map[string]interface{}			"Bad Request"
+// @Failure		401		{object}	map[string]interface{}			"Unauthorized"
+// @Failure		402		{object}	map[string]interface{}			"Payment Required"
+// @Failure		403		{object}	map[string]interface{}			"Forbidden"
+// @Failure		500		{object}	map[string]interface{}			"Internal Server Error"
+// @Router			/access/check-in/{id} [post]
+func (h *AccessHandler) CheckInByUserIDHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	var payload CheckInPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	branchID, err := uuid.Parse(payload.BranchID)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	resp, err := h.services.AccessServices.ProcessCheckIn(ctx, userID, branchID)
+	if err != nil {
+		switch {
+		case errors.Is(err, shared_errors.ErrPayment):
+			h.services.LogErrors.PaymentRequiredResponse(c)
+		case strings.Contains(err.Error(), "access denied"):
+			h.services.LogErrors.ForbiddenResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
 // @Summary		Get Client Attendance History
 // @Description	Retrieves the complete attendance history for a specific client, ordered by date with pagination
 // @Tags			Access
