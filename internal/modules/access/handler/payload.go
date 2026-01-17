@@ -9,6 +9,7 @@ import (
 
 type CheckInPayload struct {
 	QrJWT    string `json:"qr_jwt,omitempty"`
+	UserID   string `json:"user_id,omitempty"`
 	BranchID string `json:"branch_id"`
 }
 

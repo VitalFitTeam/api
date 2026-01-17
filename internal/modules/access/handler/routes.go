@@ -32,7 +32,7 @@ func (r *AccessHandler) AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware
 	accessGroup.Use(m.AuditLogMiddleware())
 
 	accessGroup.POST("/check-in", m.RBACPermission("access:check_in"), r.CheckInHandler)
-	accessGroup.POST("/check-in/:id", m.RBACPermission("access:check_in"), r.CheckInByUserIDHandler)
+	accessGroup.POST("/check-in/manual", m.RBACPermission("access:check_in"), r.CheckInByUserIDHandler)
 
 	accessGroup.GET("/scores", m.RBACPermission("reports:view_attendance"), r.GetClientScoresHandler)
 	accessGroup.GET("/classes/:id/attendance", m.RBACPermission("access:view_class_history"), r.GetClassAttendanceHistoryHandler)

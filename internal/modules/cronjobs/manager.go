@@ -78,5 +78,4 @@ func (m *Manager) registerRoutes() {
 	if err != nil {
 		m.logger.Errorw("Error on update client scores cronjob", "error", err)
 	}
-	m.UpdateClientScoresCronjob()
 }

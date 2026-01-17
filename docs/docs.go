@@ -98,14 +98,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/access/check-in/{id}": {
+        "/access/check-in/manual": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Processes a user's check-in attempt via User ID (param) and branch ID (body).",
+                "description": "Processes a user's check-in attempt via User ID and branch ID (body).",
                 "consumes": [
                     "application/json"
                 ],
@@ -118,14 +118,7 @@ const docTemplate = `{
                 "summary": "Process User Check-In by ID",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "User UUID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Check-In Payload with Branch ID",
+                        "description": "Check-In Payload with User ID and Branch ID",
                         "name": "payload",
                         "in": "body",
                         "required": true,
@@ -14590,6 +14583,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "qr_jwt": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
