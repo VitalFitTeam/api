@@ -31,8 +31,10 @@ func (r *AccessStore) GetClassAttendanceHistory(ctx context.Context, classID uui
 	var attendances []*accessdomain.AttendanceLog
 
 	query := r.db.WithContext(ctx).
+		Model(&accessdomain.AttendanceLog{}).
 		Preload("User").
 		Preload("Service").
+		Preload("Class").
 		Where("schedule_id = ?", classID)
 
 	// Apply date filters

@@ -11,6 +11,7 @@ type AccessHandlerInterface interface {
 	CheckInHandler(c *gin.Context)
 	GetClientAttendanceHistoryHandler(c *gin.Context)
 	GetClientServiceUsageHandler(c *gin.Context)
+	GetClassAttendanceHistoryHandler(c *gin.Context)
 }
 
 type AccessHandler struct {
@@ -29,6 +30,8 @@ func (r *AccessHandler) AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware
 	accessGroup.Use(m.AuditLogMiddleware())
 
 	accessGroup.POST("/check-in", m.RBACPermission("access:check_in"), r.CheckInHandler)
+
+	accessGroup.GET("/classes/:id/attendance", m.RBACPermission("access:view_class_history"), r.GetClassAttendanceHistoryHandler)
 
 	// Client attendance and service usage routes
 	clientsGroup := rg.Group("/clients")

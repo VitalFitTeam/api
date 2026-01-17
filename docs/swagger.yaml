@@ -2730,6 +2730,54 @@ paths:
       summary: Process User Check-In
       tags:
       - Access
+  /access/classes/{id}/attendance:
+    get:
+      description: Retrieves the attendance history for a specific class
+      parameters:
+      - description: Class UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date filter (RFC3339 format)
+        in: query
+        name: start_date
+        type: string
+      - description: End date filter (RFC3339 format)
+        in: query
+        name: end_date
+        type: string
+      - description: Filter by status (Attended, NoShow, Cancelled)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/accesshandler.AttendanceHistoryResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Class Attendance History
+      tags:
+      - Access
   /admin/permissions:
     get:
       description: Lists all permissions defined in the system (from the seeder) that
