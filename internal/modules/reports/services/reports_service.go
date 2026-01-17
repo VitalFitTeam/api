@@ -255,6 +255,7 @@ func (s *ReportService) DetectAndFlagChurnRisk(ctx context.Context) ([]reportdom
 				UserID:            m.UserID,
 				Name:              m.FirstName + " " + m.LastName,
 				Email:             m.Email,
+				Phone:             m.Phone,
 				RiskScore:         riskScore,
 				Factors:           factors,
 				PreferredBranchID: m.PreferredBranchID,

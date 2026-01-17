@@ -111,6 +111,7 @@ type ClientChurnMetrics struct {
 	FirstName          string     `json:"first_name"`
 	LastName           string     `json:"last_name"`
 	Email              string     `json:"email"`
+	Phone              string     `json:"phone"`
 	LastCheckIn        *time.Time `json:"last_check_in"`
 	CurrentMonthVisits int64      `json:"current_month_visits"`
 	LastMonthVisits    int64      `json:"last_month_visits"`
@@ -123,6 +124,7 @@ type ChurnRiskAnalysis struct {
 	UserID            uuid.UUID  `json:"user_id"`
 	Name              string     `json:"name"`
 	Email             string     `json:"email"`
+	Phone             string     `json:"phone"`
 	RiskScore         int        `json:"risk_score"`
 	Factors           []string   `json:"factors"`
 	PreferredBranchID *uuid.UUID `json:"preferred_branch_id"`
