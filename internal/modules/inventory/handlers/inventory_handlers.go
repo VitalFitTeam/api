@@ -106,6 +106,48 @@ func (h *InventoryHandlers) GetEquipmentsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// @Summary		Export Equipment Types (CSV)
+// @Description	Exports all equipment types in the global catalog as a CSV file.
+// @Tags			Equipment
+// @Security		ApiKeyAuth
+// @Produce		text/csv
+// @Success		200	{file}		file	"equipment_catalog.csv"
+// @Failure		500	{object}	object{error=string}
+// @Router			/equipment-types/export [get]
+func (h *InventoryHandlers) ExportEquipmentsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	fq := pagination.PaginatedFeedQuery{
+		Limit: 1000000,
+		Page:  1,
+		Sort:  "desc",
+	}
+
+	equipments, err := h.services.EquipmentServices.GetEquipments(ctx, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=equipment_catalog.csv")
+	c.Header("Content-Type", "text/csv")
+
+	writer := csv.NewWriter(c.Writer)
+	defer writer.Flush()
+
+	writer.Write([]string{"ID", "Name", "Category", "Brand", "Model", "Description"})
+
+	for _, e := range equipments.Equipments {
+		writer.Write([]string{
+			e.EquipmentID.String(),
+			e.Name,
+			string(e.Category),
+			e.Brand,
+			e.Model,
+			e.Description,
+		})
+	}
+}
+
 // @Summary		Get equipment type by ID
 // @Description	Retrieves a single equipment type from the global catalog by its UUID.
 // @Tags			Equipment

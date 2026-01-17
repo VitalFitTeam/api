@@ -12,6 +12,7 @@ type InventoryHandlersInterface interface {
 	// Equipment
 	CreateEquipmentHandler(c *gin.Context)
 	GetEquipmentsHandler(c *gin.Context)
+	ExportEquipmentsHandler(c *gin.Context)
 	UpdateEquipmentHandler(c *gin.Context)
 	DeleteEquipmentHandler(c *gin.Context)
 	GetEquipmentByID(c *gin.Context)
@@ -45,6 +46,7 @@ func (r *InventoryHandlers) InventoryRoutes(rg *gin.RouterGroup, m *auth.AuthMid
 	{
 		equipmentGroup.POST("", r.CreateEquipmentHandler)
 		equipmentGroup.GET("", r.GetEquipmentsHandler)
+		equipmentGroup.GET("/export", r.ExportEquipmentsHandler)
 		equipmentGroup.PUT("/:id", r.UpdateEquipmentHandler)
 		equipmentGroup.GET("/:id", r.GetEquipmentByID)
 		equipmentGroup.DELETE("/:id", r.DeleteEquipmentHandler)

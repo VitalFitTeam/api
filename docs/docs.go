@@ -6450,6 +6450,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/equipment-types/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all equipment types in the global catalog as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Equipment"
+                ],
+                "summary": "Export Equipment Types (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "equipment_catalog.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/equipment-types/{id}": {
             "get": {
                 "security": [
