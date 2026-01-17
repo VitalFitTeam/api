@@ -3924,6 +3924,62 @@
                 }
             }
         },
+        "/branches/{id}/equipment/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all equipment items for a given branch as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Branch Inventory"
+                ],
+                "summary": "Export Branch Inventory (CSV)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "branch_inventory.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/branches/{id}/equipment/{inventoryId}": {
             "get": {
                 "security": [
