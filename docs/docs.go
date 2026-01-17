@@ -9099,6 +9099,38 @@ const docTemplate = `{
                 }
             }
         },
+        "/packages/export": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Exports all packages as a CSV file.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Packages"
+                ],
+                "summary": "Export Packages (CSV)",
+                "responses": {
+                    "200": {
+                        "description": "packages.csv",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/packages/{id}": {
             "get": {
                 "security": [
