@@ -125,14 +125,14 @@ func (h *AccessHandler) CheckInByUserIDHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Accept			multipart/form-data
 // @Produce		json
-// @Param			checkin_photo	formData	file	true	"Check-in photo"
-// @Param			branch_id		formData	string	true	"Branch UUID"
-// @Success		200		{object}	accessdomain.CheckInResponse	"Access Granted"
-// @Failure		400		{object}	map[string]interface{}			"Bad Request"
-// @Failure		401		{object}	map[string]interface{}			"Unauthorized"
-// @Failure		402		{object}	map[string]interface{}			"Payment Required"
-// @Failure		403		{object}	map[string]interface{}			"Forbidden"
-// @Failure		500		{object}	map[string]interface{}			"Internal Server Error"
+// @Param			checkin_photo	formData	file							true	"Check-in photo"
+// @Param			branch_id		formData	string							true	"Branch UUID"
+// @Success		200				{object}	accessdomain.CheckInResponse	"Access Granted"
+// @Failure		400				{object}	map[string]interface{}			"Bad Request"
+// @Failure		401				{object}	map[string]interface{}			"Unauthorized"
+// @Failure		402				{object}	map[string]interface{}			"Payment Required"
+// @Failure		403				{object}	map[string]interface{}			"Forbidden"
+// @Failure		500				{object}	map[string]interface{}			"Internal Server Error"
 // @Router			/access/check-in/face [post]
 func (h *AccessHandler) CheckInFaceHandler(c *gin.Context) {
 	ctx := c.Request.Context()

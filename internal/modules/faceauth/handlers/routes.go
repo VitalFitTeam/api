@@ -7,7 +7,7 @@ import (
 )
 
 type FaceAuthHandlerInterface interface {
-	FaceAuth(rg *gin.RouterGroup, m *auth.AuthMiddleware)
+	FaceAuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 	EnrollFaceHandler(c *gin.Context)
 }
 
@@ -19,7 +19,7 @@ func NewFaceAuthHandler(services appservices.Services) *FaceAuthHandler {
 	return &FaceAuthHandler{services: services}
 }
 
-func (r *FaceAuthHandler) FaceAuth(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+func (r *FaceAuthHandler) FaceAuthRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	faceAuthGroup := rg.Group("/face-auth")
 
 	// Rutas protegidas (requieren login previo)
