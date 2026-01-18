@@ -126,3 +126,19 @@ func (s *InstructorServices) GetAssignedClientsTotal(ctx context.Context, instru
 	}
 	return total, nil
 }
+
+func (s *InstructorServices) GetStudentsTodayCount(ctx context.Context, instructorID uuid.UUID) (int64, error) {
+	count, err := s.store.Instructor.GetStudentsTodayCount(ctx, instructorID)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (s *InstructorServices) GetAttendanceRateToday(ctx context.Context, instructorID uuid.UUID) (float64, error) {
+	rate, err := s.store.Instructor.GetAttendanceRateToday(ctx, instructorID)
+	if err != nil {
+		return 0, err
+	}
+	return rate, nil
+}

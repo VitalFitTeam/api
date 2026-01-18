@@ -11019,6 +11019,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/instructors/attendance-rate": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the attendance rate (Attended / Confirmed Bookings) for the instructor's classes today.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Instructor"
+                ],
+                "summary": "Get Instructor Attendance Rate Today",
+                "responses": {
+                    "200": {
+                        "description": "Attendance rate percentage",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "number",
+                                    "format": "float64"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/instructors/classes-count": {
             "get": {
                 "security": [
@@ -11201,6 +11254,59 @@ const docTemplate = `{
                             "properties": {
                                 "data": {
                                     "$ref": "#/definitions/reportdomain.KPICard"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/instructors/students-today": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the total number of students with confirmed bookings for the instructor's classes today.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports Instructor"
+                ],
+                "summary": "Get Instructor Students Today Count",
+                "responses": {
+                    "200": {
+                        "description": "Students count",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "integer",
+                                    "format": "int64"
                                 }
                             }
                         }

@@ -384,3 +384,53 @@ func (s *InstructorStore) GetAssignedClientsTotal(ctx context.Context, instructo
 
 	return count, nil
 }
+
+func (s *InstructorStore) GetStudentsTodayCount(ctx context.Context, instructorID uuid.UUID) (int64, error) {
+	var count int64
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfDay := startOfDay.AddDate(0, 0, 1).Add(-time.Nanosecond)
+
+	err := s.db.WithContext(ctx).Table("bookings b").
+		Joins("JOIN classes c ON c.class_id = b.class_id").
+		Where("c.instructor_id = ?", instructorID).
+		Where("c.starts_at BETWEEN ? AND ?", startOfDay, endOfDay).
+		Where("b.status = 'Confirmed'").
+		Count(&count).Error
+
+	return count, err
+}
+
+func (s *InstructorStore) GetAttendanceRateToday(ctx context.Context, instructorID uuid.UUID) (float64, error) {
+	var totalBookings int64
+	var attendedCount int64
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfDay := startOfDay.AddDate(0, 0, 1).Add(-time.Nanosecond)
+
+	err := s.db.WithContext(ctx).Table("bookings b").
+		Joins("JOIN classes c ON c.class_id = b.class_id").
+		Where("c.instructor_id = ?", instructorID).
+		Where("c.starts_at BETWEEN ? AND ?", startOfDay, endOfDay).
+		Where("b.status = 'Confirmed'").
+		Count(&totalBookings).Error
+	if err != nil {
+		return 0, err
+	}
+
+	if totalBookings == 0 {
+		return 0, nil
+	}
+
+	err = s.db.WithContext(ctx).Table("attendance_log al").
+		Joins("JOIN classes c ON c.class_id = al.schedule_id").
+		Where("c.instructor_id = ?", instructorID).
+		Where("c.starts_at BETWEEN ? AND ?", startOfDay, endOfDay).
+		Where("al.status = 'Attended'").
+		Count(&attendedCount).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return (float64(attendedCount) / float64(totalBookings)) * 100, nil
+}
