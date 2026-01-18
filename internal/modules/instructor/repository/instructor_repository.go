@@ -321,6 +321,7 @@ func (s *InstructorStore) GetAssignedClients(ctx context.Context, instructorID u
 			u.last_name,
 			u.email,
 			u.phone,
+			u.profile_picture_url,
 			COUNT(b.booking_id) as total_bookings
 		FROM bookings b
 		JOIN classes c ON b.class_id = c.class_id
@@ -339,7 +340,7 @@ func (s *InstructorStore) GetAssignedClients(ctx context.Context, instructorID u
 		args = append(args, searchQuery, searchQuery, searchQuery, searchQuery)
 	}
 
-	query += ` GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone`
+	query += ` GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone, u.profile_picture_url`
 	query += ` ORDER BY total_bookings ` + fq.Sort
 	query += ` LIMIT ? OFFSET ?`
 	args = append(args, fq.Limit, (fq.Page-1)*fq.Limit)

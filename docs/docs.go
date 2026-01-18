@@ -16711,6 +16711,9 @@ const docTemplate = `{
                 "phone": {
                     "type": "string"
                 },
+                "profile_picture_url": {
+                    "type": "string"
+                },
                 "total_bookings": {
                     "type": "integer"
                 },
