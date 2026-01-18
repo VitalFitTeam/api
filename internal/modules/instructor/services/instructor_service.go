@@ -99,3 +99,19 @@ func (s *InstructorServices) AssignInstructorSpecialty(ctx context.Context, inst
 func (s *InstructorServices) DeleteInstructorSpecialty(ctx context.Context, instructorID uuid.UUID, specialtyID uuid.UUID) error {
 	return s.store.Instructor.DeleteInstructorSpecialty(ctx, instructorID, specialtyID)
 }
+
+func (s *InstructorServices) GetAssignedClients(ctx context.Context, instructorID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*instructordomain.AssignedClient, error) {
+	clients, err := s.store.Instructor.GetAssignedClients(ctx, instructorID, fq)
+	if err != nil {
+		return nil, err
+	}
+	return clients, nil
+}
+
+func (s *InstructorServices) GetAssignedClientsTotal(ctx context.Context, instructorID uuid.UUID, fq pagination.PaginatedFeedQuery) (int64, error) {
+	total, err := s.store.Instructor.GetAssignedClientsTotal(ctx, instructorID, fq)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}

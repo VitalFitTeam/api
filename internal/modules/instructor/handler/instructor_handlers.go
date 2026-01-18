@@ -561,3 +561,80 @@ func (h *InstructorHandlers) DeleteInstructorSpecialtyHandler(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 
 }
+
+// @Summary		Get assigned clients for an instructor
+// @Description	Retrieves a paginated list of clients who have had at least one confirmed booking with this instructor. Clients are sorted by total bookings count.
+// @Tags			Instructors
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string																						true	"Instructor UUID"
+// @Param			limit	query		int																							false	"Number of results per page (default: 10)"
+// @Param			page	query		int																							false	"Page number (default: 1)"
+// @Param			sort	query		string																						false	"Sort order by total_bookings (asc/desc, default: desc)"
+// @Param			search	query		string																						false	"Search term for first name, last name, or email"
+// @Success		200		{object}	object{data=[]AssignedClientResponse,count=int64,total=int64,next=string,previous=string}	"Paginated list of assigned clients"
+// @Failure		400		{object}	map[string]interface{}																		"Bad Request: Invalid UUID or query parameters"
+// @Failure		500		{object}	map[string]interface{}																		"Internal Server Error"
+// @Router			/instructor/{id}/clients [get]
+func (h *InstructorHandlers) GetAssignedClientsHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	instructorID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Search: "",
+		Sort:   "desc",
+	}
+	fq, err = fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	clients, err := h.services.InstructorServices.GetAssignedClients(ctx, instructorID, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	response := make([]*AssignedClientResponse, 0, len(clients))
+	for _, client := range clients {
+		response = append(response, &AssignedClientResponse{
+			UserID:        client.UserID,
+			FirstName:     client.FirstName,
+			LastName:      client.LastName,
+			Email:         client.Email,
+			Phone:         client.Phone,
+			TotalBookings: client.TotalBookings,
+		})
+	}
+
+	total, err := h.services.InstructorServices.GetAssignedClientsTotal(ctx, instructorID, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/instructor/%s/clients?limit=%d&page=%d&sort=%s", instructorID, fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage <= 0 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/instructor/%s/clients?limit=%d&page=%d&sort=%s", instructorID, fq.Limit, previousPage, fq.Sort)
+
+	pagResponse := pagination.PaginatedResponseTotal[*AssignedClientResponse]{
+		Data:     response,
+		Count:    int64(len(clients)),
+		Next:     nextURL,
+		Previous: previousURL,
+		Total:    total,
+	}
+	c.JSON(http.StatusOK, pagResponse)
+}
