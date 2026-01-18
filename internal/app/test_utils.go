@@ -52,7 +52,7 @@ func NewTestApplication(t *testing.T, cfg *config.Config) *application {
 	cache := cache.NewRedisStorage(rdb)
 	pushNoti := notifications.NewMockPushService()
 
-	mockServices := appservices.NewServices(mockStore, logger, *cfg, testAuth, mailer, cache, *pushNoti)
+	mockServices := appservices.NewServices(mockStore, logger, *cfg, testAuth, mailer, cache, *pushNoti, nil)
 	mockHandlers := apphandlers.NewAppHandlers(mockServices)
 
 	return &application{
