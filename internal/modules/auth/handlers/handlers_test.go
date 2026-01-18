@@ -422,6 +422,26 @@ func TestRegisterUserStaffHandler(t *testing.T) {
 		app.CheckResponseCode(t, http.StatusCreated, rr.Code)
 	})
 
+	t.Run("should fail when branch_admin tries to register super_admin", func(t *testing.T) {
+		// Middleware checks
+		userStoreMock.On("GetByID", mock.Anything, authorizedUser.UserID).Return(authorizedUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, authorizedUser.Role.RoleID, "users:create").Return(true, nil).Once()
+
+		payload := map[string]string{
+			"first_name": "New", "last_name": "Admin", "email": "new.admin@example.com",
+			"phone": "987654321", "identity_document": "doc-admin", "password": "StaffPassword123!",
+			"birth_date": "1995-01-01", "gender": "female", "role_name": "super_admin",
+		}
+		body, _ := json.Marshal(payload)
+
+		req, _ := http.NewRequest(http.MethodPost, "/v1/auth/register-staff", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+authorizedToken)
+
+		rr := app.ExecuteRequest(req, mux)
+		app.CheckResponseCode(t, http.StatusForbidden, rr.Code)
+	})
+
 	staffRoles := []string{"instructor", "accountant", "recepcionist", "branch_admin", "super_admin"}
 
 	for _, role := range staffRoles {
@@ -567,6 +587,8 @@ func TestAdminRoleRoutes(t *testing.T) {
 		roleID := uuid.New()
 		setupAdminMiddleware()
 		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "roles:update").Return(true, nil).Once()
+		mockExistingRole := &authdomain.Roles{RoleID: roleID, Name: "custom-role"}
+		roleStoreMock.On("GetRoleByID", mock.Anything, roleID).Return(mockExistingRole, nil).Once()
 		roleStoreMock.On("Update", mock.Anything, mock.AnythingOfType("*authdomain.Roles")).Return(nil).Once()
 
 		payload := map[string]interface{}{
@@ -581,6 +603,29 @@ func TestAdminRoleRoutes(t *testing.T) {
 		rr := app.ExecuteRequest(req, mux)
 
 		assert.Equal(t, http.StatusNoContent, rr.Code)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("UpdateRole_SystemRole_NameChange", func(t *testing.T) {
+		roleID := uuid.New()
+		setupAdminMiddleware()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminUser.Role.RoleID, "roles:update").Return(true, nil).Once()
+
+		systemRole := &authdomain.Roles{RoleID: roleID, Name: "super_admin"}
+		roleStoreMock.On("GetRoleByID", mock.Anything, roleID).Return(systemRole, nil).Once()
+
+		payload := map[string]interface{}{
+			"name":        "new-admin-name",
+			"description": "Trying to change system role name",
+		}
+		body, _ := json.Marshal(payload)
+
+		req, _ := http.NewRequest(http.MethodPut, "/v1/admin/roles/"+roleID.String(), bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
 		roleStoreMock.AssertExpectations(t)
 	})
 
