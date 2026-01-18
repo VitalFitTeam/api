@@ -237,6 +237,7 @@ type UserResponse struct {
 	Email            string    `json:"email"`
 	IdentityDocument string    `json:"identity_document"`
 	IsValidated      bool      `json:"is_validated"`
+	ProfilePicture   string    `json:"profile_picture_url,omitempty"`
 }
 
 type GetUserResponse struct {

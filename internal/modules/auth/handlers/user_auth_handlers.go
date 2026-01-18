@@ -1006,6 +1006,7 @@ func (h *AuthHandlers) GetClientsHandler(c *gin.Context) {
 			RoleName:         user.Role.Name,
 			IdentityDocument: user.IdentityDocument,
 			IsValidated:      user.IsValidated,
+			ProfilePicture:   user.ProfilePictureURL,
 		}
 		responseList = append(responseList, resp)
 	}
