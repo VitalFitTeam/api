@@ -21,6 +21,9 @@ type InstructorHandlersInterface interface {
 	RemoveInstructorFromBranchHandler(c *gin.Context)
 
 	AssignInstructorSpecialtyHandler(c *gin.Context)
+	DeleteInstructorSpecialtyHandler(c *gin.Context)
+
+	GetAssignedClientsHandler(c *gin.Context)
 }
 
 type InstructorHandlers struct {
@@ -46,6 +49,7 @@ func (r *InstructorHandlers) InstructorRoutes(rg *gin.RouterGroup, m *auth.AuthM
 		instructorGroup.DELETE("/:id", m.RBACPermission("instructors:delete"), r.DeleteInstructorHandler)
 		instructorGroup.POST("/:id/specialty", m.RBACPermission("instructors:update"), r.AssignInstructorSpecialtyHandler)
 		instructorGroup.DELETE("/:id/specialty/:specialty_id", m.RBACPermission("instructors:update"), r.DeleteInstructorSpecialtyHandler)
+		instructorGroup.GET("/:id/clients", m.RBACPermission("instructors:list"), r.GetAssignedClientsHandler)
 	}
 
 	branchInstructorGroup := rg.Group("/branches/:id/instructor")

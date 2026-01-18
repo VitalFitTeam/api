@@ -52,3 +52,12 @@ type InstructorSummary struct {
 	Actives int64 `json:"actives"`
 	Blocked int64 `json:"blocked"`
 }
+
+type AssignedClient struct {
+	UserID        uuid.UUID `json:"user_id"`
+	FirstName     string    `json:"first_name"`
+	LastName      string    `json:"last_name"`
+	Email         string    `json:"email"`
+	Phone         string    `json:"phone"`
+	TotalBookings int64     `json:"total_bookings"`
+}
