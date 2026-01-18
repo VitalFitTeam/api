@@ -89,6 +89,8 @@ type Users struct {
 	BlockJustification string         `gorm:"type:text" json:"block_justification"`
 	ProfilePictureURL  string         `gorm:"type:varchar(255)" json:"profile_picture_url"`
 	IsValidated        bool           `gorm:"default:false" json:"is_validated"`
+	FaceID             *string        `gorm:"type:varchar(255);unique" json:"face_id,omitempty"`
+	FaceAuthEnabled    bool           `gorm:"default:false" json:"face_auth_enabled"`
 	ClientProfile      ClientProfiles `gorm:"foreignKey:UserID;references:UserID"`
 
 	ClientMembership *membershipsdomain.ClientMembership `gorm:"foreignKey:UserID" json:"client_membership,omitempty"`
