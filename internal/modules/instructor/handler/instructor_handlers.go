@@ -607,12 +607,13 @@ func (h *InstructorHandlers) GetAssignedClientsHandler(c *gin.Context) {
 	response := make([]*AssignedClientResponse, 0, len(clients))
 	for _, client := range clients {
 		response = append(response, &AssignedClientResponse{
-			UserID:        client.UserID,
-			FirstName:     client.FirstName,
-			LastName:      client.LastName,
-			Email:         client.Email,
-			Phone:         client.Phone,
-			TotalBookings: client.TotalBookings,
+			UserID:            client.UserID,
+			FirstName:         client.FirstName,
+			LastName:          client.LastName,
+			Email:             client.Email,
+			Phone:             client.Phone,
+			TotalBookings:     client.TotalBookings,
+			ProfilePictureURL: client.ProfilePictureURL,
 		})
 	}
 
