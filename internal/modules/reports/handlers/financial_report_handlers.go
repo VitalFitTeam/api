@@ -6,7 +6,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-pdf/fpdf"
 	"github.com/google/uuid"
+	"github.com/xuri/excelize/v2"
 )
 
 // @Summary		Get Weekly Revenue KPI
@@ -35,14 +37,17 @@ func (h *ReportHanlders) GetWeeklyRevenueKPIHandler(c *gin.Context) {
 }
 
 // @Summary		Export Financial Report (CSV)
-// @Description	Exports a detailed financial report as a CSV file.
+// @Description	Exports a detailed financial report. Supports CSV, Excel, and PDF formats.
 // @Tags			Reports Financial
 // @Security		ApiKeyAuth
 // @Produce		text/csv
+// @Produce		application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Produce		application/pdf
 // @Param			branch_id	query		string					false	"Filter by Branch UUID"
 // @Param			start		query		string					false	"Start date (YYYY-MM-DD)"
 // @Param			end			query		string					false	"End date (YYYY-MM-DD)"
-// @Success		200			{file}		file					"financial_report.csv"
+// @Param			type		query		string					false	"Export format: csv, excel, pdf"	default(csv)
+// @Success		200			{file}		file					"financial_report"
 // @Failure		500			{object}	object{error=string}	"Internal Server Error"
 // @Router			/reports/export/financial [get]
 func (h *ReportHanlders) ExportFinancialReportHandler(c *gin.Context) {
@@ -54,6 +59,7 @@ func (h *ReportHanlders) ExportFinancialReportHandler(c *gin.Context) {
 			branchID = &id
 		}
 	}
+	exportType := c.DefaultQuery("type", "csv")
 
 	data, err := h.services.ReportServices.GetFinancialReportData(ctx, branchID, start, end)
 	if err != nil {
@@ -61,38 +67,113 @@ func (h *ReportHanlders) ExportFinancialReportHandler(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Disposition", "attachment; filename=financial_report.csv")
-	c.Header("Content-Type", "text/csv")
+	switch exportType {
+	case "excel":
+		f := excelize.NewFile()
+		defer func() {
+			if err := f.Close(); err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+			}
+		}()
 
-	writer := csv.NewWriter(c.Writer)
-	defer writer.Flush()
+		sheetName := "Financial Report"
+		index, _ := f.NewSheet(sheetName)
+		f.SetActiveSheet(index)
+		f.DeleteSheet("Sheet1")
 
-	// Header
-	writer.Write([]string{"Date", "Branch", "Client", "Category", "Concept", "Amount", "Status"})
+		headers := []interface{}{"Date", "Branch", "Client", "Category", "Concept", "Amount", "Status"}
+		f.SetSheetRow(sheetName, "A1", &headers)
 
-	for _, row := range data {
-		writer.Write([]string{
-			row.Date.Format("2006-01-02"),
-			row.BranchName,
-			row.ClientName,
-			row.Category,
-			row.Concept,
-			row.Amount.StringFixed(2),
-			row.Status,
-		})
+		for i, row := range data {
+			cell, _ := excelize.CoordinatesToCellName(1, i+2)
+			values := []interface{}{
+				row.Date.Format("2006-01-02"),
+				row.BranchName,
+				row.ClientName,
+				row.Category,
+				row.Concept,
+				row.Amount.InexactFloat64(),
+				row.Status,
+			}
+			f.SetSheetRow(sheetName, cell, &values)
+		}
+
+		c.Header("Content-Disposition", "attachment; filename=financial_report.xlsx")
+		c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		if err := f.Write(c.Writer); err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+
+	case "pdf":
+		pdf := fpdf.New("L", "mm", "A4", "")
+		pdf.AddPage()
+		pdf.SetFont("Arial", "B", 10)
+
+		// Headers
+		headers := []string{"Date", "Branch", "Client", "Category", "Concept", "Amount", "Status"}
+		widths := []float64{25, 40, 50, 30, 50, 30, 30}
+
+		for i, header := range headers {
+			pdf.CellFormat(widths[i], 10, header, "1", 0, "C", false, 0, "")
+		}
+		pdf.Ln(-1)
+
+		pdf.SetFont("Arial", "", 9)
+		for _, row := range data {
+			pdf.CellFormat(widths[0], 8, row.Date.Format("2006-01-02"), "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[1], 8, row.BranchName, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[2], 8, row.ClientName, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[3], 8, row.Category, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[4], 8, row.Concept, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[5], 8, row.Amount.StringFixed(2), "1", 0, "R", false, 0, "")
+			pdf.CellFormat(widths[6], 8, row.Status, "1", 0, "C", false, 0, "")
+			pdf.Ln(-1)
+		}
+
+		c.Header("Content-Disposition", "attachment; filename=financial_report.pdf")
+		c.Header("Content-Type", "application/pdf")
+		if err := pdf.Output(c.Writer); err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+
+	default: // csv
+		c.Header("Content-Disposition", "attachment; filename=financial_report.csv")
+		c.Header("Content-Type", "text/csv")
+
+		writer := csv.NewWriter(c.Writer)
+		defer writer.Flush()
+
+		// Header
+		writer.Write([]string{"Date", "Branch", "Client", "Category", "Concept", "Amount", "Status"})
+
+		for _, row := range data {
+			writer.Write([]string{
+				row.Date.Format("2006-01-02"),
+				row.BranchName,
+				row.ClientName,
+				row.Category,
+				row.Concept,
+				row.Amount.StringFixed(2),
+				row.Status,
+			})
+		}
 	}
 }
 
-// @Summary		Export Client Report (CSV)
-// @Description	Exports a detailed client report including retention metrics, last activity, and risk status.
+// @Summary		Export Client Report
+// @Description	Exports a detailed client report including retention metrics, last activity, and risk status. Supports CSV, Excel, and PDF.
 // @Tags			Reports Financial
 // @Security		ApiKeyAuth
 // @Produce		text/csv
-// @Success		200	{file}		file					"client_report.csv"
-// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Produce		application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Produce		application/pdf
+// @Param			type	query		string					false	"Export format: csv, excel, pdf"	default(csv)
+// @Success		200		{file}		file					"client_report"
+// @Failure		500		{object}	object{error=string}	"Internal Server Error"
 // @Router			/reports/export/clients [get]
 func (h *ReportHanlders) ExportClientReportHandler(c *gin.Context) {
 	ctx := c.Request.Context()
+	exportType := c.DefaultQuery("type", "csv")
 
 	data, err := h.services.ReportServices.GetClientReportData(ctx)
 	if err != nil {
@@ -100,47 +181,140 @@ func (h *ReportHanlders) ExportClientReportHandler(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Disposition", "attachment; filename=client_report.csv")
-	c.Header("Content-Type", "text/csv")
+	switch exportType {
+	case "excel":
+		f := excelize.NewFile()
+		defer func() {
+			if err := f.Close(); err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+			}
+		}()
 
-	writer := csv.NewWriter(c.Writer)
-	defer writer.Flush()
+		sheetName := "Client Report"
+		index, _ := f.NewSheet(sheetName)
+		f.SetActiveSheet(index)
+		f.DeleteSheet("Sheet1")
 
-	// Header
-	writer.Write([]string{"Client Name", "Email", "Phone", "Category", "Last Check-In", "Visits (Current Month)", "Visits (Last Month)", "Membership End Date"})
+		headers := []interface{}{"Client Name", "Email", "Phone", "Category", "Last Check-In", "Visits (Current Month)", "Visits (Last Month)", "Membership End Date"}
+		f.SetSheetRow(sheetName, "A1", &headers)
 
-	for _, row := range data {
-		lastCheckIn := "Never"
-		if row.LastCheckIn != nil {
-			lastCheckIn = row.LastCheckIn.Format("2006-01-02 15:04")
+		for i, row := range data {
+			lastCheckIn := "Never"
+			if row.LastCheckIn != nil {
+				lastCheckIn = row.LastCheckIn.Format("2006-01-02 15:04")
+			}
+			memEndDate := "N/A"
+			if row.MembershipEndDate != nil {
+				memEndDate = row.MembershipEndDate.Format("2006-01-02")
+			}
+
+			cell, _ := excelize.CoordinatesToCellName(1, i+2)
+			values := []interface{}{
+				row.FirstName + " " + row.LastName,
+				row.Email,
+				row.Phone,
+				row.CurrentCategory,
+				lastCheckIn,
+				row.CurrentMonthVisits,
+				row.LastMonthVisits,
+				memEndDate,
+			}
+			f.SetSheetRow(sheetName, cell, &values)
 		}
-		memEndDate := "N/A"
-		if row.MembershipEndDate != nil {
-			memEndDate = row.MembershipEndDate.Format("2006-01-02")
+
+		c.Header("Content-Disposition", "attachment; filename=client_report.xlsx")
+		c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		if err := f.Write(c.Writer); err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
 		}
 
-		writer.Write([]string{
-			row.FirstName + " " + row.LastName,
-			row.Email,
-			row.Phone,
-			row.CurrentCategory,
-			lastCheckIn,
-			strconv.FormatInt(row.CurrentMonthVisits, 10),
-			strconv.FormatInt(row.LastMonthVisits, 10),
-			memEndDate,
-		})
+	case "pdf":
+		pdf := fpdf.New("L", "mm", "A4", "")
+		pdf.AddPage()
+		pdf.SetFont("Arial", "B", 10)
+
+		headers := []string{"Client Name", "Email", "Phone", "Category", "Last Check-In", "Visits (Cur)", "Visits (Last)", "End Date"}
+		widths := []float64{40, 50, 30, 25, 35, 20, 20, 25}
+
+		for i, header := range headers {
+			pdf.CellFormat(widths[i], 10, header, "1", 0, "C", false, 0, "")
+		}
+		pdf.Ln(-1)
+
+		pdf.SetFont("Arial", "", 9)
+		for _, row := range data {
+			lastCheckIn := "Never"
+			if row.LastCheckIn != nil {
+				lastCheckIn = row.LastCheckIn.Format("2006-01-02 15:04")
+			}
+			memEndDate := "N/A"
+			if row.MembershipEndDate != nil {
+				memEndDate = row.MembershipEndDate.Format("2006-01-02")
+			}
+
+			pdf.CellFormat(widths[0], 8, row.FirstName+" "+row.LastName, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[1], 8, row.Email, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[2], 8, row.Phone, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[3], 8, row.CurrentCategory, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[4], 8, lastCheckIn, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[5], 8, strconv.FormatInt(row.CurrentMonthVisits, 10), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(widths[6], 8, strconv.FormatInt(row.LastMonthVisits, 10), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(widths[7], 8, memEndDate, "1", 0, "L", false, 0, "")
+			pdf.Ln(-1)
+		}
+
+		c.Header("Content-Disposition", "attachment; filename=client_report.pdf")
+		c.Header("Content-Type", "application/pdf")
+		if err := pdf.Output(c.Writer); err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+
+	default: // csv
+		c.Header("Content-Disposition", "attachment; filename=client_report.csv")
+		c.Header("Content-Type", "text/csv")
+
+		writer := csv.NewWriter(c.Writer)
+		defer writer.Flush()
+
+		// Header
+		writer.Write([]string{"Client Name", "Email", "Phone", "Category", "Last Check-In", "Visits (Current Month)", "Visits (Last Month)", "Membership End Date"})
+
+		for _, row := range data {
+			lastCheckIn := "Never"
+			if row.LastCheckIn != nil {
+				lastCheckIn = row.LastCheckIn.Format("2006-01-02 15:04")
+			}
+			memEndDate := "N/A"
+			if row.MembershipEndDate != nil {
+				memEndDate = row.MembershipEndDate.Format("2006-01-02")
+			}
+
+			writer.Write([]string{
+				row.FirstName + " " + row.LastName,
+				row.Email,
+				row.Phone,
+				row.CurrentCategory,
+				lastCheckIn,
+				strconv.FormatInt(row.CurrentMonthVisits, 10),
+				strconv.FormatInt(row.LastMonthVisits, 10),
+				memEndDate,
+			})
+		}
 	}
 }
 
-// @Summary		Export Sales Report (CSV)
-// @Description	Exports a detailed sales report including commercial performance, payment methods, and branch productivity.
+// @Summary		Export Sales Report
+// @Description	Exports a detailed sales report. Supports CSV, Excel, and PDF.
 // @Tags			Reports Financial
 // @Security		ApiKeyAuth
 // @Produce		text/csv
+// @Produce		application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Produce		application/pdf
 // @Param			branch_id	query		string					false	"Filter by Branch UUID"
 // @Param			start		query		string					false	"Start date (YYYY-MM-DD)"
 // @Param			end			query		string					false	"End date (YYYY-MM-DD)"
-// @Success		200			{file}		file					"sales_report.csv"
+// @Param			type		query		string					false	"Export format: csv, excel, pdf"	default(csv)
+// @Success		200			{file}		file					"sales_report"
 // @Failure		500			{object}	object{error=string}	"Internal Server Error"
 // @Router			/reports/export/sales [get]
 func (h *ReportHanlders) ExportSalesReportHandler(c *gin.Context) {
@@ -152,6 +326,7 @@ func (h *ReportHanlders) ExportSalesReportHandler(c *gin.Context) {
 			branchID = &id
 		}
 	}
+	exportType := c.DefaultQuery("type", "csv")
 
 	data, err := h.services.ReportServices.GetSalesReportData(ctx, branchID, start, end)
 	if err != nil {
@@ -159,25 +334,95 @@ func (h *ReportHanlders) ExportSalesReportHandler(c *gin.Context) {
 		return
 	}
 
-	c.Header("Content-Disposition", "attachment; filename=sales_report.csv")
-	c.Header("Content-Type", "text/csv")
+	switch exportType {
+	case "excel":
+		f := excelize.NewFile()
+		defer func() {
+			if err := f.Close(); err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+			}
+		}()
 
-	writer := csv.NewWriter(c.Writer)
-	defer writer.Flush()
+		sheetName := "Sales Report"
+		index, _ := f.NewSheet(sheetName)
+		f.SetActiveSheet(index)
+		f.DeleteSheet("Sheet1")
 
-	// Header
-	writer.Write([]string{"Date", "Branch", "Item", "Category", "Quantity", "Total", "Payment Method"})
+		headers := []interface{}{"Date", "Branch", "Item", "Category", "Quantity", "Total", "Payment Method"}
+		f.SetSheetRow(sheetName, "A1", &headers)
 
-	for _, row := range data {
-		writer.Write([]string{
-			row.Date.Format("2006-01-02"),
-			row.BranchName,
-			row.ItemName,
-			row.Category,
-			strconv.Itoa(row.Quantity),
-			row.Total.StringFixed(2),
-			row.PaymentMethod,
-		})
+		for i, row := range data {
+			cell, _ := excelize.CoordinatesToCellName(1, i+2)
+			values := []interface{}{
+				row.Date.Format("2006-01-02"),
+				row.BranchName,
+				row.ItemName,
+				row.Category,
+				row.Quantity,
+				row.Total.InexactFloat64(),
+				row.PaymentMethod,
+			}
+			f.SetSheetRow(sheetName, cell, &values)
+		}
+
+		c.Header("Content-Disposition", "attachment; filename=sales_report.xlsx")
+		c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		if err := f.Write(c.Writer); err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+
+	case "pdf":
+		pdf := fpdf.New("L", "mm", "A4", "")
+		pdf.AddPage()
+		pdf.SetFont("Arial", "B", 10)
+
+		headers := []string{"Date", "Branch", "Item", "Category", "Quantity", "Total", "Payment Method"}
+		widths := []float64{25, 40, 50, 30, 20, 30, 40}
+
+		for i, header := range headers {
+			pdf.CellFormat(widths[i], 10, header, "1", 0, "C", false, 0, "")
+		}
+		pdf.Ln(-1)
+
+		pdf.SetFont("Arial", "", 9)
+		for _, row := range data {
+			pdf.CellFormat(widths[0], 8, row.Date.Format("2006-01-02"), "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[1], 8, row.BranchName, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[2], 8, row.ItemName, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[3], 8, row.Category, "1", 0, "L", false, 0, "")
+			pdf.CellFormat(widths[4], 8, strconv.Itoa(row.Quantity), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(widths[5], 8, row.Total.StringFixed(2), "1", 0, "R", false, 0, "")
+			pdf.CellFormat(widths[6], 8, row.PaymentMethod, "1", 0, "L", false, 0, "")
+			pdf.Ln(-1)
+		}
+
+		c.Header("Content-Disposition", "attachment; filename=sales_report.pdf")
+		c.Header("Content-Type", "application/pdf")
+		if err := pdf.Output(c.Writer); err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+
+	default: // csv
+		c.Header("Content-Disposition", "attachment; filename=sales_report.csv")
+		c.Header("Content-Type", "text/csv")
+
+		writer := csv.NewWriter(c.Writer)
+		defer writer.Flush()
+
+		// Header
+		writer.Write([]string{"Date", "Branch", "Item", "Category", "Quantity", "Total", "Payment Method"})
+
+		for _, row := range data {
+			writer.Write([]string{
+				row.Date.Format("2006-01-02"),
+				row.BranchName,
+				row.ItemName,
+				row.Category,
+				strconv.Itoa(row.Quantity),
+				row.Total.StringFixed(2),
+				row.PaymentMethod,
+			})
+		}
 	}
 }
 

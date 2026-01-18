@@ -14,6 +14,7 @@ type InstructorServiceInterface interface {
 	GetSummary(context.Context) (*InstructorSummary, error)
 	DeleteInstructor(ctx context.Context, instructorID uuid.UUID) error
 	GetInstructorByID(ctx context.Context, instructorID uuid.UUID) (*Instructor, error)
+	GetInstructorByUserID(ctx context.Context, userID uuid.UUID) (*Instructor, error)
 	UpdateInstructor(ctx context.Context, instructor *Instructor) error
 
 	AssignInstructorsToBranch(ctx context.Context, branchID uuid.UUID, instructorID []uuid.UUID) error

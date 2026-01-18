@@ -16,6 +16,7 @@ type InstructorRepository interface {
 	GetSummary(context.Context) (*InstructorSummary, error)
 	Delete(context.Context, uuid.UUID) error
 	GetByID(context.Context, uuid.UUID) (*Instructor, error)
+	GetByUserID(context.Context, uuid.UUID) (*Instructor, error)
 	Update(context.Context, *Instructor) error
 	CreateAndInvitate(ctx context.Context, instructor *Instructor, token string, invitationExp time.Duration) error
 	GetAllInstructors(ctx context.Context) ([]*Instructor, error)
