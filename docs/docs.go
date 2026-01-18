@@ -15461,6 +15461,9 @@ const docTemplate = `{
                 "last_name": {
                     "type": "string"
                 },
+                "profile_picture_url": {
+                    "type": "string"
+                },
                 "role_id": {
                     "type": "string"
                 },
