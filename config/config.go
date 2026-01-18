@@ -122,7 +122,7 @@ func LoadConfig() *Config {
 		},
 		EncryptionKey: env.GetString("ENCRYPTION_KEY", "vitalfit-medical-encrypt-key1234"),
 		Rekognition: RekognitionConfig{
-			Region:    env.GetString("AWS_REGION", ""),
+			Region:    env.GetString("AWS_REGIONR", ""),
 			AccessKey: env.GetString("AWS_ACCESS_KEY_ID", ""),
 			SecretKey: env.GetString("AWS_SECRET_ACCESS_KEY", ""),
 		},
