@@ -7322,10 +7322,9 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Instructor UUID",
+                        "description": "Instructor UUID (Required for admins, ignored for instructors)",
                         "name": "id",
-                        "in": "path",
-                        "required": true
+                        "in": "path"
                     },
                     {
                         "type": "integer",
@@ -10850,17 +10849,28 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Exports a detailed client report including retention metrics, last activity, and risk status.",
+                "description": "Exports a detailed client report including retention metrics, last activity, and risk status. Supports CSV, Excel, and PDF.",
                 "produces": [
-                    "text/csv"
+                    "text/csv",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/pdf"
                 ],
                 "tags": [
                     "Reports Financial"
                 ],
-                "summary": "Export Client Report (CSV)",
+                "summary": "Export Client Report",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "csv",
+                        "description": "Export format: csv, excel, pdf",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "client_report.csv",
+                        "description": "client_report",
                         "schema": {
                             "type": "file"
                         }
@@ -10886,9 +10896,11 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Exports a detailed financial report as a CSV file.",
+                "description": "Exports a detailed financial report. Supports CSV, Excel, and PDF formats.",
                 "produces": [
-                    "text/csv"
+                    "text/csv",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/pdf"
                 ],
                 "tags": [
                     "Reports Financial"
@@ -10912,11 +10924,18 @@ const docTemplate = `{
                         "description": "End date (YYYY-MM-DD)",
                         "name": "end",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "csv",
+                        "description": "Export format: csv, excel, pdf",
+                        "name": "type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "financial_report.csv",
+                        "description": "financial_report",
                         "schema": {
                             "type": "file"
                         }
@@ -10942,14 +10961,16 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Exports a detailed sales report including commercial performance, payment methods, and branch productivity.",
+                "description": "Exports a detailed sales report. Supports CSV, Excel, and PDF.",
                 "produces": [
-                    "text/csv"
+                    "text/csv",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "application/pdf"
                 ],
                 "tags": [
                     "Reports Financial"
                 ],
-                "summary": "Export Sales Report (CSV)",
+                "summary": "Export Sales Report",
                 "parameters": [
                     {
                         "type": "string",
@@ -10968,11 +10989,18 @@ const docTemplate = `{
                         "description": "End date (YYYY-MM-DD)",
                         "name": "end",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "csv",
+                        "description": "Export format: csv, excel, pdf",
+                        "name": "type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "sales_report.csv",
+                        "description": "sales_report",
                         "schema": {
                             "type": "file"
                         }

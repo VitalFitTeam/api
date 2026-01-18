@@ -568,7 +568,7 @@ func (h *InstructorHandlers) DeleteInstructorSpecialtyHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
-// @Param			id		path		string																						true	"Instructor UUID"
+// @Param			id		path		string																						false	"Instructor UUID (Required for admins, ignored for instructors)"
 // @Param			limit	query		int																							false	"Number of results per page (default: 10)"
 // @Param			page	query		int																							false	"Page number (default: 1)"
 // @Param			sort	query		string																						false	"Sort order by total_bookings (asc/desc, default: desc)"
@@ -580,10 +580,35 @@ func (h *InstructorHandlers) DeleteInstructorSpecialtyHandler(c *gin.Context) {
 func (h *InstructorHandlers) GetAssignedClientsHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	instructorID, err := uuid.Parse(c.Param("id"))
-	if err != nil {
-		h.services.LogErrors.BadRequestResponse(c, err)
-		return
+	user := h.services.UserServices.GetUserFromContext(c)
+	var instructorID uuid.UUID
+	var err error
+
+	if user.Role.Name == "instructor" {
+		instructor, err := h.services.InstructorServices.GetInstructorByUserID(ctx, user.UserID)
+		if err != nil {
+			h.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+		instructorID = instructor.InstructorID
+	} else {
+		permission := "instructors:get"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+		instructorID, err = uuid.Parse(c.Param("id"))
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
 	}
 
 	fq := pagination.PaginatedFeedQuery{

@@ -73,6 +73,17 @@ func (s *InstructorServices) GetInstructorByID(ctx context.Context, instructorID
 	return instructor, nil
 }
 
+func (s *InstructorServices) GetInstructorByUserID(ctx context.Context, userID uuid.UUID) (*instructordomain.Instructor, error) {
+	instructor, err := s.store.Instructor.GetByUserID(ctx, userID)
+	if err != nil {
+		if err == shared_errors.ErrNotFound {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+	return instructor, nil
+}
+
 func (s *InstructorServices) GetSummary(ctx context.Context) (*instructordomain.InstructorSummary, error) {
 	summary, err := s.store.Instructor.GetSummary(ctx)
 	if err != nil {

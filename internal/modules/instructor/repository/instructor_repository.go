@@ -164,6 +164,17 @@ func (s *InstructorStore) GetByID(ctx context.Context, instructorID uuid.UUID) (
 	return instructor, nil
 }
 
+func (s *InstructorStore) GetByUserID(ctx context.Context, userID uuid.UUID) (*instructordomain.Instructor, error) {
+	var instructor instructordomain.Instructor
+	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).First(&instructor).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, shared_errors.ErrNotFound
+		}
+		return nil, err
+	}
+	return &instructor, nil
+}
+
 func (s *InstructorStore) Update(ctx context.Context, instructor *instructordomain.Instructor) error {
 	return db.WithTX(s.db, func(tx *gorm.DB) error {
 		var existingInstructor instructordomain.Instructor
