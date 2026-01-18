@@ -111,3 +111,57 @@ func (h *ReportHanlders) GetInstructorClassesTodayHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": classes})
 }
+
+// @Summary		Get Instructor Students Today Count
+// @Description	Retrieves the total number of students with confirmed bookings for the instructor's classes today.
+// @Tags			Reports Instructor
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=int64}		"Students count"
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/reports/instructors/students-today [get]
+func (h *ReportHanlders) GetInstructorStudentsTodayHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	instructor, err := h.services.InstructorServices.GetInstructorByUserID(ctx, user.UserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	count, err := h.services.InstructorServices.GetStudentsTodayCount(ctx, instructor.InstructorID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": count})
+}
+
+// @Summary		Get Instructor Attendance Rate Today
+// @Description	Retrieves the attendance rate (Attended / Confirmed Bookings) for the instructor's classes today.
+// @Tags			Reports Instructor
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	object{data=float64}	"Attendance rate percentage"
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/reports/instructors/attendance-rate [get]
+func (h *ReportHanlders) GetInstructorAttendanceRateHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	instructor, err := h.services.InstructorServices.GetInstructorByUserID(ctx, user.UserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	rate, err := h.services.InstructorServices.GetAttendanceRateToday(ctx, instructor.InstructorID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": rate})
+}

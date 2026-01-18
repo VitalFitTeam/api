@@ -26,4 +26,7 @@ type InstructorServiceInterface interface {
 
 	GetAssignedClients(ctx context.Context, instructorID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*AssignedClient, error)
 	GetAssignedClientsTotal(ctx context.Context, instructorID uuid.UUID, fq pagination.PaginatedFeedQuery) (int64, error)
+
+	GetStudentsTodayCount(ctx context.Context, instructorID uuid.UUID) (int64, error)
+	GetAttendanceRateToday(ctx context.Context, instructorID uuid.UUID) (float64, error)
 }

@@ -9883,6 +9883,40 @@ paths:
       summary: Export Sales Report
       tags:
       - Reports Financial
+  /reports/instructors/attendance-rate:
+    get:
+      description: Retrieves the attendance rate (Attended / Confirmed Bookings) for
+        the instructor's classes today.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Attendance rate percentage
+          schema:
+            properties:
+              data:
+                format: float64
+                type: number
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Instructor Attendance Rate Today
+      tags:
+      - Reports Instructor
   /reports/instructors/classes-count:
     get:
       description: Retrieves the total number of classes assigned to the instructor
@@ -10015,6 +10049,40 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get Instructor Student Count KPI
+      tags:
+      - Reports Instructor
+  /reports/instructors/students-today:
+    get:
+      description: Retrieves the total number of students with confirmed bookings
+        for the instructor's classes today.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Students count
+          schema:
+            properties:
+              data:
+                format: int64
+                type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get Instructor Students Today Count
       tags:
       - Reports Instructor
   /reports/kpi/accounts-receivable:
