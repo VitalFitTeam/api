@@ -98,6 +98,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/access/check-in/manual": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Processes a user's check-in attempt via User ID and branch ID (body).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access"
+                ],
+                "summary": "Process User Check-In by ID",
+                "parameters": [
+                    {
+                        "description": "Check-In Payload with User ID and Branch ID",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/accesshandler.CheckInPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Access Granted",
+                        "schema": {
+                            "$ref": "#/definitions/accessdomain.CheckInResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "402": {
+                        "description": "Payment Required",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/access/classes/{id}/attendance": {
             "get": {
                 "security": [
@@ -160,6 +234,41 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/access/scores": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Calculates and retrieves scores for all clients based on their attendance history",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Access"
+                ],
+                "summary": "Get Client Scores",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/accessdomain.ClientScore"
+                            }
                         }
                     },
                     "500": {
@@ -12803,6 +12912,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/services/balances": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves all service balances for a specific user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Get Client Balances",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User UUID (Required for non-clients)",
+                        "name": "user_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of client service balances",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/productsdomain.ClientServiceBalance"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/services/categories": {
             "get": {
                 "security": [
@@ -14518,6 +14689,20 @@ const docTemplate = `{
                 }
             }
         },
+        "accessdomain.ClientScore": {
+            "type": "object",
+            "properties": {
+                "attendance_count": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "accesshandler.AttendanceHistoryResponse": {
             "type": "object",
             "properties": {
@@ -14557,6 +14742,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "qr_jwt": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -17477,6 +17665,26 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "productsdomain.ClientServiceBalance": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "integer"
+                },
+                "service": {
+                    "$ref": "#/definitions/productsdomain.Service"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

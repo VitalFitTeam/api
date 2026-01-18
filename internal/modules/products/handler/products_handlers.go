@@ -2,6 +2,7 @@ package productshandler
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -639,4 +640,57 @@ func (h *ProductsHandler) PublicGetBranchServicesHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, resp)
 
+}
+
+// @Summary		Get Client Balances
+// @Description	Retrieves all service balances for a specific user.
+// @Tags			Services
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			user_id	query		string												false	"User UUID (Required for non-clients)"
+// @Success		200		{object}	object{data=[]productsdomain.ClientServiceBalance}	"List of client service balances"
+// @Failure		400		{object}	map[string]interface{}								"Bad Request"
+// @Failure		403		{object}	map[string]interface{}								"Forbidden"
+// @Failure		500		{object}	map[string]interface{}								"Internal Server Error"
+// @Router			/services/balances [get]
+func (h *ProductsHandler) GetClientBalancesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+	var targetUserID uuid.UUID
+
+	if user.Role.Name == "client" {
+		targetUserID = user.UserID
+	} else {
+		permission := "services:get"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+		userIDStr := c.Query("user_id")
+		if userIDStr == "" {
+			h.services.LogErrors.BadRequestResponse(c, errors.New("user_id query parameter is required"))
+			return
+		}
+		var err error
+		targetUserID, err = uuid.Parse(userIDStr)
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, err)
+			return
+		}
+	}
+
+	balances, err := h.services.ProductsServices.GetClientBalances(ctx, targetUserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": balances})
 }

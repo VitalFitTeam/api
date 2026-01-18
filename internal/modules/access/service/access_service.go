@@ -189,3 +189,19 @@ func (s *AccessService) GetClientServiceUsage(ctx context.Context, clientID uuid
 func (s *AccessService) GetClassAttendanceHistory(ctx context.Context, classID uuid.UUID, startDate, endDate, status *string) ([]*accessdomain.AttendanceLog, error) {
 	return s.store.Access.GetClassAttendanceHistory(ctx, classID, startDate, endDate, status)
 }
+
+func (s *AccessService) CalculateClientScores(ctx context.Context) ([]accessdomain.ClientScore, error) {
+	scores, err := s.store.Access.GetAttendanceCounts(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range scores {
+		scores[i].Score = int(scores[i].AttendanceCount) * 5
+	}
+	return scores, nil
+}
+
+func (s *AccessService) UpdateClientScore(ctx context.Context, userID uuid.UUID, score int) error {
+	return s.store.Access.UpdateClientScore(ctx, userID, score)
+}

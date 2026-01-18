@@ -233,3 +233,22 @@ func (m *Manager) MembershipExpiringNotification() {
 	}
 	m.logger.Infow("memberships", "memberships", memberships)
 }
+
+func (m *Manager) UpdateClientScoresCronjob() {
+	m.logger.Info("running update client scores cronjob")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	scores, err := m.appservices.AccessServices.CalculateClientScores(ctx)
+	if err != nil {
+		m.logger.Errorw("failed to calculate client scores", "error", err)
+		return
+	}
+
+	for _, s := range scores {
+		if err := m.appservices.AccessServices.UpdateClientScore(ctx, s.UserID, s.Score); err != nil {
+			m.logger.Errorw("failed to update client score", "user_id", s.UserID, "error", err)
+		}
+	}
+	m.logger.Infow("client scores updated", "count", len(scores))
+}

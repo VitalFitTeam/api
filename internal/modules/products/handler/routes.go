@@ -28,6 +28,7 @@ type ProductsHandlerInterface interface {
 
 	PublicGetServicesHandler(c *gin.Context)
 	PublicGetBranchServicesHandler(c *gin.Context)
+	GetClientBalancesHandler(c *gin.Context)
 }
 
 type ProductsHandler struct {
@@ -52,6 +53,7 @@ func (r *ProductsHandler) ProductsRoutes(rg *gin.RouterGroup, m *auth.AuthMiddle
 		ProductGroup.GET("/:id", r.GetServiceByIDHandler)
 		ProductGroup.DELETE("/:id", m.RBACPermission("services:delete"), r.DeleteServiceHandler)
 		ProductGroup.PUT("/:id", m.RBACPermission("services:update"), r.UpdateServiceHandler)
+		ProductGroup.GET("/balances", r.GetClientBalancesHandler)
 	}
 
 	BranchServicesGroup := rg.Group("/branches/:id/services")

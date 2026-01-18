@@ -68,6 +68,56 @@ func (h *AccessHandler) CheckInHandler(c *gin.Context) {
 
 }
 
+// @Summary		Process User Check-In by ID
+// @Description	Processes a user's check-in attempt via User ID and branch ID (body).
+// @Tags			Access
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		CheckInPayload					true	"Check-In Payload with User ID and Branch ID"
+// @Success		200		{object}	accessdomain.CheckInResponse	"Access Granted"
+// @Failure		400		{object}	map[string]interface{}			"Bad Request"
+// @Failure		401		{object}	map[string]interface{}			"Unauthorized"
+// @Failure		402		{object}	map[string]interface{}			"Payment Required"
+// @Failure		403		{object}	map[string]interface{}			"Forbidden"
+// @Failure		500		{object}	map[string]interface{}			"Internal Server Error"
+// @Router			/access/check-in/manual [post]
+func (h *AccessHandler) CheckInByUserIDHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var payload CheckInPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	userID, err := uuid.Parse(payload.UserID)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	branchID, err := uuid.Parse(payload.BranchID)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	resp, err := h.services.AccessServices.ProcessCheckIn(ctx, userID, branchID)
+	if err != nil {
+		switch {
+		case errors.Is(err, shared_errors.ErrPayment):
+			h.services.LogErrors.PaymentRequiredResponse(c)
+		case strings.Contains(err.Error(), "access denied"):
+			h.services.LogErrors.ForbiddenResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
 // @Summary		Get Client Attendance History
 // @Description	Retrieves the complete attendance history for a specific client, ordered by date with pagination
 // @Tags			Access
@@ -298,4 +348,23 @@ func (h *AccessHandler) GetClassAttendanceHistoryHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+// @Summary		Get Client Scores
+// @Description	Calculates and retrieves scores for all clients based on their attendance history
+// @Tags			Access
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Success		200	{object}	[]accessdomain.ClientScore
+// @Failure		500	{object}	map[string]interface{}
+// @Router			/access/scores [get]
+func (h *AccessHandler) GetClientScoresHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	scores, err := h.services.AccessServices.CalculateClientScores(ctx)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, scores)
 }
