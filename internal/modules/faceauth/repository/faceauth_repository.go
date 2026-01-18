@@ -29,7 +29,7 @@ func (r *FaceAuthStore) UpdateUserFaceID(ctx context.Context, userID uuid.UUID, 
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("usuario no encontrado con ID: %s", userID)
+		return fmt.Errorf("user not found with ID: %s", userID)
 	}
 	return nil
 }
@@ -44,7 +44,7 @@ func (r *FaceAuthStore) GetUserIDByFaceID(ctx context.Context, faceID string) (u
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return uuid.Nil, fmt.Errorf("rostro no asociado a ningún usuario activo")
+			return uuid.Nil, fmt.Errorf("face not associated with any active user")
 		}
 		return uuid.Nil, err
 	}

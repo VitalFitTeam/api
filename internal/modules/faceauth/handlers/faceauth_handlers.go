@@ -46,5 +46,5 @@ func (h *FaceAuthHandler) EnrollFaceHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Reconocimiento facial activado correctamente"})
+	c.JSON(http.StatusOK, gin.H{"message": "Face recognition successfully activated"})
 }

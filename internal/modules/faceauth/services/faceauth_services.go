@@ -38,17 +38,17 @@ func (s *FaceAuthServices) EnrollFace(ctx context.Context, userID uuid.UUID, ima
 
 	output, err := s.rekognition.IndexFaces(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error de comunicación con AWS Rekognition: %w", err)
+		return fmt.Errorf("error communicating with AWS Rekognition: %w", err)
 	}
 
 	if len(output.FaceRecords) == 0 {
-		return fmt.Errorf("no se detectó ningún rostro válido en la imagen")
+		return fmt.Errorf("no valid face detected in the image")
 	}
 
 	faceID := *output.FaceRecords[0].Face.FaceId
 
 	if err := s.store.FaceAuth.UpdateUserFaceID(ctx, userID, faceID); err != nil {
-		return fmt.Errorf("error guardando credenciales faciales: %w", err)
+		return fmt.Errorf("error saving face credentials: %w", err)
 	}
 
 	return nil
@@ -64,18 +64,18 @@ func (s *FaceAuthServices) AuthenticateUser(ctx context.Context, imageBytes []by
 
 	output, err := s.rekognition.SearchFacesByImage(ctx, input)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("error buscando rostro en AWS: %w", err)
+		return uuid.Nil, fmt.Errorf("error searching face in AWS: %w", err)
 	}
 
 	if len(output.FaceMatches) == 0 {
-		return uuid.Nil, fmt.Errorf("rostro no reconocido")
+		return uuid.Nil, fmt.Errorf("face not recognized")
 	}
 
 	matchFaceID := *output.FaceMatches[0].Face.FaceId
 
 	userID, err := s.store.FaceAuth.GetUserIDByFaceID(ctx, matchFaceID)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("rostro reconocido en nube pero usuario no encontrado en sistema")
+		return uuid.Nil, fmt.Errorf("face recognized in cloud but user not found in system")
 	}
 
 	return userID, nil
