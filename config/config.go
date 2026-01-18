@@ -21,6 +21,7 @@ type Config struct {
 	OpenExchange  OpenExchangeConfig
 	Clerk         ClerkConfig
 	EncryptionKey string
+	Rekognition   RekognitionConfig
 }
 
 type redisConfig struct {
@@ -65,6 +66,11 @@ type TokenConfig struct {
 
 type ClerkConfig struct {
 	JwksURL string
+}
+type RekognitionConfig struct {
+	Region    string
+	AccessKey string
+	SecretKey string
 }
 
 func LoadConfig() *Config {
@@ -115,5 +121,10 @@ func LoadConfig() *Config {
 			JwksURL: env.GetString("CLERK_JWKS_URL", ""),
 		},
 		EncryptionKey: env.GetString("ENCRYPTION_KEY", "vitalfit-medical-encrypt-key1234"),
+		Rekognition: RekognitionConfig{
+			Region:    env.GetString("AWS_REGION", ""),
+			AccessKey: env.GetString("AWS_ACCESS_KEY_ID", ""),
+			SecretKey: env.GetString("AWS_SECRET_ACCESS_KEY", ""),
+		},
 	}
 }

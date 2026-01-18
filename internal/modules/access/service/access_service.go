@@ -106,7 +106,7 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 		return nil, err
 	}
 
-	gracePolicy, err := s.store.Policies.GetPolicyByKey(ctx, "ACCESS_GRACE_PERIOD")
+	gracePolicy, err := s.store.Policies.GetPolicyByKey(ctx, "MEMBERSHIP_GRACE_PERIOD_DAYS")
 	if err != nil {
 		return nil, err
 	}

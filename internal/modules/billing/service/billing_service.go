@@ -449,12 +449,21 @@ func (bs *BillingService) ActivateInvoiceItems(ctx context.Context, invoice *bil
 				continue
 			}
 
+			startDate := time.Now()
+			endDate := startDate.AddDate(0, 0, membershipType.DurationDays*item.Quantity)
+
+			existingMembership, err := bs.store.Membership.GetClientMembership(ctx, invoice.UserID)
+			if err == nil && existingMembership.EndDate.After(startDate) {
+				endDate = existingMembership.EndDate.AddDate(0, 0, membershipType.DurationDays*item.Quantity)
+				startDate = existingMembership.StartDate
+			}
+
 			clientMembership := membershipsdomain.ClientMembership{
 				MembershipTypeID: item.MembershipTypeID.UUID,
 				InvoiceID:        invoice.InvoiceID,
 				UserID:           invoice.UserID,
-				StartDate:        time.Now(),
-				EndDate:          time.Now().AddDate(0, 0, membershipType.DurationDays*item.Quantity),
+				StartDate:        startDate,
+				EndDate:          endDate,
 				Status:           membershipsdomain.StatusActive,
 			}
 

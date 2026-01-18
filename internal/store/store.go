@@ -17,6 +17,8 @@ import (
 	clientsrepository "github.com/vitalfit/api/internal/modules/clients/repository"
 	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
 	combosrepository "github.com/vitalfit/api/internal/modules/combos/repository"
+	faceauthdomain "github.com/vitalfit/api/internal/modules/faceauth/domain"
+	faceauthrepository "github.com/vitalfit/api/internal/modules/faceauth/repository"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	instructorrepository "github.com/vitalfit/api/internal/modules/instructor/repository"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
@@ -69,6 +71,7 @@ type Storage struct {
 	Session         authdomain.SessionRepository
 	Client          clientsdomain.ClientRepository
 	Notification    notidomain.NotificationRepository
+	FaceAuth        faceauthdomain.FaceAuthRepository
 }
 
 func NewStorage(db *gorm.DB) Storage {
@@ -98,5 +101,6 @@ func NewStorage(db *gorm.DB) Storage {
 		Session:         authrepository.NewSessionStore(db),
 		Client:          clientsrepository.NewClientStore(db),
 		Notification:    notirepository.NewNotificationStore(db),
+		FaceAuth:        faceauthrepository.NewFaceAuthStore(db),
 	}
 }

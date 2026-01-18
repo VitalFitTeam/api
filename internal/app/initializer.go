@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
@@ -15,6 +17,10 @@ import (
 	rate_mw "github.com/vitalfit/api/pkg/ratelimiter"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 )
 
 func BuildApplication(cfg *config.Config, db *gorm.DB, rdb *redis.Client) *application {
@@ -34,8 +40,22 @@ func BuildApplication(cfg *config.Config, db *gorm.DB, rdb *redis.Client) *appli
 	}
 	store := store.NewStorage(db)
 
+	awsCfg, err := awsconfig.LoadDefaultConfig(context.TODO(),
+		awsconfig.WithRegion(cfg.Rekognition.Region),
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+			cfg.Rekognition.AccessKey,
+			cfg.Rekognition.SecretKey,
+			"",
+		)),
+	)
+	if err != nil {
+		logger.Errorw("error loading aws config", "error", err.Error())
+	}
+
+	rekognitionClient := rekognition.NewFromConfig(awsCfg)
+
 	cache := cache.NewRedisStorage(rdb)
-	services := appservices.NewServices(store, logger, *cfg, auth, mailer, cache, *notifications)
+	services := appservices.NewServices(store, logger, *cfg, auth, mailer, cache, *notifications, rekognitionClient)
 	handlers := apphandlers.NewAppHandlers(services)
 
 	cronjob := cronjobs.NewManager(store, services, mailer, logger, cache, *notifications, *cfg)

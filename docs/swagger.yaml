@@ -2780,6 +2780,59 @@ paths:
       summary: Process User Check-In
       tags:
       - Access
+  /access/check-in/face:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Authenticates a user via face recognition and processes their check-in.
+      parameters:
+      - description: Check-in photo
+        in: formData
+        name: checkin_photo
+        required: true
+        type: file
+      - description: Branch UUID
+        in: formData
+        name: branch_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Access Granted
+          schema:
+            $ref: '#/definitions/accessdomain.CheckInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: Payment Required
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Process User Check-In via Face
+      tags:
+      - Access
   /access/check-in/manual:
     post:
       consumes:
@@ -7213,6 +7266,41 @@ paths:
       summary: Export Equipment Types (CSV)
       tags:
       - Equipment
+  /face-auth/enroll:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Registers a face for the authenticated user.
+      parameters:
+      - description: User selfie image
+        in: formData
+        name: selfie
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Enroll Face
+      tags:
+      - FaceAuth
   /health:
     get:
       consumes:

@@ -119,6 +119,8 @@ func (app *application) Mount() http.Handler {
 		//notifications
 		app.Handlers.NotificationHandlers.NotificationsRoutes(v1, m)
 
+		app.Handlers.FaceAuthHandlers.FaceAuthRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}

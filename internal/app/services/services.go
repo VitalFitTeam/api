@@ -1,6 +1,7 @@
 package appservices
 
 import (
+	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	"github.com/vitalfit/api/config"
 	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	accessservice "github.com/vitalfit/api/internal/modules/access/service"
@@ -18,6 +19,8 @@ import (
 	clientsservice "github.com/vitalfit/api/internal/modules/clients/service"
 	combosdomain "github.com/vitalfit/api/internal/modules/combos/domain"
 	combosservices "github.com/vitalfit/api/internal/modules/combos/services"
+	faceauthdomain "github.com/vitalfit/api/internal/modules/faceauth/domain"
+	faceauthservices "github.com/vitalfit/api/internal/modules/faceauth/services"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	instructorservices "github.com/vitalfit/api/internal/modules/instructor/services"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
@@ -73,11 +76,12 @@ type Services struct {
 	AuditServices        auditdomain.AuditService
 	ClientServices       clientsdomain.ClientServiceInterface
 	NotificationServices notidomain.NotificationServiceInterface
+	FaceAuthServices     faceauthdomain.FacAuthServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
 
-func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage, pushNoti notifications.PushService) Services {
+func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage, pushNoti notifications.PushService, rekognitionClient *rekognition.Client) Services {
 	bookingService := bookingservice.NewBookingService(store)
 	return Services{
 		AuthServices:         authservices.NewAuthServices(store, cfg, auth, mailer),
@@ -102,6 +106,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		AuditServices:        auditservice.NewAuditService(store),
 		ClientServices:       clientsservice.NewClientService(store, cfg.EncryptionKey),
 		NotificationServices: notiservice.NewNotificationService(store, pushNoti),
+		FaceAuthServices:     faceauthservices.NewFaceAuthServices(store, rekognitionClient),
 		LogErrors:            logs.NewLogErrors(logger),
 		Logger:               logger,
 	}

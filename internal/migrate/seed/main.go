@@ -56,10 +56,10 @@ func NewSeedStruct() *SeedStruct {
 func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices.Services) {
 	ctx := context.Background()
 	// s.CreateSuperAdmin(store, db, ctx)
-	s.SeedPermissions(store, db, ctx)
-	s.SeedRolePermissions(store, db, ctx)
+	//s.SeedPermissions(store, db, ctx)
+	//s.SeedRolePermissions(store, db, ctx)
 	// s.SeedUsers(store, db, ctx)
-	// s.SeedPolicies(store, db, ctx)
+	s.SeedPolicies(store, db, ctx)
 	// s.SeedServiceCategories(store, db, ctx)
 	// s.SeedBanners(store, db, ctx)
 	// s.SeedServices(store, db, ctx)
@@ -1477,7 +1477,7 @@ func main() {
 	mailer.On("Send", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(200, nil)
 	pushNoti := notifications.NewMockPushService()
 
-	service := appservices.NewServices(appStore, sugaredLogger, *cfg, testAuth, mailer, cache, *pushNoti)
+	service := appservices.NewServices(appStore, sugaredLogger, *cfg, testAuth, mailer, cache, *pushNoti, nil)
 	s := NewSeedStruct()
 	s.Seed(appStore, conn, service)
 

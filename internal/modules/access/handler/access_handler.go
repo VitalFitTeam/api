@@ -2,6 +2,7 @@ package accesshandler
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"strings"
 
@@ -100,6 +101,75 @@ func (h *AccessHandler) CheckInByUserIDHandler(c *gin.Context) {
 	branchID, err := uuid.Parse(payload.BranchID)
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	resp, err := h.services.AccessServices.ProcessCheckIn(ctx, userID, branchID)
+	if err != nil {
+		switch {
+		case errors.Is(err, shared_errors.ErrPayment):
+			h.services.LogErrors.PaymentRequiredResponse(c)
+		case strings.Contains(err.Error(), "access denied"):
+			h.services.LogErrors.ForbiddenResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary		Process User Check-In via Face
+// @Description	Authenticates a user via face recognition and processes their check-in.
+// @Tags			Access
+// @Security		ApiKeyAuth
+// @Accept			multipart/form-data
+// @Produce		json
+// @Param			checkin_photo	formData	file							true	"Check-in photo"
+// @Param			branch_id		formData	string							true	"Branch UUID"
+// @Success		200				{object}	accessdomain.CheckInResponse	"Access Granted"
+// @Failure		400				{object}	map[string]interface{}			"Bad Request"
+// @Failure		401				{object}	map[string]interface{}			"Unauthorized"
+// @Failure		402				{object}	map[string]interface{}			"Payment Required"
+// @Failure		403				{object}	map[string]interface{}			"Forbidden"
+// @Failure		500				{object}	map[string]interface{}			"Internal Server Error"
+// @Router			/access/check-in/face [post]
+func (h *AccessHandler) CheckInFaceHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	// Limit upload size (e.g., 10MB)
+	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	branchIDStr := c.Request.FormValue("branch_id")
+	if branchIDStr == "" {
+		h.services.LogErrors.BadRequestResponse(c, errors.New("branch_id is required"))
+		return
+	}
+	branchID, err := uuid.Parse(branchIDStr)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	file, _, err := c.Request.FormFile("checkin_photo")
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	defer file.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	userID, err := h.services.FaceAuthServices.AuthenticateUser(ctx, fileBytes)
+	if err != nil {
+		h.services.LogErrors.UnauthorizedErrorResponse(c, err)
 		return
 	}
 
