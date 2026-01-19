@@ -84,7 +84,7 @@ func (s *UserStore) GetBranchAdmins(ctx context.Context, fq pagination.Paginated
 		Joins("JOIN roles ON roles.role_id = users.role_id").
 		Preload("Role").
 		Where("roles.name = ?", "branch_admin").
-		Where("users.first_name ILIKE ? OR users.last_name ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?", searchQuery, searchQuery, searchQuery).
+		Where("users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR users.identity_document ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?", searchQuery, searchQuery, searchQuery, searchQuery, searchQuery).
 		Find(&users).Error
 	if err != nil {
 		return nil, err
@@ -101,8 +101,8 @@ func (s *UserStore) GetUsers(ctx context.Context, fq pagination.PaginatedFeedQue
 		Where("roles.name <> ?", "client")
 
 	query = query.Where(
-		"users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?",
-		searchQuery, searchQuery, searchQuery, searchQuery,
+		"users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR users.identity_document ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?",
+		searchQuery, searchQuery, searchQuery, searchQuery, searchQuery,
 	)
 
 	if fq.Role != "" {
@@ -126,7 +126,7 @@ func (s *UserStore) GetClients(ctx context.Context, fq pagination.PaginatedFeedQ
 		Model(&authdomain.Users{}).
 		Joins("JOIN roles ON roles.role_id = users.role_id").
 		Where("roles.name = ?", "client").
-		Where("users.first_name ILIKE ? OR users.last_name ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?", searchQuery, searchQuery, searchQuery)
+		Where("users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR users.identity_document ILIKE ? OR CONCAT(users.first_name, ' ', users.last_name) ILIKE ?", searchQuery, searchQuery, searchQuery, searchQuery, searchQuery)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
