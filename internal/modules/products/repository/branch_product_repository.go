@@ -20,7 +20,16 @@ func (s *ProductsStore) AssignBranchService(ctx context.Context, branchServices 
 	}
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
 		if err := tx.WithContext(ctx).
-			Clauses(clause.OnConflict{DoNothing: true}).
+			Clauses(clause.OnConflict{
+				Columns: []clause.Column{{Name: "service_id"}, {Name: "branch_id"}},
+				DoUpdates: clause.AssignmentColumns([]string{
+					"is_visible",
+					"max_capacity",
+					"price_for_member",
+					"price_for_non_member",
+					"deleted_at",
+				}),
+			}).
 			Create(&branchServices).Error; err != nil {
 			return err
 		}
