@@ -6974,6 +6974,135 @@ const docTemplate = `{
                 }
             }
         },
+        "/exercises": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of exercises from the catalog.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routines"
+                ],
+                "summary": "List exercises",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of exercises",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/routinedomain.Exercise"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a new exercise in the library. Only for Instructors/Admins.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routines"
+                ],
+                "summary": "Create a new exercise",
+                "parameters": [
+                    {
+                        "description": "Exercise creation payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/routinehandlers.CreateExerciseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Exercise created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/routinedomain.Exercise"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/face-auth/enroll": {
             "post": {
                 "security": [
@@ -12801,6 +12930,65 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found (Instructor/Client/Routine)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/routines/client/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the list of active routines assigned to a specific client. Only for Instructors/Admins.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routines"
+                ],
+                "summary": "Get client routines",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of assigned routines",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/routinedomain.UserRoutine"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "properties": {
@@ -19362,6 +19550,12 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "creator": {
+                    "$ref": "#/definitions/authdomain.Users"
+                },
+                "creator_id": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -19495,6 +19689,23 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "routine_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "routinehandlers.CreateExerciseRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "muscle_group": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "video_url": {
                     "type": "string"
                 }
             }

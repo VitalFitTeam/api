@@ -145,13 +145,13 @@ func (h *RoutineHandlers) CreateExerciseHandler(c *gin.Context) {
 // @Description	Retrieves a paginated list of exercises from the catalog.
 // @Tags			Routines
 // @Security		ApiKeyAuth
-// @Produce			json
-// @Param			limit	query		int		false	"Number of results per page"
-// @Param			page	query		int		false	"Page number"
-// @Param			sort	query		string	false	"Sort order (asc/desc)"
-// @Param			search	query		string	false	"Search term"
+// @Produce		json
+// @Param			limit	query		int										false	"Number of results per page"
+// @Param			page	query		int										false	"Page number"
+// @Param			sort	query		string									false	"Sort order (asc/desc)"
+// @Param			search	query		string									false	"Search term"
 // @Success		200		{object}	object{data=[]routinedomain.Exercise}	"List of exercises"
-// @Failure		500		{object}	object{error=string}		"Internal Server Error"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
 // @Router			/exercises [get]
 func (h *RoutineHandlers) GetExercisesHandler(c *gin.Context) {
 	fq := pagination.PaginatedFeedQuery{
@@ -192,11 +192,11 @@ func (h *RoutineHandlers) GetExercisesHandler(c *gin.Context) {
 // @Description	Retrieves the list of active routines assigned to a specific client. Only for Instructors/Admins.
 // @Tags			Routines
 // @Security		ApiKeyAuth
-// @Produce			json
-// @Param			id		path		string					true	"Client ID (UUID)"
-// @Success		200		{object}	[]routinedomain.UserRoutine	"List of assigned routines"
-// @Failure		400		{object}	object{error=string}		"Bad Request"
-// @Failure		500		{object}	object{error=string}		"Internal Server Error"
+// @Produce		json
+// @Param			id	path		string						true	"Client ID (UUID)"
+// @Success		200	{object}	[]routinedomain.UserRoutine	"List of assigned routines"
+// @Failure		400	{object}	object{error=string}		"Bad Request"
+// @Failure		500	{object}	object{error=string}		"Internal Server Error"
 // @Router			/routines/client/{id} [get]
 func (h *RoutineHandlers) GetClientRoutinesHandler(c *gin.Context) {
 	clientID, err := uuid.Parse(c.Param("id"))

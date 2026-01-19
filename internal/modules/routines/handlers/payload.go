@@ -28,3 +28,10 @@ type AssignRoutineRequest struct {
 	RoutineID uuid.UUID  `json:"routine_id"`
 	DueDate   *time.Time `json:"due_date"` //optional
 }
+
+type CreateExerciseRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	VideoURL    string `json:"video_url"`
+	MuscleGroup string `json:"muscle_group"`
+}
