@@ -52,6 +52,10 @@ type Exercise struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
+func (Exercise) TableName() string {
+	return "exercises"
+}
+
 type Routine struct {
 	RoutineID   uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"routine_id"`
 	ServiceID   *uuid.UUID `gorm:"type:uuid" json:"service_id,omitempty"`
@@ -68,6 +72,10 @@ type Routine struct {
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+func (Routine) TableName() string {
+	return "routines"
 }
 
 type RoutineExercise struct {
@@ -87,6 +95,10 @@ type RoutineExercise struct {
 	Notes string `gorm:"type:text" json:"notes"`
 }
 
+func (RoutineExercise) TableName() string {
+	return "routine_exercises"
+}
+
 type UserRoutine struct {
 	UserRoutineID uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"user_routine_id"`
 
@@ -103,4 +115,8 @@ type UserRoutine struct {
 	DueDate      *time.Time    `json:"due_date,omitempty"`
 	Status       RoutineStatus `gorm:"type:routine_status_enum;default:'Active'" json:"status"`
 	IsActive     bool          `gorm:"default:true" json:"is_active"`
+}
+
+func (UserRoutine) TableName() string {
+	return "user_routines"
 }

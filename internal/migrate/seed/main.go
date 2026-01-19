@@ -35,6 +35,7 @@ import (
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
 	policiesdomain "github.com/vitalfit/api/internal/modules/policies/domain"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
+	routinedomain "github.com/vitalfit/api/internal/modules/routines/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/internal/store/cache"
@@ -59,7 +60,8 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices
 	//s.SeedPermissions(store, db, ctx)
 	//s.SeedRolePermissions(store, db, ctx)
 	// s.SeedUsers(store, db, ctx)
-	s.SeedPolicies(store, db, ctx)
+	// s.SeedPolicies(store, db, ctx)
+	s.SeedExercises(store, db, ctx)
 	// s.SeedServiceCategories(store, db, ctx)
 	// s.SeedBanners(store, db, ctx)
 	// s.SeedServices(store, db, ctx)
@@ -1449,6 +1451,59 @@ func (s *SeedStruct) SeedPolicies(store store.Storage, db *gorm.DB, ctx context.
 	}
 
 	log.Println("Policies seeder completed successfully.")
+}
+
+type exerciseJSON struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	MuscleGroup string `json:"muscle_group"`
+	VideoURL    string `json:"video_url"`
+}
+
+func (s *SeedStruct) SeedExercises(store store.Storage, db *gorm.DB, ctx context.Context) {
+	jsonFile, err := os.ReadFile("./internal/migrate/seed/data/exercises.json")
+	if err != nil {
+		log.Fatalf("Fatal error: could not read exercises.json file: %v", err)
+		return
+	}
+
+	if len(jsonFile) == 0 {
+		log.Println("exercises.json is empty, skipping.")
+		return
+	}
+
+	var exercisesFromJSON []exerciseJSON
+	if err = json.Unmarshal(jsonFile, &exercisesFromJSON); err != nil {
+		log.Fatalf("Fatal error: could not decode exercises.json: %v", err)
+		return
+	}
+
+	log.Printf("Found %d exercises in exercises.json. Starting seeder...", len(exercisesFromJSON))
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		for _, ex := range exercisesFromJSON {
+			exercise := &routinedomain.Exercise{
+				Name:        ex.Name,
+				Description: ex.Description,
+				MuscleGroup: routinedomain.MuscleGroup(ex.MuscleGroup),
+				VideoURL:    ex.VideoURL,
+				CreatedAt:   randomDateInLastSixMonths(),
+			}
+
+			if err := tx.Create(exercise).Error; err != nil {
+				log.Printf("Error creating exercise '%s': %v", ex.Name, err)
+				return err
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Println("Error in exercises seeder, transaction was rolled back:", err)
+		return
+	}
+
+	log.Println("Exercises seeder completed successfully.")
 }
 
 func main() {
