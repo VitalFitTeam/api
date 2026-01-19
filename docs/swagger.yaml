@@ -100,6 +100,45 @@ definitions:
       user_id:
         type: string
     type: object
+  authdomain.ClientCategoryEnum:
+    enum:
+    - VIP
+    - Regular
+    - New
+    - AtRisk
+    type: string
+    x-enum-varnames:
+    - ClientCategoryVIP
+    - ClientCategoryRegular
+    - ClientCategoryNew
+    - ClientCategoryAtRisk
+  authdomain.ClientProfiles:
+    properties:
+      category:
+        $ref: '#/definitions/authdomain.ClientCategoryEnum'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      qr_code:
+        type: string
+      scoring:
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  authdomain.GenderEnum:
+    enum:
+    - male
+    - female
+    - prefer-not-to-say
+    type: string
+    x-enum-varnames:
+    - GenderMale
+    - GenderFemale
+    - GenderPreferNotToSay
   authdomain.Permission:
     properties:
       created_at:
@@ -147,6 +186,59 @@ definitions:
       refresh_token:
         type: string
       user_agent:
+        type: string
+      user_id:
+        type: string
+    type: object
+  authdomain.UserStatusEnum:
+    enum:
+    - Active
+    - Blocked
+    type: string
+    x-enum-varnames:
+    - UserStatusActive
+    - UserStatusBlocked
+  authdomain.Users:
+    properties:
+      birth_date:
+        type: string
+      block_justification:
+        type: string
+      client_membership:
+        $ref: '#/definitions/membershipsdomain.ClientMembership'
+      clientProfile:
+        $ref: '#/definitions/authdomain.ClientProfiles'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      email:
+        type: string
+      face_auth_enabled:
+        type: boolean
+      face_id:
+        type: string
+      first_name:
+        type: string
+      gender:
+        $ref: '#/definitions/authdomain.GenderEnum'
+      identity_document:
+        type: string
+      is_validated:
+        type: boolean
+      last_name:
+        type: string
+      phone:
+        type: string
+      profile_picture_url:
+        type: string
+      role:
+        $ref: '#/definitions/authdomain.Roles'
+      role_id:
+        type: string
+      status:
+        $ref: '#/definitions/authdomain.UserStatusEnum'
+      updated_at:
         type: string
       user_id:
         type: string
@@ -2565,6 +2657,192 @@ definitions:
       total_sales:
         type: number
       trend:
+        type: string
+    type: object
+  routinedomain.Exercise:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      exercise_id:
+        type: string
+      muscle_group:
+        $ref: '#/definitions/routinedomain.MuscleGroup'
+      name:
+        type: string
+      updated_at:
+        type: string
+      video_url:
+        type: string
+    type: object
+  routinedomain.MuscleGroup:
+    enum:
+    - Chest
+    - Back
+    - Legs
+    - Shoulders
+    - Arms
+    - Core
+    - Cardio
+    - FullBody
+    - Other
+    type: string
+    x-enum-varnames:
+    - MuscleChest
+    - MuscleBack
+    - MuscleLegs
+    - MuscleShoulders
+    - MuscleArms
+    - MuscleCore
+    - MuscleCardio
+    - MuscleFullBody
+    - MuscleOther
+  routinedomain.Routine:
+    properties:
+      created_at:
+        type: string
+      creator:
+        $ref: '#/definitions/authdomain.Users'
+      creator_id:
+        type: string
+      description:
+        type: string
+      exercises:
+        items:
+          $ref: '#/definitions/routinedomain.RoutineExercise'
+        type: array
+      level:
+        $ref: '#/definitions/routinedomain.RoutineLevel'
+      name:
+        type: string
+      routine_id:
+        type: string
+      service_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  routinedomain.RoutineExercise:
+    properties:
+      exercise_details:
+        $ref: '#/definitions/routinedomain.Exercise'
+      exercise_id:
+        type: string
+      notes:
+        type: string
+      order:
+        type: integer
+      reps:
+        type: string
+      rest_time:
+        type: integer
+      routine_exercise_id:
+        type: string
+      routine_id:
+        type: string
+      sets:
+        type: integer
+    type: object
+  routinedomain.RoutineLevel:
+    enum:
+    - Beginner
+    - Intermediate
+    - Advanced
+    type: string
+    x-enum-varnames:
+    - LevelBeginner
+    - LevelIntermediate
+    - LevelAdvanced
+  routinehandlers.AssignRoutineRequest:
+    properties:
+      client_id:
+        type: string
+      due_date:
+        description: optional
+        type: string
+      routine_id:
+        type: string
+    type: object
+  routinehandlers.CreateExerciseRequest:
+    properties:
+      description:
+        type: string
+      muscle_group:
+        type: string
+      name:
+        type: string
+      video_url:
+        type: string
+    type: object
+  routinehandlers.CreateRoutineRequest:
+    properties:
+      description:
+        type: string
+      exercises:
+        items:
+          $ref: '#/definitions/routinehandlers.RoutineExerciseDTO'
+        type: array
+      level:
+        type: string
+      name:
+        type: string
+      service_id:
+        type: string
+    type: object
+  routinehandlers.RoutineExerciseDTO:
+    properties:
+      exercise_id:
+        type: string
+      notes:
+        type: string
+      order:
+        type: integer
+      reps:
+        type: string
+      rest_time:
+        type: integer
+      sets:
+        type: integer
+    type: object
+  routinehandlers.UpdateRoutineRequest:
+    properties:
+      description:
+        type: string
+      exercises:
+        items:
+          $ref: '#/definitions/routinehandlers.RoutineExerciseDTO'
+        type: array
+      level:
+        type: string
+      name:
+        type: string
+      service_id:
+        type: string
+    type: object
+  routinehandlers.UserRoutineResponse:
+    properties:
+      assigned_date:
+        type: string
+      completion_count:
+        type: integer
+      due_date:
+        type: string
+      instructor:
+        type: string
+      last_completed_at:
+        type: string
+      level:
+        type: string
+      routine_id:
+        type: string
+      routine_name:
+        type: string
+      service_id:
+        type: string
+      status:
+        type: string
+      user_routine_id:
         type: string
     type: object
   scheduledomain.Class:
@@ -6023,6 +6301,10 @@ paths:
         in: query
         name: year
         type: integer
+      - description: Specific date (YYYY-MM-DD)
+        in: query
+        name: date
+        type: string
       produces:
       - application/json
       responses:
@@ -7293,6 +7575,87 @@ paths:
       summary: Export Equipment Types (CSV)
       tags:
       - Equipment
+  /exercises:
+    get:
+      description: Retrieves a paginated list of exercises from the catalog.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of exercises
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/routinedomain.Exercise'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List exercises
+      tags:
+      - Routines
+    post:
+      consumes:
+      - application/json
+      description: Creates a new exercise in the library. Only for Instructors/Admins.
+      parameters:
+      - description: Exercise creation payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/routinehandlers.CreateExerciseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Exercise created successfully
+          schema:
+            $ref: '#/definitions/routinedomain.Exercise'
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new exercise
+      tags:
+      - Routines
   /face-auth/enroll:
     post:
       consumes:
@@ -10978,6 +11341,460 @@ paths:
       summary: Get Upcoming Classes Today
       tags:
       - Reports Branch
+  /routines:
+    get:
+      description: Retrieves a paginated list of all routine templates.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of routines
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/routinedomain.Routine'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all routines
+      tags:
+      - Routines
+    post:
+      consumes:
+      - application/json
+      description: Creates a routine template with exercises. Only for Instructors/Admins.
+      parameters:
+      - description: Routine creation payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/routinehandlers.CreateRoutineRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Routine created successfully
+          schema:
+            $ref: '#/definitions/routinedomain.Routine'
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new routine template
+      tags:
+      - Routines
+  /routines/{id}:
+    delete:
+      description: Deletes a routine and its assignments. Only creator or superadmin.
+      parameters:
+      - description: Routine ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a routine
+      tags:
+      - Routines
+    get:
+      description: Retrieves details of a specific routine template.
+      parameters:
+      - description: Routine ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Routine details
+          schema:
+            $ref: '#/definitions/routinedomain.Routine'
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get routine by ID
+      tags:
+      - Routines
+    put:
+      description: Updates an existing routine. Only creator or superadmin.
+      parameters:
+      - description: Routine ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Routine update payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/routinehandlers.UpdateRoutineRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a routine
+      tags:
+      - Routines
+  /routines/assign:
+    post:
+      consumes:
+      - application/json
+      description: Assigns an existing routine template to a client. Only for Instructors.
+      parameters:
+      - description: Assignment payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/routinehandlers.AssignRoutineRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found (Instructor/Client/Routine)
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Assign a routine to a client
+      tags:
+      - Routines
+  /routines/client/{id}:
+    get:
+      description: Retrieves the list of active routines assigned to a specific client.
+        Only for Instructors/Admins.
+      parameters:
+      - description: Client ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of assigned routines
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/routinehandlers.UserRoutineResponse'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get client routines
+      tags:
+      - Routines
+  /routines/my-created:
+    get:
+      description: Retrieves a paginated list of routines created by the authenticated
+        instructor.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of routines
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/routinedomain.Routine'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get routines created by instructor
+      tags:
+      - Routines
+  /routines/my-routines:
+    get:
+      description: Retrieves the list of active routines assigned to the authenticated
+        client.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of assigned routines
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/routinehandlers.UserRoutineResponse'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get my assigned routines
+      tags:
+      - Routines
+  /routines/my-routines/{id}/complete:
+    post:
+      description: Increments the completion counter and updates the last completed
+        date for a user's routine.
+      parameters:
+      - description: User Routine ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Mark routine as completed
+      tags:
+      - Routines
   /schedule/{classId}:
     delete:
       description: Deletes or cancels a class from the calendar
@@ -11212,6 +12029,10 @@ paths:
         in: query
         name: year
         type: integer
+      - description: Specific date (YYYY-MM-DD)
+        in: query
+        name: date
+        type: string
       produces:
       - application/json
       responses:

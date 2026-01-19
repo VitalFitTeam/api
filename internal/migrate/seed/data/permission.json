@@ -330,5 +330,33 @@
   {
     "name": "view",
     "description": "Allows viewing specific branch information"
+  },
+  {
+    "name": "routines:create",
+    "description": "Allows creating new routines and exercises"
+  },
+  {
+    "name": "routines:list",
+    "description": "Allows listing routines"
+  },
+  {
+    "name": "routines:get",
+    "description": "Allows viewing routine details"
+  },
+  {
+    "name": "routines:update",
+    "description": "Allows updating routines"
+  },
+  {
+    "name": "routines:delete",
+    "description": "Allows deleting routines"
+  },
+  {
+    "name": "routines:assign",
+    "description": "Allows assigning routines to clients"
+  },
+  {
+    "name": "routines:read",
+    "description": "Allows reading routines and exercises"
   }
 ]

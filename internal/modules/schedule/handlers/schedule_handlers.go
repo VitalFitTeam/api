@@ -214,6 +214,7 @@ func (h *ScheduleHandlers) CreateClassHandler(c *gin.Context) {
 // @Param			id		path		string	true	"Branch UUID"
 // @Param			month	query		int		false	"Month (1-12)"
 // @Param			year	query		int		false	"Year"
+// @Param			date	query		string	false	"Specific date (YYYY-MM-DD)"
 // @Success		200		{object}	object{data=[]ClassResponse}
 // @Failure		400		{object}	map[string]interface{}
 // @Failure		500		{object}	map[string]interface{}
@@ -246,8 +247,17 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 	var startDate, endDate *time.Time
 	monthStr := c.Query("month")
 	yearStr := c.Query("year")
+	dateStr := c.Query("date")
 
-	if monthStr != "" && yearStr != "" {
+	if dateStr != "" {
+		parsedDate, err := time.Parse("2006-01-02", dateStr)
+		if err == nil {
+			start := time.Date(parsedDate.Year(), parsedDate.Month(), parsedDate.Day(), 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 0, 1).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	} else if monthStr != "" && yearStr != "" {
 		m, errM := strconv.Atoi(monthStr)
 		y, errY := strconv.Atoi(yearStr)
 		if errM == nil && errY == nil {
@@ -306,6 +316,7 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 // @Param			user_id	query		string	false	"User UUID (if not instructor)"
 // @Param			month	query		int		false	"Month (1-12)"
 // @Param			year	query		int		false	"Year"
+// @Param			date	query		string	false	"Specific date (YYYY-MM-DD)"
 // @Success		200		{object}	object{data=[]ClassResponse}
 // @Failure		400		{object}	map[string]interface{}
 // @Failure		500		{object}	map[string]interface{}
@@ -335,8 +346,17 @@ func (h *ScheduleHandlers) GetClassesByInstructorHandler(c *gin.Context) {
 	var startDate, endDate *time.Time
 	monthStr := c.Query("month")
 	yearStr := c.Query("year")
+	dateStr := c.Query("date")
 
-	if monthStr != "" && yearStr != "" {
+	if dateStr != "" {
+		parsedDate, err := time.Parse("2006-01-02", dateStr)
+		if err == nil {
+			start := time.Date(parsedDate.Year(), parsedDate.Month(), parsedDate.Day(), 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 0, 1).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	} else if monthStr != "" && yearStr != "" {
 		m, errM := strconv.Atoi(monthStr)
 		y, errY := strconv.Atoi(yearStr)
 		if errM == nil && errY == nil {

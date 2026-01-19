@@ -121,6 +121,9 @@ func (app *application) Mount() http.Handler {
 
 		app.Handlers.FaceAuthHandlers.FaceAuthRoutes(v1, m)
 
+		//routines
+		app.Handlers.RoutineHandlers.RoutineRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}
