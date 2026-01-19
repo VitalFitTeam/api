@@ -2,6 +2,8 @@ package reportservices
 
 import (
 	"context"
+	"math"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -296,4 +298,94 @@ func (s *ReportService) GetClientReportData(ctx context.Context) ([]reportdomain
 
 func (s *ReportService) GetSalesReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.SalesReportRow, error) {
 	return s.store.Reports.GetSalesReportData(ctx, branchID, start, end)
+}
+
+func (s *ReportService) GetRFMAnalysis(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.RFMMetric, error) {
+	data, err := s.store.Reports.GetRFMData(ctx, branchID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		return data, nil
+	}
+
+	// 1. Calculate Recency Days
+	now := time.Now()
+	for i := range data {
+		if data[i].LastPurchase != nil {
+			diff := now.Sub(*data[i].LastPurchase).Hours() / 24
+			data[i].RecencyDays = int(diff)
+		} else {
+			data[i].RecencyDays = 999 // Never purchased
+		}
+	}
+
+	// Helper to assign scores (1-5) based on quintiles
+	assignScore := func(metrics []reportdomain.RFMMetric, getValue func(int) float64, setScore func(int, int), descending bool) {
+		n := len(metrics)
+		// Create a slice of indices to sort
+		indices := make([]int, n)
+		for i := 0; i < n; i++ {
+			indices[i] = i
+		}
+
+		sort.Slice(indices, func(i, j int) bool {
+			valI := getValue(indices[i])
+			valJ := getValue(indices[j])
+			if descending {
+				return valI > valJ // Higher value = Better rank (e.g. Monetary, Frequency)
+			}
+			return valI < valJ // Lower value = Better rank (e.g. Recency)
+		})
+
+		// Assign scores 5 to 1 based on quintiles
+		for rank, idx := range indices {
+			percentile := float64(rank) / float64(n)
+			score := 5 - int(math.Floor(percentile*5))
+			if score < 1 {
+				score = 1
+			}
+			setScore(idx, score)
+		}
+	}
+
+	// 2. Calculate Scores
+	// Recency (Lower is better -> Descending=false)
+	assignScore(data, func(i int) float64 { return float64(data[i].RecencyDays) }, func(i, score int) { data[i].RScore = score }, false)
+
+	// Frequency (Higher is better -> Descending=true)
+	assignScore(data, func(i int) float64 { return float64(data[i].Frequency) }, func(i, score int) { data[i].FScore = score }, true)
+
+	// Monetary (Higher is better -> Descending=true)
+	assignScore(data, func(i int) float64 { val, _ := data[i].MonetaryTotal.Float64(); return val }, func(i, score int) { data[i].MScore = score }, true)
+
+	// 3. Assign Segments
+	for i := range data {
+		r, f, m := data[i].RScore, data[i].FScore, data[i].MScore
+		avgFM := float64(f+m) / 2.0
+
+		if r >= 4 && avgFM >= 4 {
+			data[i].Segment = "Champions"
+		} else if r >= 3 && avgFM >= 3 {
+			data[i].Segment = "Loyal Customers"
+		} else if r >= 4 && avgFM <= 2 {
+			data[i].Segment = "New Customers" // High recency, low frequency/monetary
+		} else if r <= 2 && avgFM >= 4 {
+			data[i].Segment = "At Risk" // Good past customers, haven't bought recently
+		} else if r <= 2 && avgFM <= 2 {
+			data[i].Segment = "Lost"
+		} else if r == 3 && avgFM <= 3 {
+			data[i].Segment = "Potential Loyalist"
+		} else {
+			data[i].Segment = "Regular"
+		}
+
+		// Override for non-purchasers
+		if data[i].Frequency == 0 {
+			data[i].Segment = "New / Non-Purchaser"
+		}
+	}
+
+	return data, nil
 }

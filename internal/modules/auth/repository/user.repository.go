@@ -531,3 +531,20 @@ func (s *UserStore) BlockUser(ctx context.Context, userID uuid.UUID, justificati
 	}
 	return nil
 }
+
+func (s *UserStore) UnblockUser(ctx context.Context, userID uuid.UUID) error {
+	result := s.db.WithContext(ctx).Model(&authdomain.Users{}).
+		Where("user_id = ?", userID).
+		Updates(map[string]interface{}{
+			"status":              authdomain.UserStatusActive,
+			"block_justification": "",
+		})
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return shared_errors.ErrNotFound
+	}
+	return nil
+}

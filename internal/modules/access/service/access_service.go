@@ -65,6 +65,7 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 			AccessType:  "Class Reservation",
 			ServiceName: class.Service.Name,
 			CheckInTime: now,
+			UserID:      userID,
 		}, nil
 	}
 
@@ -94,6 +95,7 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 				AccessType:  "Class Walk-in",
 				ServiceName: class.Service.Name,
 				CheckInTime: now,
+				UserID:      userID,
 			}, nil
 		}
 	}
@@ -134,6 +136,7 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 			AccessType:  "Open Gym",
 			ServiceName: "Open Gym",
 			CheckInTime: now,
+			UserID:      userID,
 		}, nil
 	}
 
@@ -160,6 +163,7 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 			AccessType:  "Open Gym",
 			ServiceName: "Open Gym",
 			CheckInTime: now,
+			UserID:      userID,
 		}, nil
 	}
 

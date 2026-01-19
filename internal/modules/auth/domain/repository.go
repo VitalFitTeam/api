@@ -34,6 +34,7 @@ type UserRepository interface {
 	UpgradePassword(ctx context.Context, user *Users) error
 	UpdateActivationCode(ctx context.Context, userID uuid.UUID, token string, invitationExp time.Duration) error
 	BlockUser(ctx context.Context, userID uuid.UUID, justification string) error
+	UnblockUser(ctx context.Context, userID uuid.UUID) error
 	GetAllStaffUsers(ctx context.Context) ([]*Users, error)
 }
 

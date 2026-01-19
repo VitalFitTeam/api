@@ -10258,6 +10258,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/analysis/rfm": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the RFM (Recency, Frequency, Monetary) analysis for clients.\nRecency: Days since last purchase. Frequency: Total number of purchases. Monetary: Total amount spent.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get RFM Analysis",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "RFM Analysis Data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.RFMMetric"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/charts/activity-heatmap": {
             "get": {
                 "security": [
@@ -14738,6 +14790,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/{id}/unblock": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Unblocks a previously blocked user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Unblock a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User unblocked successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/wishlist": {
             "get": {
                 "security": [
@@ -14952,6 +15071,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "service_name": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -18648,6 +18770,44 @@ const docTemplate = `{
                 },
                 "value": {
                     "type": "number"
+                }
+            }
+        },
+        "reportdomain.RFMMetric": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "f_score": {
+                    "type": "integer"
+                },
+                "frequency": {
+                    "type": "integer"
+                },
+                "last_purchase": {
+                    "type": "string"
+                },
+                "m_score": {
+                    "type": "integer"
+                },
+                "monetary_total": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "r_score": {
+                    "type": "integer"
+                },
+                "recency_days": {
+                    "type": "integer"
+                },
+                "segment": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },

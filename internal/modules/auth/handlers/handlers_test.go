@@ -885,6 +885,36 @@ func TestUserDetailAndUpdateHandlers(t *testing.T) {
 		userStoreMock.AssertExpectations(t)
 		roleStoreMock.AssertExpectations(t)
 	})
+
+	t.Run("UnblockUserHandler", func(t *testing.T) {
+		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminRoleID, "users:update").Return(true, nil).Once()
+
+		userStoreMock.On("UnblockUser", mock.Anything, targetUserID).Return(nil).Once()
+
+		req, _ := http.NewRequest(http.MethodPut, "/v1/user/"+targetUserID.String()+"/unblock", nil)
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusNoContent, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
+
+	t.Run("UnblockUserHandler_NotFound", func(t *testing.T) {
+		userStoreMock.On("GetByID", mock.Anything, adminUser.UserID).Return(adminUser, nil).Once()
+		roleStoreMock.On("RoleHasPermission", mock.Anything, adminRoleID, "users:update").Return(true, nil).Once()
+
+		userStoreMock.On("UnblockUser", mock.Anything, targetUserID).Return(shared_errors.ErrNotFound).Once()
+
+		req, _ := http.NewRequest(http.MethodPut, "/v1/user/"+targetUserID.String()+"/unblock", nil)
+		req.Header.Set("Authorization", "Bearer "+adminToken)
+		rr := app.ExecuteRequest(req, mux)
+
+		assert.Equal(t, http.StatusNotFound, rr.Code)
+		userStoreMock.AssertExpectations(t)
+		roleStoreMock.AssertExpectations(t)
+	})
 }
 
 func TestResetPasswordHandler(t *testing.T) {

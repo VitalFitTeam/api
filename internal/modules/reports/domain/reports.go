@@ -158,3 +158,17 @@ type SalesReportRow struct {
 	Total         decimal.Decimal `json:"total"`
 	PaymentMethod string          `json:"payment_method"`
 }
+
+type RFMMetric struct {
+	UserID        uuid.UUID       `json:"user_id"`
+	Name          string          `json:"name"`
+	Email         string          `json:"email"`
+	LastPurchase  *time.Time      `json:"last_purchase"`
+	RecencyDays   int             `json:"recency_days"`
+	Frequency     int             `json:"frequency"`
+	MonetaryTotal decimal.Decimal `json:"monetary_total"`
+	RScore        int             `json:"r_score"`
+	FScore        int             `json:"f_score"`
+	MScore        int             `json:"m_score"`
+	Segment       string          `json:"segment"`
+}

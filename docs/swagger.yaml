@@ -20,6 +20,8 @@ definitions:
         type: string
       service_name:
         type: string
+      user_id:
+        type: string
     type: object
   accessdomain.ClientScore:
     properties:
@@ -2509,6 +2511,31 @@ definitions:
         type: number
       value:
         type: number
+    type: object
+  reportdomain.RFMMetric:
+    properties:
+      email:
+        type: string
+      f_score:
+        type: integer
+      frequency:
+        type: integer
+      last_purchase:
+        type: string
+      m_score:
+        type: integer
+      monetary_total:
+        type: number
+      name:
+        type: string
+      r_score:
+        type: integer
+      recency_days:
+        type: integer
+      segment:
+        type: string
+      user_id:
+        type: string
     type: object
   reportdomain.RecentAttendanceItem:
     properties:
@@ -9405,6 +9432,40 @@ paths:
       summary: List all public services
       tags:
       - Public
+  /reports/analysis/rfm:
+    get:
+      description: |-
+        Retrieves the RFM (Recency, Frequency, Monetary) analysis for clients.
+        Recency: Days since last purchase. Frequency: Total number of purchases. Monetary: Total amount spent.
+      parameters:
+      - description: Filter by Branch UUID
+        in: query
+        name: branch_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: RFM Analysis Data
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/reportdomain.RFMMetric'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get RFM Analysis
+      tags:
+      - Reports
   /reports/charts/activity-heatmap:
     get:
       description: Retrieves attendance density grouped by day of week and 3-hour
@@ -11865,6 +11926,48 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update a staff user
+      tags:
+      - User
+  /user/{id}/unblock:
+    put:
+      consumes:
+      - application/json
+      description: Unblocks a previously blocked user.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User unblocked successfully
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Unblock a user
       tags:
       - User
   /user/branch-admins:
