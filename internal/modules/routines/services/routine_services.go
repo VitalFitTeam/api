@@ -25,16 +25,10 @@ func (s *RoutineService) CreateRoutine(ctx context.Context, routine *routinedoma
 	return s.store.Routine.CreateRoutine(ctx, routine)
 }
 
-func (s *RoutineService) AssignRoutine(ctx context.Context, instructorUserID, clientID, routineID uuid.UUID, dueDate *time.Time) error {
-	// Resolve InstructorID from UserID
-	instructor, err := s.store.Instructor.GetByUserID(ctx, instructorUserID)
-	if err != nil {
-		return err
-	}
-
+func (s *RoutineService) AssignRoutine(ctx context.Context, instructorID, clientID, routineID uuid.UUID, dueDate *time.Time) error {
 	assignment := &routinedomain.UserRoutine{
 		ClientID:     clientID,
-		InstructorID: instructor.InstructorID,
+		InstructorID: instructorID,
 		RoutineID:    routineID,
 		Status:       routinedomain.StatusActive,
 		DueDate:      dueDate,
@@ -45,8 +39,8 @@ func (s *RoutineService) AssignRoutine(ctx context.Context, instructorUserID, cl
 	return s.store.Routine.AssignRoutine(ctx, assignment)
 }
 
-func (s *RoutineService) GetClientRoutines(ctx context.Context, clientID uuid.UUID) ([]*routinedomain.UserRoutine, error) {
-	return s.store.Routine.GetClientRoutines(ctx, clientID)
+func (s *RoutineService) GetClientRoutines(ctx context.Context, clientID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*routinedomain.UserRoutine, int64, error) {
+	return s.store.Routine.GetClientRoutines(ctx, clientID, fq)
 }
 
 func (s *RoutineService) CreateExercise(ctx context.Context, exercise *routinedomain.Exercise) error {
@@ -55,4 +49,12 @@ func (s *RoutineService) CreateExercise(ctx context.Context, exercise *routinedo
 
 func (s *RoutineService) GetExercises(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*routinedomain.Exercise, int64, error) {
 	return s.store.Routine.GetExercises(ctx, fq)
+}
+
+func (s *RoutineService) GetRoutinesByCreator(ctx context.Context, creatorID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*routinedomain.Routine, int64, error) {
+	return s.store.Routine.GetRoutinesByCreator(ctx, creatorID, fq)
+}
+
+func (s *RoutineService) GetRoutineByID(ctx context.Context, routineID uuid.UUID) (*routinedomain.Routine, error) {
+	return s.store.Routine.GetRoutineByID(ctx, routineID)
 }

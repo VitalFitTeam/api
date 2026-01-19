@@ -12975,15 +12975,44 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term",
+                        "name": "search",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "List of assigned routines",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/routinedomain.UserRoutine"
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/routinehandlers.UserRoutineResponse"
+                                    }
+                                }
                             }
                         }
                     },
@@ -12994,6 +13023,76 @@ const docTemplate = `{
                             "properties": {
                                 "error": {
                                     "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/routines/my-created": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a paginated list of routines created by the authenticated instructor.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routines"
+                ],
+                "summary": "Get routines created by instructor",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of routines",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/routinedomain.Routine"
+                                    }
                                 }
                             }
                         }
@@ -13027,13 +13126,111 @@ const docTemplate = `{
                     "Routines"
                 ],
                 "summary": "Get my assigned routines",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search term",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "List of assigned routines",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/routinedomain.UserRoutine"
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/routinehandlers.UserRoutineResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/routines/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves details of a specific routine template.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routines"
+                ],
+                "summary": "Get routine by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Routine ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Routine details",
+                        "schema": {
+                            "$ref": "#/definitions/routinedomain.Routine"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
                             }
                         }
                     },
@@ -16814,65 +17011,6 @@ const docTemplate = `{
                 }
             }
         },
-        "branchdomain.Branch": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "branch_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "deleted_at": {
-                    "type": "string"
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "manager": {
-                    "$ref": "#/definitions/authdomain.Users"
-                },
-                "manager_id": {
-                    "type": "string"
-                },
-                "max_capacity": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "operating_hours": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/branchdomain.OperatingHours"
-                    }
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "state": {
-                    "$ref": "#/definitions/branchdomain.States"
-                },
-                "state_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/branchdomain.BranchStatusEnum"
-                },
-                "tax_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "branchdomain.BranchStatusCount": {
             "type": "object",
             "properties": {
@@ -16891,36 +17029,6 @@ const docTemplate = `{
                 "total": {
                     "type": "integer",
                     "format": "int64"
-                }
-            }
-        },
-        "branchdomain.BranchStatusEnum": {
-            "type": "string",
-            "enum": [
-                "Active",
-                "Inactive",
-                "Maintenance"
-            ],
-            "x-enum-varnames": [
-                "BranchStatusActive",
-                "BranchStatusInactive",
-                "BranchStatusMaintenance"
-            ]
-        },
-        "branchdomain.Countries": {
-            "type": "object",
-            "properties": {
-                "countryID": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "states": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/branchdomain.States"
-                    }
                 }
             }
         },
@@ -16964,23 +17072,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "open_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "branchdomain.States": {
-            "type": "object",
-            "properties": {
-                "country": {
-                    "$ref": "#/definitions/branchdomain.Countries"
-                },
-                "countryID": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "stateID": {
                     "type": "string"
                 }
             }
@@ -17507,41 +17598,6 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "startAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "instructordomain.Instructor": {
-            "type": "object",
-            "properties": {
-                "biography": {
-                    "type": "string"
-                },
-                "branches": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/branchdomain.Branch"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "instructor_id": {
-                    "type": "string"
-                },
-                "specialties": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/productsdomain.ServiceCategory"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/authdomain.Users"
-                },
-                "user_id": {
                     "type": "string"
                 }
             }
@@ -19627,57 +19683,6 @@ const docTemplate = `{
                 "LevelAdvanced"
             ]
         },
-        "routinedomain.RoutineStatus": {
-            "type": "string",
-            "enum": [
-                "Active",
-                "Completed",
-                "Archived"
-            ],
-            "x-enum-varnames": [
-                "StatusActive",
-                "StatusCompleted",
-                "StatusArchived"
-            ]
-        },
-        "routinedomain.UserRoutine": {
-            "type": "object",
-            "properties": {
-                "assigned_date": {
-                    "type": "string"
-                },
-                "client": {
-                    "$ref": "#/definitions/authdomain.Users"
-                },
-                "client_id": {
-                    "type": "string"
-                },
-                "due_date": {
-                    "type": "string"
-                },
-                "instructor": {
-                    "$ref": "#/definitions/instructordomain.Instructor"
-                },
-                "instructor_id": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "routine": {
-                    "$ref": "#/definitions/routinedomain.Routine"
-                },
-                "routine_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/routinedomain.RoutineStatus"
-                },
-                "user_routine_id": {
-                    "type": "string"
-                }
-            }
-        },
         "routinehandlers.AssignRoutineRequest": {
             "type": "object",
             "properties": {
@@ -19753,6 +19758,38 @@ const docTemplate = `{
                 },
                 "sets": {
                     "type": "integer"
+                }
+            }
+        },
+        "routinehandlers.UserRoutineResponse": {
+            "type": "object",
+            "properties": {
+                "assigned_date": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "instructor": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "string"
+                },
+                "routine_id": {
+                    "type": "string"
+                },
+                "routine_name": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_routine_id": {
+                    "type": "string"
                 }
             }
         },

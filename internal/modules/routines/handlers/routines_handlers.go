@@ -79,7 +79,13 @@ func (h *RoutineHandlers) AssignRoutineHandler(c *gin.Context) {
 
 	user := h.services.UserServices.GetUserFromContext(c)
 
-	err := h.services.Routine.AssignRoutine(c.Request.Context(), user.UserID, payload.ClientID, payload.RoutineID, payload.DueDate)
+	instructor, err := h.services.InstructorServices.GetInstructorByUserID(c.Request.Context(), user.UserID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	err = h.services.Routine.AssignRoutine(c.Request.Context(), instructor.InstructorID, payload.ClientID, payload.RoutineID, payload.DueDate)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -93,19 +99,68 @@ func (h *RoutineHandlers) AssignRoutineHandler(c *gin.Context) {
 // @Tags			Routines
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Success		200	{object}	[]routinedomain.UserRoutine	"List of assigned routines"
-// @Failure		500	{object}	object{error=string}		"Internal Server Error"
+// @Param			limit	query		int									false	"Number of results per page"
+// @Param			page	query		int									false	"Page number"
+// @Param			sort	query		string								false	"Sort order (asc/desc)"
+// @Param			search	query		string								false	"Search term"
+// @Success		200		{object}	object{data=[]UserRoutineResponse}	"List of assigned routines"
+// @Failure		500		{object}	object{error=string}				"Internal Server Error"
 // @Router			/routines/my-routines [get]
 func (h *RoutineHandlers) GetMyRoutinesHandler(c *gin.Context) {
 	user := h.services.UserServices.GetUserFromContext(c)
 
-	routines, err := h.services.Routine.GetClientRoutines(c.Request.Context(), user.UserID)
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Search: "",
+	}
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	routines, total, err := h.services.Routine.GetClientRoutines(c.Request.Context(), user.UserID, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, routines)
+	response := make([]UserRoutineResponse, 0, len(routines))
+	for _, r := range routines {
+		instructorName := "Unknown"
+		if r.Instructor.User != nil {
+			instructorName = fmt.Sprintf("%s %s", r.Instructor.User.FirstName, r.Instructor.User.LastName)
+		}
+
+		response = append(response, UserRoutineResponse{
+			UserRoutineID: r.UserRoutineID,
+			RoutineID:     r.RoutineID,
+			ServiceID:     r.Routine.ServiceID,
+			RoutineName:   r.Routine.Name,
+			Level:         string(r.Routine.Level),
+			Instructor:    instructorName,
+			AssignedDate:  r.AssignedDate,
+			DueDate:       r.DueDate,
+			Status:        string(r.Status),
+		})
+	}
+
+	nextURL := fmt.Sprintf("/routines/my-routines?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, fq.Page+1, fq.Sort, fq.Search)
+	previousPage := fq.Page - 1
+	if previousPage < 1 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/routines/my-routines?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, previousPage, fq.Sort, fq.Search)
+
+	c.JSON(http.StatusOK, pagination.PaginatedResponseTotal[UserRoutineResponse]{
+		Data:     response,
+		Count:    int64(len(response)),
+		Total:    total,
+		Next:     nextURL,
+		Previous: previousURL,
+	})
 }
 
 // @Summary		Create a new exercise
@@ -193,10 +248,14 @@ func (h *RoutineHandlers) GetExercisesHandler(c *gin.Context) {
 // @Tags			Routines
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			id	path		string						true	"Client ID (UUID)"
-// @Success		200	{object}	[]routinedomain.UserRoutine	"List of assigned routines"
-// @Failure		400	{object}	object{error=string}		"Bad Request"
-// @Failure		500	{object}	object{error=string}		"Internal Server Error"
+// @Param			id		path		string								true	"Client ID (UUID)"
+// @Param			limit	query		int									false	"Number of results per page"
+// @Param			page	query		int									false	"Page number"
+// @Param			sort	query		string								false	"Sort order (asc/desc)"
+// @Param			search	query		string								false	"Search term"
+// @Success		200		{object}	object{data=[]UserRoutineResponse}	"List of assigned routines"
+// @Failure		400		{object}	object{error=string}				"Bad Request"
+// @Failure		500		{object}	object{error=string}				"Internal Server Error"
 // @Router			/routines/client/{id} [get]
 func (h *RoutineHandlers) GetClientRoutinesHandler(c *gin.Context) {
 	clientID, err := uuid.Parse(c.Param("id"))
@@ -205,11 +264,149 @@ func (h *RoutineHandlers) GetClientRoutinesHandler(c *gin.Context) {
 		return
 	}
 
-	routines, err := h.services.Routine.GetClientRoutines(c.Request.Context(), clientID)
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Search: "",
+	}
+	fq, err = fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	routines, total, err := h.services.Routine.GetClientRoutines(c.Request.Context(), clientID, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, routines)
+	response := make([]UserRoutineResponse, 0, len(routines))
+	for _, r := range routines {
+		instructorName := "Unknown"
+		if r.Instructor.User != nil {
+			instructorName = fmt.Sprintf("%s %s", r.Instructor.User.FirstName, r.Instructor.User.LastName)
+		}
+
+		response = append(response, UserRoutineResponse{
+			UserRoutineID: r.UserRoutineID,
+			RoutineID:     r.RoutineID,
+			ServiceID:     r.Routine.ServiceID,
+			RoutineName:   r.Routine.Name,
+			Level:         string(r.Routine.Level),
+			Instructor:    instructorName,
+			AssignedDate:  r.AssignedDate,
+			DueDate:       r.DueDate,
+			Status:        string(r.Status),
+		})
+	}
+
+	nextURL := fmt.Sprintf("/routines/client/%s?limit=%d&page=%d&sort=%s&search=%s", clientID, fq.Limit, fq.Page+1, fq.Sort, fq.Search)
+	previousPage := fq.Page - 1
+	if previousPage < 1 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/routines/client/%s?limit=%d&page=%d&sort=%s&search=%s", clientID, fq.Limit, previousPage, fq.Sort, fq.Search)
+
+	c.JSON(http.StatusOK, pagination.PaginatedResponseTotal[UserRoutineResponse]{
+		Data:     response,
+		Count:    int64(len(response)),
+		Total:    total,
+		Next:     nextURL,
+		Previous: previousURL,
+	})
+}
+
+// @Summary		Get routines created by instructor
+// @Description	Retrieves a paginated list of routines created by the authenticated instructor.
+// @Tags			Routines
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			limit	query		int										false	"Number of results per page"
+// @Param			page	query		int										false	"Page number"
+// @Param			sort	query		string									false	"Sort order (asc/desc)"
+// @Param			search	query		string									false	"Search term"
+// @Success		200		{object}	object{data=[]routinedomain.Routine}	"List of routines"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Router			/routines/my-created [get]
+func (h *RoutineHandlers) GetInstructorRoutinesHandler(c *gin.Context) {
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Search: "",
+	}
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	routines, total, err := h.services.Routine.GetRoutinesByCreator(c.Request.Context(), user.UserID, fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/routines/my-created?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, fq.Page+1, fq.Sort, fq.Search)
+	previousPage := fq.Page - 1
+	if previousPage < 1 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/routines/my-created?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, previousPage, fq.Sort, fq.Search)
+
+	c.JSON(http.StatusOK, pagination.PaginatedResponseTotal[*routinedomain.Routine]{
+		Data:     routines,
+		Count:    int64(len(routines)),
+		Total:    total,
+		Next:     nextURL,
+		Previous: previousURL,
+	})
+}
+
+// @Summary		Get routine by ID
+// @Description	Retrieves details of a specific routine template.
+// @Tags			Routines
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			id	path		string					true	"Routine ID (UUID)"
+// @Success		200	{object}	routinedomain.Routine	"Routine details"
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		404	{object}	object{error=string}	"Not Found"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/routines/{id} [get]
+func (h *RoutineHandlers) GetRoutineByIDHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	user := h.services.UserServices.GetUserFromContext(c)
+	if user.Role.Name != "client" {
+		permission := "routines:get"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
+	idStr := c.Param("id")
+	routineID, err := uuid.Parse(idStr)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	routine, err := h.services.Routine.GetRoutineByID(c.Request.Context(), routineID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, routine)
 }

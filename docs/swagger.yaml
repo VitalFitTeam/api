@@ -949,45 +949,6 @@ definitions:
       user_id:
         type: string
     type: object
-  branchdomain.Branch:
-    properties:
-      address:
-        type: string
-      branch_id:
-        type: string
-      created_at:
-        type: string
-      deleted_at:
-        type: string
-      latitude:
-        type: number
-      longitude:
-        type: number
-      manager:
-        $ref: '#/definitions/authdomain.Users'
-      manager_id:
-        type: string
-      max_capacity:
-        type: integer
-      name:
-        type: string
-      operating_hours:
-        items:
-          $ref: '#/definitions/branchdomain.OperatingHours'
-        type: array
-      phone:
-        type: string
-      state:
-        $ref: '#/definitions/branchdomain.States'
-      state_id:
-        type: string
-      status:
-        $ref: '#/definitions/branchdomain.BranchStatusEnum'
-      tax_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
   branchdomain.BranchStatusCount:
     properties:
       active:
@@ -1002,27 +963,6 @@ definitions:
       total:
         format: int64
         type: integer
-    type: object
-  branchdomain.BranchStatusEnum:
-    enum:
-    - Active
-    - Inactive
-    - Maintenance
-    type: string
-    x-enum-varnames:
-    - BranchStatusActive
-    - BranchStatusInactive
-    - BranchStatusMaintenance
-  branchdomain.Countries:
-    properties:
-      countryID:
-        type: string
-      name:
-        type: string
-      states:
-        items:
-          $ref: '#/definitions/branchdomain.States'
-        type: array
     type: object
   branchdomain.DayOfWeekEnum:
     enum:
@@ -1055,17 +995,6 @@ definitions:
       is_closed:
         type: boolean
       open_time:
-        type: string
-    type: object
-  branchdomain.States:
-    properties:
-      country:
-        $ref: '#/definitions/branchdomain.Countries'
-      countryID:
-        type: string
-      name:
-        type: string
-      stateID:
         type: string
     type: object
   branchhandlers.BranchListResponse:
@@ -1429,29 +1358,6 @@ definitions:
       ref_price:
         type: number
       startAt:
-        type: string
-    type: object
-  instructordomain.Instructor:
-    properties:
-      biography:
-        type: string
-      branches:
-        items:
-          $ref: '#/definitions/branchdomain.Branch'
-        type: array
-      created_at:
-        type: string
-      instructor_id:
-        type: string
-      specialties:
-        items:
-          $ref: '#/definitions/productsdomain.ServiceCategory'
-        type: array
-      updated_at:
-        type: string
-      user:
-        $ref: '#/definitions/authdomain.Users'
-      user_id:
         type: string
     type: object
   instructordomain.InstructorSummary:
@@ -2848,41 +2754,6 @@ definitions:
     - LevelBeginner
     - LevelIntermediate
     - LevelAdvanced
-  routinedomain.RoutineStatus:
-    enum:
-    - Active
-    - Completed
-    - Archived
-    type: string
-    x-enum-varnames:
-    - StatusActive
-    - StatusCompleted
-    - StatusArchived
-  routinedomain.UserRoutine:
-    properties:
-      assigned_date:
-        type: string
-      client:
-        $ref: '#/definitions/authdomain.Users'
-      client_id:
-        type: string
-      due_date:
-        type: string
-      instructor:
-        $ref: '#/definitions/instructordomain.Instructor'
-      instructor_id:
-        type: string
-      is_active:
-        type: boolean
-      routine:
-        $ref: '#/definitions/routinedomain.Routine'
-      routine_id:
-        type: string
-      status:
-        $ref: '#/definitions/routinedomain.RoutineStatus'
-      user_routine_id:
-        type: string
-    type: object
   routinehandlers.AssignRoutineRequest:
     properties:
       client_id:
@@ -2933,6 +2804,27 @@ definitions:
         type: integer
       sets:
         type: integer
+    type: object
+  routinehandlers.UserRoutineResponse:
+    properties:
+      assigned_date:
+        type: string
+      due_date:
+        type: string
+      instructor:
+        type: string
+      level:
+        type: string
+      routine_id:
+        type: string
+      routine_name:
+        type: string
+      service_id:
+        type: string
+      status:
+        type: string
+      user_routine_id:
+        type: string
     type: object
   scheduledomain.Class:
     properties:
@@ -11464,6 +11356,48 @@ paths:
       summary: Create a new routine template
       tags:
       - Routines
+  /routines/{id}:
+    get:
+      description: Retrieves details of a specific routine template.
+      parameters:
+      - description: Routine ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Routine details
+          schema:
+            $ref: '#/definitions/routinedomain.Routine'
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get routine by ID
+      tags:
+      - Routines
   /routines/assign:
     post:
       consumes:
@@ -11521,15 +11455,34 @@ paths:
         name: id
         required: true
         type: string
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: List of assigned routines
           schema:
-            items:
-              $ref: '#/definitions/routinedomain.UserRoutine'
-            type: array
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/routinehandlers.UserRoutineResponse'
+                type: array
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -11549,19 +11502,84 @@ paths:
       summary: Get client routines
       tags:
       - Routines
+  /routines/my-created:
+    get:
+      description: Retrieves a paginated list of routines created by the authenticated
+        instructor.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of routines
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/routinedomain.Routine'
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get routines created by instructor
+      tags:
+      - Routines
   /routines/my-routines:
     get:
       description: Retrieves the list of active routines assigned to the authenticated
         client.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: List of assigned routines
           schema:
-            items:
-              $ref: '#/definitions/routinedomain.UserRoutine'
-            type: array
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/routinehandlers.UserRoutineResponse'
+                type: array
+            type: object
         "500":
           description: Internal Server Error
           schema:

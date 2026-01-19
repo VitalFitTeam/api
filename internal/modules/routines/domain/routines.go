@@ -84,7 +84,7 @@ type RoutineExercise struct {
 	RoutineID  uuid.UUID `gorm:"type:uuid;not null" json:"routine_id"`
 	ExerciseID uuid.UUID `gorm:"type:uuid;not null" json:"exercise_id"`
 
-	Exercise Exercise `gorm:"foreignKey:ExerciseID" json:"exercise_details,omitempty"`
+	Exercise Exercise `gorm:"foreignKey:ExerciseID;references:ExerciseID" json:"exercise_details,omitempty"`
 
 	Sets     int    `gorm:"not null" json:"sets"`
 	Reps     string `gorm:"type:varchar(20);not null" json:"reps"`
@@ -106,9 +106,9 @@ type UserRoutine struct {
 	InstructorID uuid.UUID `gorm:"type:uuid;not null" json:"instructor_id"`
 	RoutineID    uuid.UUID `gorm:"type:uuid;not null" json:"routine_id"`
 
-	Routine Routine `gorm:"foreignKey:RoutineID" json:"routine,omitempty"`
+	Routine Routine `gorm:"foreignKey:RoutineID;references:RoutineID" json:"routine,omitempty"`
 
-	Instructor instructordomain.Instructor `gorm:"foreignKey:InstructorID" json:"instructor,omitempty"`
+	Instructor instructordomain.Instructor `gorm:"foreignKey:InstructorID;references:InstructorID" json:"instructor,omitempty"`
 	Client     authdomain.Users            `gorm:"foreignKey:ClientID" json:"client,omitempty"`
 
 	AssignedDate time.Time     `gorm:"default:now()" json:"assigned_date"`
