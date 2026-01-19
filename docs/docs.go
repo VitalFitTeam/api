@@ -15072,6 +15072,9 @@ const docTemplate = `{
                 },
                 "service_name": {
                     "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },

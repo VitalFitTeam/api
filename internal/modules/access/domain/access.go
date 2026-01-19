@@ -43,6 +43,7 @@ type CheckInResponse struct {
 	AccessType  string    `json:"access_type"`
 	ServiceName string    `json:"service_name,omitempty"`
 	CheckInTime time.Time `json:"check_in_time"`
+	UserID      uuid.UUID `json:"user_id"`
 }
 
 type ClientScore struct {
