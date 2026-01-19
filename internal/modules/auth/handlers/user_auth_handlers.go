@@ -100,6 +100,12 @@ func (h *AuthHandlers) RegisterUserStaffHandler(c *gin.Context) {
 		return
 	}
 
+	currentUser := h.services.UserServices.GetUserFromContext(c)
+	if payload.RoleName == "super_admin" && currentUser.Role.Name != "super_admin" {
+		h.services.LogErrors.ForbiddenResponse(c)
+		return
+	}
+
 	user, err := payload.CreateUser()
 	if err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)

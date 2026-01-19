@@ -166,6 +166,34 @@ func (r *AuthHandlers) UpdateRoleHandler(c *gin.Context) {
 		r.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
+
+	existingRole, err := r.services.UserServices.GetRoleByID(ctx, roleID)
+	if err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			r.services.LogErrors.NotFoundResponse(c)
+			return
+		default:
+			r.services.LogErrors.InternalServerError(c, err)
+			return
+		}
+	}
+
+	systemRoles := map[string]bool{
+		"super_admin":  true,
+		"recepcionist": true,
+		"branch_admin": true,
+		"data_analyst": true,
+		"accountant":   true,
+		"instructor":   true,
+		"client":       true,
+	}
+
+	if systemRoles[existingRole.Name] && payload.Name != existingRole.Name {
+		r.services.LogErrors.BadRequestResponse(c, fmt.Errorf("cannot modify the name of system role '%s'", existingRole.Name))
+		return
+	}
+
 	role, err := payload.createRole()
 	if err != nil {
 		r.services.LogErrors.BadRequestResponse(c, err)

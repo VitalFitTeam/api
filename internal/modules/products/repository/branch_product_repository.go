@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"gorm.io/gorm"
@@ -62,22 +63,27 @@ func (s *ProductsStore) UpdateBranchService(ctx context.Context, branchService *
 }
 
 func (s *ProductsStore) DeleteBranchService(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) error {
-	association := productsdomain.ServiceBranchDetail{
-		BranchID:  branchID,
-		ServiceID: serviceID,
-	}
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).
+			Where("branch_id = ? AND service_id = ?", branchID, serviceID).
+			Delete(&scheduledomain.Class{}).Error; err != nil {
+			return err
+		}
 
-	result := s.db.WithContext(ctx).Delete(&association)
+		association := productsdomain.ServiceBranchDetail{
+			BranchID:  branchID,
+			ServiceID: serviceID,
+		}
 
-	if result.Error != nil {
-		return result.Error
-	}
-
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-
-	return nil
+		result := tx.WithContext(ctx).Delete(&association)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return nil
+	})
 }
 
 func (s *ProductsStore) GetBranchServiceByID(ctx context.Context, branchID uuid.UUID, serviceID uuid.UUID) (*productsdomain.ServiceBranchDetail, error) {
