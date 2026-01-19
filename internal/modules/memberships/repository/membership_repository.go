@@ -304,12 +304,12 @@ func (s *MembershipStore) GetClientsMemberships(ctx context.Context, fq paginati
 
 	if fq.Search != "" {
 		searchQuery := "%" + fq.Search + "%"
-		searchFields := "users.first_name ILIKE ? OR users.last_name ILIKE ? OR membership_types.name ILIKE ?"
+		searchFields := "users.first_name ILIKE ? OR users.last_name ILIKE ? OR users.email ILIKE ? OR users.identity_document ILIKE ? OR membership_types.name ILIKE ?"
 		if fq.Category == "" {
 			searchFields += " OR client_memberships.status::text ILIKE ?"
-			query = query.Where(searchFields, searchQuery, searchQuery, searchQuery, searchQuery)
+			query = query.Where(searchFields, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery)
 		} else {
-			query = query.Where(searchFields, searchQuery, searchQuery, searchQuery)
+			query = query.Where(searchFields, searchQuery, searchQuery, searchQuery, searchQuery, searchQuery)
 		}
 	}
 
