@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"github.com/vitalfit/api/pkg/pagination"
@@ -220,20 +221,20 @@ func (s *ProductsStore) GetServiceSummary(ctx context.Context) (*productsdomain.
 }
 
 func (s *ProductsStore) DeleteService(ctx context.Context, serviceID uuid.UUID) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).Where("service_id = ?", serviceID).Delete(&scheduledomain.Class{}).Error; err != nil {
+			return err
+		}
 
-	err := db.WithTX(s.db, func(tx *gorm.DB) error {
-		if err := tx.Delete(&productsdomain.Service{}, serviceID).Error; err != nil {
-			switch err {
-			case gorm.ErrRecordNotFound:
-				return err
-			default:
-				return err
-			}
+		if err := tx.WithContext(ctx).Where("service_id = ?", serviceID).Delete(&productsdomain.ServiceBranchDetail{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).Delete(&productsdomain.Service{}, serviceID).Error; err != nil {
+			return err
 		}
 		return nil
 	})
-	return err
-
 }
 func (s *ProductsStore) GetServiceByID(ctx context.Context, serviceID uuid.UUID) (*productsdomain.Service, error) {
 	service := &productsdomain.Service{}

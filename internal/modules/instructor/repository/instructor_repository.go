@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/db"
 	"github.com/vitalfit/api/pkg/pagination"
@@ -132,6 +133,18 @@ func (s *InstructorStore) Delete(ctx context.Context, instructorID uuid.UUID) er
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return shared_errors.ErrNotFound
 			}
+			return err
+		}
+
+		if err := tx.WithContext(ctx).Where("instructor_id = ?", instructorID).Delete(&scheduledomain.Class{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).Where("instructor_id = ?", instructorID).Delete(&instructordomain.BranchInstructor{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).Where("instructor_id = ?", instructorID).Delete(&instructordomain.InstructorSpecialty{}).Error; err != nil {
 			return err
 		}
 

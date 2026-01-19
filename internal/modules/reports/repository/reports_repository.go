@@ -1046,7 +1046,7 @@ func (rs *ReportStore) GetCurrentOccupancyStat(ctx context.Context, branchID *uu
 func (rs *ReportStore) GetClassCapacityRatio(ctx context.Context, classID uuid.UUID) (*reportdomain.ClassCapacityStats, error) {
 	var class scheduledomain.Class
 	// Get class info (capacity and service name)
-	if err := rs.db.WithContext(ctx).Joins("Service").First(&class, "class_id = ?", classID).Error; err != nil {
+	if err := rs.db.WithContext(ctx).Unscoped().Joins("Service").First(&class, "class_id = ?", classID).Error; err != nil {
 		return nil, err
 	}
 
@@ -1188,7 +1188,7 @@ func (rs *ReportStore) GetInstructorMonthlyClassesCount(ctx context.Context, ins
 	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
 
 	var currentCount int64
-	err := rs.db.WithContext(ctx).Model(&scheduledomain.Class{}).
+	err := rs.db.WithContext(ctx).Unscoped().Model(&scheduledomain.Class{}).
 		Where("instructor_id = ?", instructorID).
 		Where("starts_at >= ? AND starts_at < ?", currentMonthStart, nextMonthStart).
 		Count(&currentCount).Error
@@ -1197,7 +1197,7 @@ func (rs *ReportStore) GetInstructorMonthlyClassesCount(ctx context.Context, ins
 	}
 
 	var prevCount int64
-	err = rs.db.WithContext(ctx).Model(&scheduledomain.Class{}).
+	err = rs.db.WithContext(ctx).Unscoped().Model(&scheduledomain.Class{}).
 		Where("instructor_id = ?", instructorID).
 		Where("starts_at >= ? AND starts_at < ?", prevMonthStart, currentMonthStart).
 		Count(&prevCount).Error

@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
+	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	"github.com/vitalfit/api/pkg/db"
 	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
@@ -66,21 +67,25 @@ func (s *InstructorStore) ListBranchInstructors(ctx context.Context, branchID uu
 }
 
 func (s *InstructorStore) RemoveInstructorFromBranch(ctx context.Context, branchID uuid.UUID, instructorID uuid.UUID) error {
+	return db.WithTX(s.db, func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).
+			Where("branch_id = ? AND instructor_id = ?", branchID, instructorID).
+			Delete(&scheduledomain.Class{}).Error; err != nil {
+			return err
+		}
 
-	association := instructordomain.BranchInstructor{
-		BranchID:     branchID,
-		InstructorID: instructorID,
-	}
+		association := instructordomain.BranchInstructor{
+			BranchID:     branchID,
+			InstructorID: instructorID,
+		}
 
-	result := s.db.WithContext(ctx).Delete(&association)
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-
-	return nil
+		result := tx.WithContext(ctx).Delete(&association)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return nil
+	})
 }
