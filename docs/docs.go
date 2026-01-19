@@ -5079,6 +5079,12 @@ const docTemplate = `{
                         "description": "Year",
                         "name": "year",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Specific date (YYYY-MM-DD)",
+                        "name": "date",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -13559,6 +13565,12 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Year",
                         "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Specific date (YYYY-MM-DD)",
+                        "name": "date",
                         "in": "query"
                     }
                 ],

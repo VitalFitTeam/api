@@ -6297,6 +6297,10 @@ paths:
         in: query
         name: year
         type: integer
+      - description: Specific date (YYYY-MM-DD)
+        in: query
+        name: date
+        type: string
       produces:
       - application/json
       responses:
@@ -11978,6 +11982,10 @@ paths:
         in: query
         name: year
         type: integer
+      - description: Specific date (YYYY-MM-DD)
+        in: query
+        name: date
+        type: string
       produces:
       - application/json
       responses:
