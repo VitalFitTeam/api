@@ -111,10 +111,12 @@ type UserRoutine struct {
 	Instructor instructordomain.Instructor `gorm:"foreignKey:InstructorID;references:InstructorID" json:"instructor,omitempty"`
 	Client     authdomain.Users            `gorm:"foreignKey:ClientID" json:"client,omitempty"`
 
-	AssignedDate time.Time     `gorm:"default:now()" json:"assigned_date"`
-	DueDate      *time.Time    `json:"due_date,omitempty"`
-	Status       RoutineStatus `gorm:"type:routine_status_enum;default:'Active'" json:"status"`
-	IsActive     bool          `gorm:"default:true" json:"is_active"`
+	AssignedDate    time.Time     `gorm:"default:now()" json:"assigned_date"`
+	DueDate         *time.Time    `json:"due_date,omitempty"`
+	Status          RoutineStatus `gorm:"type:routine_status_enum;default:'Active'" json:"status"`
+	IsActive        bool          `gorm:"default:true" json:"is_active"`
+	CompletionCount int           `gorm:"default:0" json:"completion_count"`
+	LastCompletedAt *time.Time    `json:"last_completed_at,omitempty"`
 }
 
 func (UserRoutine) TableName() string {

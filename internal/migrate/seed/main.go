@@ -61,7 +61,7 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices
 	s.SeedRolePermissions(store, db, ctx)
 	// s.SeedUsers(store, db, ctx)
 	// s.SeedPolicies(store, db, ctx)
-	//s.SeedExercises(store, db, ctx)
+	s.SeedExercises(store, db, ctx)
 	// s.SeedServiceCategories(store, db, ctx)
 	// s.SeedBanners(store, db, ctx)
 	// s.SeedServices(store, db, ctx)

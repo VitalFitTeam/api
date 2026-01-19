@@ -35,6 +35,7 @@ func (h *RoutineHandlers) RoutineRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 
 	// Client routes
 	routinesGroup.GET("/my-routines", h.GetMyRoutinesHandler)
+	routinesGroup.POST("/my-routines/:id/complete", h.MarkRoutineCompletionHandler)
 
 	exercisesGroup := rg.Group("/exercises")
 	exercisesGroup.Use(m.AuthJwtTokenMiddleware())

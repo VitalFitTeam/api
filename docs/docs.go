@@ -13255,6 +13255,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/routines/my-routines/{id}/complete": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Increments the completion counter and updates the last completed date for a user's routine.",
+                "tags": [
+                    "Routines"
+                ],
+                "summary": "Mark routine as completed",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User Routine ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/routines/{id}": {
             "get": {
                 "security": [
@@ -20019,10 +20086,16 @@ const docTemplate = `{
                 "assigned_date": {
                     "type": "string"
                 },
+                "completion_count": {
+                    "type": "integer"
+                },
                 "due_date": {
                     "type": "string"
                 },
                 "instructor": {
+                    "type": "string"
+                },
+                "last_completed_at": {
                     "type": "string"
                 },
                 "level": {

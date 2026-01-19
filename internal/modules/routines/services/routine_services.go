@@ -28,6 +28,10 @@ func (s *RoutineService) CreateRoutine(ctx context.Context, routine *routinedoma
 }
 
 func (s *RoutineService) AssignRoutine(ctx context.Context, instructorID, clientID, routineID uuid.UUID, dueDate *time.Time) error {
+	if _, err := s.store.Routine.GetRoutineByID(ctx, routineID); err != nil {
+		return err
+	}
+
 	assignment := &routinedomain.UserRoutine{
 		ClientID:     clientID,
 		InstructorID: instructorID,
@@ -95,4 +99,17 @@ func (s *RoutineService) UpdateRoutine(ctx context.Context, routineID uuid.UUID,
 	}
 	routine.RoutineID = routineID
 	return s.store.Routine.UpdateRoutine(ctx, routine)
+}
+
+func (s *RoutineService) MarkRoutineCompletion(ctx context.Context, userRoutineID uuid.UUID, userID uuid.UUID) error {
+	userRoutine, err := s.store.Routine.GetUserRoutineByID(ctx, userRoutineID)
+	if err != nil {
+		return err
+	}
+
+	if userRoutine.ClientID != userID {
+		return shared_errors.ErrForbidden
+	}
+
+	return s.store.Routine.MarkRoutineCompletion(ctx, userRoutineID)
 }

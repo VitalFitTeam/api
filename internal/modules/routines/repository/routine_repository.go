@@ -3,6 +3,8 @@ package routinerepository
 import (
 	"context"
 
+	"time"
+
 	"github.com/google/uuid"
 	routinedomain "github.com/vitalfit/api/internal/modules/routines/domain"
 	"github.com/vitalfit/api/pkg/pagination"
@@ -137,6 +139,23 @@ func (s *RoutineStore) DeleteRoutine(ctx context.Context, routineID uuid.UUID) e
 		}
 		return nil
 	})
+}
+
+func (s *RoutineStore) GetUserRoutineByID(ctx context.Context, userRoutineID uuid.UUID) (*routinedomain.UserRoutine, error) {
+	var userRoutine routinedomain.UserRoutine
+	err := s.db.WithContext(ctx).
+		Where("user_routine_id = ?", userRoutineID).
+		First(&userRoutine).Error
+	return &userRoutine, err
+}
+
+func (s *RoutineStore) MarkRoutineCompletion(ctx context.Context, userRoutineID uuid.UUID) error {
+	return s.db.WithContext(ctx).Model(&routinedomain.UserRoutine{}).
+		Where("user_routine_id = ?", userRoutineID).
+		Updates(map[string]interface{}{
+			"completion_count":  gorm.Expr("completion_count + 1"),
+			"last_completed_at": time.Now(),
+		}).Error
 }
 
 func (s *RoutineStore) UpdateRoutine(ctx context.Context, routine *routinedomain.Routine) error {

@@ -1,6 +1,7 @@
 package routinehandlers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 	routinedomain "github.com/vitalfit/api/internal/modules/routines/domain"
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
+	"gorm.io/gorm"
 )
 
 // @Summary		Create a new routine template
@@ -88,6 +90,10 @@ func (h *RoutineHandlers) AssignRoutineHandler(c *gin.Context) {
 
 	err = h.services.Routine.AssignRoutine(c.Request.Context(), instructor.InstructorID, payload.ClientID, payload.RoutineID, payload.DueDate)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			h.services.LogErrors.NotFoundResponse(c)
+			return
+		}
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
@@ -136,15 +142,17 @@ func (h *RoutineHandlers) GetMyRoutinesHandler(c *gin.Context) {
 		}
 
 		response = append(response, UserRoutineResponse{
-			UserRoutineID: r.UserRoutineID,
-			RoutineID:     r.RoutineID,
-			ServiceID:     r.Routine.ServiceID,
-			RoutineName:   r.Routine.Name,
-			Level:         string(r.Routine.Level),
-			Instructor:    instructorName,
-			AssignedDate:  r.AssignedDate,
-			DueDate:       r.DueDate,
-			Status:        string(r.Status),
+			UserRoutineID:   r.UserRoutineID,
+			RoutineID:       r.RoutineID,
+			ServiceID:       r.Routine.ServiceID,
+			RoutineName:     r.Routine.Name,
+			Level:           string(r.Routine.Level),
+			Instructor:      instructorName,
+			AssignedDate:    r.AssignedDate,
+			DueDate:         r.DueDate,
+			Status:          string(r.Status),
+			CompletionCount: r.CompletionCount,
+			LastCompletedAt: r.LastCompletedAt,
 		})
 	}
 
@@ -384,15 +392,17 @@ func (h *RoutineHandlers) GetClientRoutinesHandler(c *gin.Context) {
 		}
 
 		response = append(response, UserRoutineResponse{
-			UserRoutineID: r.UserRoutineID,
-			RoutineID:     r.RoutineID,
-			ServiceID:     r.Routine.ServiceID,
-			RoutineName:   r.Routine.Name,
-			Level:         string(r.Routine.Level),
-			Instructor:    instructorName,
-			AssignedDate:  r.AssignedDate,
-			DueDate:       r.DueDate,
-			Status:        string(r.Status),
+			UserRoutineID:   r.UserRoutineID,
+			RoutineID:       r.RoutineID,
+			ServiceID:       r.Routine.ServiceID,
+			RoutineName:     r.Routine.Name,
+			Level:           string(r.Routine.Level),
+			Instructor:      instructorName,
+			AssignedDate:    r.AssignedDate,
+			DueDate:         r.DueDate,
+			Status:          string(r.Status),
+			CompletionCount: r.CompletionCount,
+			LastCompletedAt: r.LastCompletedAt,
 		})
 	}
 
@@ -503,6 +513,34 @@ func (h *RoutineHandlers) GetRoutineByIDHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, routine)
+}
+
+// @Summary		Mark routine as completed
+// @Description	Increments the completion counter and updates the last completed date for a user's routine.
+// @Tags			Routines
+// @Security		ApiKeyAuth
+// @Param			id	path		string					true	"User Routine ID (UUID)"
+// @Success		200	{object}	map[string]string		"Success message"
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		403	{object}	object{error=string}	"Forbidden"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/routines/my-routines/{id}/complete [post]
+func (h *RoutineHandlers) MarkRoutineCompletionHandler(c *gin.Context) {
+	idStr := c.Param("id")
+	userRoutineID, err := uuid.Parse(idStr)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	if err := h.services.Routine.MarkRoutineCompletion(c.Request.Context(), userRoutineID, user.UserID); err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Routine marked as completed"})
 }
 
 // @Summary		List all routines

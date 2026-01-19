@@ -45,13 +45,15 @@ type CreateExerciseRequest struct {
 }
 
 type UserRoutineResponse struct {
-	UserRoutineID uuid.UUID  `json:"user_routine_id"`
-	RoutineID     uuid.UUID  `json:"routine_id"`
-	ServiceID     *uuid.UUID `json:"service_id,omitempty"`
-	RoutineName   string     `json:"routine_name"`
-	Level         string     `json:"level"`
-	Instructor    string     `json:"instructor"`
-	AssignedDate  time.Time  `json:"assigned_date"`
-	DueDate       *time.Time `json:"due_date,omitempty"`
-	Status        string     `json:"status"`
+	UserRoutineID   uuid.UUID  `json:"user_routine_id"`
+	RoutineID       uuid.UUID  `json:"routine_id"`
+	ServiceID       *uuid.UUID `json:"service_id,omitempty"`
+	RoutineName     string     `json:"routine_name"`
+	Level           string     `json:"level"`
+	Instructor      string     `json:"instructor"`
+	AssignedDate    time.Time  `json:"assigned_date"`
+	DueDate         *time.Time `json:"due_date,omitempty"`
+	Status          string     `json:"status"`
+	CompletionCount int        `json:"completion_count"`
+	LastCompletedAt *time.Time `json:"last_completed_at,omitempty"`
 }
