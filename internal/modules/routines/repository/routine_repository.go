@@ -105,3 +105,36 @@ func (s *RoutineStore) GetRoutineByID(ctx context.Context, routineID uuid.UUID) 
 		First(&routine).Error
 	return &routine, err
 }
+
+func (s *RoutineStore) GetAllRoutines(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*routinedomain.Routine, int64, error) {
+	var routines []*routinedomain.Routine
+	var total int64
+
+	query := s.db.WithContext(ctx).Model(&routinedomain.Routine{})
+
+	if fq.Search != "" {
+		query = query.Where("name ILIKE ?", "%"+fq.Search+"%")
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.Limit(fq.Limit).Offset(fq.Page*fq.Limit - fq.Limit).Order("created_at " + fq.Sort).Find(&routines).Error
+
+	return routines, total, err
+}
+
+func (s *RoutineStore) DeleteRoutine(ctx context.Context, routineID uuid.UUID) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// Delete assigned routines (UserRoutine) - Hard delete as it has no DeletedAt
+		if err := tx.Where("routine_id = ?", routineID).Delete(&routinedomain.UserRoutine{}).Error; err != nil {
+			return err
+		}
+		// Delete routine (Soft delete as it has DeletedAt)
+		if err := tx.Delete(&routinedomain.Routine{}, routineID).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}

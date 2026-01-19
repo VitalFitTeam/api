@@ -15,4 +15,6 @@ type RoutineRepository interface {
 	GetExercises(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Exercise, int64, error)
 	GetRoutinesByCreator(ctx context.Context, creatorID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*Routine, int64, error)
 	GetRoutineByID(ctx context.Context, routineID uuid.UUID) (*Routine, error)
+	GetAllRoutines(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Routine, int64, error)
+	DeleteRoutine(ctx context.Context, routineID uuid.UUID) error
 }

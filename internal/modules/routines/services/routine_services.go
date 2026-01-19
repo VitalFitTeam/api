@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	routinedomain "github.com/vitalfit/api/internal/modules/routines/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/internal/store"
 	"github.com/vitalfit/api/pkg/pagination"
 )
@@ -57,4 +59,24 @@ func (s *RoutineService) GetRoutinesByCreator(ctx context.Context, creatorID uui
 
 func (s *RoutineService) GetRoutineByID(ctx context.Context, routineID uuid.UUID) (*routinedomain.Routine, error) {
 	return s.store.Routine.GetRoutineByID(ctx, routineID)
+}
+
+func (s *RoutineService) GetAllRoutines(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*routinedomain.Routine, int64, error) {
+	return s.store.Routine.GetAllRoutines(ctx, fq)
+}
+
+func (s *RoutineService) DeleteRoutine(ctx context.Context, routineID uuid.UUID, user *authdomain.Users) error {
+	routine, err := s.store.Routine.GetRoutineByID(ctx, routineID)
+	if err != nil {
+		return err
+	}
+
+	isCreator := routine.CreatorID != nil && *routine.CreatorID == user.UserID
+	isSuperAdmin := user.Role.Name == "super_admin"
+
+	if !isCreator && !isSuperAdmin {
+		return shared_errors.ErrForbidden
+	}
+
+	return s.store.Routine.DeleteRoutine(ctx, routineID)
 }

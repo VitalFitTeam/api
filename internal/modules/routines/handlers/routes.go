@@ -25,8 +25,10 @@ func (h *RoutineHandlers) RoutineRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 
 	// Admin/Instructor routes
 	routinesGroup.POST("", m.RBACPermission("routines:create"), h.CreateRoutineHandler)
+	routinesGroup.GET("", m.RBACPermission("routines:list"), h.GetAllRoutinesHandler)
 	routinesGroup.GET("/my-created", m.RBACPermission("routines:list"), h.GetInstructorRoutinesHandler)
 	routinesGroup.GET("/:id", h.GetRoutineByIDHandler)
+	routinesGroup.DELETE("/:id", m.RBACPermission("routines:delete"), h.DeleteRoutineHandler)
 	routinesGroup.POST("/assign", m.RBACPermission("routines:assign"), h.AssignRoutineHandler)
 	routinesGroup.GET("/client/:id", m.RBACPermission("routines:read"), h.GetClientRoutinesHandler)
 

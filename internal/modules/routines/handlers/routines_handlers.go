@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	routinedomain "github.com/vitalfit/api/internal/modules/routines/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
 )
 
@@ -161,6 +162,40 @@ func (h *RoutineHandlers) GetMyRoutinesHandler(c *gin.Context) {
 		Next:     nextURL,
 		Previous: previousURL,
 	})
+}
+
+// @Summary		Delete a routine
+// @Description	Deletes a routine and its assignments. Only creator or superadmin.
+// @Tags			Routines
+// @Security		ApiKeyAuth
+// @Param			id	path		string					true	"Routine ID (UUID)"
+// @Success		204	{object}	nil						"No Content"
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		403	{object}	object{error=string}	"Forbidden"
+// @Failure		404	{object}	object{error=string}	"Not Found"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/routines/{id} [delete]
+func (h *RoutineHandlers) DeleteRoutineHandler(c *gin.Context) {
+	idStr := c.Param("id")
+	routineID, err := uuid.Parse(idStr)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	err = h.services.Routine.DeleteRoutine(c.Request.Context(), routineID, user)
+	if err != nil {
+		if err == shared_errors.ErrForbidden {
+			h.services.LogErrors.ForbiddenResponse(c)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }
 
 // @Summary		Create a new exercise
@@ -409,4 +444,51 @@ func (h *RoutineHandlers) GetRoutineByIDHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, routine)
+}
+
+// @Summary		List all routines
+// @Description	Retrieves a paginated list of all routine templates.
+// @Tags			Routines
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			limit	query		int										false	"Number of results per page"
+// @Param			page	query		int										false	"Page number"
+// @Param			sort	query		string									false	"Sort order (asc/desc)"
+// @Param			search	query		string									false	"Search term"
+// @Success		200		{object}	object{data=[]routinedomain.Routine}	"List of routines"
+// @Failure		500		{object}	object{error=string}					"Internal Server Error"
+// @Router			/routines [get]
+func (h *RoutineHandlers) GetAllRoutinesHandler(c *gin.Context) {
+	fq := pagination.PaginatedFeedQuery{
+		Limit:  10,
+		Page:   1,
+		Sort:   "desc",
+		Search: "",
+	}
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	routines, total, err := h.services.Routine.GetAllRoutines(c.Request.Context(), fq)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	nextURL := fmt.Sprintf("/routines?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, fq.Page+1, fq.Sort, fq.Search)
+	previousPage := fq.Page - 1
+	if previousPage < 1 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/routines?limit=%d&page=%d&sort=%s&search=%s", fq.Limit, previousPage, fq.Sort, fq.Search)
+
+	c.JSON(http.StatusOK, pagination.PaginatedResponseTotal[*routinedomain.Routine]{
+		Data:     routines,
+		Count:    int64(len(routines)),
+		Total:    total,
+		Next:     nextURL,
+		Previous: previousURL,
+	})
 }
