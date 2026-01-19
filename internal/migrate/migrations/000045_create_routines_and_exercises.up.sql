@@ -10,7 +10,6 @@ DO $$ BEGIN
     END IF;
 END$$;
 
--- 1. Tabla de Ejercicios (Catálogo)
 CREATE TABLE IF NOT EXISTS exercises (
     exercise_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
@@ -22,7 +21,6 @@ CREATE TABLE IF NOT EXISTS exercises (
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
--- 2. Tabla de Rutinas (Plantillas)
 CREATE TABLE IF NOT EXISTS routines (
     routine_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_id UUID,
@@ -36,7 +34,6 @@ CREATE TABLE IF NOT EXISTS routines (
     CONSTRAINT fk_routines_service FOREIGN KEY (service_id) REFERENCES services(service_id) ON DELETE SET NULL
 );
 
--- 3. Tabla Pivote (Detalles de ejercicios en una rutina)
 CREATE TABLE IF NOT EXISTS routine_exercises (
     routine_exercise_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     routine_id UUID NOT NULL,
@@ -52,7 +49,6 @@ CREATE TABLE IF NOT EXISTS routine_exercises (
     CONSTRAINT fk_re_exercise FOREIGN KEY (exercise_id) REFERENCES exercises(exercise_id) ON DELETE CASCADE
 );
 
--- 4. Tabla de Asignación (Instructor -> Usuario)
 CREATE TABLE IF NOT EXISTS user_routines (
     user_routine_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id UUID NOT NULL,
