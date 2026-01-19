@@ -52,6 +52,7 @@ type UserServicesInterface interface {
 	UpdateStaff(ctx context.Context, user *Users, roleName string) error
 	Delete(ctx context.Context, userID uuid.UUID) error
 	BlockUser(ctx context.Context, userID uuid.UUID, justification string) error
+	UnblockUser(ctx context.Context, userID uuid.UUID) error
 	GetAllClients(ctx context.Context) ([]*Users, error)
 	GetAllStaffUsers(ctx context.Context) ([]*Users, error)
 

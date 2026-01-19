@@ -146,6 +146,10 @@ func (h *UserService) BlockUser(ctx context.Context, userID uuid.UUID, justifica
 	return h.store.Users.BlockUser(ctx, userID, justification)
 }
 
+func (h *UserService) UnblockUser(ctx context.Context, userID uuid.UUID) error {
+	return h.store.Users.UnblockUser(ctx, userID)
+}
+
 func (h *UserService) GetAllClients(ctx context.Context) ([]*authdomain.Users, error) {
 	return h.store.Users.GetAllClients(ctx)
 }

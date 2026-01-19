@@ -1401,3 +1401,34 @@ func (h *AuthHandlers) BlockUserHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusNoContent, nil)
 }
+
+// @Summary		Unblock a user
+// @Description	Unblocks a previously blocked user.
+// @Tags			User
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			id	path		string					true	"User ID (UUID)"
+// @Success		204	{object}	nil						"User unblocked successfully"
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		404	{object}	object{error=string}	"Not Found"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Router			/user/{id}/unblock [put]
+func (h *AuthHandlers) UnblockUserHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+	if err := h.services.UserServices.UnblockUser(ctx, id); err != nil {
+		switch err {
+		case shared_errors.ErrNotFound:
+			h.services.LogErrors.NotFoundResponse(c)
+		default:
+			h.services.LogErrors.InternalServerError(c, err)
+		}
+		return
+	}
+	c.JSON(http.StatusNoContent, nil)
+}

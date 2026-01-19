@@ -459,6 +459,22 @@ func TestUserService(t *testing.T) {
 			userStoreMock.AssertExpectations(t)
 		})
 	})
+
+	t.Run("UnblockUser", func(t *testing.T) {
+		t.Run("success", func(t *testing.T) {
+			userStoreMock.On("UnblockUser", mock.Anything, mockUser.UserID).Return(nil).Once()
+			err := userService.UnblockUser(context.Background(), mockUser.UserID)
+			assert.NoError(t, err)
+			userStoreMock.AssertExpectations(t)
+		})
+
+		t.Run("not found", func(t *testing.T) {
+			userStoreMock.On("UnblockUser", mock.Anything, mockUser.UserID).Return(shared_errors.ErrNotFound).Once()
+			err := userService.UnblockUser(context.Background(), mockUser.UserID)
+			assert.ErrorIs(t, err, shared_errors.ErrNotFound)
+			userStoreMock.AssertExpectations(t)
+		})
+	})
 }
 
 func TestJWTAuthenticator(t *testing.T) {
