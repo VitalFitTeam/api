@@ -50,6 +50,9 @@ func (j *AuthMiddleware) AuditLogMiddleware() gin.HandlerFunc {
 		userAgent := c.Request.UserAgent()
 		ip := c.ClientIP()
 		payloadStr := string(requestBody)
+		if payloadStr == "" {
+			payloadStr = "{}"
+		}
 
 		go func(uID uuid.UUID, m, p, ua, ipAddr, load string, st int) {
 			ctx := context.Background()
