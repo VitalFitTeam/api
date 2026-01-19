@@ -55,4 +55,5 @@ type ReportServiceInterface interface {
 	GetFinancialReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]FinancialReportRow, error)
 	GetClientReportData(ctx context.Context) ([]ClientChurnMetrics, error)
 	GetSalesReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]SalesReportRow, error)
+	GetRFMAnalysis(ctx context.Context, branchID *uuid.UUID) ([]RFMMetric, error)
 }

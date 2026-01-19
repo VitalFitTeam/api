@@ -1479,3 +1479,35 @@ func (rs *ReportStore) GetSalesByDemographics(ctx context.Context, branchID *uui
 
 	return nil, fmt.Errorf("invalid dimension: %s", dimension)
 }
+
+func (rs *ReportStore) GetRFMData(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.RFMMetric, error) {
+	var results []reportdomain.RFMMetric
+
+	// Base query to get raw RFM data
+	// Recency: Calculated later in service or via SQL (NOW - MAX(issue_date))
+	// Frequency: Count of paid invoices
+	// Monetary: Sum of paid invoices
+
+	query := rs.db.WithContext(ctx).Table("users u").
+		Select(`
+			u.user_id,
+			u.first_name || ' ' || u.last_name as name,
+			u.email,
+			MAX(i.issue_date) as last_purchase,
+			COUNT(i.invoice_id) as frequency,
+			COALESCE(SUM(i.total_amount), 0) as monetary_total
+		`).
+		Joins("JOIN roles r ON r.role_id = u.role_id").
+		Joins("LEFT JOIN invoices i ON i.user_id = u.user_id AND i.status = ?", billingdomain.InvoiceStatusPaid).
+		Where("r.name = ?", "client")
+
+	if branchID != nil {
+		// If filtering by branch, we only consider invoices from that branch for F and M
+		// Note: This might exclude users who haven't purchased in this branch specifically
+		query = query.Where("i.branch_id = ? OR i.branch_id IS NULL", *branchID)
+	}
+
+	err := query.Group("u.user_id, u.first_name, u.last_name, u.email").Scan(&results).Error
+
+	return results, err
+}

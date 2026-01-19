@@ -259,6 +259,32 @@ func (h *ReportHanlders) GetNewClientsKPIHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": kpi})
 }
 
+// @Summary		Get RFM Analysis
+// @Description	Retrieves the RFM (Recency, Frequency, Monetary) analysis for clients.
+// @Description	Recency: Days since last purchase. Frequency: Total number of purchases. Monetary: Total amount spent.
+// @Tags			Reports
+// @Security		ApiKeyAuth
+// @Produce		json
+// @Param			branch_id	query		string									false	"Filter by Branch UUID"
+// @Success		200			{object}	object{data=[]reportdomain.RFMMetric}	"RFM Analysis Data"
+// @Failure		500			{object}	object{error=string}					"Internal Server Error"
+// @Router			/reports/analysis/rfm [get]
+func (h *ReportHanlders) GetRFMAnalysisHandler(c *gin.Context) {
+	ctx := c.Request.Context()
+	var branchID *uuid.UUID
+	if idStr := c.Query("branch_id"); idStr != "" {
+		if id, err := uuid.Parse(idStr); err == nil {
+			branchID = &id
+		}
+	}
+	data, err := h.services.ReportServices.GetRFMAnalysis(ctx, branchID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}
+
 // @Summary		Get Churn Rate KPI
 // @Description	Retrieves the percentage of clients who left (churned) during the current month compared to the start of the month. Formula: ((Lost Clients) / Start Clients) * 100.
 // @Tags			Reports

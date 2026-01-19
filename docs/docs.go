@@ -10258,6 +10258,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports/analysis/rfm": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the RFM (Recency, Frequency, Monetary) analysis for clients.\nRecency: Days since last purchase. Frequency: Total number of purchases. Monetary: Total amount spent.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get RFM Analysis",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "RFM Analysis Data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/reportdomain.RFMMetric"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/reports/charts/activity-heatmap": {
             "get": {
                 "security": [
@@ -18715,6 +18767,44 @@ const docTemplate = `{
                 },
                 "value": {
                     "type": "number"
+                }
+            }
+        },
+        "reportdomain.RFMMetric": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "f_score": {
+                    "type": "integer"
+                },
+                "frequency": {
+                    "type": "integer"
+                },
+                "last_purchase": {
+                    "type": "string"
+                },
+                "m_score": {
+                    "type": "integer"
+                },
+                "monetary_total": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "r_score": {
+                    "type": "integer"
+                },
+                "recency_days": {
+                    "type": "integer"
+                },
+                "segment": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },

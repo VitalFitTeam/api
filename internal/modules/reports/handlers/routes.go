@@ -52,6 +52,7 @@ type ReportHandlersInterface interface {
 	ExportFinancialReportHandler(c *gin.Context)
 	ExportClientReportHandler(c *gin.Context)
 	ExportSalesReportHandler(c *gin.Context)
+	GetRFMAnalysisHandler(c *gin.Context)
 }
 
 type ReportHanlders struct {
@@ -86,6 +87,7 @@ func (r *ReportHanlders) ReportRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlewar
 		salesGroup.GET("/charts/new-vs-recurring", r.GetNewVsRecurringChartHandler)
 		salesGroup.GET("/charts/cohort-analysis", r.GetCohortAnalysisHandler)
 		salesGroup.GET("/charts/sales-by-demographics", r.GetSalesByDemographicsHandler)
+		salesGroup.GET("/analysis/rfm", r.GetRFMAnalysisHandler)
 	}
 
 	// Financial Routes

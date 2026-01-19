@@ -55,4 +55,5 @@ type ReportRepository interface {
 	GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID) (*KPICard, error)
 	GetFinancialReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]FinancialReportRow, error)
 	GetSalesReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]SalesReportRow, error)
+	GetRFMData(ctx context.Context, branchID *uuid.UUID) ([]RFMMetric, error)
 }
