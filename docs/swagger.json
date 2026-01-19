@@ -12680,6 +12680,181 @@
                 }
             }
         },
+        "/routines": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a routine template with exercises. Only for Instructors/Admins.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routines"
+                ],
+                "summary": "Create a new routine template",
+                "parameters": [
+                    {
+                        "description": "Routine creation payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/routinehandlers.CreateRoutineRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Routine created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/routinedomain.Routine"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/routines/assign": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Assigns an existing routine template to a client. Only for Instructors.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routines"
+                ],
+                "summary": "Assign a routine to a client",
+                "parameters": [
+                    {
+                        "description": "Assignment payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/routinehandlers.AssignRoutineRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Success message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found (Instructor/Client/Routine)",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/routines/my-routines": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the list of active routines assigned to the authenticated client.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Routines"
+                ],
+                "summary": "Get my assigned routines",
+                "responses": {
+                    "200": {
+                        "description": "List of assigned routines",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/routinedomain.UserRoutine"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/schedule/branch/{branchId}/client/{userId}": {
             "get": {
                 "security": [
@@ -15188,6 +15363,60 @@
                 }
             }
         },
+        "authdomain.ClientCategoryEnum": {
+            "type": "string",
+            "enum": [
+                "VIP",
+                "Regular",
+                "New",
+                "AtRisk"
+            ],
+            "x-enum-varnames": [
+                "ClientCategoryVIP",
+                "ClientCategoryRegular",
+                "ClientCategoryNew",
+                "ClientCategoryAtRisk"
+            ]
+        },
+        "authdomain.ClientProfiles": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/authdomain.ClientCategoryEnum"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "qr_code": {
+                    "type": "string"
+                },
+                "scoring": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "authdomain.GenderEnum": {
+            "type": "string",
+            "enum": [
+                "male",
+                "female",
+                "prefer-not-to-say"
+            ],
+            "x-enum-varnames": [
+                "GenderMale",
+                "GenderFemale",
+                "GenderPreferNotToSay"
+            ]
+        },
         "authdomain.Permission": {
             "type": "object",
             "properties": {
@@ -15259,6 +15488,85 @@
                     "type": "string"
                 },
                 "user_agent": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "authdomain.UserStatusEnum": {
+            "type": "string",
+            "enum": [
+                "Active",
+                "Blocked"
+            ],
+            "x-enum-varnames": [
+                "UserStatusActive",
+                "UserStatusBlocked"
+            ]
+        },
+        "authdomain.Users": {
+            "type": "object",
+            "properties": {
+                "birth_date": {
+                    "type": "string"
+                },
+                "block_justification": {
+                    "type": "string"
+                },
+                "clientProfile": {
+                    "$ref": "#/definitions/authdomain.ClientProfiles"
+                },
+                "client_membership": {
+                    "$ref": "#/definitions/membershipsdomain.ClientMembership"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "face_auth_enabled": {
+                    "type": "boolean"
+                },
+                "face_id": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "$ref": "#/definitions/authdomain.GenderEnum"
+                },
+                "identity_document": {
+                    "type": "string"
+                },
+                "is_validated": {
+                    "type": "boolean"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "profile_picture_url": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/authdomain.Roles"
+                },
+                "role_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/authdomain.UserStatusEnum"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "user_id": {
@@ -16310,6 +16618,65 @@
                 }
             }
         },
+        "branchdomain.Branch": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "branch_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "manager": {
+                    "$ref": "#/definitions/authdomain.Users"
+                },
+                "manager_id": {
+                    "type": "string"
+                },
+                "max_capacity": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "operating_hours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/branchdomain.OperatingHours"
+                    }
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "state": {
+                    "$ref": "#/definitions/branchdomain.States"
+                },
+                "state_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/branchdomain.BranchStatusEnum"
+                },
+                "tax_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "branchdomain.BranchStatusCount": {
             "type": "object",
             "properties": {
@@ -16328,6 +16695,36 @@
                 "total": {
                     "type": "integer",
                     "format": "int64"
+                }
+            }
+        },
+        "branchdomain.BranchStatusEnum": {
+            "type": "string",
+            "enum": [
+                "Active",
+                "Inactive",
+                "Maintenance"
+            ],
+            "x-enum-varnames": [
+                "BranchStatusActive",
+                "BranchStatusInactive",
+                "BranchStatusMaintenance"
+            ]
+        },
+        "branchdomain.Countries": {
+            "type": "object",
+            "properties": {
+                "countryID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/branchdomain.States"
+                    }
                 }
             }
         },
@@ -16371,6 +16768,23 @@
                     "type": "boolean"
                 },
                 "open_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "branchdomain.States": {
+            "type": "object",
+            "properties": {
+                "country": {
+                    "$ref": "#/definitions/branchdomain.Countries"
+                },
+                "countryID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "stateID": {
                     "type": "string"
                 }
             }
@@ -16897,6 +17311,41 @@
                     "type": "number"
                 },
                 "startAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "instructordomain.Instructor": {
+            "type": "object",
+            "properties": {
+                "biography": {
+                    "type": "string"
+                },
+                "branches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/branchdomain.Branch"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "instructor_id": {
+                    "type": "string"
+                },
+                "specialties": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/productsdomain.ServiceCategory"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/authdomain.Users"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -18845,6 +19294,246 @@
                 },
                 "trend": {
                     "type": "string"
+                }
+            }
+        },
+        "routinedomain.Exercise": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "exercise_id": {
+                    "type": "string"
+                },
+                "muscle_group": {
+                    "$ref": "#/definitions/routinedomain.MuscleGroup"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "video_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "routinedomain.MuscleGroup": {
+            "type": "string",
+            "enum": [
+                "Chest",
+                "Back",
+                "Legs",
+                "Shoulders",
+                "Arms",
+                "Core",
+                "Cardio",
+                "FullBody",
+                "Other"
+            ],
+            "x-enum-varnames": [
+                "MuscleChest",
+                "MuscleBack",
+                "MuscleLegs",
+                "MuscleShoulders",
+                "MuscleArms",
+                "MuscleCore",
+                "MuscleCardio",
+                "MuscleFullBody",
+                "MuscleOther"
+            ]
+        },
+        "routinedomain.Routine": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "exercises": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/routinedomain.RoutineExercise"
+                    }
+                },
+                "level": {
+                    "$ref": "#/definitions/routinedomain.RoutineLevel"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "routine_id": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "routinedomain.RoutineExercise": {
+            "type": "object",
+            "properties": {
+                "exercise_details": {
+                    "$ref": "#/definitions/routinedomain.Exercise"
+                },
+                "exercise_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "reps": {
+                    "type": "string"
+                },
+                "rest_time": {
+                    "type": "integer"
+                },
+                "routine_exercise_id": {
+                    "type": "string"
+                },
+                "routine_id": {
+                    "type": "string"
+                },
+                "sets": {
+                    "type": "integer"
+                }
+            }
+        },
+        "routinedomain.RoutineLevel": {
+            "type": "string",
+            "enum": [
+                "Beginner",
+                "Intermediate",
+                "Advanced"
+            ],
+            "x-enum-varnames": [
+                "LevelBeginner",
+                "LevelIntermediate",
+                "LevelAdvanced"
+            ]
+        },
+        "routinedomain.RoutineStatus": {
+            "type": "string",
+            "enum": [
+                "Active",
+                "Completed",
+                "Archived"
+            ],
+            "x-enum-varnames": [
+                "StatusActive",
+                "StatusCompleted",
+                "StatusArchived"
+            ]
+        },
+        "routinedomain.UserRoutine": {
+            "type": "object",
+            "properties": {
+                "assigned_date": {
+                    "type": "string"
+                },
+                "client": {
+                    "$ref": "#/definitions/authdomain.Users"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "type": "string"
+                },
+                "instructor": {
+                    "$ref": "#/definitions/instructordomain.Instructor"
+                },
+                "instructor_id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "routine": {
+                    "$ref": "#/definitions/routinedomain.Routine"
+                },
+                "routine_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/routinedomain.RoutineStatus"
+                },
+                "user_routine_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "routinehandlers.AssignRoutineRequest": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "due_date": {
+                    "description": "optional",
+                    "type": "string"
+                },
+                "routine_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "routinehandlers.CreateRoutineRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "exercises": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/routinehandlers.RoutineExerciseDTO"
+                    }
+                },
+                "level": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "routinehandlers.RoutineExerciseDTO": {
+            "type": "object",
+            "properties": {
+                "exercise_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "reps": {
+                    "type": "string"
+                },
+                "rest_time": {
+                    "type": "integer"
+                },
+                "sets": {
+                    "type": "integer"
                 }
             }
         },

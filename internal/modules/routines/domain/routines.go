@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	instructordomain "github.com/vitalfit/api/internal/modules/instructor/domain"
 	"gorm.io/gorm"
 )
 
@@ -57,6 +58,9 @@ type Routine struct {
 	Name        string     `gorm:"type:varchar(100);not null" json:"name"`
 	Description string     `gorm:"type:text" json:"description"`
 
+	CreatorID *uuid.UUID        `gorm:"type:uuid" json:"creator_id,omitempty"`
+	Creator   *authdomain.Users `gorm:"foreignKey:CreatorID;references:UserID" json:"creator,omitempty"`
+
 	Level RoutineLevel `gorm:"type:routine_level_enum;not null" json:"level"`
 
 	RoutineExercises []RoutineExercise `gorm:"foreignKey:RoutineID" json:"exercises,omitempty"`
@@ -92,11 +96,11 @@ type UserRoutine struct {
 
 	Routine Routine `gorm:"foreignKey:RoutineID" json:"routine,omitempty"`
 
-	Instructor authdomain.Users `gorm:"foreignKey:InstructorID" json:"instructor,omitempty"`
-	Client     authdomain.Users `gorm:"foreignKey:ClientID" json:"client,omitempty"`
+	Instructor instructordomain.Instructor `gorm:"foreignKey:InstructorID" json:"instructor,omitempty"`
+	Client     authdomain.Users            `gorm:"foreignKey:ClientID" json:"client,omitempty"`
 
 	AssignedDate time.Time     `gorm:"default:now()" json:"assigned_date"`
-	DueDate      *time.Time    `json:"due_date,omitempty"` // Puntero para permitir NULL
+	DueDate      *time.Time    `json:"due_date,omitempty"`
 	Status       RoutineStatus `gorm:"type:routine_status_enum;default:'Active'" json:"status"`
 	IsActive     bool          `gorm:"default:true" json:"is_active"`
 }

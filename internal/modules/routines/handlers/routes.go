@@ -1,4 +1,4 @@
-package handlers
+package routinehandlers
 
 import (
 	"github.com/gin-gonic/gin"
@@ -7,6 +7,7 @@ import (
 )
 
 type RoutineHandlersInterface interface {
+	RoutineRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware)
 }
 
 type RoutineHandlers struct {
@@ -18,5 +19,21 @@ func NewRoutineHandlers(services appservices.Services) *RoutineHandlers {
 }
 
 func (h *RoutineHandlers) RoutineRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
+	routinesGroup := rg.Group("/routines")
+	routinesGroup.Use(m.AuthJwtTokenMiddleware())
+	routinesGroup.Use(m.AuditLogMiddleware())
 
+	// Admin/Instructor routes
+	routinesGroup.POST("", m.RBACPermission("routines:create"), h.CreateRoutineHandler)
+	routinesGroup.POST("/assign", m.RBACPermission("routines:assign"), h.AssignRoutineHandler)
+	routinesGroup.GET("/client/:id", m.RBACPermission("routines:read"), h.GetClientRoutinesHandler)
+
+	// Client routes
+	routinesGroup.GET("/my-routines", h.GetMyRoutinesHandler)
+
+	exercisesGroup := rg.Group("/exercises")
+	exercisesGroup.Use(m.AuthJwtTokenMiddleware())
+	exercisesGroup.Use(m.AuditLogMiddleware())
+	exercisesGroup.POST("", m.RBACPermission("routines:create"), h.CreateExerciseHandler)
+	exercisesGroup.GET("", m.RBACPermission("routines:read"), h.GetExercisesHandler)
 }
