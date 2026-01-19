@@ -56,16 +56,6 @@ func (s *ScheduleStore) GetClassesByBranch(ctx context.Context, branchID uuid.UU
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
 
 		query := tx.WithContext(ctx).
-			Joins("JOIN services ON services.service_id = classes.service_id").
-			Joins("JOIN instructors ON instructors.instructor_id = classes.instructor_id").
-			Joins("JOIN users ON users.user_id = instructors.user_id").
-			Joins("JOIN service_branch_details sbd ON sbd.service_id = classes.service_id AND sbd.branch_id = classes.branch_id").
-			Joins("JOIN branch_instructors bi ON bi.instructor_id = classes.instructor_id AND bi.branch_id = classes.branch_id").
-			Where("services.deleted_at IS NULL").
-			Where("instructors.deleted_at IS NULL").
-			Where("users.deleted_at IS NULL").
-			Where("users.status != ?", "Blocked").
-			Where("sbd.deleted_at IS NULL").
 			Preload("Service").
 			Preload("Instructor").
 			Preload("Branch").
