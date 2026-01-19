@@ -80,3 +80,19 @@ func (s *RoutineService) DeleteRoutine(ctx context.Context, routineID uuid.UUID,
 
 	return s.store.Routine.DeleteRoutine(ctx, routineID)
 }
+
+func (s *RoutineService) UpdateRoutine(ctx context.Context, routineID uuid.UUID, routine *routinedomain.Routine, user *authdomain.Users) error {
+	existingRoutine, err := s.store.Routine.GetRoutineByID(ctx, routineID)
+	if err != nil {
+		return err
+	}
+
+	isCreator := existingRoutine.CreatorID != nil && *existingRoutine.CreatorID == user.UserID
+	isSuperAdmin := user.Role.Name == "super_admin"
+
+	if !isCreator && !isSuperAdmin {
+		return shared_errors.ErrForbidden
+	}
+	routine.RoutineID = routineID
+	return s.store.Routine.UpdateRoutine(ctx, routine)
+}

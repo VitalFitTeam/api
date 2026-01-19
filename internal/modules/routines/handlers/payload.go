@@ -14,6 +14,14 @@ type CreateRoutineRequest struct {
 	Exercises   []RoutineExerciseDTO `json:"exercises"`
 }
 
+type UpdateRoutineRequest struct {
+	Name        string               `json:"name"`
+	Description string               `json:"description"`
+	Level       string               `json:"level"`
+	ServiceID   *uuid.UUID           `json:"service_id"`
+	Exercises   []RoutineExerciseDTO `json:"exercises"`
+}
+
 type RoutineExerciseDTO struct {
 	ExerciseID uuid.UUID `json:"exercise_id"`
 	Sets       int       `json:"sets"`

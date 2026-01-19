@@ -19,4 +19,5 @@ type RoutineServiceInterface interface {
 	GetRoutineByID(ctx context.Context, routineID uuid.UUID) (*Routine, error)
 	GetAllRoutines(ctx context.Context, fq pagination.PaginatedFeedQuery) ([]*Routine, int64, error)
 	DeleteRoutine(ctx context.Context, routineID uuid.UUID, user *authdomain.Users) error
+	UpdateRoutine(ctx context.Context, routineID uuid.UUID, routine *Routine, user *authdomain.Users) error
 }

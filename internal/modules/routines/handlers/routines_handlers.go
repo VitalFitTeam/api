@@ -198,6 +198,65 @@ func (h *RoutineHandlers) DeleteRoutineHandler(c *gin.Context) {
 	c.JSON(http.StatusNoContent, nil)
 }
 
+// @Summary		Update a routine
+// @Description	Updates an existing routine. Only creator or superadmin.
+// @Tags			Routines
+// @Security		ApiKeyAuth
+// @Param			id		path		string					true	"Routine ID (UUID)"
+// @Param			payload	body		UpdateRoutineRequest	true	"Routine update payload"
+// @Success		204		{object}	nil						"No Content"
+// @Failure		400		{object}	object{error=string}	"Bad Request"
+// @Failure		403		{object}	object{error=string}	"Forbidden"
+// @Failure		404		{object}	object{error=string}	"Not Found"
+// @Failure		500		{object}	object{error=string}	"Internal Server Error"
+// @Router			/routines/{id} [put]
+func (h *RoutineHandlers) UpdateRoutineHandler(c *gin.Context) {
+	idStr := c.Param("id")
+	routineID, err := uuid.Parse(idStr)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	var payload UpdateRoutineRequest
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	user := h.services.UserServices.GetUserFromContext(c)
+
+	routine := &routinedomain.Routine{
+		Name:        payload.Name,
+		Description: payload.Description,
+		Level:       routinedomain.RoutineLevel(payload.Level),
+		ServiceID:   payload.ServiceID,
+	}
+
+	for _, exDto := range payload.Exercises {
+		routine.RoutineExercises = append(routine.RoutineExercises, routinedomain.RoutineExercise{
+			ExerciseID: exDto.ExerciseID,
+			Sets:       exDto.Sets,
+			Reps:       exDto.Reps,
+			RestTime:   exDto.RestTime,
+			Order:      exDto.Order,
+			Notes:      exDto.Notes,
+		})
+	}
+
+	err = h.services.Routine.UpdateRoutine(c.Request.Context(), routineID, routine, user)
+	if err != nil {
+		if err == shared_errors.ErrForbidden {
+			h.services.LogErrors.ForbiddenResponse(c)
+			return
+		}
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
 // @Summary		Create a new exercise
 // @Description	Creates a new exercise in the library. Only for Instructors/Admins.
 // @Tags			Routines

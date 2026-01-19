@@ -138,3 +138,24 @@ func (s *RoutineStore) DeleteRoutine(ctx context.Context, routineID uuid.UUID) e
 		return nil
 	})
 }
+
+func (s *RoutineStore) UpdateRoutine(ctx context.Context, routine *routinedomain.Routine) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(routine).Omit("CreatorID").Save(routine).Error; err != nil {
+			return err
+		}
+
+		if len(routine.RoutineExercises) > 0 {
+			if err := tx.Where("routine_id = ?", routine.RoutineID).Delete(&routinedomain.RoutineExercise{}).Error; err != nil {
+				return err
+			}
+			for i := range routine.RoutineExercises {
+				routine.RoutineExercises[i].RoutineID = routine.RoutineID
+			}
+			if err := tx.Create(&routine.RoutineExercises).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
