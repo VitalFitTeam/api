@@ -211,10 +211,20 @@ func (s *MembershipStore) UpdateClientMembership(ctx context.Context, membership
 func (s *MembershipStore) UpdateClientMembershipStatus(ctx context.Context, membership *membershipsdomain.ClientMembership) error {
 	// Usamos Updates para actualizar solo los campos proporcionados en el struct `membership`.
 	// GORM es lo suficientemente inteligente como para generar un UPDATE solo con los campos no nulos.
-	result := s.db.WithContext(ctx).
+	query := s.db.WithContext(ctx).
 		Model(&membershipsdomain.ClientMembership{}).
-		Where("client_membership_id = ?", membership.ClientMembershipID).
-		Updates(membership)
+		Where("client_membership_id = ?", membership.ClientMembershipID)
+
+	var result *gorm.DB
+	if membership.Status == membershipsdomain.StatusActive {
+		result = query.Updates(map[string]interface{}{
+			"status":                 membership.Status,
+			"cancellation_reason_id": nil,
+			"cancellation_notes":     "",
+		})
+	} else {
+		result = query.Updates(membership)
+	}
 
 	if result.Error != nil {
 		return result.Error
