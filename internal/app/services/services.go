@@ -37,6 +37,8 @@ import (
 	productsservice "github.com/vitalfit/api/internal/modules/products/service"
 	reportdomain "github.com/vitalfit/api/internal/modules/reports/domain"
 	reportservices "github.com/vitalfit/api/internal/modules/reports/services"
+	routinedomain "github.com/vitalfit/api/internal/modules/routines/domain"
+	routineservices "github.com/vitalfit/api/internal/modules/routines/services"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 	scheduleservice "github.com/vitalfit/api/internal/modules/schedule/service"
 	staffdomain "github.com/vitalfit/api/internal/modules/staff/domain"
@@ -77,6 +79,7 @@ type Services struct {
 	ClientServices       clientsdomain.ClientServiceInterface
 	NotificationServices notidomain.NotificationServiceInterface
 	FaceAuthServices     faceauthdomain.FacAuthServiceInterface
+	Routine              routinedomain.RoutineServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
@@ -107,6 +110,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		ClientServices:       clientsservice.NewClientService(store, cfg.EncryptionKey),
 		NotificationServices: notiservice.NewNotificationService(store, pushNoti),
 		FaceAuthServices:     faceauthservices.NewFaceAuthServices(store, rekognitionClient),
+		Routine:              routineservices.NewRoutineService(store),
 		LogErrors:            logs.NewLogErrors(logger),
 		Logger:               logger,
 	}
