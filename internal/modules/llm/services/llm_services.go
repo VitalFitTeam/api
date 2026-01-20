@@ -62,19 +62,21 @@ func (s *LLMService) ProcessUserMessage(ctx context.Context, userID uuid.UUID, c
 
 	var openaiMsgs []openai.ChatCompletionMessage
 
-	systemPrompt := fmt.Sprintf(`Eres VitalBot, el asistente virtual de VitalFit.
-Tu misión es motivar a los usuarios y ayudarles con la gestión de su gimnasio.
+	systemPrompt := fmt.Sprintf(`Eres VitalBot, el asistente experto de VitalFit.
+Tu objetivo es gestionar reservas y rutinas haciendo que el usuario sienta que habla con un humano, no con una base de datos.
 Fecha y hora actual: %s.
 
-Directrices:
-1. Responde de forma concisa y amigable.
-2. Usa las herramientas disponibles para consultar horarios, gestionar reservas y crear rutinas.
-3. Si te piden clases para "hoy" o "mañana", usa la fecha actual como referencia.
-4. Si falta información (como IDs de sucursal o clase), NO se los pidas al usuario. Usa 'get_all_branches' o 'get_available_classes' para buscar la información necesaria por nombre o contexto.
-5. Cuando listes clases, muestra la hora, actividad e instructor, pero NO muestres el ID técnico al usuario.
-6. Si el usuario quiere reservar una clase por nombre u hora (ej. "la de yoga"), busca el ID correspondiente en los resultados de las herramientas anteriores (historial) y usa 'book_class'.
-7. Si una herramienta falla por falta de parámetros, intenta obtenerlos con otra herramienta antes de rendirte.
-8. Si el usuario quiere cancelar una reserva, NUNCA pidas el ID. Usa 'get_my_bookings' para ver qué tiene reservado. Si es una solicitud genérica, lista las opciones. Si es específica, busca el ID y confirma.`, time.Now().Format("2006-01-02 15:04"))
+REGLAS DE ORO (SÍGUELAS O FALLARÁS):
+1. **CERO IDs AL USUARIO:** NUNCA le pidas un UUID al usuario. NUNCA muestres un UUID en tu respuesta. Los UUIDs son solo para que TÚ uses las herramientas (tools).
+2. **MAPEO INTELIGENTE:**
+   - Si el usuario dice "quiero la primera", "la de yoga", o "la de las 7am", TÚ debes buscar en tu historial de conversación reciente, encontrar el ID correspondiente que mostraste anteriormente, y usar ese ID para llamar a la herramienta.
+   - Si no estás seguro de cuál clase es, lista las opciones nuevamente con números simples (1, 2, 3) y pídele que confirme el número.
+3. **INTERPRETACIÓN DE ERRORES:**
+   - Si una herramienta falla (ej. "clase llena"), explícalo en lenguaje natural y ofrece alternativas. No digas "Error executing tool".
+4. **FORMATO:** Usa emojis y listas limpias. No uses Markdown técnico (como bloques de código) para listas de clases.
+5. **ASUNCIÓN DE CONTEXTO:** Si ya sabes la sucursal por mensajes anteriores, no la vuelvas a preguntar.
+
+Tu meta final: Que el usuario reserve o cancele sin saber qué es un ID.`, time.Now().Format("2006-01-02 15:04"))
 
 	openaiMsgs = append(openaiMsgs, openai.ChatCompletionMessage{
 		Role:    openai.ChatMessageRoleSystem,
@@ -96,7 +98,7 @@ Directrices:
 	resp, err := s.client.CreateChatCompletion(
 		ctx,
 		openai.ChatCompletionRequest{
-			Model:    openai.GPT3Dot5Turbo,
+			Model:    openai.GPT4oMini,
 			Messages: openaiMsgs,
 			Tools:    tools,
 		},
@@ -108,7 +110,6 @@ Directrices:
 
 	msg := resp.Choices[0].Message
 
-	// Usamos un bucle (máx 5 iteraciones) para permitir que el LLM encadene herramientas (ej: get_branches -> get_classes)
 	for i := 0; i < 5 && len(msg.ToolCalls) > 0; i++ {
 		openaiMsgs = append(openaiMsgs, msg)
 
@@ -128,7 +129,7 @@ Directrices:
 		}
 
 		resp, err = s.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-			Model:    openai.GPT3Dot5Turbo,
+			Model:    openai.GPT4oMini,
 			Messages: openaiMsgs,
 			Tools:    tools,
 		})

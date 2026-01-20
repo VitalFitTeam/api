@@ -63,6 +63,12 @@ func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		if user.Status == authdomain.UserStatusBlocked {
+			j.services.LogErrors.UnauthorizedErrorResponse(c, fmt.Errorf("account is blocked"))
+			c.Abort()
+			return
+		}
 		c.Set("user", user)
 		c.Next()
 	}

@@ -599,6 +599,11 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 		return
 	}
 
+	if user.Status == authdomain.UserStatusBlocked {
+		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("account is blocked"))
+		return
+	}
+
 	if !user.IsValidated {
 		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("account not activated"))
 		return
@@ -704,6 +709,11 @@ func (h *AuthHandlers) OAuthLoginHandler(c *gin.Context) {
 		default:
 			h.services.LogErrors.InternalServerError(c, err)
 		}
+		return
+	}
+
+	if user.Status == authdomain.UserStatusBlocked {
+		h.services.LogErrors.UnauthorizedErrorResponse(c, errors.New("account is blocked"))
 		return
 	}
 
