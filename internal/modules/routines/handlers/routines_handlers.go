@@ -435,7 +435,23 @@ func (h *RoutineHandlers) GetClientRoutinesHandler(c *gin.Context) {
 // @Failure		500		{object}	object{error=string}					"Internal Server Error"
 // @Router			/routines/my-created [get]
 func (h *RoutineHandlers) GetInstructorRoutinesHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 	user := h.services.UserServices.GetUserFromContext(c)
+
+	if user.Role.Name != "client" {
+		permission := "routines:list"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
 
 	fq := pagination.PaginatedFeedQuery{
 		Limit:  10,
@@ -449,7 +465,7 @@ func (h *RoutineHandlers) GetInstructorRoutinesHandler(c *gin.Context) {
 		return
 	}
 
-	routines, total, err := h.services.Routine.GetRoutinesByCreator(c.Request.Context(), user.UserID, fq)
+	routines, total, err := h.services.Routine.GetRoutinesByCreator(ctx, user.UserID, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
