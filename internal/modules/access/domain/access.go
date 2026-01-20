@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
+	branchdomain "github.com/vitalfit/api/internal/modules/branches/domain"
 	productsdomain "github.com/vitalfit/api/internal/modules/products/domain"
 	scheduledomain "github.com/vitalfit/api/internal/modules/schedule/domain"
 )
@@ -18,9 +19,10 @@ const (
 )
 
 type AttendanceLog struct {
-	AttendanceID uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"attendance_id"`
-	UserID       uuid.UUID `gorm:"type:uuid;not null;index" json:"user_id"`
-	ServiceID    uuid.UUID `gorm:"type:uuid;not null" json:"service_id"`
+	AttendanceID uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"attendance_id"`
+	UserID       uuid.UUID  `gorm:"type:uuid;not null;index" json:"user_id"`
+	ServiceID    uuid.UUID  `gorm:"type:uuid;not null" json:"service_id"`
+	BranchID     *uuid.UUID `gorm:"type:uuid;index" json:"branch_id,omitempty"`
 
 	ClassID *uuid.UUID `gorm:"column:schedule_id;type:uuid;index" json:"class_id,omitempty"`
 
@@ -30,6 +32,7 @@ type AttendanceLog struct {
 	CreatedAt time.Time `gorm:"default:now()" json:"created_at"`
 
 	User    authdomain.Users       `gorm:"foreignKey:UserID;references:UserID" json:"-"`
+	Branch  *branchdomain.Branch   `gorm:"foreignKey:BranchID;references:BranchID" json:"-"`
 	Service productsdomain.Service `gorm:"foreignKey:ServiceID;references:ServiceID" json:"-"`
 	Class   *scheduledomain.Class  `gorm:"foreignKey:ClassID;references:ClassID" json:"-"`
 }

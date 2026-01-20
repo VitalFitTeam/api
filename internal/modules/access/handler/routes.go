@@ -36,7 +36,7 @@ func (r *AccessHandler) AccessRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware
 	accessGroup.POST("/check-in/manual", m.RBACPermission("access:check_in"), r.CheckInByUserIDHandler)
 	accessGroup.POST("/check-in/face", m.RBACPermission("access:check_in"), r.CheckInFaceHandler)
 
-	accessGroup.GET("/scores", m.RBACPermission("reports:view_attendance"), r.GetClientScoresHandler)
+	accessGroup.GET("/scores", m.RBACPermission("access:view_class_history"), r.GetClientScoresHandler)
 	accessGroup.GET("/classes/:id/attendance", m.RBACPermission("access:view_class_history"), r.GetClassAttendanceHistoryHandler)
 
 	// Client attendance and service usage routes

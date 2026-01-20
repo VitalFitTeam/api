@@ -106,7 +106,7 @@ func LoadConfig() *Config {
 			},
 		},
 		RateLimiter: ratelimiter.Config{
-			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_PER_TIME_FRAME", 150),
+			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_PER_TIME_FRAME", 500),
 			TimeFrame:            time.Minute * 1,
 			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
