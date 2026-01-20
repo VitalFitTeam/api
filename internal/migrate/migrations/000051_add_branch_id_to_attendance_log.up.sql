@@ -11,3 +11,9 @@ SET branch_id = (
     LIMIT 1
 )
 WHERE service_id IN (SELECT service_id FROM services WHERE name = 'Open Gym');
+
+UPDATE attendance_log
+SET branch_id = c.branch_id
+FROM classes c
+WHERE attendance_log.schedule_id = c.class_id
+  AND attendance_log.branch_id IS NULL;
