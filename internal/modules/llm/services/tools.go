@@ -152,7 +152,7 @@ var tools = []openai.Tool{
 }
 
 func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name string, argsRaw string) (string, error) {
-	s.logger.Infow("🔧 Ejecutando Tool", "name", name, "args", argsRaw)
+	s.logger.Infow(" Ejecutando Tool", "name", name, "args", argsRaw)
 
 	switch name {
 	case "get_all_branches":
