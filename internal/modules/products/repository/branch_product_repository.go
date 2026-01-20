@@ -48,8 +48,7 @@ func (s *ProductsStore) GetBranchService(ctx context.Context, branchID uuid.UUID
 		if err := tx.WithContext(ctx).
 			Preload("Service").
 			Preload("Branch").
-			Joins("JOIN services ON services.service_id = service_branch_details.service_id").
-			Where("services.deleted_at IS NULL").
+			Joins("INNER JOIN services ON services.service_id = service_branch_details.service_id AND services.deleted_at IS NULL").
 			Find(&branchServices, "service_branch_details.branch_id = ?", branchID).Error; err != nil {
 			return err
 		}
