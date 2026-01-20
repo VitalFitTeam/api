@@ -188,8 +188,7 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		endOfDay := startOfDay.Add(24 * time.Hour)
 
 		if args.BranchID == "" {
-			branchesOutput, _ := s.callFunction(ctx, userID, "get_all_branches", "{}")
-			return fmt.Sprintf("Falta el ID de la sucursal. Aquí tienes las disponibles para que el usuario elija:\n%s", branchesOutput), nil
+			return "SYSTEM_REQUIREMENT: Branch ID is missing. YOU MUST call 'get_all_branches' first to find the ID corresponding to the user's requested location name (e.g., 'Madrid'), then call 'get_available_classes' again with that ID.", nil
 		}
 
 		branchID, err := uuid.Parse(args.BranchID)
@@ -208,7 +207,8 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		}
 
 		var result strings.Builder
-		result.WriteString(fmt.Sprintf("Clases disponibles para %s:\n", targetDate.Format("2006-01-02")))
+		result.WriteString(fmt.Sprintf("SYSTEM NOTE: Do not show the IDs to the user. Use them internally for booking. Available classes for %s:\n", targetDate.Format("2006-01-02")))
+
 		count := 0
 		for _, c := range classes {
 			if c.StartsAt.Before(time.Now()) {
@@ -234,8 +234,8 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 				availableSpots = 0
 			}
 
-			result.WriteString(fmt.Sprintf("- ID: %s | %s con %s a las %s (Cupos: %d)\n",
-				c.ClassID, serviceName, instructorName, c.StartsAt.Format("15:04"), availableSpots))
+			result.WriteString(fmt.Sprintf("%d. [ID:%s] %s | %s | Instructor: %s (Cupos: %d)\n",
+				count, c.ClassID, serviceName, c.StartsAt.Format("15:04"), instructorName, availableSpots))
 		}
 
 		if count == 0 {
@@ -291,7 +291,6 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 			return "Error obteniendo tus reservas.", nil
 		}
 
-		// Filtramos solo las reservas futuras para no saturar el contexto del LLM
 		var upcoming []bookingdomain.BookingWithClassInfo
 		now := time.Now()
 		for _, b := range bookings {
@@ -304,7 +303,6 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 			return "No tienes ninguna reserva futura en este momento.", nil
 		}
 
-		// Limitamos a 10 para evitar errores de tokens
 		if len(upcoming) > 10 {
 			upcoming = upcoming[:10]
 		}
