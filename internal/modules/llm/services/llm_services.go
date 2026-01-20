@@ -110,7 +110,6 @@ Tu meta final: Que el usuario reserve o cancele sin saber qué es un ID.`, time.
 
 	msg := resp.Choices[0].Message
 
-	// Usamos un bucle (máx 5 iteraciones) para permitir que el LLM encadene herramientas (ej: get_branches -> get_classes)
 	for i := 0; i < 5 && len(msg.ToolCalls) > 0; i++ {
 		openaiMsgs = append(openaiMsgs, msg)
 
