@@ -371,15 +371,18 @@ func (h *BillingHandlers) GetPaymentMethodsFromBranchHandler(c *gin.Context) {
 		return
 
 	}
-	resp := make([]BranchPaymentMethodResponse, len(Branchmethods))
-	for i, method := range Branchmethods {
-		resp[i] = BranchPaymentMethodResponse{
+	resp := make([]BranchPaymentMethodResponse, 0, len(Branchmethods))
+	for _, method := range Branchmethods {
+		if method.Method == nil {
+			continue
+		}
+		resp = append(resp, BranchPaymentMethodResponse{
 			BranchID: method.BranchID,
 			MethodID: method.MethodID,
 			Name:     method.Method.Name,
 			Type:     string(method.Method.Type),
 			IsActive: method.IsActive,
-		}
+		})
 	}
 	c.JSON(http.StatusOK, gin.H{"data": resp})
 

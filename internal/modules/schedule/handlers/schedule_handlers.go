@@ -313,13 +313,14 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 // @Tags			Schedule
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Param			user_id	query		string	false	"User UUID (if not instructor)"
-// @Param			month	query		int		false	"Month (1-12)"
-// @Param			year	query		int		false	"Year"
-// @Param			date	query		string	false	"Specific date (YYYY-MM-DD)"
-// @Success		200		{object}	object{data=[]ClassResponse}
-// @Failure		400		{object}	map[string]interface{}
-// @Failure		500		{object}	map[string]interface{}
+// @Param			user_id		query		string	false	"User UUID (if not instructor)"
+// @Param			month		query		int		false	"Month (1-12)"
+// @Param			branch_id	query		string	false	"Branch UUID"
+// @Param			year		query		int		false	"Year"
+// @Param			date		query		string	false	"Specific date (YYYY-MM-DD)"
+// @Success		200			{object}	object{data=[]ClassResponse}
+// @Failure		400			{object}	map[string]interface{}
+// @Failure		500			{object}	map[string]interface{}
 // @Router			/schedule/instructor [get]
 func (h *ScheduleHandlers) GetClassesByInstructorHandler(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -367,7 +368,17 @@ func (h *ScheduleHandlers) GetClassesByInstructorHandler(c *gin.Context) {
 		}
 	}
 
-	classes, err := h.services.ScheduleServices.GetClassesByInstructor(ctx, targetUserID, startDate, endDate)
+	var branchID *uuid.UUID
+	if branchIDStr := c.Query("branch_id"); branchIDStr != "" {
+		id, err := uuid.Parse(branchIDStr)
+		if err != nil {
+			h.services.LogErrors.BadRequestResponse(c, errors.New("invalid branch_id"))
+			return
+		}
+		branchID = &id
+	}
+
+	classes, err := h.services.ScheduleServices.GetClassesByInstructor(ctx, targetUserID, branchID, startDate, endDate)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return

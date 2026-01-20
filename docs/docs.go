@@ -13804,6 +13804,12 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "type": "string",
+                        "description": "Branch UUID",
+                        "name": "branch_id",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "Year",
                         "name": "year",

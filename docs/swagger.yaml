@@ -12165,6 +12165,10 @@ paths:
         in: query
         name: month
         type: integer
+      - description: Branch UUID
+        in: query
+        name: branch_id
+        type: string
       - description: Year
         in: query
         name: year
