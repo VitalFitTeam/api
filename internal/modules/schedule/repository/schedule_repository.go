@@ -58,6 +58,7 @@ func (s *ScheduleStore) GetClassesByBranch(ctx context.Context, branchID uuid.UU
 		query := tx.WithContext(ctx).
 			Preload("Service").
 			Preload("Instructor").
+			Preload("Instructor.User").
 			Preload("Branch").
 			Where("classes.branch_id = ?", branchID)
 
