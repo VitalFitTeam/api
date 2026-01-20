@@ -22,9 +22,9 @@ var tools = []openai.Tool{
 		Function: &openai.FunctionDefinition{
 			Name:        "get_all_branches",
 			Description: "Obtiene la lista de todas las sucursales disponibles con sus IDs. Útil cuando el usuario quiere saber qué sucursales existen o para obtener el ID de una sucursal por su nombre.",
-			Parameters: jsonschema.Definition{
-				Type:       jsonschema.Object,
-				Properties: map[string]jsonschema.Definition{},
+			Parameters: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
 			},
 		},
 	},
@@ -71,9 +71,9 @@ var tools = []openai.Tool{
 		Function: &openai.FunctionDefinition{
 			Name:        "get_my_bookings",
 			Description: "Obtiene la lista de reservas activas del usuario. Útil para ver qué tiene reservado o para buscar el ID de una reserva para cancelar.",
-			Parameters: jsonschema.Definition{
-				Type:       jsonschema.Object,
-				Properties: map[string]jsonschema.Definition{},
+			Parameters: map[string]interface{}{
+				"type":       "object",
+				"properties": map[string]interface{}{},
 			},
 		},
 	},
