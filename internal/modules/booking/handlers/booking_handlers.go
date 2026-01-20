@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
@@ -19,6 +21,9 @@ import (
 // @Produce		json
 // @Param			branchId	path		string	true	"Branch UUID"
 // @Param			userId		path		string	false	"Client UUID (required for non-client users)"
+// @Param			month		query		int		false	"Month (1-12)"
+// @Param			year		query		int		false	"Year"
+// @Param			date		query		string	false	"Specific date (YYYY-MM-DD)"
 // @Success		200			{object}	object{data=[]scheduledomain.Class}
 // @Failure		400			{object}	map[string]interface{}	"Bad Request (e.g., invalid UUID, missing userId for staff)"
 // @Failure		500			{object}	map[string]interface{}	"Internal Server Error"
@@ -62,7 +67,31 @@ func (h *BookingHandlers) GetClientScheduleHandler(c *gin.Context) {
 		}
 	}
 
-	classes, err := h.services.BookingServices.GetClientSchedule(ctx, branchID, targetUserID)
+	var startDate, endDate *time.Time
+	monthStr := c.Query("month")
+	yearStr := c.Query("year")
+	dateStr := c.Query("date")
+
+	if dateStr != "" {
+		parsedDate, err := time.Parse("2006-01-02", dateStr)
+		if err == nil {
+			start := time.Date(parsedDate.Year(), parsedDate.Month(), parsedDate.Day(), 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 0, 1).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	} else if monthStr != "" && yearStr != "" {
+		m, errM := strconv.Atoi(monthStr)
+		y, errY := strconv.Atoi(yearStr)
+		if errM == nil && errY == nil {
+			start := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 1, 0).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	}
+
+	classes, err := h.services.BookingServices.GetClientSchedule(ctx, branchID, targetUserID, startDate, endDate)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
@@ -203,6 +232,9 @@ func (h *BookingHandlers) CancelBookingHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Produce		json
 // @Param			userId	path		string	false	"User UUID (required for staff)"
+// @Param			month	query		int		false	"Month (1-12)"
+// @Param			year	query		int		false	"Year"
+// @Param			date	query		string	false	"Specific date (YYYY-MM-DD)"
 // @Success		200		{object}	object{data=[]BookingResponse}
 // @Failure		400		{object}	map[string]interface{}	"Bad Request (e.g., invalid UUID, missing userId for staff)"
 // @Failure		500		{object}	map[string]interface{}	"Internal Server Error"
@@ -241,7 +273,31 @@ func (h *BookingHandlers) GetClientBookingsHandler(c *gin.Context) {
 		}
 	}
 
-	bookings, err := h.services.BookingServices.GetClientBookings(ctx, targetUserID)
+	var startDate, endDate *time.Time
+	monthStr := c.Query("month")
+	yearStr := c.Query("year")
+	dateStr := c.Query("date")
+
+	if dateStr != "" {
+		parsedDate, err := time.Parse("2006-01-02", dateStr)
+		if err == nil {
+			start := time.Date(parsedDate.Year(), parsedDate.Month(), parsedDate.Day(), 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 0, 1).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	} else if monthStr != "" && yearStr != "" {
+		m, errM := strconv.Atoi(monthStr)
+		y, errY := strconv.Atoi(yearStr)
+		if errM == nil && errY == nil {
+			start := time.Date(y, time.Month(m), 1, 0, 0, 0, 0, time.UTC)
+			end := start.AddDate(0, 1, 0).Add(-time.Nanosecond)
+			startDate = &start
+			endDate = &end
+		}
+	}
+
+	bookings, err := h.services.BookingServices.GetClientBookings(ctx, targetUserID, startDate, endDate)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return

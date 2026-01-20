@@ -325,23 +325,17 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		return "¡Reserva confirmada con éxito! Se ha añadido a tu calendario.", nil
 
 	case "get_my_bookings":
-		bookings, err := s.store.Booking.GetClientBookings(ctx, userID)
+		now := time.Now()
+		bookings, err := s.store.Booking.GetClientBookings(ctx, userID, &now, nil)
 		if err != nil {
 			return "Error obteniendo tus reservas.", nil
 		}
 
-		var upcoming []bookingdomain.BookingWithClassInfo
-		now := time.Now()
-		for _, b := range bookings {
-			if b.StartsAt.After(now) {
-				upcoming = append(upcoming, b)
-			}
-		}
-
-		if len(upcoming) == 0 {
+		if len(bookings) == 0 {
 			return "No tienes ninguna reserva futura en este momento.", nil
 		}
 
+		upcoming := bookings
 		if len(upcoming) > 10 {
 			upcoming = upcoming[:10]
 		}

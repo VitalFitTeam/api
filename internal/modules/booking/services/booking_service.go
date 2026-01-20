@@ -148,13 +148,14 @@ func (s *BookingService) GetClientSchedule(
 	ctx context.Context,
 	branchID uuid.UUID,
 	userID uuid.UUID,
+	startDate, endDate *time.Time,
 ) ([]scheduledomain.Class, error) {
 
-	return s.store.Booking.GetClientSchedule(ctx, branchID, userID)
+	return s.store.Booking.GetClientSchedule(ctx, branchID, userID, startDate, endDate)
 }
 
-func (s *BookingService) GetClientBookings(ctx context.Context, userID uuid.UUID) ([]bookingdomain.BookingWithClassInfo, error) {
-	return s.store.Booking.GetClientBookings(ctx, userID)
+func (s *BookingService) GetClientBookings(ctx context.Context, userID uuid.UUID, startDate, endDate *time.Time) ([]bookingdomain.BookingWithClassInfo, error) {
+	return s.store.Booking.GetClientBookings(ctx, userID, startDate, endDate)
 }
 
 func (s *BookingService) GetClientActualBook(ctx context.Context, userID, branchID uuid.UUID, startsAt time.Time, endsAt time.Time) (*bookingdomain.Booking, error) {

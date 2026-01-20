@@ -119,10 +119,11 @@ func (s *BookingStore) GetClientSchedule(
 	ctx context.Context,
 	branchID uuid.UUID,
 	userID uuid.UUID,
+	startDate, endDate *time.Time,
 ) ([]scheduledomain.Class, error) {
 	var classes []scheduledomain.Class
 
-	err := s.db.WithContext(ctx).Model(&scheduledomain.Class{}).
+	query := s.db.WithContext(ctx).Model(&scheduledomain.Class{}).
 		Joins("JOIN bookings ON bookings.class_id = classes.class_id").
 		Where("classes.branch_id = ?", branchID).
 		Where("bookings.user_id = ?", userID).
@@ -130,8 +131,16 @@ func (s *BookingStore) GetClientSchedule(
 		Where("bookings.deleted_at IS NULL").
 		Preload("Service").
 		Preload("Instructor.User").
-		Preload("Branch").
-		Find(&classes).Error
+		Preload("Branch")
+
+	if startDate != nil {
+		query = query.Where("classes.starts_at >= ?", startDate)
+	}
+	if endDate != nil {
+		query = query.Where("classes.starts_at <= ?", endDate)
+	}
+
+	err := query.Find(&classes).Error
 
 	if err != nil {
 		return nil, err
@@ -165,10 +174,11 @@ func (s *BookingStore) CountBookingsForClass(ctx context.Context, classID uuid.U
 // ------------------------------------------------------------
 //
 
-func (s *BookingStore) GetClientBookings(ctx context.Context, userID uuid.UUID) ([]bookingdomain.BookingWithClassInfo, error) {
+func (s *BookingStore) GetClientBookings(ctx context.Context, userID uuid.UUID, startDate, endDate *time.Time) ([]bookingdomain.BookingWithClassInfo, error) {
 	var results []bookingdomain.BookingWithClassInfo
+	args := []interface{}{userID}
 
-	query := `
+	queryStr := `
         SELECT 
             b.booking_id,
             c.class_id,
@@ -184,10 +194,20 @@ func (s *BookingStore) GetClientBookings(ctx context.Context, userID uuid.UUID) 
         JOIN users u ON ins.user_id = u.user_id
         JOIN branch br ON c.branch_id = br.branch_id
         WHERE b.user_id = ? AND b.deleted_at IS NULL
-        ORDER BY c.starts_at ASC
     `
 
-	err := s.db.WithContext(ctx).Raw(query, userID).Scan(&results).Error
+	if startDate != nil {
+		queryStr += " AND c.starts_at >= ?"
+		args = append(args, startDate)
+	}
+	if endDate != nil {
+		queryStr += " AND c.starts_at <= ?"
+		args = append(args, endDate)
+	}
+
+	queryStr += " ORDER BY c.starts_at ASC"
+
+	err := s.db.WithContext(ctx).Raw(queryStr, args...).Scan(&results).Error
 	if err != nil {
 		return nil, err
 	}
