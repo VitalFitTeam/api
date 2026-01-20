@@ -45,7 +45,6 @@ var tools = []openai.Tool{
 						Description: "El UUID de la sucursal para consultar el horario.",
 					},
 				},
-				Required: []string{"branch_id"},
 			},
 		},
 	},
@@ -188,9 +187,13 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		startOfDay := time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), 0, 0, 0, 0, targetDate.Location())
 		endOfDay := startOfDay.Add(24 * time.Hour)
 
+		if args.BranchID == "" {
+			return s.callFunction(ctx, userID, "get_all_branches", "{}")
+		}
+
 		branchID, err := uuid.Parse(args.BranchID)
 		if err != nil {
-			return "Error: ID de sucursal inválido.", nil
+			return "Error: ID de sucursal inválido. Por favor usa 'get_all_branches' para obtener un ID válido.", nil
 		}
 
 		classes, err := s.store.Schedule.GetClassesByBranch(ctx, branchID, &startOfDay, &endOfDay)

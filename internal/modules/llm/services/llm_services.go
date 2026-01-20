@@ -72,7 +72,8 @@ Directrices:
 3. Si te piden clases para "hoy" o "mañana", usa la fecha actual como referencia.
 4. Si falta información (como IDs de sucursal o clase), NO se los pidas al usuario. Usa 'get_all_branches' o 'get_available_classes' para buscar la información necesaria por nombre o contexto.
 5. Cuando listes clases, muestra la hora, actividad e instructor, pero NO muestres el ID técnico al usuario.
-6. Si el usuario quiere reservar una clase por hora (ej. "la de las 19:00"), busca el ID internamente en el listado de clases y usa la herramienta 'book_class'.`, time.Now().Format("2006-01-02 15:04"))
+6. Si el usuario quiere reservar una clase por nombre u hora (ej. "la de yoga"), busca el ID correspondiente en los resultados de las herramientas anteriores (historial) y usa 'book_class'.
+7. Si una herramienta falla por falta de parámetros, intenta obtenerlos con otra herramienta antes de rendirte.`, time.Now().Format("2006-01-02 15:04"))
 
 	openaiMsgs = append(openaiMsgs, openai.ChatCompletionMessage{
 		Role:    openai.ChatMessageRoleSystem,
