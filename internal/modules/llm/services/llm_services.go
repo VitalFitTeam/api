@@ -50,23 +50,31 @@ func (s *LLMService) ProcessUserMessage(ctx context.Context, userID uuid.UUID, c
 		return "", err
 	}
 
-	// Obtener los últimos 20 mensajes para el contexto (ordenados por fecha descendente)
 	fq := pagination.PaginatedFeedQuery{Limit: 20, Page: 1, Sort: "desc"}
 	history, _, err := s.store.LLM.GetConversationHistory(ctx, convo.ConversationID, fq)
 	if err != nil {
 		return "", err
 	}
 
-	// Invertir historial para enviarlo a OpenAI en orden cronológico (Oldest -> Newest)
 	for i, j := 0, len(history)-1; i < j; i, j = i+1, j-1 {
 		history[i], history[j] = history[j], history[i]
 	}
 
 	var openaiMsgs []openai.ChatCompletionMessage
 
+	systemPrompt := fmt.Sprintf(`Eres VitalBot, el asistente virtual de VitalFit.
+Tu misión es motivar a los usuarios y ayudarles con la gestión de su gimnasio.
+Fecha y hora actual: %s.
+
+Directrices:
+1. Responde de forma concisa y amigable.
+2. Usa las herramientas disponibles para consultar horarios, gestionar reservas y crear rutinas.
+3. Si te piden clases para "hoy" o "mañana", usa la fecha actual como referencia.
+4. Si falta información para una herramienta (ej. ID de sucursal), pregunta al usuario o usa 'get_all_branches' para guiarlo.`, time.Now().Format("2006-01-02 15:04"))
+
 	openaiMsgs = append(openaiMsgs, openai.ChatCompletionMessage{
 		Role:    openai.ChatMessageRoleSystem,
-		Content: "Eres VitalBot, un asistente de gimnasio útil y motivador. Responde de forma concisa.",
+		Content: systemPrompt,
 	})
 
 	for _, msg := range history {
@@ -86,7 +94,7 @@ func (s *LLMService) ProcessUserMessage(ctx context.Context, userID uuid.UUID, c
 		openai.ChatCompletionRequest{
 			Model:    openai.GPT3Dot5Turbo,
 			Messages: openaiMsgs,
-			// Tools: tools,
+			Tools:    tools,
 		},
 	)
 	if err != nil {
@@ -94,7 +102,39 @@ func (s *LLMService) ProcessUserMessage(ctx context.Context, userID uuid.UUID, c
 		return "Lo siento, estoy teniendo problemas de conexión. Intenta más tarde.", nil
 	}
 
-	botContent := resp.Choices[0].Message.Content
+	msg := resp.Choices[0].Message
+
+	if len(msg.ToolCalls) > 0 {
+		openaiMsgs = append(openaiMsgs, msg)
+
+		for _, toolCall := range msg.ToolCalls {
+			if toolCall.Type == openai.ToolTypeFunction {
+				toolOutput, err := s.callFunction(ctx, userID, toolCall.Function.Name, toolCall.Function.Arguments)
+				if err != nil {
+					toolOutput = fmt.Sprintf("Error executing tool: %v", err)
+				}
+
+				openaiMsgs = append(openaiMsgs, openai.ChatCompletionMessage{
+					Role:       openai.ChatMessageRoleTool,
+					Content:    toolOutput,
+					ToolCallID: toolCall.ID,
+				})
+			}
+		}
+
+		resp, err = s.client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+			Model:    openai.GPT3Dot5Turbo,
+			Messages: openaiMsgs,
+			Tools:    tools,
+		})
+		if err != nil {
+			s.logger.Errorw("Error calling OpenAI after tools", "error", err)
+			return "Lo siento, hubo un error procesando la solicitud.", nil
+		}
+		msg = resp.Choices[0].Message
+	}
+
+	botContent := msg.Content
 
 	botMsg := &llmdomain.Message{
 		ConversationID: convo.ConversationID,
