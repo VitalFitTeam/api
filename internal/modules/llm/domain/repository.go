@@ -11,4 +11,5 @@ type LLMRepository interface {
 	CreateConversation(ctx context.Context, userID uuid.UUID) (*Conversation, error)
 	SaveMessage(ctx context.Context, msg *Message) error
 	GetConversationHistory(ctx context.Context, convoID uuid.UUID, limit int) ([]Message, error)
+	DeactivateConversation(ctx context.Context, convoID uuid.UUID) error
 }

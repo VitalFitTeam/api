@@ -22,6 +22,7 @@ type Config struct {
 	Clerk         ClerkConfig
 	EncryptionKey string
 	Rekognition   RekognitionConfig
+	OpenAI        OpenAIConfig
 }
 
 type redisConfig struct {
@@ -71,6 +72,10 @@ type RekognitionConfig struct {
 	Region    string
 	AccessKey string
 	SecretKey string
+}
+
+type OpenAIConfig struct {
+	APIKey string
 }
 
 func LoadConfig() *Config {
@@ -125,6 +130,9 @@ func LoadConfig() *Config {
 			Region:    env.GetString("AWS_REGIONR", ""),
 			AccessKey: env.GetString("AWS_ACCESS_KEY_ID", ""),
 			SecretKey: env.GetString("AWS_SECRET_ACCESS_KEY", ""),
+		},
+		OpenAI: OpenAIConfig{
+			APIKey: env.GetString("OPENAI_API_KEY", ""),
 		},
 	}
 }

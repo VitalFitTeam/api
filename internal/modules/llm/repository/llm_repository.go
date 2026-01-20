@@ -42,12 +42,10 @@ func (r *LLMStore) CreateConversation(ctx context.Context, userID uuid.UUID) (*l
 	return convo, err
 }
 
-// SaveMessage guarda un mensaje en el historial
 func (r *LLMStore) SaveMessage(ctx context.Context, msg *llmdomain.Message) error {
 	return r.db.WithContext(ctx).Create(msg).Error
 }
 
-// GetConversationHistory recupera los últimos N mensajes para darle contexto a la IA
 func (r *LLMStore) GetConversationHistory(ctx context.Context, convoID uuid.UUID, limit int) ([]llmdomain.Message, error) {
 	var messages []llmdomain.Message
 
@@ -61,9 +59,16 @@ func (r *LLMStore) GetConversationHistory(ctx context.Context, convoID uuid.UUID
 
 	err := r.db.WithContext(ctx).
 		Where("conversation_id = ?", convoID).
-		Order("created_at ASC"). // Orden cronológico (Lo que OpenAI necesita)
-		// Limit(limit). // Nota: Si la conver es muy larga, necesitarás lógica de ventana deslizante
+		Order("created_at ASC").
+		Limit(limit).
 		Find(&messages).Error
 
 	return messages, err
+}
+
+func (r *LLMStore) DeactivateConversation(ctx context.Context, convoID uuid.UUID) error {
+	return r.db.WithContext(ctx).
+		Model(&llmdomain.Conversation{}).
+		Where("conversation_id = ?", convoID).
+		Update("is_active", false).Error
 }

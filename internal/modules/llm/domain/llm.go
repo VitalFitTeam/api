@@ -14,6 +14,7 @@ const (
 	RoleClient       = "client"
 	RoleSystem       = "system"
 	RoleTool         = "tool"
+	RoleAssistant    = "assistant"
 )
 
 type Conversation struct {

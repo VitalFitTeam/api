@@ -7781,6 +7781,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/llm/chat": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Sends a message to the AI assistant and receives a response.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LLM"
+                ],
+                "summary": "Chat with AI Assistant",
+                "parameters": [
+                    {
+                        "description": "Chat message payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/llmhandlers.ChatRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "AI response",
+                        "schema": {
+                            "$ref": "#/definitions/llmhandlers.ChatResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/marketing/banners": {
             "get": {
                 "security": [
@@ -18417,6 +18478,22 @@ const docTemplate = `{
                         "InMaintenance",
                         "OutOfService"
                     ]
+                }
+            }
+        },
+        "llmhandlers.ChatRequest": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "llmhandlers.ChatResponse": {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "type": "string"
                 }
             }
         },
