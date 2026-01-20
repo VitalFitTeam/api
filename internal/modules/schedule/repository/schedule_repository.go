@@ -115,6 +115,7 @@ func (s *ScheduleStore) GetUpcomingClassesByBranch(ctx context.Context, branchID
 			Where("sbd.deleted_at IS NULL").
 			Preload("Service").
 			Preload("Instructor").
+			Preload("Instructor.User").
 			Preload("Branch").
 			Where("classes.branch_id = ?", branchID)
 
