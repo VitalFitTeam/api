@@ -188,7 +188,8 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		endOfDay := startOfDay.Add(24 * time.Hour)
 
 		if args.BranchID == "" {
-			return s.callFunction(ctx, userID, "get_all_branches", "{}")
+			branchesOutput, _ := s.callFunction(ctx, userID, "get_all_branches", "{}")
+			return fmt.Sprintf("Falta el ID de la sucursal. Aquí tienes las disponibles para que el usuario elija:\n%s", branchesOutput), nil
 		}
 
 		branchID, err := uuid.Parse(args.BranchID)
