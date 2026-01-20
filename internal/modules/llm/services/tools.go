@@ -3,6 +3,7 @@ package llmservices
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/sashabaranov/go-openai/jsonschema"
 	bookingdomain "github.com/vitalfit/api/internal/modules/booking/domain"
 	routinedomain "github.com/vitalfit/api/internal/modules/routines/domain"
+	shared_errors "github.com/vitalfit/api/internal/shared/errors"
 	"github.com/vitalfit/api/pkg/pagination"
 )
 
@@ -269,6 +271,43 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		bookedCount, _ := s.store.Booking.CountBookingsForClass(ctx, classID)
 		if class.MaxCapacity > 0 && bookedCount >= int64(class.MaxCapacity) {
 			return "Error: La clase está llena. No quedan cupos disponibles.", nil
+		}
+
+		// Validaciones de Membresía y Saldo (Replicando lógica de BookingService)
+		isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID, 0)
+		if err != nil {
+			return "Error verificando estado de membresía.", nil
+		}
+
+		canBook := false
+
+		if isMember {
+			branchService, err := s.store.Products.GetBranchServiceByID(ctx, class.BranchID, class.ServiceID)
+			if err != nil {
+				return "Error consultando detalles del servicio.", nil
+			}
+
+			if branchService.PriceForMember == 0 {
+				canBook = true
+			}
+		}
+
+		if !canBook {
+			clientBalance, err := s.store.Products.GetClientBalance(ctx, userID, class.ServiceID)
+			if err != nil && !errors.Is(err, shared_errors.ErrNotFound) {
+				return "Error consultando saldo de créditos.", nil
+			}
+
+			if clientBalance != nil && clientBalance.Balance > 0 {
+				if err := s.store.Products.SpendClientBalance(ctx, userID, class.ServiceID); err != nil {
+					return "Error procesando el consumo del crédito.", nil
+				}
+				canBook = true
+			}
+		}
+
+		if !canBook {
+			return "No se pudo completar la reserva: No tienes una membresía activa que cubra esta clase ni créditos suficientes.", nil
 		}
 
 		booking := &bookingdomain.Booking{
