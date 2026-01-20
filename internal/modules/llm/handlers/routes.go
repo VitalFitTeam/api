@@ -23,6 +23,7 @@ func NewLLMHandlers(appservices appservices.Services) *LLMHandlers {
 func (h *LLMHandlers) LLMRoutes(rg *gin.RouterGroup, m *auth.AuthMiddleware) {
 	llmGroup := rg.Group("/llm")
 	llmGroup.Use(m.AuthJwtTokenMiddleware())
-	llmGroup.Use(m.AuditLogMiddleware())
 	llmGroup.POST("/chat", h.ChatHandler)
+	llmGroup.GET("/history", h.GetHistoryHandler)
+	llmGroup.POST("/reset", h.ResetChatHandler)
 }

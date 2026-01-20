@@ -32,6 +32,6 @@ type Message struct {
 	ConversationID uuid.UUID      `gorm:"type:uuid;not null;index" json:"conversation_id"`
 	SenderRole     string         `gorm:"type:varchar(20);not null" json:"sender_role"`
 	Content        string         `gorm:"type:text;not null" json:"content"`
-	Metadata       datatypes.JSON `gorm:"type:jsonb;default:'{}'::jsonb" json:"metadata"`
+	Metadata       datatypes.JSON `gorm:"type:jsonb;default:'{}'::jsonb" json:"metadata" swaggertype:"object"`
 	CreatedAt      time.Time      `json:"created_at"`
 }

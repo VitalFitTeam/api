@@ -7842,6 +7842,84 @@ const docTemplate = `{
                 }
             }
         },
+        "/llm/history": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the conversation history for the current user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LLM"
+                ],
+                "summary": "Get chat history",
+                "responses": {
+                    "200": {
+                        "description": "Chat history",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/llmdomain.Message"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/llm/reset": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Resets the active conversation for the current user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LLM"
+                ],
+                "summary": "Reset conversation",
+                "responses": {
+                    "200": {
+                        "description": "Success message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/marketing/banners": {
             "get": {
                 "security": [
@@ -18478,6 +18556,29 @@ const docTemplate = `{
                         "InMaintenance",
                         "OutOfService"
                     ]
+                }
+            }
+        },
+        "llmdomain.Message": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "conversation_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "message_id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object"
+                },
+                "sender_role": {
+                    "type": "string"
                 }
             }
         },
