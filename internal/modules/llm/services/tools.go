@@ -276,7 +276,8 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		// Validaciones de Membresía y Saldo (Replicando lógica de BookingService)
 		isMember, err := s.store.Membership.ClientHasActiveMembership(ctx, userID, 0)
 		if err != nil {
-			return "Error verificando estado de membresía.", nil
+			s.logger.Errorw("Error checking membership", "error", err)
+			isMember = false
 		}
 
 		canBook := false
@@ -284,11 +285,11 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		if isMember {
 			branchService, err := s.store.Products.GetBranchServiceByID(ctx, class.BranchID, class.ServiceID)
 			if err != nil {
-				return "Error consultando detalles del servicio.", nil
-			}
-
-			if branchService.PriceForMember == 0 {
-				canBook = true
+				s.logger.Errorw("Error getting branch service details", "error", err)
+			} else {
+				if branchService.PriceForMember == 0 {
+					canBook = true
+				}
 			}
 		}
 
@@ -311,7 +312,6 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		}
 
 		booking := &bookingdomain.Booking{
-			BookingID: uuid.New(),
 			UserID:    userID,
 			ClassID:   classID,
 			Status:    bookingdomain.BookingStatusConfirmed,
