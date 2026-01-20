@@ -102,9 +102,9 @@ func (RoutineExercise) TableName() string {
 type UserRoutine struct {
 	UserRoutineID uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"user_routine_id"`
 
-	ClientID     uuid.UUID `gorm:"type:uuid;not null" json:"client_id"`
-	InstructorID uuid.UUID `gorm:"type:uuid;not null" json:"instructor_id"`
-	RoutineID    uuid.UUID `gorm:"type:uuid;not null" json:"routine_id"`
+	ClientID     uuid.UUID  `gorm:"type:uuid;not null" json:"client_id"`
+	InstructorID *uuid.UUID `gorm:"type:uuid" json:"instructor_id"`
+	RoutineID    uuid.UUID  `gorm:"type:uuid;not null" json:"routine_id"`
 
 	Routine Routine `gorm:"foreignKey:RoutineID;references:RoutineID" json:"routine,omitempty"`
 

@@ -34,7 +34,7 @@ func (s *RoutineService) AssignRoutine(ctx context.Context, instructorID, client
 
 	assignment := &routinedomain.UserRoutine{
 		ClientID:     clientID,
-		InstructorID: instructorID,
+		InstructorID: &instructorID,
 		RoutineID:    routineID,
 		Status:       routinedomain.StatusActive,
 		DueDate:      dueDate,

@@ -371,7 +371,6 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 
 		assignment := &routinedomain.UserRoutine{
 			ClientID:     userID,
-			InstructorID: userID,
 			RoutineID:    routine.RoutineID,
 			Status:       routinedomain.StatusActive,
 			AssignedDate: time.Now(),
