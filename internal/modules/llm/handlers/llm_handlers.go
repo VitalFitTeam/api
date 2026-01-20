@@ -1,9 +1,12 @@
 package llmhandlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	llmdomain "github.com/vitalfit/api/internal/modules/llm/domain"
+	"github.com/vitalfit/api/pkg/pagination"
 )
 
 // @Summary		Chat with AI Assistant
@@ -40,22 +43,50 @@ func (h *LLMHandlers) ChatHandler(c *gin.Context) {
 // @Tags			LLM
 // @Security		ApiKeyAuth
 // @Produce		json
-// @Success		200	{array}		llmdomain.Message		"Chat history"
-// @Failure		500	{object}	object{error=string}	"Internal Server Error"
+// @Param			limit	query		int									false	"Number of results per page"
+// @Param			page	query		int									false	"Page number"
+// @Param			sort	query		string								false	"Sort order (asc/desc)"
+// @Success		200		{object}	object{data=[]llmdomain.Message}	"Chat history paginated"
+// @Failure		400		{object}	object{error=string}				"Bad Request"
+// @Failure		500		{object}	object{error=string}				"Internal Server Error"
 // @Router			/llm/history [get]
 func (h *LLMHandlers) GetHistoryHandler(c *gin.Context) {
 	// 1. Obtener usuario del contexto (Tu helper)
 	user := h.services.UserServices.GetUserFromContext(c)
 
+	fq := pagination.PaginatedFeedQuery{
+		Limit: 50,
+		Page:  1,
+		Sort:  "desc", // Por defecto traemos los más recientes primero
+	}
+	fq, err := fq.Parse(c.Request)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
 	// 2. Llamar al servicio
-	history, err := h.services.LLM.GetChatHistory(c.Request.Context(), user.UserID)
+	history, total, err := h.services.LLM.GetChatHistory(c.Request.Context(), user.UserID, fq)
 	if err != nil {
 		h.services.LogErrors.InternalServerError(c, err)
 		return
 	}
 
+	nextURL := fmt.Sprintf("/llm/history?limit=%d&page=%d&sort=%s", fq.Limit, fq.Page+1, fq.Sort)
+	previousPage := fq.Page - 1
+	if previousPage < 1 {
+		previousPage = 1
+	}
+	previousURL := fmt.Sprintf("/llm/history?limit=%d&page=%d&sort=%s", fq.Limit, previousPage, fq.Sort)
+
 	// 3. Responder
-	c.JSON(http.StatusOK, history)
+	c.JSON(http.StatusOK, pagination.PaginatedResponseTotal[llmdomain.Message]{
+		Data:     history,
+		Count:    int64(len(history)),
+		Total:    total,
+		Next:     nextURL,
+		Previous: previousURL,
+	})
 }
 
 // @Summary		Reset conversation
@@ -77,5 +108,5 @@ func (h *LLMHandlers) ResetChatHandler(c *gin.Context) {
 	}
 
 	// 3. Responder
-	c.JSON(http.StatusOK, gin.H{"message": "Conversation reset successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Conversación reiniciada exitosamente"})
 }

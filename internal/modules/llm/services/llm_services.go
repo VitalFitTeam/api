@@ -9,6 +9,7 @@ import (
 	"github.com/sashabaranov/go-openai"
 	llmdomain "github.com/vitalfit/api/internal/modules/llm/domain"
 	"github.com/vitalfit/api/internal/store"
+	"github.com/vitalfit/api/pkg/pagination"
 	"go.uber.org/zap"
 	"gorm.io/datatypes"
 )
@@ -49,9 +50,16 @@ func (s *LLMService) ProcessUserMessage(ctx context.Context, userID uuid.UUID, c
 		return "", err
 	}
 
-	history, err := s.store.LLM.GetConversationHistory(ctx, convo.ConversationID, 20)
+	// Obtener los últimos 20 mensajes para el contexto (ordenados por fecha descendente)
+	fq := pagination.PaginatedFeedQuery{Limit: 20, Page: 1, Sort: "desc"}
+	history, _, err := s.store.LLM.GetConversationHistory(ctx, convo.ConversationID, fq)
 	if err != nil {
 		return "", err
+	}
+
+	// Invertir historial para enviarlo a OpenAI en orden cronológico (Oldest -> Newest)
+	for i, j := 0, len(history)-1; i < j; i, j = i+1, j-1 {
+		history[i], history[j] = history[j], history[i]
 	}
 
 	var openaiMsgs []openai.ChatCompletionMessage
@@ -103,22 +111,22 @@ func (s *LLMService) ProcessUserMessage(ctx context.Context, userID uuid.UUID, c
 	return botContent, nil
 }
 
-func (s *LLMService) GetChatHistory(ctx context.Context, userID uuid.UUID) ([]llmdomain.Message, error) {
+func (s *LLMService) GetChatHistory(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]llmdomain.Message, int64, error) {
 	convo, err := s.store.LLM.GetActiveConversation(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("error searching for active conversation: %v", err)
+		return nil, 0, fmt.Errorf("error searching for active conversation: %v", err)
 	}
 
 	if convo == nil {
-		return []llmdomain.Message{}, nil
+		return []llmdomain.Message{}, 0, nil
 	}
 
-	history, err := s.store.LLM.GetConversationHistory(ctx, convo.ConversationID, 50)
+	history, total, err := s.store.LLM.GetConversationHistory(ctx, convo.ConversationID, fq)
 	if err != nil {
-		return nil, fmt.Errorf("error getting history: %v", err)
+		return nil, 0, fmt.Errorf("error getting history: %v", err)
 	}
 
-	return history, nil
+	return history, total, nil
 }
 
 func (s *LLMService) ResetConversation(ctx context.Context, userID uuid.UUID) error {

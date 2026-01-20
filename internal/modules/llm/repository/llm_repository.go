@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	llmdomain "github.com/vitalfit/api/internal/modules/llm/domain"
+	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
 )
 
@@ -45,16 +46,22 @@ func (r *LLMStore) SaveMessage(ctx context.Context, msg *llmdomain.Message) erro
 	return r.db.WithContext(ctx).Create(msg).Error
 }
 
-func (r *LLMStore) GetConversationHistory(ctx context.Context, convoID uuid.UUID, limit int) ([]llmdomain.Message, error) {
+func (r *LLMStore) GetConversationHistory(ctx context.Context, convoID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]llmdomain.Message, int64, error) {
 	var messages []llmdomain.Message
+	var total int64
 
-	err := r.db.WithContext(ctx).
-		Where("conversation_id = ?", convoID).
-		Order("created_at ASC").
-		Limit(limit).
+	query := r.db.WithContext(ctx).Model(&llmdomain.Message{}).Where("conversation_id = ?", convoID)
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.Order("created_at " + fq.Sort).
+		Limit(fq.Limit).
+		Offset(fq.Page*fq.Limit - fq.Limit).
 		Find(&messages).Error
 
-	return messages, err
+	return messages, total, err
 }
 
 func (r *LLMStore) DeactivateConversation(ctx context.Context, convoID uuid.UUID) error {

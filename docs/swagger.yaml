@@ -392,6 +392,8 @@ definitions:
         type: boolean
       identity_document:
         type: string
+      is_validated:
+        type: boolean
       last_name:
         type: string
       phone:
@@ -401,6 +403,8 @@ definitions:
       role_id:
         type: string
       role_name:
+        type: string
+      status:
         type: string
       user_id:
         type: string
@@ -550,6 +554,8 @@ definitions:
       role_id:
         type: string
       role_name:
+        type: string
+      status:
         type: string
       user_id:
         type: string
@@ -8166,15 +8172,38 @@ paths:
   /llm/history:
     get:
       description: Retrieves the conversation history for the current user.
+      parameters:
+      - description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Sort order (asc/desc)
+        in: query
+        name: sort
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Chat history
+          description: Chat history paginated
           schema:
-            items:
-              $ref: '#/definitions/llmdomain.Message'
-            type: array
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/llmdomain.Message'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:

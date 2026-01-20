@@ -7857,13 +7857,49 @@ const docTemplate = `{
                     "LLM"
                 ],
                 "summary": "Get chat history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort order (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Chat history",
+                        "description": "Chat history paginated",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/llmdomain.Message"
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/llmdomain.Message"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
                             }
                         }
                     },
@@ -16620,6 +16656,9 @@ const docTemplate = `{
                 "identity_document": {
                     "type": "string"
                 },
+                "is_validated": {
+                    "type": "boolean"
+                },
                 "last_name": {
                     "type": "string"
                 },
@@ -16633,6 +16672,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role_name": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "user_id": {
@@ -16851,6 +16893,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role_name": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 },
                 "user_id": {

@@ -238,6 +238,7 @@ type UserResponse struct {
 	IdentityDocument string    `json:"identity_document"`
 	IsValidated      bool      `json:"is_validated"`
 	ProfilePicture   string    `json:"profile_picture_url,omitempty"`
+	Status           string    `json:"status"`
 }
 
 type GetUserResponse struct {
@@ -254,6 +255,8 @@ type GetUserResponse struct {
 	ProfilePictureURL   string    `json:"profile_picture_url"`
 	Category            string    `json:"category,omitempty"`
 	HasActiveMembership bool      `json:"has_active_membership"`
+	IsValidated         bool      `json:"is_validated"`
+	Status              string    `json:"status"`
 }
 
 type OAuthLoginPayload struct {
