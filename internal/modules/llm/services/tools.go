@@ -198,7 +198,7 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 			return "Error: ID de sucursal inválido. Por favor usa 'get_all_branches' para obtener un ID válido.", nil
 		}
 
-		classes, err := s.store.Schedule.GetClassesByBranch(ctx, branchID, &startOfDay, &endOfDay)
+		classes, err := s.store.Schedule.GetUpcomingClassesByBranch(ctx, branchID, &startOfDay, &endOfDay)
 		if err != nil {
 			s.logger.Errorw("Error buscando clases", "err", err)
 			return "Error interno consultando el horario. Intenta más tarde.", nil
