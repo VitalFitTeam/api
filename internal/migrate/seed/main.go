@@ -1532,7 +1532,7 @@ func main() {
 	mailer.On("Send", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(200, nil)
 	pushNoti := notifications.NewMockPushService()
 
-	service := appservices.NewServices(appStore, sugaredLogger, *cfg, testAuth, mailer, cache, *pushNoti, nil)
+	service := appservices.NewServices(appStore, sugaredLogger, *cfg, testAuth, mailer, cache, *pushNoti, nil, nil)
 	s := NewSeedStruct()
 	s.Seed(appStore, conn, service)
 

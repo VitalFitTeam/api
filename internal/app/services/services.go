@@ -2,6 +2,7 @@ package appservices
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
+	"github.com/sashabaranov/go-openai"
 	"github.com/vitalfit/api/config"
 	accessdomain "github.com/vitalfit/api/internal/modules/access/domain"
 	accessservice "github.com/vitalfit/api/internal/modules/access/service"
@@ -25,6 +26,8 @@ import (
 	instructorservices "github.com/vitalfit/api/internal/modules/instructor/services"
 	inventorydomain "github.com/vitalfit/api/internal/modules/inventory/domain"
 	inventoryservices "github.com/vitalfit/api/internal/modules/inventory/services"
+	llmdomain "github.com/vitalfit/api/internal/modules/llm/domain"
+	llmservices "github.com/vitalfit/api/internal/modules/llm/services"
 	marketingdomain "github.com/vitalfit/api/internal/modules/marketing/domain"
 	marketingservice "github.com/vitalfit/api/internal/modules/marketing/service"
 	membershipsdomain "github.com/vitalfit/api/internal/modules/memberships/domain"
@@ -80,11 +83,12 @@ type Services struct {
 	NotificationServices notidomain.NotificationServiceInterface
 	FaceAuthServices     faceauthdomain.FacAuthServiceInterface
 	Routine              routinedomain.RoutineServiceInterface
+	LLM                  llmdomain.LLMServiceInterface
 	logs.LogErrors
 	Logger *zap.SugaredLogger
 }
 
-func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage, pushNoti notifications.PushService, rekognitionClient *rekognition.Client) Services {
+func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Config, auth authdomain.Authenticator, mailer mailer.Client, cache cache.Storage, pushNoti notifications.PushService, rekognitionClient *rekognition.Client, opeaiClient *openai.Client) Services {
 	bookingService := bookingservice.NewBookingService(store)
 	return Services{
 		AuthServices:         authservices.NewAuthServices(store, cfg, auth, mailer),
@@ -111,6 +115,7 @@ func NewServices(store store.Storage, logger *zap.SugaredLogger, cfg config.Conf
 		NotificationServices: notiservice.NewNotificationService(store, pushNoti),
 		FaceAuthServices:     faceauthservices.NewFaceAuthServices(store, rekognitionClient),
 		Routine:              routineservices.NewRoutineService(store),
+		LLM:                  llmservices.NewLLMService(opeaiClient, store, logger),
 		LogErrors:            logs.NewLogErrors(logger),
 		Logger:               logger,
 	}

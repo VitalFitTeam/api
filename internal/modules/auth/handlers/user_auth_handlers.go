@@ -950,6 +950,7 @@ func (h *AuthHandlers) GetUsersHandler(c *gin.Context) {
 			RoleName:         user.Role.Name,
 			IdentityDocument: user.IdentityDocument,
 			IsValidated:      user.IsValidated,
+			Status:           string(user.Status),
 		}
 		responseList = append(responseList, resp)
 	}
@@ -1013,6 +1014,7 @@ func (h *AuthHandlers) GetClientsHandler(c *gin.Context) {
 			IdentityDocument: user.IdentityDocument,
 			IsValidated:      user.IsValidated,
 			ProfilePicture:   user.ProfilePictureURL,
+			Status:           string(user.Status),
 		}
 		responseList = append(responseList, resp)
 	}
@@ -1070,6 +1072,8 @@ func (h *AuthHandlers) GetUserByIDHandler(c *gin.Context) {
 		RoleName:            user.Role.Name,
 		Category:            string(user.ClientProfile.Category),
 		HasActiveMembership: user.HasActiveMembership(),
+		IsValidated:         user.IsValidated,
+		Status:              string(user.Status),
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"data": resp,
@@ -1262,6 +1266,8 @@ func (h *AuthHandlers) GetUserByEmailHandler(c *gin.Context) {
 		RoleName:            user.Role.Name,
 		Category:            string(user.ClientProfile.Category),
 		HasActiveMembership: user.HasActiveMembership(),
+		IsValidated:         user.IsValidated,
+		Status:              string(user.Status),
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"data": resp,

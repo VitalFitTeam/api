@@ -412,16 +412,12 @@ func (rs *ReportStore) GetNewClientsKPI(ctx context.Context, branchID *uuid.UUID
 
 	var currentCount, prevCount int64
 
-	// Helper para construir la query base (filtrando por rol 'client')
 	buildQuery := func(start, end time.Time) *gorm.DB {
 		query := rs.db.WithContext(ctx).Model(&authdomain.Users{}).
 			Joins("JOIN roles ON roles.role_id = users.role_id").
 			Where("roles.name = ?", "client").
 			Where("users.created_at >= ? AND users.created_at < ?", start, end)
 
-		// Nota: Actualmente la tabla Users no tiene branch_id directo, por lo que este KPI
-		// funciona principalmente a nivel global. Si se requiere filtro por sucursal,
-		// se debería unir con tablas de membresía o registro específico.
 		return query
 	}
 
@@ -447,12 +443,9 @@ func (rs *ReportStore) GetRetentionRateKPI(ctx context.Context, branchID *uuid.U
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
 
-	// Helper para calcular retención en un rango de fechas
 	calcRetention := func(start, end time.Time) (float64, error) {
 		var S, N, E int64
 
-		// S (Start): Clientes al inicio del mes.
-		// Deben haber sido creados antes del inicio Y (no eliminados O eliminados después del inicio)
 		err := rs.db.WithContext(ctx).Unscoped().Model(&authdomain.Users{}).
 			Joins("JOIN roles ON roles.role_id = users.role_id").
 			Where("roles.name = ?", "client").
@@ -467,7 +460,6 @@ func (rs *ReportStore) GetRetentionRateKPI(ctx context.Context, branchID *uuid.U
 			return 0, nil
 		}
 
-		// N (New): Clientes nuevos durante el mes
 		err = rs.db.WithContext(ctx).Model(&authdomain.Users{}).
 			Joins("JOIN roles ON roles.role_id = users.role_id").
 			Where("roles.name = ?", "client").
@@ -477,7 +469,6 @@ func (rs *ReportStore) GetRetentionRateKPI(ctx context.Context, branchID *uuid.U
 			return 0, err
 		}
 
-		// E (End): Clientes al final del mes (o ahora)
 		err = rs.db.WithContext(ctx).Unscoped().Model(&authdomain.Users{}).
 			Joins("JOIN roles ON roles.role_id = users.role_id").
 			Where("roles.name = ?", "client").
@@ -576,16 +567,10 @@ func (rs *ReportStore) GetNewVsRecurringChart(ctx context.Context, branchID *uui
 }
 
 func (rs *ReportStore) GetCohortAnalysis(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.CohortRetention, error) {
-	// Analizar los últimos 12 meses
 	now := time.Now()
 	end := now
 	start := now.AddDate(0, -11, 0) // 12 meses atrás incluyendo el actual
 	start = time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, start.Location())
-
-	// SQL Query compleja para cohortes
-	// 1. cohort_users: Usuarios creados en el rango, agrupados por mes.
-	// 2. activity: Pagos completados de esos usuarios.
-	// 3. Cruce para calcular retención.
 
 	query := `
 		WITH cohort_users AS (
@@ -623,7 +608,7 @@ func (rs *ReportStore) GetCohortAnalysis(ctx context.Context, branchID *uuid.UUI
 	type queryResult struct {
 		CohortMonthStr string `gorm:"column:cohort_month_str"`
 		CohortSize     int64  `gorm:"column:cohort_size"`
-		MonthIdx       *int   `gorm:"column:month_idx"` // Puede ser null si no hay actividad
+		MonthIdx       *int   `gorm:"column:month_idx"`
 		ActiveCount    int64  `gorm:"column:active_count"`
 	}
 
@@ -639,17 +624,16 @@ func (rs *ReportStore) GetCohortAnalysis(ctx context.Context, branchID *uuid.UUI
 		return nil, err
 	}
 
-	// Procesar resultados en estructura de respuesta
 	cohortMap := make(map[string]*reportdomain.CohortRetention)
 	var result []reportdomain.CohortRetention
-	var order []string // Para mantener el orden de fecha descendente
+	var order []string
 
 	for _, r := range rows {
 		if _, exists := cohortMap[r.CohortMonthStr]; !exists {
 			cohort := &reportdomain.CohortRetention{
 				CohortMonth: r.CohortMonthStr,
 				CohortSize:  r.CohortSize,
-				Retention:   make([]float64, 13), // Hasta 12 meses + mes 0
+				Retention:   make([]float64, 13),
 			}
 			// Mes 0 siempre 100%
 			cohort.Retention[0] = 100.0
@@ -670,7 +654,6 @@ func (rs *ReportStore) GetCohortAnalysis(ctx context.Context, branchID *uuid.UUI
 	return result, nil
 }
 
-// Helpers para inyección de SQL condicional (seguro porque branchID es UUID validado)
 func checkBranchFilterUser(branchID *uuid.UUID) string {
 	if branchID != nil {
 		return "AND EXISTS (SELECT 1 FROM invoices i WHERE i.user_id = u.user_id AND i.branch_id = ?)"
@@ -1224,7 +1207,6 @@ func (rs *ReportStore) GetInstructorMonthlyClassesCount(ctx context.Context, ins
 func (rs *ReportStore) GetClientsChurnMetrics(ctx context.Context) ([]reportdomain.ClientChurnMetrics, error) {
 	var metrics []reportdomain.ClientChurnMetrics
 
-	// Query to get Recency (Last Check-in), Frequency (Visits this month vs last), and Expiration
 	query := `
 		SELECT 
 			u.user_id, u.first_name, u.last_name, u.email, u.phone, COALESCE(cp.category, 'New') as current_category,
@@ -1267,7 +1249,6 @@ func (rs *ReportStore) GetClientsChurnMetrics(ctx context.Context) ([]reportdoma
 func (rs *ReportStore) GetBranchManagers(ctx context.Context) (map[uuid.UUID]reportdomain.BranchManagerDetails, error) {
 	var results []reportdomain.BranchManagerDetails
 
-	// Fetch managers directly from the branch table as defined in the Branch struct (ManagerID -> user_id column)
 	query := `
 		SELECT 
 			b.branch_id, u.user_id, u.email, u.first_name || ' ' || u.last_name as name
@@ -1291,12 +1272,9 @@ func (rs *ReportStore) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID)
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	prevMonthStart := currentMonthStart.AddDate(0, -1, 0)
 
-	// Helper to calculate churn rate in a date range
 	calcChurn := func(start, end time.Time) (float64, error) {
 		var startCount, retainedCount int64
 
-		// 1. Start Count (S): Users with active membership at 'start'
-		// We check for memberships that cover the 'start' date.
 		queryS := rs.db.WithContext(ctx).Table("client_memberships cm").
 			Joins("JOIN invoices i ON i.invoice_id = cm.invoice_id").
 			Where("cm.start_date <= ? AND cm.end_date >= ?", start, start).
@@ -1314,10 +1292,6 @@ func (rs *ReportStore) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID)
 			return 0, nil
 		}
 
-		// 2. Retained Count (R): Users from S who are also active at 'end'
-		// We find users active at 'start' (SubQuery) AND check if they are active at 'end'.
-
-		// Subquery: IDs of users active at start
 		subQueryS := rs.db.Table("client_memberships cm_start").
 			Select("cm_start.user_id").
 			Joins("JOIN invoices i_start ON i_start.invoice_id = cm_start.invoice_id").
@@ -1328,14 +1302,12 @@ func (rs *ReportStore) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID)
 			subQueryS = subQueryS.Where("i_start.branch_id = ?", *branchID)
 		}
 
-		// Main Query: Count users from SubQuery who have valid membership at 'end'
 		queryR := rs.db.WithContext(ctx).Table("client_memberships cm_end").
 			Where("cm_end.start_date <= ? AND cm_end.end_date >= ?", end, end).
 			Where("cm_end.status != ?", "Cancelled").
 			Where("cm_end.user_id IN (?)", subQueryS)
 
 		if branchID != nil {
-			// If filtering by branch, we check if they are active IN THAT BRANCH at 'end'
 			queryR = queryR.Joins("JOIN invoices i_end ON i_end.invoice_id = cm_end.invoice_id").
 				Where("i_end.branch_id = ?", *branchID)
 		}
@@ -1344,7 +1316,6 @@ func (rs *ReportStore) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID)
 			return 0, err
 		}
 
-		// Churn Rate = (Start - Retained) / Start
 		lost := startCount - retainedCount
 		if lost < 0 {
 			lost = 0
@@ -1371,7 +1342,7 @@ func (rs *ReportStore) GetChurnRateKPI(ctx context.Context, branchID *uuid.UUID)
 		Value:        decimal.NewFromFloat(currentChurn).Round(2),
 		TrendPercent: decimal.NewFromFloat(trend).Round(2).InexactFloat64(),
 		TrendLabel:   "vs previous month (pts %)",
-		IsPositive:   trend <= 0, // Lower churn is better (Positive)
+		IsPositive:   trend <= 0,
 	}, nil
 }
 
@@ -1483,11 +1454,6 @@ func (rs *ReportStore) GetSalesByDemographics(ctx context.Context, branchID *uui
 func (rs *ReportStore) GetRFMData(ctx context.Context, branchID *uuid.UUID) ([]reportdomain.RFMMetric, error) {
 	var results []reportdomain.RFMMetric
 
-	// Base query to get raw RFM data
-	// Recency: Calculated later in service or via SQL (NOW - MAX(issue_date))
-	// Frequency: Count of paid invoices
-	// Monetary: Sum of paid invoices
-
 	query := rs.db.WithContext(ctx).Table("users u").
 		Select(`
 			u.user_id,
@@ -1502,8 +1468,6 @@ func (rs *ReportStore) GetRFMData(ctx context.Context, branchID *uuid.UUID) ([]r
 		Where("r.name = ?", "client")
 
 	if branchID != nil {
-		// If filtering by branch, we only consider invoices from that branch for F and M
-		// Note: This might exclude users who haven't purchased in this branch specifically
 		query = query.Where("i.branch_id = ? OR i.branch_id IS NULL", *branchID)
 	}
 

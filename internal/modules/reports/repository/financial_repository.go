@@ -433,7 +433,6 @@ func (rs *ReportStore) GetFinancialReportData(ctx context.Context, branchID *uui
 func (rs *ReportStore) GetSalesReportData(ctx context.Context, branchID *uuid.UUID, start, end time.Time) ([]reportdomain.SalesReportRow, error) {
 	var results []reportdomain.SalesReportRow
 
-	// CTE to aggregate payment methods per invoice
 	query := rs.db.WithContext(ctx).Table("invoice_items ii").
 		Select(`
 			i.issue_date as date,

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/sashabaranov/go-openai"
 	"github.com/vitalfit/api/config"
 	apphandlers "github.com/vitalfit/api/internal/app/handlers"
 	appservices "github.com/vitalfit/api/internal/app/services"
@@ -53,9 +54,9 @@ func BuildApplication(cfg *config.Config, db *gorm.DB, rdb *redis.Client) *appli
 	}
 
 	rekognitionClient := rekognition.NewFromConfig(awsCfg)
-
+	openaiClient := openai.NewClient(cfg.OpenAI.APIKey)
 	cache := cache.NewRedisStorage(rdb)
-	services := appservices.NewServices(store, logger, *cfg, auth, mailer, cache, *notifications, rekognitionClient)
+	services := appservices.NewServices(store, logger, *cfg, auth, mailer, cache, *notifications, rekognitionClient, openaiClient)
 	handlers := apphandlers.NewAppHandlers(services)
 
 	cronjob := cronjobs.NewManager(store, services, mailer, logger, cache, *notifications, *cfg)
