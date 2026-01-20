@@ -270,7 +270,7 @@ func (h *ScheduleHandlers) GetClassesByBranchHandler(c *gin.Context) {
 
 	var classes []scheduledomain.Class
 	if user.Role.Name == "client" {
-		classes, err = h.services.ScheduleServices.GetUpcomingClassesByBranch(ctx, branchID)
+		classes, err = h.services.ScheduleServices.GetUpcomingClassesByBranch(ctx, branchID, startDate, endDate)
 	} else {
 		classes, err = h.services.ScheduleServices.GetClassesByBranch(ctx, branchID, startDate, endDate)
 	}
