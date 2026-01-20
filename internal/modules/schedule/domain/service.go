@@ -23,5 +23,5 @@ type ScheduleServiceInterface interface {
 	DeleteClass(ctx context.Context, classID uuid.UUID) error
 	GetUpcomingClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]Class, error)
 	GetClassAttendanceHistory(ctx context.Context, filter AttendanceHistoryFilter) ([]interface{}, error)
-	GetClassesByInstructor(ctx context.Context, userID uuid.UUID, startDate, endDate *time.Time) ([]Class, error)
+	GetClassesByInstructor(ctx context.Context, userID uuid.UUID, branchID *uuid.UUID, startDate, endDate *time.Time) ([]Class, error)
 }

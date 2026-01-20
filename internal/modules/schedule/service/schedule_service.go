@@ -57,8 +57,8 @@ func (s *ScheduleService) GetUpcomingClassesByBranch(ctx context.Context, branch
 	return s.store.Schedule.GetUpcomingClassesByBranch(ctx, branchID)
 }
 
-func (s *ScheduleService) GetClassesByInstructor(ctx context.Context, userID uuid.UUID, startDate, endDate *time.Time) ([]scheduledomain.Class, error) {
-	return s.store.Schedule.GetClassesByInstructor(ctx, userID, startDate, endDate)
+func (s *ScheduleService) GetClassesByInstructor(ctx context.Context, userID uuid.UUID, branchID *uuid.UUID, startDate, endDate *time.Time) ([]scheduledomain.Class, error) {
+	return s.store.Schedule.GetClassesByInstructor(ctx, userID, branchID, startDate, endDate)
 }
 
 // ----------------------------------------

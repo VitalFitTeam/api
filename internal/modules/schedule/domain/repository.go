@@ -34,5 +34,5 @@ type ScheduleRepository interface {
 	GetAvailableClassesForBranch(ctx context.Context, branchID uuid.UUID, startTime, endTime time.Time) ([]Class, error)
 
 	// GetClassesByInstructor obtiene las clases programadas para un instructor específico (por UserID).
-	GetClassesByInstructor(ctx context.Context, userID uuid.UUID, startDate, endDate *time.Time) ([]Class, error)
+	GetClassesByInstructor(ctx context.Context, userID uuid.UUID, branchID *uuid.UUID, startDate, endDate *time.Time) ([]Class, error)
 }

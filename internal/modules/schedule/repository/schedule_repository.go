@@ -126,7 +126,7 @@ func (s *ScheduleStore) GetUpcomingClassesByBranch(ctx context.Context, branchID
 // GetClassesByInstructor
 // ----------------------------------------
 
-func (s *ScheduleStore) GetClassesByInstructor(ctx context.Context, userID uuid.UUID, startDate, endDate *time.Time) ([]scheduledomain.Class, error) {
+func (s *ScheduleStore) GetClassesByInstructor(ctx context.Context, userID uuid.UUID, branchID *uuid.UUID, startDate, endDate *time.Time) ([]scheduledomain.Class, error) {
 	var classes []scheduledomain.Class
 
 	err := db.WithTX(s.db, func(tx *gorm.DB) error {
@@ -152,6 +152,10 @@ func (s *ScheduleStore) GetClassesByInstructor(ctx context.Context, userID uuid.
 		}
 		if endDate != nil {
 			query = query.Where("classes.starts_at <= ?", endDate)
+		}
+
+		if branchID != nil {
+			query = query.Where("classes.branch_id = ?", branchID)
 		}
 
 		if err := query.Find(&classes).Error; err != nil {
