@@ -104,7 +104,8 @@ Directrices:
 
 	msg := resp.Choices[0].Message
 
-	if len(msg.ToolCalls) > 0 {
+	// Usamos un bucle (máx 5 iteraciones) para permitir que el LLM encadene herramientas (ej: get_branches -> get_classes)
+	for i := 0; i < 5 && len(msg.ToolCalls) > 0; i++ {
 		openaiMsgs = append(openaiMsgs, msg)
 
 		for _, toolCall := range msg.ToolCalls {
