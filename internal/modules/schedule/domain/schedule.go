@@ -25,8 +25,8 @@ type Class struct {
 	UpdatedAt   time.Time                   `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt              `gorm:"index" json:"-"`
 	Branch      branchdomain.Branch         `gorm:"foreignKey:BranchID;references:BranchID" json:"-"`
-	Service     productsdomain.Service      `gorm:"foreignKey:ServiceID" json:"-"`
-	Instructor  instructordomain.Instructor `gorm:"foreignKey:InstructorID" json:"-"`
+	Service     productsdomain.Service      `gorm:"foreignKey:ServiceID;references:ServiceID" json:"-"`
+	Instructor  instructordomain.Instructor `gorm:"foreignKey:InstructorID;references:InstructorID" json:"-"`
 }
 
 func (Class) TableName() string {
