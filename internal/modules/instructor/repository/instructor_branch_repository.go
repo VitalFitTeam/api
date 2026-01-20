@@ -43,7 +43,8 @@ func (s *InstructorStore) ListBranchInstructors(ctx context.Context, branchID uu
 		Preload("User").
 		Joins("JOIN branch_instructors ON branch_instructors.instructor_id = instructors.instructor_id").
 		Joins("JOIN users ON users.user_id = instructors.user_id").
-		Where("branch_instructors.branch_id = ?", branchID)
+		Where("branch_instructors.branch_id = ?", branchID).
+		Where("instructors.deleted_at IS NULL")
 
 	if fq.Search != "" {
 		searchQuery := "%" + fq.Search + "%"
