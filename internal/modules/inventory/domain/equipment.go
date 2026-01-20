@@ -31,6 +31,10 @@ type Equipment struct {
 	DeletedAt   gorm.DeletedAt        `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
 }
 
+func (Equipment) TableName() string {
+	return "equipment"
+}
+
 type EquipmentQueryResults struct {
 	Equipments []*Equipment
 }
