@@ -184,6 +184,7 @@ func (h *RoutineHandlers) GetMyRoutinesHandler(c *gin.Context) {
 // @Failure		500	{object}	object{error=string}	"Internal Server Error"
 // @Router			/routines/{id} [delete]
 func (h *RoutineHandlers) DeleteRoutineHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 	idStr := c.Param("id")
 	routineID, err := uuid.Parse(idStr)
 	if err != nil {
@@ -193,7 +194,22 @@ func (h *RoutineHandlers) DeleteRoutineHandler(c *gin.Context) {
 
 	user := h.services.UserServices.GetUserFromContext(c)
 
-	err = h.services.Routine.DeleteRoutine(c.Request.Context(), routineID, user)
+	if user.Role.Name != "client" {
+		permission := "routines:delete"
+		if user.Role.Name != "super_admin" {
+			ok, err := h.services.UserServices.RoleHasPermission(ctx, user.RoleID, permission)
+			if err != nil {
+				h.services.LogErrors.InternalServerError(c, err)
+				return
+			}
+			if !ok {
+				h.services.LogErrors.ForbiddenResponse(c)
+				return
+			}
+		}
+	}
+
+	err = h.services.Routine.DeleteRoutine(ctx, routineID, user)
 	if err != nil {
 		if err == shared_errors.ErrForbidden {
 			h.services.LogErrors.ForbiddenResponse(c)
