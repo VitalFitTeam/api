@@ -289,13 +289,28 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		if err != nil {
 			return "Error obteniendo tus reservas.", nil
 		}
-		if len(bookings) == 0 {
-			return "No tienes ninguna reserva activa en este momento.", nil
+
+		// Filtramos solo las reservas futuras para no saturar el contexto del LLM
+		var upcoming []bookingdomain.BookingWithClassInfo
+		now := time.Now()
+		for _, b := range bookings {
+			if b.StartsAt.After(now) {
+				upcoming = append(upcoming, b)
+			}
+		}
+
+		if len(upcoming) == 0 {
+			return "No tienes ninguna reserva futura en este momento.", nil
+		}
+
+		// Limitamos a 10 para evitar errores de tokens
+		if len(upcoming) > 10 {
+			upcoming = upcoming[:10]
 		}
 
 		var result strings.Builder
-		result.WriteString("Tus reservas activas son:\n")
-		for _, b := range bookings {
+		result.WriteString("Tus próximas reservas son:\n")
+		for _, b := range upcoming {
 			result.WriteString(fmt.Sprintf("- ID: %s | %s con %s - %s (%s)\n", b.BookingID, b.ServiceName, b.Instructor, b.StartsAt.Format("Mon, 02 Jan 15:04"), b.BranchName))
 		}
 		return result.String(), nil
