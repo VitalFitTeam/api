@@ -27,6 +27,10 @@ type Conversation struct {
 	Messages []Message `gorm:"foreignKey:ConversationID" json:"messages,omitempty"`
 }
 
+func (Conversation) TableName() string {
+	return "conversations"
+}
+
 type Message struct {
 	MessageID      uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"message_id"`
 	ConversationID uuid.UUID      `gorm:"type:uuid;not null;index" json:"conversation_id"`
@@ -34,4 +38,8 @@ type Message struct {
 	Content        string         `gorm:"type:text;not null" json:"content"`
 	Metadata       datatypes.JSON `gorm:"type:jsonb;default:'{}'::jsonb" json:"metadata" swaggertype:"object"`
 	CreatedAt      time.Time      `json:"created_at"`
+}
+
+func (Message) TableName() string {
+	return "messages"
 }

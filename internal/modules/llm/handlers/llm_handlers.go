@@ -77,5 +77,5 @@ func (h *LLMHandlers) ResetChatHandler(c *gin.Context) {
 	}
 
 	// 3. Responder
-	c.JSON(http.StatusOK, gin.H{"message": "Conversación reiniciada exitosamente"})
+	c.JSON(http.StatusOK, gin.H{"message": "Conversation reset successfully"})
 }

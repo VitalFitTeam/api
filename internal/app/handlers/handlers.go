@@ -13,6 +13,7 @@ import (
 	faceauthhandlers "github.com/vitalfit/api/internal/modules/faceauth/handlers"
 	instructorhandler "github.com/vitalfit/api/internal/modules/instructor/handler"
 	inventoryhandlers "github.com/vitalfit/api/internal/modules/inventory/handlers"
+	llmhandlers "github.com/vitalfit/api/internal/modules/llm/handlers"
 	marketinghandlers "github.com/vitalfit/api/internal/modules/marketing/handlers"
 	membershipshandlers "github.com/vitalfit/api/internal/modules/memberships/handlers"
 	notihandlers "github.com/vitalfit/api/internal/modules/notifications/handlers"
@@ -47,6 +48,7 @@ type Handlers struct {
 	NotificationHandlers notihandlers.NotificationHandlersInterface
 	FaceAuthHandlers     faceauthhandlers.FaceAuthHandlerInterface
 	RoutineHandlers      routinehandlers.RoutineHandlersInterface
+	LLMHandlers          llmhandlers.LLMHandlersInterface
 }
 
 func NewAppHandlers(services appservices.Services) Handlers {
@@ -72,5 +74,6 @@ func NewAppHandlers(services appservices.Services) Handlers {
 		NotificationHandlers: notihandlers.NewNotificationHandlers(services),
 		FaceAuthHandlers:     faceauthhandlers.NewFaceAuthHandler(services),
 		RoutineHandlers:      routinehandlers.NewRoutineHandlers(services),
+		LLMHandlers:          llmhandlers.NewLLMHandlers(services),
 	}
 }

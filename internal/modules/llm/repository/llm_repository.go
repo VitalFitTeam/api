@@ -31,7 +31,6 @@ func (r *LLMStore) GetActiveConversation(ctx context.Context, userID uuid.UUID) 
 	return &convo, nil
 }
 
-// CreateConversation crea un nuevo hilo
 func (r *LLMStore) CreateConversation(ctx context.Context, userID uuid.UUID) (*llmdomain.Conversation, error) {
 	convo := &llmdomain.Conversation{
 		ConversationID: uuid.New(),
@@ -48,14 +47,6 @@ func (r *LLMStore) SaveMessage(ctx context.Context, msg *llmdomain.Message) erro
 
 func (r *LLMStore) GetConversationHistory(ctx context.Context, convoID uuid.UUID, limit int) ([]llmdomain.Message, error) {
 	var messages []llmdomain.Message
-
-	// Truco: Obtenemos los últimos N ordenados por fecha DESC (del más nuevo al viejo)
-	// para el LIMIT, y luego el servicio deberá invertirlos o enviarlos correctamente.
-	// O mejor, traemos los últimos y dejamos que SQL los ordene.
-
-	// Subquery strategy es compleja en GORM simple, así que haremos:
-	// Traer todos o usar un limit alto. Para un MVP, traer los ultimos 20 ordenados ASC
-	// asumiendo que el chat no es infinito, o filtrar por fecha.
 
 	err := r.db.WithContext(ctx).
 		Where("conversation_id = ?", convoID).

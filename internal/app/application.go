@@ -124,6 +124,9 @@ func (app *application) Mount() http.Handler {
 		//routines
 		app.Handlers.RoutineHandlers.RoutineRoutes(v1, m)
 
+		//llm
+		app.Handlers.LLMHandlers.LLMRoutes(v1, m)
+
 		v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	}
