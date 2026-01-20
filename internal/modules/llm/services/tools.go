@@ -141,6 +141,10 @@ var tools = []openai.Tool{
 							Required: []string{"name", "sets", "reps"},
 						},
 					},
+					"service_id": {
+						Type:        jsonschema.String,
+						Description: "El UUID del servicio asociado a esta rutina (opcional).",
+					},
 				},
 				Required: []string{"name", "level", "exercises"},
 			},
@@ -201,7 +205,13 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 
 		var result strings.Builder
 		result.WriteString(fmt.Sprintf("Clases disponibles para %s:\n", targetDate.Format("2006-01-02")))
+		count := 0
 		for _, c := range classes {
+			if c.StartsAt.Before(time.Now()) {
+				continue
+			}
+			count++
+
 			instructorName := "Instructor"
 			if c.Instructor.User != nil {
 				instructorName = c.Instructor.User.FirstName
@@ -222,6 +232,10 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 
 			result.WriteString(fmt.Sprintf("- ID: %s | %s con %s a las %s (Cupos: %d)\n",
 				c.ClassID, serviceName, instructorName, c.StartsAt.Format("15:04"), availableSpots))
+		}
+
+		if count == 0 {
+			return fmt.Sprintf("Ya no quedan clases disponibles para el %s (han finalizado o ya comenzaron).", targetDate.Format("2006-01-02")), nil
 		}
 
 		return result.String(), nil
@@ -311,6 +325,7 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 				Reps        string `json:"reps"`
 				MuscleGroup string `json:"muscle_group"`
 			} `json:"exercises"`
+			ServiceID string `json:"service_id,omitempty"`
 		}
 		if err := json.Unmarshal([]byte(argsRaw), &args); err != nil {
 			return "Error: Argumentos de rutina inválidos.", nil
@@ -318,11 +333,19 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 
 		s.logger.Infow("🏋️ IA Creando Rutina", "nombre", args.Name, "ejercicios", len(args.Exercises))
 
+		var serviceID *uuid.UUID
+		if args.ServiceID != "" {
+			if id, err := uuid.Parse(args.ServiceID); err == nil {
+				serviceID = &id
+			}
+		}
+
 		routine := &routinedomain.Routine{
 			RoutineID:   uuid.New(),
 			Name:        args.Name,
 			Description: args.Description,
 			Level:       routinedomain.RoutineLevel(args.Level),
+			ServiceID:   serviceID,
 			CreatorID:   &userID,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
