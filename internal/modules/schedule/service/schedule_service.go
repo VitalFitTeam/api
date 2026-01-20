@@ -53,8 +53,8 @@ func (s *ScheduleService) GetClassesByBranch(ctx context.Context, branchID uuid.
 	return s.store.Schedule.GetClassesByBranch(ctx, branchID, startDate, endDate)
 }
 
-func (s *ScheduleService) GetUpcomingClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]scheduledomain.Class, error) {
-	return s.store.Schedule.GetUpcomingClassesByBranch(ctx, branchID)
+func (s *ScheduleService) GetUpcomingClassesByBranch(ctx context.Context, branchID uuid.UUID, startDate, endDate *time.Time) ([]scheduledomain.Class, error) {
+	return s.store.Schedule.GetUpcomingClassesByBranch(ctx, branchID, startDate, endDate)
 }
 
 func (s *ScheduleService) GetClassesByInstructor(ctx context.Context, userID uuid.UUID, branchID *uuid.UUID, startDate, endDate *time.Time) ([]scheduledomain.Class, error) {

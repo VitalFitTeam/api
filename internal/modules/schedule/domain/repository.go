@@ -29,7 +29,7 @@ type ScheduleRepository interface {
 	DeleteClass(ctx context.Context, classID uuid.UUID) error
 
 	// GetUpcomingClassesByBranch obtiene las clases futuras (o en curso) de una sucursal.
-	GetUpcomingClassesByBranch(ctx context.Context, branchID uuid.UUID) ([]Class, error)
+	GetUpcomingClassesByBranch(ctx context.Context, branchID uuid.UUID, startDate, endDate *time.Time) ([]Class, error)
 
 	GetAvailableClassesForBranch(ctx context.Context, branchID uuid.UUID, startTime, endTime time.Time) ([]Class, error)
 

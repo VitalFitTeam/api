@@ -5368,6 +5368,18 @@ paths:
         in: path
         name: userId
         type: string
+      - description: Month (1-12)
+        in: query
+        name: month
+        type: integer
+      - description: Year
+        in: query
+        name: year
+        type: integer
+      - description: Specific date (YYYY-MM-DD)
+        in: query
+        name: date
+        type: string
       produces:
       - application/json
       responses:
@@ -12124,6 +12136,18 @@ paths:
       - description: Client UUID (required for non-client users)
         in: path
         name: userId
+        type: string
+      - description: Month (1-12)
+        in: query
+        name: month
+        type: integer
+      - description: Year
+        in: query
+        name: year
+        type: integer
+      - description: Specific date (YYYY-MM-DD)
+        in: query
+        name: date
         type: string
       produces:
       - application/json
