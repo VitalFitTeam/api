@@ -71,12 +71,17 @@ func (s *NotificationService) SendBroadcast(ctx context.Context, title, message 
 	}
 
 	for _, user := range users {
+		sentTokens := make(map[string]struct{})
 		session, err := s.store.Session.GetUserSessions(jobCtx, user.UserID)
 		if err != nil {
 			continue
 		}
 		for _, ses := range session {
 			if ses.DeviceToken != "" {
+				if _, exists := sentTokens[ses.DeviceToken]; exists {
+					continue
+				}
+				sentTokens[ses.DeviceToken] = struct{}{}
 				jobs <- ses.DeviceToken
 			}
 		}

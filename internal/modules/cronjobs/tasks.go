@@ -148,6 +148,7 @@ func (m *Manager) NotifyClassReminder() {
 			metaInterface[k] = v
 		}
 		notification.Metadata = metaInterface
+		sentTokens := make(map[string]struct{})
 		session, err := m.store.Session.GetUserSessions(ctx, booking.UserID)
 		if err != nil {
 			m.logger.Errorw("failed to get user sessions")
@@ -156,6 +157,10 @@ func (m *Manager) NotifyClassReminder() {
 			if ses.DeviceToken == "" {
 				continue
 			}
+			if _, exists := sentTokens[ses.DeviceToken]; exists {
+				continue
+			}
+			sentTokens[ses.DeviceToken] = struct{}{}
 			err := m.push.SendPush(ctx, ses.DeviceToken, fmt.Sprintf("Class Reminder %s", booking.ServiceName), fmt.Sprintf("Your %s class starts in %v", booking.ServiceName, booking.TimeUntilStart), metadata)
 			if err != nil {
 				m.logger.Errorw("failed to send push notification", "error", err)
