@@ -43,9 +43,11 @@ func (s *BranchInventoryStore) Create(ctx context.Context, item *inventorydomain
 func (s *BranchInventoryStore) GetByBranch(ctx context.Context, branchID uuid.UUID) ([]inventorydomain.BranchInventory, error) {
 	var inventory []inventorydomain.BranchInventory
 	err := s.db.WithContext(ctx).
-		Where("branch_id = ?", branchID).
+		Joins("JOIN equipment ON equipment.equipment_id = branch_inventory.equipment_id").
+		Where("branch_inventory.branch_id = ?", branchID).
+		Where("equipment.deleted_at IS NULL").
 		Preload("Equipment").
-		Order("created_at desc").
+		Order("branch_inventory.created_at desc").
 		Find(&inventory).Error
 	if err != nil {
 		return nil, err
