@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	appservices "github.com/vitalfit/api/internal/app/services"
-	authdomain "github.com/vitalfit/api/internal/auth/domain"
+	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 )
 
 type AuthMiddleware struct {
@@ -63,13 +63,17 @@ func (j *AuthMiddleware) AuthJwtTokenMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		if user.Status == authdomain.UserStatusBlocked {
+			j.services.LogErrors.UnauthorizedErrorResponse(c, fmt.Errorf("account is blocked"))
+			c.Abort()
+			return
+		}
 		c.Set("user", user)
 		c.Next()
 	}
 }
-
-// checks role access to the endpoint
-func (j *AuthMiddleware) CheckRoleAccess(requiredRole string) gin.HandlerFunc {
+func (j *AuthMiddleware) RBACPermission(permissions ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := j.services.UserServices.GetUserFromContext(c)
 
@@ -79,28 +83,33 @@ func (j *AuthMiddleware) CheckRoleAccess(requiredRole string) gin.HandlerFunc {
 			return
 		}
 
-		// The rest of the logic is correct
-		allowed, err := j.CheckRolePrecedence(c.Request.Context(), user, requiredRole)
-		if err != nil {
-			j.services.LogErrors.UnauthorizedErrorResponse(c, err)
-			c.Abort()
-			return
+		hasPermission := false
+		for _, perm := range permissions {
+			allowed, err := j.CheckRolePermission(c.Request.Context(), user, perm)
+			if err != nil {
+				j.services.LogErrors.UnauthorizedErrorResponse(c, err)
+				c.Abort()
+				return
+			}
+			if allowed {
+				hasPermission = true
+				break
+			}
 		}
 
-		if !allowed {
+		if !hasPermission {
 			j.services.LogErrors.ForbiddenResponse(c)
 			c.Abort()
 			return
 		}
+
 		c.Next()
 	}
 }
 
-// compares users level with the level required
-func (j *AuthMiddleware) CheckRolePrecedence(ctx context.Context, user *authdomain.Users, roleName string) (bool, error) {
-	role, err := j.services.UserServices.GetRoleByName(ctx, roleName)
-	if err != nil {
-		return false, err
+func (j *AuthMiddleware) CheckRolePermission(ctx context.Context, user *authdomain.Users, permissionName string) (bool, error) {
+	if user.Role.Name == "super_admin" {
+		return true, nil
 	}
-	return user.Role.Level >= role.Level, nil
+	return j.services.UserServices.RoleHasPermission(ctx, user.Role.RoleID, permissionName)
 }

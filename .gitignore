@@ -2,7 +2,7 @@ tmp
 .env
 .envrc
 bin/
-
+docs/
 # Logs
 logs
 *.log
@@ -41,7 +41,7 @@ node_modules
 dist
 dist-ssr
 *.local
-
+/docs
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -52,3 +52,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.claude/

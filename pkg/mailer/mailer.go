@@ -3,10 +3,14 @@ package mailer
 import "embed"
 
 const (
-	FromName             = "GopherSocial"
-	maxRetries           = 3
-	UserWelcomeTemplate  = "user_invitation.tmpl"
-	UserResetPwsTemplate = "user_reset.tmpl"
+	FromName                = "GopherSocial"
+	maxRetries              = 3
+	UserWelcomeTemplate     = "user_invitation.tmpl"
+	UserResetPwsTemplate    = "user_reset.tmpl"
+	UserStaffActivate       = "user_staff_activate.tmpl"
+	InvoiceCreationTemplate = "invoice.tmpl"
+	InvoicePaidTemplate     = "paid_invoice.tmpl"
+	MembershipExpiring      = "membership_expiring.tmpl"
 )
 
 //go:embed "templates"

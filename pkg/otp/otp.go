@@ -1,6 +1,8 @@
 package otp
 
 import (
+	crand "crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"math/rand"
 	"time"
@@ -17,14 +19,22 @@ func GenerateCode(length int) (string, error) {
 	alphabetSize := len(alphabetRunes)
 
 	if alphabetSize == 0 {
-		return "", fmt.Errorf("el alfabeto no puede estar vacío")
+		return "", fmt.Errorf("alphabet cannot be empty")
 	}
 
 	for i := 0; i < length; i++ {
-		// Selecciona un carácter aleatorio del alfabeto
 		randomIndex := rand.Intn(alphabetSize)
 		code[i] = alphabetRunes[randomIndex]
 	}
 
 	return string(code), nil
+}
+
+func GenerateRandomString() (string, error) {
+	b := make([]byte, 32)
+	_, err := crand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
 }

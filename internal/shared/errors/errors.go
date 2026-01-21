@@ -2,6 +2,7 @@ package errors
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,8 +10,20 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("resource not found")
-	ErrConflict = errors.New("resource already exists")
+	ErrNotFound                 = errors.New("resource not found")
+	ErrConflict                 = errors.New("resource already exists")
+	ErrInternalServerError      = errors.New("internal server error")
+	ErrBadRequest               = errors.New("bad request")
+	ErrUnauthorized             = errors.New("unauthorized")
+	ErrForbidden                = errors.New("forbidden")
+	ErrPayment                  = errors.New("payment required")
+	ErrInsufficientBalance      = errors.New("insufficient balance")
+	ErrPastClass                = errors.New("cannot book a past class")
+	ErrFullClass                = errors.New("class is full")
+	ErrCancellationWindowClosed = errors.New("cannot cancel booking within the restricted time window")
+	ErrInvalidSession           = errors.New("invalid session or token reused")
+	ErrTokenReuse               = errors.New("security alert: token reuse detected, session revoked")
+	ErrRefreshTokenMismatch     = errors.New("refresh token mismatch: reuse detection")
 )
 
 type LogErrors struct {
@@ -57,5 +70,14 @@ func (l *LogErrors) ForbiddenResponse(c *gin.Context) {
 
 func (l *LogErrors) UnauthorizedErrorResponse(c *gin.Context, err error) {
 	l.logger.Errorw("unauthorized error", "method", c.Request.Method, "path", c.Request.URL.Path, "error", err)
-	c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	msg := "unauthorized"
+	if err != nil {
+		msg = fmt.Sprintf("unauthorized: %s", err.Error())
+	}
+	c.JSON(http.StatusUnauthorized, gin.H{"error": msg})
+}
+
+func (l *LogErrors) PaymentRequiredResponse(c *gin.Context) {
+	l.logger.Errorw("PaymentRequired error", "method", c.Request.Method, "path", c.Request.URL.Path)
+	c.JSON(http.StatusPaymentRequired, gin.H{"error": "Payment Required"})
 }
