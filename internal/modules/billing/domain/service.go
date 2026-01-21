@@ -51,5 +51,5 @@ type BillingServiceInterface interface {
 
 	// Stripe
 	CreateCheckoutSessionForInvoice(ctx context.Context, invoiceID uuid.UUID) (string, error)
-	HandleStripeWebhook(ctx context.Context, body []byte, signature string, paymentMethodID uuid.UUID) error
+	HandleStripeWebhook(ctx context.Context, body []byte, signature string) error
 }

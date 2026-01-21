@@ -666,6 +666,13 @@ definitions:
       total_amount:
         type: number
     type: object
+  billinghandlers.CreateCheckoutPayload:
+    properties:
+      invoice_id:
+        type: string
+    required:
+    - invoice_id
+    type: object
   billinghandlers.CreateFiscalDocumentTypePayload:
     properties:
       name:
@@ -4175,6 +4182,47 @@ paths:
       summary: Resend Activation Code
       tags:
       - Auth
+  /billing/checkout:
+    post:
+      consumes:
+      - application/json
+      description: Creates a Stripe Checkout Session for a specific invoice.
+      parameters:
+      - description: Checkout payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/billinghandlers.CreateCheckoutPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Checkout URL
+          schema:
+            properties:
+              url:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create Checkout Session
+      tags:
+      - Billing
   /billing/fiscal-document-types:
     get:
       description: Retrieves a list of all available fiscal document types in the
@@ -13359,6 +13407,33 @@ paths:
       summary: Get current user profile
       tags:
       - User
+  /webhooks/stripe:
+    post:
+      consumes:
+      - application/json
+      description: Handles Stripe webhooks for payment confirmation.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Stripe Webhook
+      tags:
+      - Billing
   /wishlist:
     get:
       description: Returns all services in the authenticated user's wishlist

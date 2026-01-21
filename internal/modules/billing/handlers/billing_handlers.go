@@ -517,10 +517,10 @@ func (h *BillingHandlers) GetTaxRateByBranchIDHandler(c *gin.Context) {
 // @Security		ApiKeyAuth
 // @Accept			json
 // @Produce		json
-// @Param			payload	body		CreateCheckoutPayload			true	"Checkout payload"
-// @Success		200		{object}	object{url=string}				"Checkout URL"
-// @Failure		400		{object}	object{error=string}			"Bad Request"
-// @Failure		500		{object}	object{error=string}			"Internal Server Error"
+// @Param			payload	body		CreateCheckoutPayload	true	"Checkout payload"
+// @Success		200		{object}	object{url=string}		"Checkout URL"
+// @Failure		400		{object}	object{error=string}	"Bad Request"
+// @Failure		500		{object}	object{error=string}	"Internal Server Error"
 // @Router			/billing/checkout [post]
 func (h *BillingHandlers) CreateCheckoutHandler(c *gin.Context) {
 	var payload CreateCheckoutPayload
@@ -543,9 +543,9 @@ func (h *BillingHandlers) CreateCheckoutHandler(c *gin.Context) {
 // @Tags			Billing
 // @Accept			json
 // @Produce		json
-// @Success		200		{object}	nil
-// @Failure		400		{object}	object{error=string}	"Bad Request"
-// @Failure		500		{object}	object{error=string}	"Internal Server Error"
+// @Success		200	{object}	nil
+// @Failure		400	{object}	object{error=string}	"Bad Request"
+// @Failure		500	{object}	object{error=string}	"Internal Server Error"
 // @Router			/webhooks/stripe [post]
 func (h *BillingHandlers) WebhookHandler(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
@@ -556,14 +556,7 @@ func (h *BillingHandlers) WebhookHandler(c *gin.Context) {
 
 	signature := c.GetHeader("Stripe-Signature")
 
-	methods, err := h.services.BillingServices.GetPaymentMethodsByType(c.Request.Context(), billingdomain.PaymentMethodCard)
-	if err != nil || len(methods) == 0 {
-		h.services.LogErrors.InternalServerError(c, errors.New("no card payment method configured"))
-		return
-	}
-	paymentMethodID := methods[0].MethodID
-
-	if err := h.services.BillingServices.HandleStripeWebhook(c.Request.Context(), body, signature, paymentMethodID); err != nil {
+	if err := h.services.BillingServices.HandleStripeWebhook(c.Request.Context(), body, signature); err != nil {
 		h.services.LogErrors.BadRequestResponse(c, err)
 		return
 	}
