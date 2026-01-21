@@ -96,8 +96,8 @@ func (bs *BillingService) CreateCheckoutSessionForInvoice(ctx context.Context, i
 		baseURL = "http://" + baseURL
 	}
 
-	successURL := fmt.Sprintf("%s/payment/%s?status=success", baseURL, invoice.InvoiceID.String())
-	cancelURL := fmt.Sprintf("%s/payment/%s?status=cancelled", baseURL, invoice.InvoiceID.String())
+	successURL := fmt.Sprintf("%s/payments/%s", baseURL, invoice.InvoiceID.String())
+	cancelURL := fmt.Sprintf("%s/payments/%s", baseURL, invoice.InvoiceID.String())
 
 	params := &stripe.CheckoutSessionParams{
 		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
@@ -120,7 +120,9 @@ func (bs *BillingService) CreateCheckoutSessionForInvoice(ctx context.Context, i
 }
 
 func (bs *BillingService) HandleStripeWebhook(ctx context.Context, body []byte, signature string) error {
-	event, err := webhook.ConstructEvent(body, signature, bs.cfg.Stripe.WebhookSecret)
+	event, err := webhook.ConstructEventWithOptions(body, signature, bs.cfg.Stripe.WebhookSecret, webhook.ConstructEventOptions{
+		IgnoreAPIVersionMismatch: true,
+	})
 	if err != nil {
 		return fmt.Errorf("webhook signature verification failed: %v", err)
 	}
