@@ -3,6 +3,7 @@ package llmservices
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -71,6 +72,7 @@ GOLDEN RULES (FOLLOW THEM OR FAIL):
 2. **SMART MAPPING:**
    - The user sees a simple numbered list (1, 2, 3...).
    - You see the UUIDs in the tool outputs (e.g., "[ID: 123...]").
+   - **HISTORY AWARENESS:** You may see "<!-- TOOL_OUTPUT ... -->" in the conversation history. These contain the UUIDs from previous searches. USE THEM to map the user's "1" or "2" to the correct ID.
    - IF the user selects "1", YOU MUST find the UUID for item #1 and use THAT UUID in the tool call.
    - NEVER send "1", "2", etc. as an ID to a tool.
    - If you are unsure which class it is, list the options again with simple numbers (1, 2, 3) and ask them to confirm the number.
@@ -114,6 +116,8 @@ Your final goal: The user books or cancels without knowing what an ID is.`, time
 
 	msg := resp.Choices[0].Message
 
+	var hiddenContext strings.Builder
+
 	for i := 0; i < 5 && len(msg.ToolCalls) > 0; i++ {
 		openaiMsgs = append(openaiMsgs, msg)
 
@@ -123,6 +127,8 @@ Your final goal: The user books or cancels without knowing what an ID is.`, time
 				if err != nil {
 					toolOutput = fmt.Sprintf("Error executing tool: %v", err)
 				}
+
+				hiddenContext.WriteString(fmt.Sprintf("\n<!-- TOOL_OUTPUT [%s]: %s -->", toolCall.Function.Name, toolOutput))
 
 				openaiMsgs = append(openaiMsgs, openai.ChatCompletionMessage{
 					Role:       openai.ChatMessageRoleTool,
@@ -149,7 +155,7 @@ Your final goal: The user books or cancels without knowing what an ID is.`, time
 	botMsg := &llmdomain.Message{
 		ConversationID: convo.ConversationID,
 		SenderRole:     llmdomain.RoleAssistant,
-		Content:        botContent,
+		Content:        botContent + hiddenContext.String(),
 		Metadata:       datatypes.JSON([]byte(`{}`)),
 		CreatedAt:      time.Now(),
 	}
