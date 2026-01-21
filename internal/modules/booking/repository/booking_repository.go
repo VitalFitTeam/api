@@ -176,7 +176,7 @@ func (s *BookingStore) CountBookingsForClass(ctx context.Context, classID uuid.U
 
 func (s *BookingStore) GetClientBookings(ctx context.Context, userID uuid.UUID, startDate, endDate *time.Time) ([]bookingdomain.BookingWithClassInfo, error) {
 	var results []bookingdomain.BookingWithClassInfo
-	args := []interface{}{userID}
+	args := []interface{}{userID, bookingdomain.BookingStatusCancelledByUser, bookingdomain.BookingStatusCancelledBySystem}
 
 	queryStr := `
         SELECT 
@@ -193,7 +193,7 @@ func (s *BookingStore) GetClientBookings(ctx context.Context, userID uuid.UUID, 
         JOIN instructors ins ON c.instructor_id = ins.instructor_id
         JOIN users u ON ins.user_id = u.user_id
         JOIN branch br ON c.branch_id = br.branch_id
-        WHERE b.user_id = ? AND b.deleted_at IS NULL
+        WHERE b.user_id = ? AND b.deleted_at IS NULL AND b.status NOT IN (?, ?)
     `
 
 	if startDate != nil {
