@@ -44,7 +44,9 @@ func (s *BranchInventoryStore) GetByBranch(ctx context.Context, branchID uuid.UU
 	var inventory []inventorydomain.BranchInventory
 	err := s.db.WithContext(ctx).
 		Where("branch_id = ?", branchID).
-		Preload("Equipment").
+		Preload("Equipment", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
 		Order("created_at desc").
 		Find(&inventory).Error
 	if err != nil {
