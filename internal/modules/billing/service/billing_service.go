@@ -3,13 +3,19 @@ package billingservice
 import (
 	"context"
 	"crypto/tls"
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/stripe/stripe-go/v76"
+	"github.com/stripe/stripe-go/v76/checkout/session"
+	"github.com/stripe/stripe-go/v76/webhook"
 	"github.com/vitalfit/api/config"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
@@ -39,7 +45,7 @@ func NewBillingService(store store.Storage, cache cache.Storage, cfg config.Conf
 		Transport: customTransport,
 		Timeout:   10 * time.Second,
 	}
-
+	stripe.Key = cfg.Stripe.SecretKey
 	return &BillingService{
 		store:  store,
 		cache:  cache,
@@ -48,6 +54,142 @@ func NewBillingService(store store.Storage, cache cache.Storage, cfg config.Conf
 		Mailer: mailer,
 	}
 }
+
+func (bs *BillingService) CreateCheckoutSessionForInvoice(ctx context.Context, invoiceID uuid.UUID) (string, error) {
+	invoice, err := bs.store.Billing.GetInvoiceByID(ctx, invoiceID)
+	if err != nil {
+		return "", fmt.Errorf("error getting invoice: %w", err)
+	}
+
+	if invoice.Status == billingdomain.InvoiceStatusPaid {
+		return "", errors.New("this invoice is already paid")
+	}
+
+	var lineItems []*stripe.CheckoutSessionLineItemParams
+
+	unitAmount := invoice.TotalAmount.Mul(decimal.NewFromInt(100)).IntPart()
+	productName := fmt.Sprintf("Invoice %s", invoice.InvoiceNumber)
+
+	lineItems = append(lineItems, &stripe.CheckoutSessionLineItemParams{
+		PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+			Currency: stripe.String("usd"),
+			ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+				Name: stripe.String(productName),
+			},
+			UnitAmount: stripe.Int64(unitAmount),
+		},
+		Quantity: stripe.Int64(1),
+	})
+
+	baseURL := bs.cfg.FrontURL
+	if bs.cfg.FrontURLE != "" {
+		baseURL = bs.cfg.FrontURLE
+	}
+	if baseURL == "" {
+		return "", errors.New("frontend URL is not configured")
+	}
+
+	baseURL = strings.TrimSpace(baseURL)
+	baseURL = strings.TrimSuffix(baseURL, "/")
+
+	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
+		baseURL = "http://" + baseURL
+	}
+
+	successURL := fmt.Sprintf("%s/payment/%s?status=success", baseURL, invoice.InvoiceID.String())
+	cancelURL := fmt.Sprintf("%s/payment/%s?status=cancelled", baseURL, invoice.InvoiceID.String())
+
+	params := &stripe.CheckoutSessionParams{
+		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
+		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+		LineItems:          lineItems,
+		ClientReferenceID:  stripe.String(invoice.InvoiceID.String()),
+		SuccessURL:         stripe.String(successURL),
+		CancelURL:          stripe.String(cancelURL),
+		Metadata: map[string]string{
+			"user_id": invoice.UserID.String(),
+		},
+	}
+
+	sess, err := session.New(params)
+	if err != nil {
+		return "", fmt.Errorf("error generating stripe session: %w", err)
+	}
+
+	return sess.URL, nil
+}
+
+func (bs *BillingService) HandleStripeWebhook(ctx context.Context, body []byte, signature string) error {
+	event, err := webhook.ConstructEvent(body, signature, bs.cfg.Stripe.WebhookSecret)
+	if err != nil {
+		return fmt.Errorf("webhook signature verification failed: %v", err)
+	}
+
+	var status billingdomain.PaymentStatus
+
+	switch event.Type {
+	case "checkout.session.completed":
+		status = billingdomain.PaymentStatusCompleted
+	case "checkout.session.async_payment_failed":
+		status = billingdomain.PaymentStatusFailed
+	default:
+		return nil
+	}
+
+	var session stripe.CheckoutSession
+	if err := json.Unmarshal(event.Data.Raw, &session); err != nil {
+		return fmt.Errorf("error parsing webhook JSON: %v", err)
+	}
+
+	invoiceID, err := uuid.Parse(session.ClientReferenceID)
+	if err != nil {
+		return fmt.Errorf("invalid invoice uuid from stripe: %v", err)
+	}
+
+	invoice, err := bs.store.Billing.GetInvoiceByID(ctx, invoiceID)
+	if err != nil {
+		return fmt.Errorf("could not retrieve invoice %s to find branch: %w", invoiceID, err)
+	}
+
+	branchPaymentMethods, err := bs.store.PaymentMethods.GetPaymentMethodsFromBranch(ctx, invoice.BranchID)
+	if err != nil {
+		return fmt.Errorf("could not get payment methods for branch %s: %w", invoice.BranchID, err)
+	}
+
+	var paymentMethodID uuid.UUID
+	for _, bpm := range branchPaymentMethods {
+		if bpm.Method != nil && bpm.IsActive && bpm.Method.Type == billingdomain.PaymentMethodCard && bpm.Method.ProcessingType == billingdomain.PaymentProcessingGateway {
+			paymentMethodID = bpm.MethodID
+			break
+		}
+	}
+
+	if paymentMethodID == uuid.Nil {
+		return fmt.Errorf("no active card gateway payment method configured for branch %s", invoice.BranchID)
+	}
+	amountPaid := decimal.NewFromInt(session.AmountTotal).Div(decimal.NewFromInt(100))
+
+	var transactionID string
+	if session.PaymentIntent != nil {
+		transactionID = session.PaymentIntent.ID
+	}
+
+	payment := &billingdomain.Payment{
+		InvoiceID:       invoiceID,
+		AmountPaid:      amountPaid,
+		CurrencyPaid:    "USD",
+		PaymentMethodID: paymentMethodID,
+		TransactionID:   sql.NullString{String: transactionID, Valid: transactionID != ""},
+		Status:          status,
+	}
+
+	if err := bs.AddPaymentToInvoice(ctx, payment); err != nil {
+		return fmt.Errorf("failed to register stripe payment internally: %w", err)
+	}
+
+	return nil
+}
+
 func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdomain.Invoice, items []billingdomain.InvoiceItem) error {
 	docType, err := bs.store.FiscalDocuments.GetFiscalDocumentTypeByName(ctx, "Invoice")
 	if err != nil {

@@ -1692,6 +1692,72 @@ const docTemplate = `{
                 }
             }
         },
+        "/billing/checkout": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates a Stripe Checkout Session for a specific invoice.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Create Checkout Session",
+                "parameters": [
+                    {
+                        "description": "Checkout payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/billinghandlers.CreateCheckoutPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Checkout URL",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "url": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/billing/fiscal-document-types": {
             "get": {
                 "security": [
@@ -15930,6 +15996,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/webhooks/stripe": {
+            "post": {
+                "description": "Handles Stripe webhooks for payment confirmation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Stripe Webhook",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/wishlist": {
             "get": {
                 "security": [
@@ -17095,6 +17203,17 @@ const docTemplate = `{
                 },
                 "total_amount": {
                     "type": "number"
+                }
+            }
+        },
+        "billinghandlers.CreateCheckoutPayload": {
+            "type": "object",
+            "required": [
+                "invoice_id"
+            ],
+            "properties": {
+                "invoice_id": {
+                    "type": "string"
                 }
             }
         },

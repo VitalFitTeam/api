@@ -23,6 +23,14 @@ func (s *BillingService) GetPaymentMethods(ctx context.Context) ([]*billingdomai
 	return paymentMethods, nil
 }
 
+func (s *BillingService) GetPaymentMethodsByType(ctx context.Context, methodType billingdomain.PaymentMethodTypeEnum) ([]*billingdomain.PaymentMethods, error) {
+	paymentMethods, err := s.store.PaymentMethods.GetPaymentMethodsByType(ctx, methodType)
+	if err != nil {
+		return nil, err
+	}
+	return paymentMethods, nil
+}
+
 func (s *BillingService) CreatePaymentMethod(ctx context.Context, paymentMethod *billingdomain.PaymentMethods) error {
 	err := s.store.PaymentMethods.CreatePaymentMethod(ctx, paymentMethod)
 	if err != nil {

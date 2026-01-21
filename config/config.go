@@ -23,6 +23,7 @@ type Config struct {
 	EncryptionKey string
 	Rekognition   RekognitionConfig
 	OpenAI        OpenAIConfig
+	Stripe        StripeConfig
 }
 
 type redisConfig struct {
@@ -76,6 +77,11 @@ type RekognitionConfig struct {
 
 type OpenAIConfig struct {
 	APIKey string
+}
+
+type StripeConfig struct {
+	SecretKey     string `mapstructure:"STRIPE_SECRET_KEY"`     // Empieza con sk_test_...
+	WebhookSecret string `mapstructure:"STRIPE_WEBHOOK_SECRET"` // Empieza con whsec_...
 }
 
 func LoadConfig() *Config {
@@ -133,6 +139,10 @@ func LoadConfig() *Config {
 		},
 		OpenAI: OpenAIConfig{
 			APIKey: env.GetString("OPENAI_API_KEY", ""),
+		},
+		Stripe: StripeConfig{
+			SecretKey:     env.GetString("STRIPE_SECRET_KEY", ""),
+			WebhookSecret: env.GetString("STRIPE_WEBHOOK_SECRET", ""),
 		},
 	}
 }

@@ -440,3 +440,7 @@ func NewAdminInvoiceListResponse(invoices []*billingdomain.Invoice) []AdminInvoi
 	}
 	return responses
 }
+
+type CreateCheckoutPayload struct {
+	InvoiceID uuid.UUID `json:"invoice_id" binding:"required"`
+}
