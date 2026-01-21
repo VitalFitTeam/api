@@ -55,6 +55,7 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 			UserID:    userID,
 			ClassID:   &booking.ClassID,
 			ServiceID: class.ServiceID,
+			BranchID:  &branchID,
 		}
 		if err := s.store.Access.LogAttendance(ctx, attendanceLog); err != nil {
 			return nil, err
@@ -85,6 +86,7 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 				UserID:    userID,
 				ClassID:   &class.ClassID,
 				ServiceID: class.ServiceID, // Asumiendo que class.ServiceID es uuid.UUID
+				BranchID:  &branchID,
 			}
 			if err := s.store.Access.LogAttendance(ctx, attendanceLog); err != nil {
 				return nil, err
@@ -126,6 +128,7 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 		attendanceLog := &accessdomain.AttendanceLog{
 			UserID:    userID,
 			ServiceID: openGymService.ServiceID,
+			BranchID:  &branchID,
 		}
 		if err := s.store.Access.LogAttendance(ctx, attendanceLog); err != nil {
 			return nil, err
@@ -153,6 +156,7 @@ func (s *AccessService) ProcessCheckIn(ctx context.Context, userID, branchID uui
 		attendanceLog := &accessdomain.AttendanceLog{
 			UserID:    userID,
 			ServiceID: openGymService.ServiceID,
+			BranchID:  &branchID,
 		}
 		if err := s.store.Access.LogAttendance(ctx, attendanceLog); err != nil {
 			return nil, err

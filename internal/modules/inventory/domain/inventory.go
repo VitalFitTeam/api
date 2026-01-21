@@ -29,7 +29,3 @@ type BranchInventory struct {
 	DeletedAt           gorm.DeletedAt      `gorm:"index" json:"deleted_at,omitempty" swaggertype:"primitive,string"`
 	Equipment           *Equipment          `gorm:"foreignKey:EquipmentID;references:EquipmentID" json:"equipment,omitempty"`
 }
-
-func (BranchInventory) TableName() string {
-	return "branch_inventory"
-}
