@@ -209,7 +209,7 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		}
 
 		var result strings.Builder
-		result.WriteString(fmt.Sprintf("SYSTEM NOTE: Do not show the IDs to the user. Use them internally for booking. Available classes for %s:\n", targetDate.Format("2006-01-02")))
+		result.WriteString(fmt.Sprintf("SYSTEM NOTE: The user sees a numbered list. You MUST map the user's selection (e.g., '1') to the corresponding UUID provided in brackets [ID:...] when calling tools. Available classes for %s:\n", targetDate.Format("2006-01-02")))
 
 		count := 0
 		for _, c := range classes {
@@ -256,7 +256,7 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 
 		classID, err := uuid.Parse(args.ClassID)
 		if err != nil {
-			return "Error: El ID de la clase no es válido.", nil
+			return fmt.Sprintf("Error: '%s' is not a valid UUID. You sent the list number instead of the UUID. Please retrieve the UUID corresponding to item #%s from the available classes list and try again.", args.ClassID, args.ClassID), nil
 		}
 
 		class, err := s.store.Schedule.GetClassByID(ctx, classID)
@@ -343,7 +343,7 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		var result strings.Builder
 		result.WriteString("Tus próximas reservas son:\n")
 		for _, b := range upcoming {
-			result.WriteString(fmt.Sprintf("- ID: %s | %s con %s - %s (%s)\n", b.BookingID, b.ServiceName, b.Instructor, b.StartsAt.Format("Mon, 02 Jan 15:04"), b.BranchName))
+			result.WriteString(fmt.Sprintf("- [ID:%s] %s con %s - %s (%s)\n", b.BookingID, b.ServiceName, b.Instructor, b.StartsAt.Format("Mon, 02 Jan 15:04"), b.BranchName))
 		}
 		return result.String(), nil
 
@@ -356,7 +356,7 @@ func (s *LLMService) callFunction(ctx context.Context, userID uuid.UUID, name st
 		}
 		bookingID, err := uuid.Parse(args.BookingID)
 		if err != nil {
-			return "Error: ID de reserva inválido.", nil
+			return fmt.Sprintf("Error: '%s' is not a valid UUID. You sent the list number instead of the UUID. Please retrieve the UUID corresponding to the booking from the list and try again.", args.BookingID), nil
 		}
 
 		if err := s.store.Booking.CancelBooking(ctx, bookingID); err != nil {
