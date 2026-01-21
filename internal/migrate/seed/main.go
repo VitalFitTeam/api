@@ -73,7 +73,7 @@ func (s *SeedStruct) Seed(store store.Storage, db *gorm.DB, services appservices
 	// s.SeedBranchRelations(store, db, ctx)
 	// s.SeedClasses(store, db, ctx)
 	// s.SeedInvoicesAndPayments(store, db, ctx, services)
-	// s.SeedBookingsAndAttendance(store, db, ctx)
+	s.SeedBookingsAndAttendance(store, db, ctx)
 	// s.SeedStaffAssignment(store, db, ctx, services)
 }
 
@@ -1098,6 +1098,7 @@ func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB,
 	now := time.Now()
 
 	for _, branch := range allBranches {
+		branchID := branch.BranchID
 		log.Printf("Processing bookings for branch: %s", branch.Name)
 
 		branchClasses, err := store.Schedule.GetClassesByBranch(ctx, branch.BranchID, nil, nil)
@@ -1149,6 +1150,7 @@ func (s *SeedStruct) SeedBookingsAndAttendance(store store.Storage, db *gorm.DB,
 						UserID:    client.UserID,
 						ClassID:   &class.ClassID,
 						ServiceID: class.ServiceID,
+						BranchID:  &branchID,
 					}
 
 					if attended {
