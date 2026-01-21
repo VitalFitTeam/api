@@ -201,8 +201,7 @@ func (rs *ReportStore) GetActiveMembersKPI(ctx context.Context, branchID *uuid.U
 			Where("al.check_in_time >= ? AND al.check_in_time <= ?", start, end)
 
 		if branchID != nil {
-			query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
-				Where("c.branch_id = ?", *branchID)
+			query = query.Where("al.branch_id = ?", *branchID)
 		}
 		return query
 	}
@@ -277,8 +276,7 @@ func (rs *ReportStore) GetOccupancyKPI(ctx context.Context, branchID *uuid.UUID)
 			Where("al.check_in_time >= ? AND al.check_in_time <= ?", start, end)
 
 		if branchID != nil {
-			query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
-				Where("c.branch_id = ?", *branchID)
+			query = query.Where("al.branch_id = ?", *branchID)
 		}
 		err := query.Count(&count).Error
 		return count, err
@@ -548,8 +546,7 @@ func (rs *ReportStore) GetNewVsRecurringChart(ctx context.Context, branchID *uui
 			Where("u.created_at < ?", startMonth) // Registered BEFORE this month
 
 		if branchID != nil {
-			queryRecurring = queryRecurring.Joins("JOIN classes c ON c.class_id = al.schedule_id").
-				Where("c.branch_id = ?", *branchID)
+			queryRecurring = queryRecurring.Where("al.branch_id = ?", *branchID)
 		}
 
 		if err := queryRecurring.Distinct("al.user_id").Count(&recurringCount).Error; err != nil {
@@ -877,8 +874,7 @@ func (rs *ReportStore) GetActivityHeatmap(ctx context.Context, branchID *uuid.UU
 		Where("al.check_in_time >= ?", start)
 
 	if branchID != nil {
-		query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
-			Where("c.branch_id = ?", *branchID)
+		query = query.Where("al.branch_id = ?", *branchID)
 	}
 
 	if err := query.Group("day_of_week, hour").Scan(&results).Error; err != nil {
@@ -975,8 +971,7 @@ func (rs *ReportStore) GetTodayCheckInsStat(ctx context.Context, branchID *uuid.
 		Where("al.check_in_time >= ? AND al.check_in_time <= ?", startOfDay, endOfDay)
 
 	if branchID != nil {
-		query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
-			Where("c.branch_id = ?", *branchID)
+		query = query.Where("al.branch_id = ?", *branchID)
 	}
 
 	err := query.Count(&count).Error
@@ -1014,8 +1009,7 @@ func (rs *ReportStore) GetCurrentOccupancyStat(ctx context.Context, branchID *uu
 		Where("al.check_in_time >= ? AND al.check_in_time <= ?", startWindow, endWindow)
 
 	if branchID != nil {
-		query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
-			Where("c.branch_id = ?", *branchID)
+		query = query.Where("al.branch_id = ?", *branchID)
 	}
 
 	if err := query.Count(&count).Error; err != nil {
@@ -1080,8 +1074,7 @@ func (rs *ReportStore) GetRecentCheckIns(ctx context.Context, branchID *uuid.UUI
 		Where("al.status = ?", accessdomain.AttendanceStatusAttended)
 
 	if branchID != nil {
-		query = query.Joins("JOIN classes c ON c.class_id = al.schedule_id").
-			Where("c.branch_id = ?", *branchID)
+		query = query.Where("al.branch_id = ?", *branchID)
 	}
 
 	err := query.Order("al.check_in_time DESC").Limit(4).Scan(&results).Error
@@ -1216,11 +1209,10 @@ func (rs *ReportStore) GetClientsChurnMetrics(ctx context.Context) ([]reportdoma
 			MAX(cm.end_date) as membership_end_date,
 			COALESCE(
 				(
-					SELECT c.branch_id
+					SELECT al2.branch_id
 					FROM attendance_log al2
-					JOIN classes c ON c.class_id = al2.schedule_id
 					WHERE al2.user_id = u.user_id
-					GROUP BY c.branch_id
+					GROUP BY al2.branch_id
 					ORDER BY COUNT(*) DESC
 					LIMIT 1
 				),
