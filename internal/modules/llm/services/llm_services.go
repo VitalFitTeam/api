@@ -75,6 +75,7 @@ GOLDEN RULES (FOLLOW THEM OR FAIL):
    - **HISTORY AWARENESS:** You may see "<!-- TOOL_OUTPUT ... -->" in the conversation history. These contain the UUIDs from previous searches. USE THEM to map the user's "1" or "2" to the correct ID.
    - IF the user selects "1", YOU MUST find the UUID for item #1 and use THAT UUID in the tool call.
    - NEVER send "1", "2", etc. as an ID to a tool.
+   - NEVER include "<!-- TOOL_OUTPUT ... -->" in your own responses. These are for your internal context only.
    - If you are unsure which class it is, list the options again with simple numbers (1, 2, 3) and ask them to confirm the number.
 3. **ERROR INTERPRETATION:**
    - If a tool fails (e.g., "class full"), explain it in natural language and offer alternatives. Do not say "Error executing tool".
@@ -164,6 +165,11 @@ Your final goal: The user books or cancels without knowing what an ID is.`, time
 		s.logger.Error("Error saving bot message", "error", err)
 	}
 
+	// Clean hidden context from the response in case the LLM hallucinated it
+	if idx := strings.Index(botContent, "\n<!-- TOOL_OUTPUT"); idx != -1 {
+		botContent = botContent[:idx]
+	}
+
 	return botContent, nil
 }
 
@@ -180,6 +186,13 @@ func (s *LLMService) GetChatHistory(ctx context.Context, userID uuid.UUID, fq pa
 	history, total, err := s.store.LLM.GetConversationHistory(ctx, convo.ConversationID, fq)
 	if err != nil {
 		return nil, 0, fmt.Errorf("error getting history: %v", err)
+	}
+
+	// Clean hidden context for the frontend
+	for i := range history {
+		if idx := strings.Index(history[i].Content, "\n<!-- TOOL_OUTPUT"); idx != -1 {
+			history[i].Content = history[i].Content[:idx]
+		}
 	}
 
 	return history, total, nil
