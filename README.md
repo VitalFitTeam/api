@@ -142,15 +142,38 @@ This project uses `swaggo/swag` to generate API documentation in Swagger/OpenAPI
 
 Below are the environment variables used by the application:
 
-| Variable            | Description                                                               | Example                                                        |
-| ------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `ADDR`          | Port where the server will run.                                           | `8080`                                                         |
-| `ENV`           | Application environment (`development`, `staging`, `production`).         | `development`                                                  |
-| `DB_ADDR`            | Data Source Name for connecting to PostgreSQL.                            | `"host=localhost user=postgres ..."`                           |
-| `JWT_SECRET`        | Secret key used to sign JWT tokens.                                       | `"a-very-long-hard-to-guess-secret"`                           |
-| `JWT_EXPIRATION`    | Duration that JWT tokens are valid.                                       | `"72h"`                                                        |
-| `RESEND_API_KEY`    | API key for the Resend email service.                                     | `"re_xxxxxxxxxxxx"`                                            |
-| `RESEND_FROM_EMAIL` | Sender email address used by Resend.                                      | `"noreply@yourdomain.com"`                                     |
+| Variable | Description | Default / Example |
+| :--- | :--- | :--- |
+| `ADDRS` | Port where the server will run. | `:8080` |
+| `ENV` | Application environment (`dev`, `staging`, `production`). | `dev` |
+| `API_URL` | Public URL of the API. | `localhost:8080` |
+| `DB_ADDR` | Data Source Name for connecting to PostgreSQL. | `postgres://admin:adminpassword@localhost/vitalfit?sslmode=disable` |
+| `DB_MAX_OPEN_CONNS` | Maximum number of open database connections. | `30` |
+| `DB_MAX_IDLE_CONNS` | Maximum number of idle database connections. | `30` |
+| `DB_MAX_IDLE_TIME` | Maximum amount of time a connection may be reused. | `15m` |
+| `JWT_SECRET` | Secret key used to sign JWT tokens. | `your-secret-key` |
+| `JWT_ISS` | JWT Issuer claim. | `vitalfit-api` |
+| `JWT_AUD` | JWT Audience claim. | `vitalfit-client` |
+| `FROM_RESEND_EMAIL` | Sender email address used by Resend. | `noreply@yourdomain.com` |
+| `RESEND_API_KEY` | API key for the Resend email service. | `re_xxxxxxxxxxxx` |
+| `RATE_LIMITER_ENABLED` | Enable or disable the rate limiter. | `true` |
+| `RATE_LIMITER_REQUESTS_PER_TIME_FRAME` | Number of requests allowed per time frame (1 min). | `500` |
+| `FRONT_URL` | URL of the frontend application. | `http://localhost:3000` |
+| `FRONT_URL_E` | ecommerce frontend URL. | |
+| `REDIS_ENABLED` | Enable Redis for caching/rate limiting. | `false` |
+| `REDIS_ADDR` | Redis server address. | `localhost:6379` |
+| `REDIS_USERNAME` | Redis username. | |
+| `REDIS_PW` | Redis password. | |
+| `REDIS_DB` | Redis database number. | `0` |
+| `OPEN_EXCHANGE_APP_ID` | App ID for Open Exchange Rates API. | |
+| `CLERK_JWKS_URL` | URL to fetch Clerk JWKS keys. | |
+| `ENCRYPTION_KEY` | Key used for encryption operations. | `vitalfit-medical-encrypt-key1234` |
+| `AWS_REGIONR` | AWS Region for Rekognition services. | `us-east-1` |
+| `AWS_ACCESS_KEY_ID` | AWS Access Key ID. | |
+| `AWS_SECRET_ACCESS_KEY` | AWS Secret Access Key. | |
+| `OPENAI_API_KEY` | API Key for OpenAI integration. | |
+| `STRIPE_SECRET_KEY` | Stripe Secret Key for payments. | `sk_test_...` |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Webhook Secret for events. | `whsec_...` |
 
 ## License
 
