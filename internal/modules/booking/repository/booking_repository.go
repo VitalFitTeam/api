@@ -13,6 +13,7 @@ import (
 	"github.com/vitalfit/api/pkg/db"
 	"github.com/vitalfit/api/pkg/pagination"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type BookingStore struct {
@@ -30,7 +31,10 @@ func NewBookingStore(db *gorm.DB) *BookingStore {
 }
 
 func (r *BookingStore) CreateBooking(ctx context.Context, booking *bookingdomain.Booking) (uuid.UUID, error) {
-	if err := r.db.WithContext(ctx).Create(booking).Error; err != nil {
+	if err := r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "class_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"status", "updated_at", "deleted_at"}),
+	}).Create(booking).Error; err != nil {
 		return uuid.Nil, err
 	}
 	return booking.BookingID, nil
