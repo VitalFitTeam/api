@@ -2,6 +2,7 @@ package billinghandlers
 
 import (
 	"errors"
+	"io"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -508,4 +509,64 @@ func (h *BillingHandlers) GetTaxRateByBranchIDHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"tax_rate": taxRate})
+}
+
+// @Summary		Create Checkout Session
+// @Description	Creates a Stripe Checkout Session for a specific invoice.
+// @Tags			Billing
+// @Security		ApiKeyAuth
+// @Accept			json
+// @Produce		json
+// @Param			payload	body		CreateCheckoutPayload			true	"Checkout payload"
+// @Success		200		{object}	object{url=string}				"Checkout URL"
+// @Failure		400		{object}	object{error=string}			"Bad Request"
+// @Failure		500		{object}	object{error=string}			"Internal Server Error"
+// @Router			/billing/checkout [post]
+func (h *BillingHandlers) CreateCheckoutHandler(c *gin.Context) {
+	var payload CreateCheckoutPayload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	url, err := h.services.BillingServices.CreateCheckoutSessionForInvoice(c.Request.Context(), payload.InvoiceID)
+	if err != nil {
+		h.services.LogErrors.InternalServerError(c, err)
+		return
+	}
+
+	c.JSON(200, gin.H{"url": url})
+}
+
+// @Summary		Stripe Webhook
+// @Description	Handles Stripe webhooks for payment confirmation.
+// @Tags			Billing
+// @Accept			json
+// @Produce		json
+// @Success		200		{object}	nil
+// @Failure		400		{object}	object{error=string}	"Bad Request"
+// @Failure		500		{object}	object{error=string}	"Internal Server Error"
+// @Router			/webhooks/stripe [post]
+func (h *BillingHandlers) WebhookHandler(c *gin.Context) {
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	signature := c.GetHeader("Stripe-Signature")
+
+	methods, err := h.services.BillingServices.GetPaymentMethodsByType(c.Request.Context(), billingdomain.PaymentMethodCard)
+	if err != nil || len(methods) == 0 {
+		h.services.LogErrors.InternalServerError(c, errors.New("no card payment method configured"))
+		return
+	}
+	paymentMethodID := methods[0].MethodID
+
+	if err := h.services.BillingServices.HandleStripeWebhook(c.Request.Context(), body, signature, paymentMethodID); err != nil {
+		h.services.LogErrors.BadRequestResponse(c, err)
+		return
+	}
+
+	c.Status(200)
 }

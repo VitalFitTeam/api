@@ -39,6 +39,9 @@ type BillingHandlersInterface interface {
 
 	GetClientInvoices(c *gin.Context)
 	GetTaxRateByBranchIDHandler(c *gin.Context)
+
+	CreateCheckoutHandler(c *gin.Context)
+	WebhookHandler(c *gin.Context)
 }
 
 type BillingHandlers struct {
@@ -55,6 +58,7 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	billingGroup := rg.Group("/billing")
 	billingGroup.Use(m.AuthJwtTokenMiddleware())
 	billingGroup.Use(m.AuditLogMiddleware())
+	billingGroup.POST("/checkout", r.CreateCheckoutHandler)
 
 	billingGroup.GET("/rates", r.GetRates)
 	billingGroup.GET("/rates/:currency", r.GetSpecificCurrencyRates)
@@ -102,5 +106,11 @@ func (r *BillingHandlers) BillingRoutes(rg *gin.RouterGroup, m *auth.AuthMiddlew
 	{
 		paymentsGroup.GET("/:payment_id", r.GetPaymentByIDHandler)
 		paymentsGroup.PATCH("/:payment_id/status", m.RBACPermission("billing:process_payment"), r.UpdatePaymentStatusHandler)
+	}
+
+	webhooksGroup := rg.Group("/webhooks")
+	{
+		// POST /v1/webhooks/stripe
+		webhooksGroup.POST("/stripe", r.WebhookHandler)
 	}
 }

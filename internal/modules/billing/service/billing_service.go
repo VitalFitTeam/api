@@ -3,6 +3,8 @@ package billingservice
 import (
 	"context"
 	"crypto/tls"
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,6 +12,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/stripe/stripe-go/v76"
+	"github.com/stripe/stripe-go/v76/checkout/session"
+	"github.com/stripe/stripe-go/v76/webhook"
 	"github.com/vitalfit/api/config"
 	authdomain "github.com/vitalfit/api/internal/modules/auth/domain"
 	billingdomain "github.com/vitalfit/api/internal/modules/billing/domain"
@@ -39,7 +44,7 @@ func NewBillingService(store store.Storage, cache cache.Storage, cfg config.Conf
 		Transport: customTransport,
 		Timeout:   10 * time.Second,
 	}
-
+	stripe.Key = cfg.Stripe.SecretKey
 	return &BillingService{
 		store:  store,
 		cache:  cache,
@@ -48,6 +53,92 @@ func NewBillingService(store store.Storage, cache cache.Storage, cfg config.Conf
 		Mailer: mailer,
 	}
 }
+
+func (bs *BillingService) CreateCheckoutSessionForInvoice(ctx context.Context, invoiceID uuid.UUID) (string, error) {
+	invoice, err := bs.store.Billing.GetInvoiceByID(ctx, invoiceID)
+	if err != nil {
+		return "", fmt.Errorf("error getting invoice: %w", err)
+	}
+
+	if invoice.Status == billingdomain.InvoiceStatusPaid {
+		return "", errors.New("this invoice is already paid")
+	}
+
+	var lineItems []*stripe.CheckoutSessionLineItemParams
+
+	for _, item := range invoice.InvoiceItems {
+		unitAmount := item.UnitPrice.Mul(decimal.NewFromInt(100)).IntPart()
+		productName := "VitalFit Service Invoice"
+
+		lineItems = append(lineItems, &stripe.CheckoutSessionLineItemParams{
+			PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+				Currency: stripe.String("usd"),
+				ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+					Name: stripe.String(productName),
+				},
+				UnitAmount: stripe.Int64(unitAmount),
+			},
+			Quantity: stripe.Int64(int64(item.Quantity)),
+		})
+	}
+
+	successURL := bs.cfg.FrontURLE + "/payment/" + invoice.InvoiceID.String()
+	cancelURL := bs.cfg.FrontURLE + "/payment/" + invoice.InvoiceID.String()
+
+	params := &stripe.CheckoutSessionParams{
+		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
+		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+		LineItems:          lineItems,
+		ClientReferenceID:  stripe.String(invoice.InvoiceID.String()),
+		SuccessURL:         stripe.String(successURL),
+		CancelURL:          stripe.String(cancelURL),
+		Metadata: map[string]string{
+			"user_id": invoice.UserID.String(),
+		},
+	}
+
+	sess, err := session.New(params)
+	if err != nil {
+		return "", fmt.Errorf("error generating stripe session: %w", err)
+	}
+
+	return sess.URL, nil
+}
+
+func (bs *BillingService) HandleStripeWebhook(ctx context.Context, body []byte, signature string, paymentMethodID uuid.UUID) error {
+	event, err := webhook.ConstructEvent(body, signature, bs.cfg.Stripe.WebhookSecret)
+	if err != nil {
+		return fmt.Errorf("webhook signature verification failed: %v", err)
+	}
+
+	if event.Type == "checkout.session.completed" {
+		var session stripe.CheckoutSession
+		if err := json.Unmarshal(event.Data.Raw, &session); err != nil {
+			return fmt.Errorf("error parsing webhook JSON: %v", err)
+		}
+
+		invoiceID, err := uuid.Parse(session.ClientReferenceID)
+		if err != nil {
+			return fmt.Errorf("invalid invoice uuid from stripe: %v", err)
+		}
+
+		amountPaid := decimal.NewFromInt(session.AmountTotal).Div(decimal.NewFromInt(100))
+		payment := &billingdomain.Payment{
+			InvoiceID:       invoiceID,
+			AmountPaid:      amountPaid,
+			CurrencyPaid:    "USD",
+			PaymentMethodID: paymentMethodID,
+			TransactionID:   sql.NullString{String: session.PaymentIntent.ID, Valid: true},
+			Status:          billingdomain.PaymentStatusCompleted,
+		}
+
+		if err := bs.AddPaymentToInvoice(ctx, payment); err != nil {
+			return fmt.Errorf("failed to register stripe payment internally: %w", err)
+		}
+	}
+	return nil
+}
+
 func (bs *BillingService) CreateInvoice(ctx context.Context, invoice *billingdomain.Invoice, items []billingdomain.InvoiceItem) error {
 	docType, err := bs.store.FiscalDocuments.GetFiscalDocumentTypeByName(ctx, "Invoice")
 	if err != nil {

@@ -16,6 +16,7 @@ type BillingServiceInterface interface {
 	CreatePaymentMethod(ctx context.Context, paymentMethod *PaymentMethods) error
 	UpdatePaymentMethod(ctx context.Context, paymentMethod *PaymentMethods) error
 	DeletePaymentMethod(ctx context.Context, methodID uuid.UUID) error
+	GetPaymentMethodsByType(ctx context.Context, methodType PaymentMethodTypeEnum) ([]*PaymentMethods, error)
 	//Payment-Methods-Branch
 	AddPaymentMethodsToBranch(ctx context.Context, branchMethod []*PaymentMethodsBranch) error
 	DeletePaymentMethodsFromBranch(ctx context.Context, branchID, methodID uuid.UUID) error
@@ -47,4 +48,8 @@ type BillingServiceInterface interface {
 	ActivateInvoiceItems(ctx context.Context, invoice *Invoice) error
 	GetClientIvoices(ctx context.Context, userID uuid.UUID, fq pagination.PaginatedFeedQuery) ([]*Invoice, int64, error)
 	GetTaxRateByBranchID(ctx context.Context, branchID uuid.UUID) (decimal.Decimal, error)
+
+	// Stripe
+	CreateCheckoutSessionForInvoice(ctx context.Context, invoiceID uuid.UUID) (string, error)
+	HandleStripeWebhook(ctx context.Context, body []byte, signature string, paymentMethodID uuid.UUID) error
 }

@@ -32,6 +32,7 @@ type PaymentMethodsRepository interface {
 	GetPaymentMethodsFromBranch(ctx context.Context, branchID uuid.UUID) ([]*PaymentMethodsBranch, error)
 	UpsertBranchPaymentConfig(ctx context.Context, branchMethod *PaymentMethodsBranch) error
 	GetBranchPaymentMethodByID(ctx context.Context, branchID uuid.UUID, methodID uuid.UUID) (*PaymentMethodsBranch, error)
+	GetPaymentMethodsByType(ctx context.Context, methodType PaymentMethodTypeEnum) ([]*PaymentMethods, error)
 }
 
 type FiscalDocumentRepository interface {

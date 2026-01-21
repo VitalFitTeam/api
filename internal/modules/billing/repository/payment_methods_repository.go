@@ -143,3 +143,12 @@ func (s *PaymentMethodsStore) GetBranchPaymentMethodByID(ctx context.Context, br
 	return &branchMethod, nil
 
 }
+
+func (s *PaymentMethodsStore) GetPaymentMethodsByType(ctx context.Context, methodType billingdomain.PaymentMethodTypeEnum) ([]*billingdomain.PaymentMethods, error) {
+	var paymentMethods []*billingdomain.PaymentMethods
+	err := s.db.WithContext(ctx).Where("type = ? AND processing_type = ?", methodType, billingdomain.PaymentProcessingGateway).Find(&paymentMethods).Error
+	if err != nil {
+		return nil, err
+	}
+	return paymentMethods, nil
+}
